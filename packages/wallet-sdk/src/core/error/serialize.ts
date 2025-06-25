@@ -1,4 +1,3 @@
-// TODO: error should not depend on walletlink. revisit this.
 import { VERSION } from '../../sdk-info.js';
 import { standardErrorCodes } from './constants.js';
 import { serialize } from './utils.js';
