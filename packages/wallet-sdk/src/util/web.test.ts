@@ -18,7 +18,7 @@ const mockInstance = {
   attach: mockAttach,
 };
 
-vi.mock(':sign/walletlink/relay/ui/components/Snackbar/Snackbar.js', () => ({
+vi.mock('../ui/Snackbar/Snackbar.js', () => ({
   Snackbar: vi.fn().mockImplementation(() => mockInstance),
 }));
 
@@ -68,7 +68,7 @@ describe('PopupManager', () => {
     url.searchParams.append('sdkVersion', VERSION);
     url.searchParams.append('origin', mockOrigin);
     url.searchParams.append('coop', 'null');
-    
+
     (window.open as Mock).mockReturnValue({ focus: vi.fn() });
 
     await openPopup(url);

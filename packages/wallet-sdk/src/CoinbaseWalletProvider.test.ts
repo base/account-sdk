@@ -1,10 +1,9 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import { ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import { RequestArguments } from ':core/provider/interface.js';
 import { store } from ':store/store.js';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
-import * as util from './sign/util.js';
 import * as providerUtil from './util/provider.js';
 
 function createProvider() {
@@ -18,28 +17,18 @@ const mockHandshake = vi.fn();
 const mockRequest = vi.fn();
 const mockCleanup = vi.fn();
 const mockFetchRPCRequest = vi.fn();
-const mockFetchSignerType = vi.spyOn(util, 'fetchSignerType');
-const mockStoreSignerType = vi.spyOn(util, 'storeSignerType');
-const mockLoadSignerType = vi.spyOn(util, 'loadSignerType');
 
 let provider: CoinbaseWalletProvider;
-let callback: ProviderEventCallback;
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.spyOn(util, 'createSigner').mockImplementation((params) => {
-    callback = params.callback;
-    return {
-      accounts: ['0x123'],
-      chainId: 1,
-      handshake: mockHandshake,
-      request: mockRequest,
-      cleanup: mockCleanup,
-    };
-  });
+
   vi.spyOn(providerUtil, 'fetchRPCRequest').mockImplementation(mockFetchRPCRequest);
 
   provider = createProvider();
+  provider['signer'].request = mockRequest;
+  provider['signer'].handshake = mockHandshake;
+  provider['signer'].cleanup = mockCleanup;
 });
 
 describe('Event handling', () => {
@@ -58,8 +47,7 @@ describe('Event handling', () => {
     const chainChangedListener = vi.fn();
     provider.on('chainChanged', chainChangedListener);
 
-    await provider.request({ method: 'eth_requestAccounts' });
-    callback('chainChanged', '0x1');
+    provider['signer']?.['callback']?.('chainChanged', '0x1');
 
     expect(chainChangedListener).toHaveBeenCalledWith('0x1');
   });
@@ -68,8 +56,7 @@ describe('Event handling', () => {
     const accountsChangedListener = vi.fn();
     provider.on('accountsChanged', accountsChangedListener);
 
-    await provider.request({ method: 'eth_requestAccounts' });
-    callback('accountsChanged', ['0x123']);
+    provider['signer']?.['callback']?.('accountsChanged', ['0x123']);
 
     expect(accountsChangedListener).toHaveBeenCalledWith(['0x123']);
   });
@@ -103,123 +90,29 @@ describe('Request Handling', () => {
 describe('Ephemeral methods', () => {
   it('should post requests to wallet rpc url for wallet_getCallsStatus', async () => {
     const args = { method: 'wallet_getCallsStatus' };
-    expect(provider['signer']).toBeNull();
     await provider.request(args);
     expect(mockFetchRPCRequest).toHaveBeenCalledWith(args, CB_WALLET_RPC_URL);
-    expect(provider['signer']).toBeNull();
   });
 
   it.each(['wallet_sendCalls', 'wallet_sign'])(
     'should perform a successful request after handshake',
     async (method) => {
       const args = { method, params: ['0xdeadbeef'] };
-      expect(provider['signer']).toBeNull();
       await provider.request(args);
       expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
       expect(mockRequest).toHaveBeenCalledWith(args);
       expect(mockCleanup).toHaveBeenCalled();
-      expect(provider['signer']).toBeNull();
     }
   );
 });
 
-describe('Signer configuration', () => {
-  it('should complete signerType selection correctly', async () => {
-    mockFetchSignerType.mockResolvedValue('scw');
-
-    const args = { method: 'eth_requestAccounts' };
-    await provider.request(args);
-    expect(mockHandshake).toHaveBeenCalledWith(args);
-  });
-
-  it('should support enable', async () => {
-    mockFetchSignerType.mockResolvedValue('scw');
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    await provider.enable();
-    expect(mockHandshake).toHaveBeenCalledWith({ method: 'eth_requestAccounts' });
-  });
-
-  it('should pass handshake request args', async () => {
-    mockFetchSignerType.mockResolvedValue('scw');
-
-    const argsWithCustomParams = {
-      method: 'eth_requestAccounts',
-      params: [{ scwOnboardMode: 'create' }],
-    };
-    await provider.request(argsWithCustomParams);
-    expect(mockFetchSignerType).toHaveBeenCalledWith(
-      expect.objectContaining({
-        handshakeRequest: argsWithCustomParams,
-      })
-    );
-  });
-
-  it('should throw error if signer selection failed', async () => {
-    const error = new Error('Signer selection failed');
-    mockFetchSignerType.mockRejectedValue(error);
-
-    await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toMatchObject({
-      code: standardErrorCodes.rpc.internal,
-      message: error.message,
+describe('Auto sub account', () => {
+  it('call handshake without method when enableAutoSubAccounts is true', async () => {
+    vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+      enableAutoSubAccounts: true,
     });
-    expect(mockHandshake).not.toHaveBeenCalled();
-    expect(mockStoreSignerType).not.toHaveBeenCalled();
-  });
 
-  it('should not store signer type unless handshake is successful', async () => {
-    const error = new Error('Handshake failed');
-    mockFetchSignerType.mockResolvedValue('scw');
-    mockHandshake.mockRejectedValue(error);
-
-    await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toMatchObject({
-      code: standardErrorCodes.rpc.internal,
-      message: error.message,
-    });
-    expect(mockHandshake).toHaveBeenCalled();
-    expect(mockStoreSignerType).not.toHaveBeenCalled();
-  });
-
-  it('should load signer from storage when available', async () => {
-    mockLoadSignerType.mockReturnValue('scw');
-    const providerLoadedFromStorage = createProvider();
-
-    await providerLoadedFromStorage.request({ method: 'eth_requestAccounts' });
-    expect(mockHandshake).not.toHaveBeenCalled();
-
-    const request = { method: 'personal_sign', params: ['0x123', '0xdeadbeef'] };
-    await providerLoadedFromStorage.request(request);
-    expect(mockRequest).toHaveBeenCalledWith(request);
-
-    await providerLoadedFromStorage.disconnect();
-    expect(mockCleanup).toHaveBeenCalled();
-    expect(provider['signer']).toBeNull();
-  });
-
-  it('should throw error if signer is not initialized', async () => {
-    await expect(provider.request({ method: 'personal_sign' })).rejects.toMatchObject({
-      code: standardErrorCodes.provider.unauthorized,
-      message: `Must call 'eth_requestAccounts' before other methods`,
-    });
-  });
-
-  it('should set signer to null', async () => {
     await provider.request({ method: 'eth_requestAccounts' });
-
-    await provider.disconnect();
-    expect(mockCleanup).toHaveBeenCalled();
-    expect(provider['signer']).toBeNull();
-  });
-
-  describe('Auto sub account', () => {
-    it('call handshake without method when enableAutoSubAccounts is true', async () => {
-      mockLoadSignerType.mockReturnValue('scw');
-      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
-      });
-
-      await provider.request({ method: 'eth_requestAccounts' });
-      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
-    });
+    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
   });
 });
