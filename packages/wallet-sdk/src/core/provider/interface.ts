@@ -70,10 +70,6 @@ export type Preference = {
    */
   keysUrl?: string;
   /**
-   * @param options
-   */
-  options: 'all' | 'smartWalletOnly' | 'eoaOnly';
-  /**
    * @param attribution
    * @type {Attribution}
    * @note Smart Wallet only

@@ -1,8 +1,7 @@
 import { standardErrors } from ':core/error/errors.js';
 import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
-import { RETRY_SVG_PATH } from ':sign/walletlink/relay/ui/WalletLinkRelayUI.js';
-import { Snackbar } from ':sign/walletlink/relay/ui/components/Snackbar/Snackbar.js';
 import { NAME, VERSION } from '../sdk-info.js';
+import { RETRY_SVG_PATH, Snackbar } from '../ui/Snackbar/Snackbar.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 
 const POPUP_WIDTH = 420;

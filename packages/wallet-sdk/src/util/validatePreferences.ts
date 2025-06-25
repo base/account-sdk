@@ -10,10 +10,6 @@ export function validatePreferences(preference?: Preference) {
     return;
   }
 
-  if (!['all', 'smartWalletOnly', 'eoaOnly'].includes(preference.options)) {
-    throw new Error(`Invalid options: ${preference.options}`);
-  }
-
   if (preference.attribution) {
     if (
       preference.attribution.auto !== undefined &&

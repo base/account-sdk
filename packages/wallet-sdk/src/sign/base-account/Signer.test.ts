@@ -18,7 +18,7 @@ import {
 import { fetchRPCRequest } from ':util/provider.js';
 import { HttpRequestError, numberToHex } from 'viem';
 import { SCWKeyManager } from './SCWKeyManager.js';
-import { SCWSigner } from './SCWSigner.js';
+import { SCWSigner } from './Signer.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { findOwnerIndex } from './utils/findOwnerIndex.js';
 import { handleAddSubAccountOwner } from './utils/handleAddSubAccountOwner.js';

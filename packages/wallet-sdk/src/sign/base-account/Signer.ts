@@ -43,7 +43,6 @@ import {
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
-import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
 import {
   addSenderToRequest,
@@ -70,7 +69,7 @@ type ConstructorOptions = {
   callback: ProviderEventCallback | null;
 };
 
-export class SCWSigner implements Signer {
+export class Signer {
   private readonly communicator: Communicator;
   private readonly keyManager: SCWKeyManager;
   private callback: ProviderEventCallback | null;
@@ -92,6 +91,10 @@ export class SCWSigner implements Signer {
     if (chains) {
       createClients(chains);
     }
+  }
+
+  public get isConnected() {
+    return this.accounts.length > 0;
   }
 
   async handshake(args: RequestArguments) {

@@ -1,4 +1,3 @@
-import { SignerType } from ':core/message/ConfigMessage.js';
 import { store } from ':store/store.js';
 import { VERSION } from '../../sdk-info.js';
 
@@ -58,7 +57,7 @@ type CCAEventData = {
   appOrigin?: string;
   appPreferredSigner?: string;
   // Custom Attributes
-  signerType?: SignerType;
+  signerType?: 'base-account'; // backwards compatibility
   method?: string; // RPC method
   correlationId?: string;
   errorMessage?: string;
