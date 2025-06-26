@@ -18,7 +18,7 @@ import {
 import { fetchRPCRequest } from ':util/provider.js';
 import { HttpRequestError, numberToHex } from 'viem';
 import { SCWKeyManager } from './SCWKeyManager.js';
-import { SCWSigner } from './SCWSigner.js';
+import { Signer } from './Signer.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { findOwnerIndex } from './utils/findOwnerIndex.js';
 import { handleAddSubAccountOwner } from './utils/handleAddSubAccountOwner.js';
@@ -91,8 +91,8 @@ const mockSuccessResponse: RPCResponseMessage = {
 const subAccountAddress = '0x7838d2724FC686813CAf81d4429beff1110c739a';
 const globalAccountAddress = '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54';
 
-describe('SCWSigner', () => {
-  let signer: SCWSigner;
+describe('Signer', () => {
+  let signer: Signer;
   let mockMetadata: AppMetadata;
   let mockCommunicator: Mocked<Communicator>;
   let mockCallback: ProviderEventCallback;
@@ -124,7 +124,7 @@ describe('SCWSigner', () => {
     (encryptContent as Mock).mockResolvedValueOnce(encryptedData);
     vi.spyOn(correlationIds, 'get').mockReturnValue(mockCorrelationId);
 
-    signer = new SCWSigner({
+    signer = new Signer({
       metadata: mockMetadata,
       communicator: mockCommunicator,
       callback: mockCallback,
@@ -1076,7 +1076,7 @@ describe('SCWSigner', () => {
         ],
       };
 
-      signer = new SCWSigner({
+      signer = new Signer({
         metadata: mockMetadata,
         communicator: mockCommunicator,
         callback: mockCallback,
@@ -1148,7 +1148,7 @@ describe('SCWSigner', () => {
         ],
       };
 
-      signer = new SCWSigner({
+      signer = new Signer({
         metadata: mockMetadata,
         communicator: mockCommunicator,
         callback: mockCallback,

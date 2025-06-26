@@ -1,9 +1,9 @@
 import '@testing-library/jest-dom';
 
 import { fireEvent, render, screen } from '@testing-library/preact';
-import { vi } from 'vitest';
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
+import { vi } from 'vitest';
 
 import { SnackbarContainer, SnackbarInstance, SnackbarInstanceProps } from './Snackbar.js';
 

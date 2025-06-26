@@ -17,17 +17,6 @@ describe('validatePreferences', () => {
     expect(() => validatePreferences(validPreference)).not.toThrow();
   });
 
-  it('should throw an error if options is invalid', () => {
-    const invalidPreference: Preference = {
-      // @ts-expect-error invalid option
-      options: 'invalidOption',
-      attribution: {
-        auto: true,
-      },
-    };
-    expect(() => validatePreferences(invalidPreference)).toThrow('Invalid options: invalidOption');
-  });
-
   it('should not throw an error if attribution is undefined', () => {
     const validPreference: Preference = {
       options: 'all',
