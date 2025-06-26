@@ -1,4 +1,5 @@
-import { createProvider } from '@coinbase/wallet-sdk';
+import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@coinbase/wallet-sdk';
+import { createCoinbaseWalletSDK as createCoinbaseWalletSDKLatest } from '@coinbase/wallet-sdk-latest';
 
 import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { DisconnectedAlert } from '../components/alerts/DisconnectedAlert';
@@ -12,13 +13,16 @@ type EIP1193ProviderContextProviderProps = {
 };
 
 type EIP1193ProviderContextType = {
-  provider: ReturnType<typeof createProvider>;
+  sdk:
+    | ReturnType<typeof createCoinbaseWalletSDKHEAD>
+    | ReturnType<typeof createCoinbaseWalletSDKLatest>;
+  provider: ReturnType<EIP1193ProviderContextType['sdk']['getProvider']>;
 };
 
 const EIP1193ProviderContext = createContext<EIP1193ProviderContextType | null>(null);
 
 export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderContextProviderProps) {
-  const { scwUrl, config, subAccountsConfig } = useConfig();
+  const { option, version, scwUrl, config, subAccountsConfig } = useConfig();
   const { addEventListeners, removeEventListeners } = useEventListeners();
   const {
     spyOnDisconnectedError,
@@ -26,6 +30,7 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
     onClose: onDisconnectedAlertClose,
   } = useSpyOnDisconnectedError();
 
+  const [sdk, setSdk] = useState(null);
   const [provider, setProvider] = useState(null);
 
   useEffect(() => {
@@ -33,13 +38,21 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
       appName: 'SDK Playground',
       appChainIds: [84532, 8452],
       preference: {
+        options: option ?? 'all',
         attribution: config.attribution,
         keysUrl: scwUrl ?? scwUrls[0],
       },
       subAccounts: subAccountsConfig,
     };
 
-    const newProvider = createProvider(sdkParams);
+    const sdk =
+      version === 'HEAD'
+        ? createCoinbaseWalletSDKHEAD(sdkParams)
+        : createCoinbaseWalletSDKLatest(sdkParams);
+
+    setSdk(sdk);
+
+    const newProvider = sdk.getProvider();
     // biome-ignore lint/suspicious/noConsole: developer feedback
     console.log('Provider:', newProvider);
 
@@ -55,6 +68,8 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
     };
   }, [
     scwUrl,
+    version,
+    option,
     config,
     subAccountsConfig,
     spyOnDisconnectedError,
@@ -64,9 +79,10 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
 
   const value = useMemo(
     () => ({
+      sdk,
       provider,
     }),
-    [provider]
+    [sdk, provider]
   );
 
   return (
