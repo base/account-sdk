@@ -1,7 +1,7 @@
 import { waitFor } from '@testing-library/preact';
 import { Mock, vi } from 'vitest';
 
-import { NAME, VERSION } from '../sdk-info.js';
+import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 import { closePopup, openPopup } from './web.js';
 
@@ -56,16 +56,16 @@ describe('PopupManager', () => {
     );
     expect(popup.focus).toHaveBeenCalledTimes(1);
 
-    expect(url.searchParams.get('sdkName')).toBe(NAME);
-    expect(url.searchParams.get('sdkVersion')).toBe(VERSION);
+    expect(url.searchParams.get('sdkName')).toBe(PACKAGE_NAME);
+    expect(url.searchParams.get('sdkVersion')).toBe(PACKAGE_VERSION);
     expect(url.searchParams.get('origin')).toBe(mockOrigin);
     expect(url.searchParams.get('coop')).toBe('null');
   });
 
   it('should not duplicate parameters when opening a popup with existing params', async () => {
     const url = new URL('https://example.com');
-    url.searchParams.append('sdkName', NAME);
-    url.searchParams.append('sdkVersion', VERSION);
+    url.searchParams.append('sdkName', PACKAGE_NAME);
+    url.searchParams.append('sdkVersion', PACKAGE_VERSION);
     url.searchParams.append('origin', mockOrigin);
     url.searchParams.append('coop', 'null');
 

@@ -1,4 +1,4 @@
-import { CB_KEYS_URL } from ':core/constants.js';
+import { CB_KEYS_URL, PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { AppMetadata, Preference } from ':core/provider/interface.js';
 import {
@@ -7,7 +7,7 @@ import {
   logPopupUnloadReceived,
 } from ':core/telemetry/events/communicator.js';
 import { closePopup, openPopup } from ':util/web.js';
-import { VERSION } from '../../sdk-info.js';
+
 import { ConfigMessage } from '../message/ConfigMessage.js';
 import { Message, MessageID } from '../message/Message.js';
 
@@ -119,7 +119,8 @@ export class Communicator {
         this.postMessage({
           requestId: message.id,
           data: {
-            version: VERSION,
+            version: PACKAGE_VERSION,
+            sdkName: PACKAGE_NAME,
             metadata: this.metadata,
             preference: this.preference,
             location: window.location.toString(),

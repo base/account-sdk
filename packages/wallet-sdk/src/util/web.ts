@@ -1,6 +1,6 @@
+import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
-import { NAME, VERSION } from '../sdk-info.js';
 import { Snackbar } from '../ui/Snackbar/Snackbar.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 
@@ -89,8 +89,8 @@ export function closePopup(popup: Window | null) {
 
 function appendAppInfoQueryParams(url: URL) {
   const params = {
-    sdkName: NAME,
-    sdkVersion: VERSION,
+    sdkName: PACKAGE_NAME,
+    sdkVersion: PACKAGE_VERSION,
     origin: window.location.origin,
     coop: getCrossOriginOpenerPolicy(),
   };

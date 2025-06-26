@@ -7,5 +7,5 @@
     "sourceMap": true
   },
   "include": ["src"],
-  "exclude": ["dist", "build", "**/*.test.*", "mocks", "**/HeartbeatWorker.js"]
+  "exclude": ["dist", "build", "**/*.test.*", "mocks"]
 }

@@ -1,10 +1,10 @@
+import { PACKAGE_VERSION } from ':core/constants.js';
 import { AppMetadata, Preference, SubAccountOptions } from ':core/provider/interface.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { OwnerAccount } from ':core/type/index.js';
 import { Address, Hex } from 'viem';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { StateCreator, createStore } from 'zustand/vanilla';
-import { VERSION } from '../sdk-info.js';
 
 export type ToOwnerAccountFn = () => Promise<{
   account: OwnerAccount | null;
@@ -111,7 +111,7 @@ type ConfigSlice = {
 const createConfigSlice: StateCreator<StoreState, [], [], ConfigSlice> = () => {
   return {
     config: {
-      version: VERSION,
+      version: PACKAGE_VERSION,
     },
   };
 };

@@ -1,12 +1,11 @@
 import { Mock, vi } from 'vitest';
 
-import { AppMetadata, Preference } from 'src/index.js';
+import { AppMetadata, Preference } from ':core/provider/interface.js';
 
-import { VERSION } from '../../sdk-info.js';
+import { CB_KEYS_URL, PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
+import { openPopup } from ':util/web.js';
 import { Message, MessageID } from '../message/Message.js';
 import { Communicator } from './Communicator.js';
-import { CB_KEYS_URL } from ':core/constants.js';
-import { openPopup } from ':util/web.js';
 
 vi.mock(':util/web', () => ({
   openPopup: vi.fn(),
@@ -51,7 +50,7 @@ const appMetadata: AppMetadata = {
   appChainIds: [1],
 };
 
-const preference: Preference = { keysUrl: CB_KEYS_URL, options: 'all' };
+const preference: Preference = { keysUrl: CB_KEYS_URL };
 
 describe('Communicator', () => {
   let urlOrigin: string;
@@ -115,7 +114,8 @@ describe('Communicator', () => {
         1,
         {
           data: {
-            version: VERSION,
+            version: PACKAGE_VERSION,
+            sdkName: PACKAGE_NAME,
             metadata: appMetadata,
             preference,
             location: 'http://localhost:3000/',
@@ -143,7 +143,8 @@ describe('Communicator', () => {
         1,
         {
           data: {
-            version: VERSION,
+            version: PACKAGE_VERSION,
+            sdkName: PACKAGE_NAME,
             metadata: appMetadata,
             preference,
             location: 'http://localhost:3000/',
@@ -166,7 +167,8 @@ describe('Communicator', () => {
         1,
         {
           data: {
-            version: VERSION,
+            version: PACKAGE_VERSION,
+            sdkName: PACKAGE_NAME,
             metadata: appMetadata,
             preference,
             location: 'http://localhost:3000/',

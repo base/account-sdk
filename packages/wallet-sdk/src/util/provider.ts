@@ -1,4 +1,4 @@
-import { NAME, VERSION } from '../sdk-info.js';
+import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import {
   ConstructorOptions,
@@ -18,8 +18,8 @@ export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string)
     mode: 'cors',
     headers: {
       'Content-Type': 'application/json',
-      'X-Cbw-Sdk-Version': VERSION,
-      'X-Cbw-Sdk-Platform': NAME,
+      'X-Cbw-Sdk-Version': PACKAGE_VERSION,
+      'X-Cbw-Sdk-Platform': PACKAGE_NAME,
     },
   });
   const { result, error } = await res.json();

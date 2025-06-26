@@ -1,5 +1,5 @@
+import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { store } from ':store/store.js';
-import { VERSION } from '../../sdk-info.js';
 
 enum ComponentType {
   unknown = 'unknown',
@@ -88,10 +88,10 @@ export function logEvent(
       name,
       {
         ...event,
-        sdkVersion: VERSION,
+        sdkVersion: PACKAGE_VERSION,
+        sdkName: PACKAGE_NAME,
         appName: store.config.get().metadata?.appName ?? '',
         appOrigin: window.location.origin,
-        appPreferredSigner: store.config.get().preference?.options,
       },
       importance
     );

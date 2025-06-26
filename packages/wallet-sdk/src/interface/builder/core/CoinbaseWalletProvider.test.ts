@@ -3,8 +3,8 @@ import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { store } from ':store/store.js';
+import * as providerUtil from ':util/provider.js';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
-import * as providerUtil from './util/provider.js';
 
 function createProvider() {
   return new CoinbaseWalletProvider({

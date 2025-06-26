@@ -1,4 +1,4 @@
-import { VERSION } from '../../sdk-info.js';
+import { PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrorCodes } from './constants.js';
 import { serialize } from './utils.js';
 
@@ -13,7 +13,7 @@ export function serializeError(error: unknown) {
   });
 
   const docUrl = new URL('https://docs.cloud.coinbase.com/wallet-sdk/docs/errors');
-  docUrl.searchParams.set('version', VERSION);
+  docUrl.searchParams.set('version', PACKAGE_VERSION);
   docUrl.searchParams.set('code', serialized.code.toString());
   docUrl.searchParams.set('message', serialized.message);
 
