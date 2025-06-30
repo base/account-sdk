@@ -18,11 +18,11 @@ export type CreateProviderOptions = Partial<AppMetadata> & {
 };
 
 /**
- * Create a provider instance that complies to EIP-1193 standard
- * @param params - Options to create a provider instance.
- * @returns A provider instance.
+ * Create a SDK instance with EIP-1193 compliant provider
+ * @param params - Options to create a base account SDK instance.
+ * @returns An SDK object with a getProvider method that returns an EIP-1193 compliant provider.
  */
-export function createProvider(params: CreateProviderOptions): ProviderInterface {
+export function createSDK(params: CreateProviderOptions) {
   const options: ConstructorOptions = {
     metadata: {
       appName: params.appName || 'Dapp',
@@ -71,5 +71,15 @@ export function createProvider(params: CreateProviderOptions): ProviderInterface
   //  Return the provider
   //  ====================================================================
 
-  return new CoinbaseWalletProvider(options);
+  let provider: ProviderInterface | null = null;
+
+  return {
+    getProvider: () => {
+      if (!provider) {
+        provider = new CoinbaseWalletProvider(options);
+      }
+
+      return provider;
+    },
+  };
 }

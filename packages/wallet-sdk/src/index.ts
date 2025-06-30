@@ -2,5 +2,5 @@
 export type { AppMetadata, Preference, ProviderInterface } from ':core/provider/interface.js';
 
 export { createCoinbaseWalletSDK } from './createCoinbaseWalletSDK.js';
-export { createProvider } from './interface/builder/core/createProvider.js';
+export { createSDK } from './interface/builder/core/createSDK.js';
 export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js';

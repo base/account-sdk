@@ -4,7 +4,7 @@ import * as checkCrossOriginModule from ':util/checkCrossOriginOpenerPolicy.js';
 import * as validatePreferencesModule from ':util/validatePreferences.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
-import { CreateProviderOptions, createProvider } from './createProvider.js';
+import { CreateProviderOptions, createSDK } from './createSDK.js';
 
 // Mock all dependencies
 vi.mock(':store/store.js', () => ({
@@ -55,7 +55,7 @@ describe('createProvider', () => {
 
   describe('Basic functionality', () => {
     it('should create a provider with minimal parameters', () => {
-      const result = createProvider({});
+      const result = createSDK({}).getProvider();
 
       expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
         metadata: {
@@ -77,7 +77,7 @@ describe('createProvider', () => {
         appChainIds: [1, 137],
       };
 
-      createProvider(params);
+      createSDK(params).getProvider();
 
       expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
         metadata: {
@@ -98,7 +98,7 @@ describe('createProvider', () => {
         },
       };
 
-      createProvider(params);
+      createSDK(params).getProvider();
 
       expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
         metadata: {
@@ -122,7 +122,7 @@ describe('createProvider', () => {
         },
       };
 
-      createProvider(params);
+      createSDK(params).getProvider();
 
       expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -154,7 +154,7 @@ describe('createProvider', () => {
         },
       };
 
-      createProvider(params);
+      createSDK(params).getProvider();
 
       expect(mockValidateSubAccount).toHaveBeenCalledWith(mockToOwnerAccount);
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
@@ -179,7 +179,7 @@ describe('createProvider', () => {
         },
       };
 
-      createProvider(params);
+      createSDK(params).getProvider();
 
       expect(mockValidateSubAccount).not.toHaveBeenCalled();
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
@@ -194,7 +194,7 @@ describe('createProvider', () => {
         subAccounts: undefined,
       };
 
-      createProvider(params);
+      createSDK(params).getProvider();
 
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: undefined,
@@ -212,7 +212,7 @@ describe('createProvider', () => {
         paymasterUrls: { 1: 'https://paymaster.example.com' },
       };
 
-      createProvider(params);
+      createSDK(params).getProvider();
 
       expect(mockStore.config.set).toHaveBeenCalledWith({
         metadata: {
@@ -226,7 +226,7 @@ describe('createProvider', () => {
     });
 
     it('should rehydrate store from storage', () => {
-      createProvider({});
+      createSDK({}).getProvider();
 
       expect(mockStore.persist.rehydrate).toHaveBeenCalled();
     });
@@ -235,22 +235,22 @@ describe('createProvider', () => {
   describe('Validation', () => {
     it('should validate preferences', () => {
       const preference = { options: 'all', telemetry: true };
-      createProvider({ preference });
+      createSDK({ preference }).getProvider();
 
       expect(mockValidatePreferences).toHaveBeenCalledWith(preference);
     });
 
     it('should validate sub-account when toOwnerAccount is provided', () => {
       const mockToOwnerAccount = vi.fn();
-      createProvider({
+      createSDK({
         subAccounts: { toOwnerAccount: mockToOwnerAccount },
-      });
+      }).getProvider();
 
       expect(mockValidateSubAccount).toHaveBeenCalledWith(mockToOwnerAccount);
     });
 
     it('should check cross-origin opener policy', () => {
-      createProvider({});
+      createSDK({}).getProvider();
 
       expect(mockCheckCrossOriginOpenerPolicy).toHaveBeenCalled();
     });
@@ -258,25 +258,25 @@ describe('createProvider', () => {
 
   describe('Telemetry', () => {
     it('should load telemetry script when telemetry is not disabled', () => {
-      createProvider({
+      createSDK({
         preference: { telemetry: true },
-      });
+      }).getProvider();
 
       expect(mockLoadTelemetryScript).toHaveBeenCalled();
     });
 
     it('should load telemetry script when telemetry is undefined (default)', () => {
-      createProvider({
+      createSDK({
         preference: {},
-      });
+      }).getProvider();
 
       expect(mockLoadTelemetryScript).toHaveBeenCalled();
     });
 
     it('should not load telemetry script when telemetry is disabled', () => {
-      createProvider({
+      createSDK({
         preference: { telemetry: false },
-      });
+      }).getProvider();
 
       expect(mockLoadTelemetryScript).not.toHaveBeenCalled();
     });
@@ -289,7 +289,7 @@ describe('createProvider', () => {
       });
 
       expect(() => {
-        createProvider({ preference: { options: 'invalid' } });
+        createSDK({ preference: { options: 'invalid' } }).getProvider();
       }).toThrow('Invalid preference');
     });
 
@@ -299,9 +299,9 @@ describe('createProvider', () => {
       });
 
       expect(() => {
-        createProvider({
+        createSDK({
           subAccounts: { toOwnerAccount: 'not-a-function' as any },
-        });
+        }).getProvider();
       }).toThrow('Invalid sub-account function');
     });
   });
@@ -326,7 +326,7 @@ describe('createProvider', () => {
         },
       };
 
-      const result = createProvider(params);
+      const result = createSDK(params).getProvider();
 
       // Check sub-account validation and configuration
       expect(mockValidateSubAccount).toHaveBeenCalledWith(mockToOwnerAccount);
@@ -387,7 +387,7 @@ describe('createProvider', () => {
 
   describe('Edge cases', () => {
     it('should handle null app logo URL', () => {
-      createProvider({ appLogoUrl: null });
+      createSDK({ appLogoUrl: null }).getProvider();
 
       expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -399,7 +399,7 @@ describe('createProvider', () => {
     });
 
     it('should handle empty app chain IDs array', () => {
-      createProvider({ appChainIds: [] });
+      createSDK({ appChainIds: [] }).getProvider();
 
       expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -418,7 +418,7 @@ describe('createProvider', () => {
         customProperty: 'custom value',
       };
 
-      createProvider({ preference: complexPreference });
+      createSDK({ preference: complexPreference }).getProvider();
 
       expect(mockValidatePreferences).toHaveBeenCalledWith(complexPreference);
       expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
