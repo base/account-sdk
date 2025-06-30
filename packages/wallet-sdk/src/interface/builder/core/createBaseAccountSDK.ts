@@ -18,11 +18,11 @@ export type CreateProviderOptions = Partial<AppMetadata> & {
 };
 
 /**
- * Create a SDK instance with EIP-1193 compliant provider
+ * Create Base AccountSDK instance with EIP-1193 compliant provider
  * @param params - Options to create a base account SDK instance.
  * @returns An SDK object with a getProvider method that returns an EIP-1193 compliant provider.
  */
-export function createSDK(params: CreateProviderOptions) {
+export function createBaseAccountSDK(params: CreateProviderOptions) {
   const options: ConstructorOptions = {
     metadata: {
       appName: params.appName || 'Dapp',
