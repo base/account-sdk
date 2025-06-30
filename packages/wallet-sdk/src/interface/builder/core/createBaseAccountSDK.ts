@@ -25,7 +25,7 @@ export type CreateProviderOptions = Partial<AppMetadata> & {
 export function createBaseAccountSDK(params: CreateProviderOptions) {
   const options: ConstructorOptions = {
     metadata: {
-      appName: params.appName || 'Dapp',
+      appName: params.appName || 'App',
       appLogoUrl: params.appLogoUrl || '',
       appChainIds: params.appChainIds || [],
     },

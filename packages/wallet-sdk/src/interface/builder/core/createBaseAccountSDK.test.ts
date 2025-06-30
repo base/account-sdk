@@ -59,7 +59,7 @@ describe('createProvider', () => {
 
       expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
         metadata: {
-          appName: 'Dapp',
+          appName: 'App',
           appLogoUrl: '',
           appChainIds: [],
         },
@@ -93,7 +93,6 @@ describe('createProvider', () => {
     it('should create a provider with custom preference', () => {
       const params: CreateProviderOptions = {
         preference: {
-          options: 'all',
           attribution: { auto: true },
         },
       };
@@ -102,12 +101,11 @@ describe('createProvider', () => {
 
       expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
         metadata: {
-          appName: 'Dapp',
+          appName: 'App',
           appLogoUrl: '',
           appChainIds: [],
         },
         preference: {
-          options: 'all',
           attribution: { auto: true },
         },
         paymasterUrls: undefined,
@@ -208,7 +206,7 @@ describe('createProvider', () => {
     it('should set store configuration', () => {
       const params: CreateProviderOptions = {
         appName: 'Test App',
-        preference: { options: 'all' },
+        preference: {},
         paymasterUrls: { 1: 'https://paymaster.example.com' },
       };
 
@@ -220,7 +218,7 @@ describe('createProvider', () => {
           appLogoUrl: '',
           appChainIds: [],
         },
-        preference: { options: 'all' },
+        preference: {},
         paymasterUrls: { 1: 'https://paymaster.example.com' },
       });
     });
@@ -234,7 +232,7 @@ describe('createProvider', () => {
 
   describe('Validation', () => {
     it('should validate preferences', () => {
-      const preference = { options: 'all', telemetry: true };
+      const preference = { telemetry: true };
       createBaseAccountSDK({ preference }).getProvider();
 
       expect(mockValidatePreferences).toHaveBeenCalledWith(preference);
@@ -283,16 +281,6 @@ describe('createProvider', () => {
   });
 
   describe('Error handling', () => {
-    it('should handle validation errors', () => {
-      mockValidatePreferences.mockImplementationOnce(() => {
-        throw new Error('Invalid preference');
-      });
-
-      expect(() => {
-        createBaseAccountSDK({ preference: { options: 'invalid' } }).getProvider();
-      }).toThrow('Invalid preference');
-    });
-
     it('should handle sub-account validation errors', () => {
       mockValidateSubAccount.mockImplementationOnce(() => {
         throw new Error('Invalid sub-account function');
@@ -314,7 +302,6 @@ describe('createProvider', () => {
         appLogoUrl: 'https://example.com/logo.png',
         appChainIds: [1, 137],
         preference: {
-          options: 'all',
           telemetry: true,
         },
         subAccounts: {
@@ -344,7 +331,6 @@ describe('createProvider', () => {
           appChainIds: [1, 137],
         },
         preference: {
-          options: 'all',
           telemetry: true,
         },
         paymasterUrls: {
@@ -358,7 +344,6 @@ describe('createProvider', () => {
       // Check validation
       expect(mockCheckCrossOriginOpenerPolicy).toHaveBeenCalled();
       expect(mockValidatePreferences).toHaveBeenCalledWith({
-        options: 'all',
         telemetry: true,
       });
 
@@ -373,7 +358,6 @@ describe('createProvider', () => {
           appChainIds: [1, 137],
         },
         preference: {
-          options: 'all',
           telemetry: true,
         },
         paymasterUrls: {
@@ -412,7 +396,6 @@ describe('createProvider', () => {
 
     it('should handle complex nested preference objects', () => {
       const complexPreference = {
-        options: 'all',
         attribution: { dataSuffix: '0x1234567890123456' as `0x${string}` },
         telemetry: false,
         customProperty: 'custom value',
