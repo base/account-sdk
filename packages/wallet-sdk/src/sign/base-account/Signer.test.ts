@@ -108,7 +108,7 @@ describe('Signer', () => {
     mockCommunicator = new Communicator({
       url: CB_KEYS_URL,
       metadata: mockMetadata,
-      preference: { keysUrl: CB_KEYS_URL, options: 'all' },
+      preference: { walletUrl: CB_KEYS_URL, options: 'all' },
     }) as Mocked<Communicator>;
 
     mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window);
@@ -279,7 +279,7 @@ describe('Signer', () => {
         spendPermissions: [],
         config: {
           metadata: mockMetadata,
-          preference: { keysUrl: CB_KEYS_URL, options: 'all' },
+          preference: { walletUrl: CB_KEYS_URL, options: 'all' },
           version: '1.0.0',
         },
         subAccountConfig: undefined,
@@ -1187,7 +1187,7 @@ describe('Signer', () => {
         spendPermissions: [],
         config: {
           metadata: mockMetadata,
-          preference: { keysUrl: CB_KEYS_URL, options: 'all' },
+          preference: { walletUrl: CB_KEYS_URL, options: 'all' },
           version: '1.0.0',
         },
       }));
@@ -1282,7 +1282,7 @@ describe('Signer', () => {
         spendPermissions: [],
         config: {
           metadata: mockMetadata,
-          preference: { keysUrl: CB_KEYS_URL, options: 'all' },
+          preference: { walletUrl: CB_KEYS_URL, options: 'all' },
           version: '1.0.0',
         },
       }));
@@ -1334,7 +1334,7 @@ describe('Signer', () => {
         spendPermissions: [],
         config: {
           metadata: mockMetadata,
-          preference: { keysUrl: CB_KEYS_URL, options: 'all' },
+          preference: { walletUrl: CB_KEYS_URL, options: 'all' },
           version: '1.0.0',
         },
       }));
@@ -1406,7 +1406,7 @@ describe('Signer', () => {
         spendPermissions: [],
         config: {
           metadata: mockMetadata,
-          preference: { keysUrl: CB_KEYS_URL, options: 'all' },
+          preference: { walletUrl: CB_KEYS_URL, options: 'all' },
           version: '1.0.0',
         },
       }));

@@ -50,7 +50,7 @@ const appMetadata: AppMetadata = {
   appChainIds: [1],
 };
 
-const preference: Preference = { keysUrl: CB_KEYS_URL };
+const preference: Preference = { walletUrl: CB_KEYS_URL };
 
 describe('Communicator', () => {
   let urlOrigin: string;

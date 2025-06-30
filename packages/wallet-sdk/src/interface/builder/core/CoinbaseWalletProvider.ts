@@ -25,10 +25,13 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   private readonly communicator: Communicator;
   private readonly signer: Signer;
 
-  constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
+  constructor({
+    metadata,
+    preference: { walletUrl, ...preference },
+  }: Readonly<ConstructorOptions>) {
     super();
     this.communicator = new Communicator({
-      url: keysUrl,
+      url: walletUrl,
       metadata,
       preference,
     });

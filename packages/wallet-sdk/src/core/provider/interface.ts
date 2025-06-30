@@ -64,11 +64,11 @@ export type Attribution =
 
 export type Preference = {
   /**
-   * The URL for the keys popup.
-   * By default, `https://keys.coinbase.com/connect` is used for production. Use `https://keys-dev.coinbase.com/connect` for development environments.
+   * The URL for the wallet popup.
+   * The wallet URL is automatically managed by the SDK. This field should only be used when overriding the default wallet URL with a custom environment is required.
    * @type {string}
    */
-  keysUrl?: string;
+  walletUrl?: string;
   /**
    * @param attribution
    * @type {Attribution}

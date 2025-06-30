@@ -95,7 +95,7 @@ describe('EIP1193ProviderContextProvider', () => {
       preference: {
         options: 'all',
         attribution: { dataSuffix: '0xtestattribution' },
-        keysUrl: 'https://keys-dev.coinbase.com/connect',
+        walletUrl: 'https://keys-dev.coinbase.com/connect',
       },
       subAccounts: {
         enableAutoSubAccounts: true,
@@ -135,7 +135,7 @@ describe('EIP1193ProviderContextProvider', () => {
       preference: {
         options: 'all',
         attribution: { dataSuffix: '0xtestattribution' },
-        keysUrl: 'https://keys-dev.coinbase.com/connect',
+        walletUrl: 'https://keys-dev.coinbase.com/connect',
       },
       subAccounts: {
         enableAutoSubAccounts: true,

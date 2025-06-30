@@ -40,7 +40,7 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
       preference: {
         options: option ?? 'all',
         attribution: config.attribution,
-        keysUrl: scwUrl ?? scwUrls[0],
+        walletUrl: scwUrl ?? scwUrls[0],
       },
       subAccounts: subAccountsConfig,
     };
