@@ -5,6 +5,21 @@ import { h } from 'preact';
 import { describe, expect, it, vi } from 'vitest';
 import { SignInWithBaseButton } from './SignInWithBaseButton.js';
 
+// Mock window.matchMedia for system color scheme tests
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
 describe('SignInWithBaseButton (Preact)', () => {
   it('renders with default props', () => {
     const { container } = render(<SignInWithBaseButton />);
@@ -25,8 +40,8 @@ describe('SignInWithBaseButton (Preact)', () => {
     });
   });
 
-  it('renders with non-centered layout when centered=false', () => {
-    const { container } = render(<SignInWithBaseButton centered={false} />);
+  it('renders with left-aligned layout when align="left"', () => {
+    const { container } = render(<SignInWithBaseButton align="left" />);
     const button = container.querySelector('button');
     const buttonDiv = button?.querySelector('div');
 
@@ -36,8 +51,8 @@ describe('SignInWithBaseButton (Preact)', () => {
     });
   });
 
-  it('applies transparent style when transparent=true', () => {
-    const { container } = render(<SignInWithBaseButton transparent={true} />);
+  it('applies transparent style when variant="transparent"', () => {
+    const { container } = render(<SignInWithBaseButton variant="transparent" />);
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
@@ -45,8 +60,8 @@ describe('SignInWithBaseButton (Preact)', () => {
     expect(style).toContain('border: 1px solid #1e2025');
   });
 
-  it('applies dark mode transparent style when transparent=true and darkMode=true', () => {
-    const { container } = render(<SignInWithBaseButton transparent={true} darkMode={true} />);
+  it('applies dark mode transparent style when variant="transparent" and colorScheme="dark"', () => {
+    const { container } = render(<SignInWithBaseButton variant="transparent" colorScheme="dark" />);
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
@@ -54,8 +69,18 @@ describe('SignInWithBaseButton (Preact)', () => {
     expect(style).toContain('border: 1px solid #282b31');
   });
 
-  it('applies dark mode styles when darkMode=true', () => {
-    const { container } = render(<SignInWithBaseButton darkMode={true} />);
+  it('applies dark mode styles when colorScheme="dark"', () => {
+    const { container } = render(<SignInWithBaseButton colorScheme="dark" />);
+    const button = container.querySelector('button');
+
+    expect(button).toHaveStyle({
+      backgroundColor: '#FFF',
+      color: '#000',
+    });
+  });
+
+  it('applies light mode styles when colorScheme="light"', () => {
+    const { container } = render(<SignInWithBaseButton colorScheme="light" />);
     const button = container.querySelector('button');
 
     expect(button).toHaveStyle({
@@ -64,8 +89,20 @@ describe('SignInWithBaseButton (Preact)', () => {
     });
   });
 
-  it('applies light mode styles by default', () => {
-    const { container } = render(<SignInWithBaseButton />);
+  it('detects system dark mode when colorScheme="system"', () => {
+    // Mock dark mode preference
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query === '(prefers-color-scheme: dark)',
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    const { container } = render(<SignInWithBaseButton colorScheme="system" />);
     const button = container.querySelector('button');
 
     expect(button).toHaveStyle({
@@ -100,8 +137,8 @@ describe('SignInWithBaseButton (Preact)', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  it('renders TheSquare component with correct props', () => {
-    const { container } = render(<SignInWithBaseButton darkMode={true} />);
+  it('renders BaseLogo component with correct dimensions', () => {
+    const { container } = render(<SignInWithBaseButton colorScheme="dark" />);
     const svg = container.querySelector('svg');
 
     expect(svg).toBeInTheDocument();
@@ -109,18 +146,34 @@ describe('SignInWithBaseButton (Preact)', () => {
     expect(svg).toHaveAttribute('height', '17');
   });
 
-  it('renders TheSquare with dark mode styling', () => {
-    const { container } = render(<SignInWithBaseButton darkMode={true} />);
+  it('renders BaseLogo with blue fill in dark mode solid variant', () => {
+    const { container } = render(<SignInWithBaseButton colorScheme="dark" />);
+    const path = container.querySelector('path');
+
+    expect(path).toHaveAttribute('fill', '#0000FF');
+  });
+
+  it('renders BaseLogo with white fill in light mode solid variant', () => {
+    const { container } = render(<SignInWithBaseButton colorScheme="light" />);
     const path = container.querySelector('path');
 
     expect(path).toHaveAttribute('fill', '#FFF');
   });
 
-  it('renders TheSquare with light mode styling', () => {
-    const { container } = render(<SignInWithBaseButton darkMode={false} />);
+  it('renders BaseLogo with blue fill in transparent light mode', () => {
+    const { container } = render(
+      <SignInWithBaseButton variant="transparent" colorScheme="light" />
+    );
     const path = container.querySelector('path');
 
     expect(path).toHaveAttribute('fill', '#0000FF');
+  });
+
+  it('renders BaseLogo with white fill in transparent dark mode', () => {
+    const { container } = render(<SignInWithBaseButton variant="transparent" colorScheme="dark" />);
+    const path = container.querySelector('path');
+
+    expect(path).toHaveAttribute('fill', '#FFF');
   });
 
   it('does not call onClick when not provided', () => {
@@ -132,7 +185,7 @@ describe('SignInWithBaseButton (Preact)', () => {
   });
 
   it('combines transparent and dark mode styles correctly', () => {
-    const { container } = render(<SignInWithBaseButton transparent={true} darkMode={true} />);
+    const { container } = render(<SignInWithBaseButton variant="transparent" colorScheme="dark" />);
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
@@ -142,7 +195,9 @@ describe('SignInWithBaseButton (Preact)', () => {
   });
 
   it('combines transparent and light mode styles correctly', () => {
-    const { container } = render(<SignInWithBaseButton transparent={true} darkMode={false} />);
+    const { container } = render(
+      <SignInWithBaseButton variant="transparent" colorScheme="light" />
+    );
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
