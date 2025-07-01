@@ -1,5 +1,6 @@
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
+import { BRAND_BLUE, WHITE } from './colors.js';
 
 export const TheSquare = ({ darkMode }: { darkMode: boolean }) => (
   <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -9,6 +10,3 @@ export const TheSquare = ({ darkMode }: { darkMode: boolean }) => (
     />
   </svg>
 );
-
-const BRAND_BLUE = '#0000FF';
-const WHITE = 'white';

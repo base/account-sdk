@@ -42,7 +42,7 @@ describe('TheSquare', () => {
     const { container } = render(<TheSquare darkMode={true} />);
     const path = container.querySelector('path');
 
-    expect(path).toHaveAttribute('fill', 'white');
+    expect(path).toHaveAttribute('fill', '#FFF');
   });
 
   it('has correct path data', () => {
@@ -76,7 +76,7 @@ describe('TheSquare', () => {
     const darkPath = darkContainer.querySelector('path');
 
     expect(lightPath?.getAttribute('fill')).toBe('#0000FF');
-    expect(darkPath?.getAttribute('fill')).toBe('white');
+    expect(darkPath?.getAttribute('fill')).toBe('#FFF');
     expect(lightPath?.getAttribute('fill')).not.toBe(darkPath?.getAttribute('fill'));
   });
 
