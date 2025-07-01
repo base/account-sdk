@@ -1,8 +1,8 @@
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
-import { BaseLogo } from '../../assets/BaseLogo.js';
 import { BLACK, DARK_MODE_BOARDER, LIGHT_MODE_BOARDER, WHITE } from '../../assets/colors.js';
 import { SignInWithBaseButtonProps } from '../../types.js';
+import { BaseLogo } from './BaseLogo.js';
 
 export const SignInWithBaseButton = ({
   align = 'center',
