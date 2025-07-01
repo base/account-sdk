@@ -30,16 +30,19 @@
     "clean": "rm -rf dist && rm -rf node_modules",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
-    "build": "rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias",
+    "build": "yarn workspace @base/account-ui-preact build && yarn workspace @base/account-ui-react build && rm -rf ./dist && rollup -c",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint ."
   },
-  "dependencies": {
-    "@base/account-ui-preact": "workspace:*",
-    "@base/account-ui-react": "workspace:*"
-  },
   "devDependencies": {
+        "@base/account-ui-preact": "workspace:*",
+    "@base/account-ui-react": "workspace:*",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
     "@vitest/coverage-v8": "2.1.2",
+    "rollup": "^4.0.0",
+    "rollup-plugin-dts": "^6.0.0",
     "tsc-alias": "^1.8.8",
     "tslib": "^2.6.0",
     "typescript": "^5.1.6",
