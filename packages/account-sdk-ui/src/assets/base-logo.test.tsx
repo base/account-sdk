@@ -2,7 +2,7 @@ import { render } from '@testing-library/preact';
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
 import { describe, expect, it } from 'vitest';
-import { TheSquare } from './the-square.js';
+import { TheSquare } from './base-logo.js';
 
 describe('TheSquare', () => {
   it('renders an SVG element', () => {

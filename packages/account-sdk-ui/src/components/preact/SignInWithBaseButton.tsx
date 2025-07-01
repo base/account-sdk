@@ -1,6 +1,6 @@
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
-import { TheSquare } from '../../assets/the-square.js';
+import { TheSquare } from '../../assets/base-logo.js';
 import { SignInWithBaseButtonProps } from '../../types.js';
 
 export const SignInWithBaseButton = ({
