@@ -2,11 +2,11 @@ import { render } from '@testing-library/preact';
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
 import { describe, expect, it } from 'vitest';
-import { TheSquare } from './base-logo.js';
+import { BaseLogo } from './BaseLogo.js';
 
-describe('TheSquare', () => {
+describe('BaseLogo', () => {
   it('renders an SVG element', () => {
-    const { container } = render(<TheSquare darkMode={false} />);
+    const { container } = render(<BaseLogo darkMode={false} />);
     const svg = container.querySelector('svg');
 
     expect(svg).toBeInTheDocument();
@@ -14,7 +14,7 @@ describe('TheSquare', () => {
   });
 
   it('has correct SVG attributes', () => {
-    const { container } = render(<TheSquare darkMode={false} />);
+    const { container } = render(<BaseLogo darkMode={false} />);
     const svg = container.querySelector('svg');
 
     expect(svg).toHaveAttribute('width', '16');
@@ -25,28 +25,28 @@ describe('TheSquare', () => {
   });
 
   it('contains a path element', () => {
-    const { container } = render(<TheSquare darkMode={false} />);
+    const { container } = render(<BaseLogo darkMode={false} />);
     const path = container.querySelector('path');
 
     expect(path).toBeInTheDocument();
   });
 
   it('applies brand blue fill in light mode', () => {
-    const { container } = render(<TheSquare darkMode={false} />);
+    const { container } = render(<BaseLogo darkMode={false} />);
     const path = container.querySelector('path');
 
     expect(path).toHaveAttribute('fill', '#0000FF');
   });
 
   it('applies white fill in dark mode', () => {
-    const { container } = render(<TheSquare darkMode={true} />);
+    const { container } = render(<BaseLogo darkMode={true} />);
     const path = container.querySelector('path');
 
     expect(path).toHaveAttribute('fill', '#FFF');
   });
 
   it('has correct path data', () => {
-    const { container } = render(<TheSquare darkMode={false} />);
+    const { container } = render(<BaseLogo darkMode={false} />);
     const path = container.querySelector('path');
 
     const expectedPath =
@@ -56,8 +56,8 @@ describe('TheSquare', () => {
   });
 
   it('renders consistently with same props', () => {
-    const { container: container1 } = render(<TheSquare darkMode={true} />);
-    const { container: container2 } = render(<TheSquare darkMode={true} />);
+    const { container: container1 } = render(<BaseLogo darkMode={true} />);
+    const { container: container2 } = render(<BaseLogo darkMode={true} />);
 
     const svg1 = container1.querySelector('svg');
     const svg2 = container2.querySelector('svg');
@@ -69,8 +69,8 @@ describe('TheSquare', () => {
   });
 
   it('renders different colors for different modes', () => {
-    const { container: lightContainer } = render(<TheSquare darkMode={false} />);
-    const { container: darkContainer } = render(<TheSquare darkMode={true} />);
+    const { container: lightContainer } = render(<BaseLogo darkMode={false} />);
+    const { container: darkContainer } = render(<BaseLogo darkMode={true} />);
 
     const lightPath = lightContainer.querySelector('path');
     const darkPath = darkContainer.querySelector('path');
@@ -81,7 +81,7 @@ describe('TheSquare', () => {
   });
 
   it('is accessible', () => {
-    const { container } = render(<TheSquare darkMode={false} />);
+    const { container } = render(<BaseLogo darkMode={false} />);
     const svg = container.querySelector('svg');
 
     // SVG should have proper structure for accessibility
@@ -90,7 +90,7 @@ describe('TheSquare', () => {
   });
 
   it('maintains aspect ratio', () => {
-    const { container } = render(<TheSquare darkMode={false} />);
+    const { container } = render(<BaseLogo darkMode={false} />);
     const svg = container.querySelector('svg');
 
     // 16:17 aspect ratio should be maintained through viewBox
