@@ -1,6 +1,6 @@
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
-import { BRAND_BLUE, WHITE } from './colors.js';
+import { BRAND_BLUE, WHITE } from '../../assets/colors.js';
 
 export const BaseLogo = ({ fill }: { fill: 'blue' | 'white' }) => (
   <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
