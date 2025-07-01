@@ -1,6 +1,6 @@
 export type SignInWithBaseButtonProps = {
-  centered?: boolean;
-  transparent?: boolean;
-  darkMode?: boolean;
+  align?: 'left' | 'center';
+  variant?: 'solid' | 'transparent';
+  colorScheme?: 'light' | 'dark' | 'system';
   onClick?: () => void;
 };
