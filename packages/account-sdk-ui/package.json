@@ -12,8 +12,16 @@
     "web3"
   ],
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "exports": {
+    "./preact": {
+      "types": "./dist/components/preact/index.d.ts",
+      "default": "./dist/components/preact/index.js"
+    },
+    "./react": {
+      "types": "./dist/components/react/index.d.ts",
+      "default": "./dist/components/react/index.js"
+    }
+  },
   "sideEffects": false,
   "repository": "https://github.com/base/account-sdk.git",
   "author": "Base",
@@ -22,8 +30,7 @@
     "clean": "rm -rf dist && rm -rf node_modules",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
-    "prebuild": "rm -rf ./dist",
-    "build": "tsc -p ./tsconfig.build.json && tsc-alias",
+    "build": "rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint ."
   },
