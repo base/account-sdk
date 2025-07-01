@@ -1,8 +1,8 @@
 import { cleanup, render } from '@testing-library/react';
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SignInWithBaseButtonProps } from '../../types.js';
 import * as mountModule from '../preact/mountSignInWithBaseButton.js';
+import type { SignInWithBaseButtonProps } from '../types.js';
 import { SignInWithBaseButton } from './SignInWithBaseButton.js';
 
 // Mock the mount/unmount functions

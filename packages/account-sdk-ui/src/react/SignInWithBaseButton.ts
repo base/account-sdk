@@ -1,9 +1,9 @@
 import { FC, createElement, useEffect, useRef } from 'react';
-import { SignInWithBaseButtonProps } from '../../types.js';
 import {
   mountSignInWithBaseButton,
   unmountSignInWithBaseButton,
 } from '../preact/mountSignInWithBaseButton.js';
+import { SignInWithBaseButtonProps } from '../types.js';
 
 export const SignInWithBaseButton: FC<SignInWithBaseButtonProps> = (
   props: SignInWithBaseButtonProps

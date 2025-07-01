@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as injectFontModule from '../../fonts/injectFontStyle.js';
+import * as injectFontModule from '../fonts/injectFontStyle.js';
 import {
   mountSignInWithBaseButton,
   unmountSignInWithBaseButton,

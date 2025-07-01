@@ -1,6 +1,6 @@
 import { render } from 'preact';
-import { injectFontStyle } from '../../fonts/injectFontStyle.js';
-import { SignInWithBaseButtonProps } from '../../types.js';
+import { injectFontStyle } from '../fonts/injectFontStyle.js';
+import { SignInWithBaseButtonProps } from '../types.js';
 import { SignInWithBaseButton } from './SignInWithBaseButton.js';
 
 export function mountSignInWithBaseButton(
