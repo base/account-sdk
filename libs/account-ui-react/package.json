@@ -11,8 +11,8 @@
     "web3"
   ],
   "type": "module",
-  "main": "./dist/account-ui-react/index.js",
-  "types": "./dist/account-ui-react/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "sideEffects": false,
   "repository": "https://github.com/base/account-sdk.git",
   "author": "Base",

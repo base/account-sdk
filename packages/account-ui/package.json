@@ -1,7 +1,7 @@
 {
-  "name": "@base/account-sdk-ui",
+  "name": "@base/account-ui",
   "version": "1.0.0",
-  "description": "Base Account SDK UI Components",
+  "description": "Base Account UI Components",
   "keywords": [
     "base",
     "account",
@@ -14,12 +14,12 @@
   "type": "module",
   "exports": {
     "./preact": {
-      "types": "./dist/components/preact/index.d.ts",
-      "default": "./dist/components/preact/index.js"
+      "types": "./dist/index.preact.d.ts",
+      "default": "./dist/index.preact.js"
     },
     "./react": {
-      "types": "./dist/components/react/index.d.ts",
-      "default": "./dist/components/react/index.js"
+      "types": "./dist/index.react.d.ts",
+      "default": "./dist/index.react.js"
     }
   },
   "sideEffects": false,
@@ -34,21 +34,18 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome lint ."
   },
+  "dependencies": {
+    "@base/account-ui-preact": "workspace:*",
+    "@base/account-ui-react": "workspace:*"
+  },
   "devDependencies": {
-    "@coinbase/wallet-sdk": "workspace:*",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/preact": "^3.2.4",
-    "@testing-library/react": "^16.3.0",
-    "@types/react": "^19.1.8",
     "@vitest/coverage-v8": "2.1.2",
-    "preact": "^10.26.9",
     "tsc-alias": "^1.8.8",
     "tslib": "^2.6.0",
     "typescript": "^5.1.6",
     "vitest": "^2.1.9"
   },
   "peerDependencies": {
-    "@coinbase/wallet-sdk": "*",
     "preact": "*",
     "react": "*"
   },

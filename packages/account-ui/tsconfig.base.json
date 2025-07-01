@@ -7,10 +7,6 @@
     "baseUrl": ".",
     "rootDir": "./src",
     "outDir": "./dist",
-    "paths": {
-      ":components/*": ["src/components/*"],
-      ":types/*": ["src/types/*"]
-    },
     "target": "es2017",
     "jsx": "react",
     "jsxFactory": "h",
