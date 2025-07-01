@@ -1,11 +1,13 @@
-import { createElement, useEffect, useRef } from 'react';
+import { FC, createElement, useEffect, useRef } from 'react';
 import { SignInWithBaseButtonProps } from '../../types.js';
 import {
   mountSignInWithBaseButton,
   unmountSignInWithBaseButton,
 } from '../preact/mountSignInWithBaseButton.js';
 
-export function SignInWithBaseButton(props: SignInWithBaseButtonProps = {}) {
+export const SignInWithBaseButton: FC<SignInWithBaseButtonProps> = (
+  props: SignInWithBaseButtonProps
+) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,4 +25,4 @@ export function SignInWithBaseButton(props: SignInWithBaseButtonProps = {}) {
   }, [props]);
 
   return createElement('div', { ref });
-}
+};
