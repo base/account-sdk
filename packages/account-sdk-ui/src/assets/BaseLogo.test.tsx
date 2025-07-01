@@ -6,7 +6,7 @@ import { BaseLogo } from './BaseLogo.js';
 
 describe('BaseLogo', () => {
   it('renders an SVG element', () => {
-    const { container } = render(<BaseLogo darkMode={false} />);
+    const { container } = render(<BaseLogo fill="blue" />);
     const svg = container.querySelector('svg');
 
     expect(svg).toBeInTheDocument();
@@ -14,7 +14,7 @@ describe('BaseLogo', () => {
   });
 
   it('has correct SVG attributes', () => {
-    const { container } = render(<BaseLogo darkMode={false} />);
+    const { container } = render(<BaseLogo fill="blue" />);
     const svg = container.querySelector('svg');
 
     expect(svg).toHaveAttribute('width', '16');
@@ -25,28 +25,28 @@ describe('BaseLogo', () => {
   });
 
   it('contains a path element', () => {
-    const { container } = render(<BaseLogo darkMode={false} />);
+    const { container } = render(<BaseLogo fill="blue" />);
     const path = container.querySelector('path');
 
     expect(path).toBeInTheDocument();
   });
 
-  it('applies brand blue fill in light mode', () => {
-    const { container } = render(<BaseLogo darkMode={false} />);
+  it('applies brand blue fill when fill is blue', () => {
+    const { container } = render(<BaseLogo fill="blue" />);
     const path = container.querySelector('path');
 
     expect(path).toHaveAttribute('fill', '#0000FF');
   });
 
-  it('applies white fill in dark mode', () => {
-    const { container } = render(<BaseLogo darkMode={true} />);
+  it('applies white fill when fill is white', () => {
+    const { container } = render(<BaseLogo fill="white" />);
     const path = container.querySelector('path');
 
     expect(path).toHaveAttribute('fill', '#FFF');
   });
 
   it('has correct path data', () => {
-    const { container } = render(<BaseLogo darkMode={false} />);
+    const { container } = render(<BaseLogo fill="blue" />);
     const path = container.querySelector('path');
 
     const expectedPath =
@@ -56,8 +56,8 @@ describe('BaseLogo', () => {
   });
 
   it('renders consistently with same props', () => {
-    const { container: container1 } = render(<BaseLogo darkMode={true} />);
-    const { container: container2 } = render(<BaseLogo darkMode={true} />);
+    const { container: container1 } = render(<BaseLogo fill="white" />);
+    const { container: container2 } = render(<BaseLogo fill="white" />);
 
     const svg1 = container1.querySelector('svg');
     const svg2 = container2.querySelector('svg');
@@ -68,20 +68,20 @@ describe('BaseLogo', () => {
     expect(path1?.getAttribute('fill')).toBe(path2?.getAttribute('fill'));
   });
 
-  it('renders different colors for different modes', () => {
-    const { container: lightContainer } = render(<BaseLogo darkMode={false} />);
-    const { container: darkContainer } = render(<BaseLogo darkMode={true} />);
+  it('renders different colors for different fill values', () => {
+    const { container: blueContainer } = render(<BaseLogo fill="blue" />);
+    const { container: whiteContainer } = render(<BaseLogo fill="white" />);
 
-    const lightPath = lightContainer.querySelector('path');
-    const darkPath = darkContainer.querySelector('path');
+    const bluePath = blueContainer.querySelector('path');
+    const whitePath = whiteContainer.querySelector('path');
 
-    expect(lightPath?.getAttribute('fill')).toBe('#0000FF');
-    expect(darkPath?.getAttribute('fill')).toBe('#FFF');
-    expect(lightPath?.getAttribute('fill')).not.toBe(darkPath?.getAttribute('fill'));
+    expect(bluePath?.getAttribute('fill')).toBe('#0000FF');
+    expect(whitePath?.getAttribute('fill')).toBe('#FFF');
+    expect(bluePath?.getAttribute('fill')).not.toBe(whitePath?.getAttribute('fill'));
   });
 
   it('is accessible', () => {
-    const { container } = render(<BaseLogo darkMode={false} />);
+    const { container } = render(<BaseLogo fill="blue" />);
     const svg = container.querySelector('svg');
 
     // SVG should have proper structure for accessibility
@@ -90,7 +90,7 @@ describe('BaseLogo', () => {
   });
 
   it('maintains aspect ratio', () => {
-    const { container } = render(<BaseLogo darkMode={false} />);
+    const { container } = render(<BaseLogo fill="blue" />);
     const svg = container.querySelector('svg');
 
     // 16:17 aspect ratio should be maintained through viewBox

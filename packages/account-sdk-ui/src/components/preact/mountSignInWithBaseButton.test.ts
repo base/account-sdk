@@ -10,6 +10,21 @@ vi.mock('../../fonts/injectFontStyle.js', () => ({
   injectFontStyle: vi.fn(),
 }));
 
+// Mock window.matchMedia for system color scheme tests
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
 describe('mountSignInWithBaseButton', () => {
   let container: HTMLElement;
   let mockInjectFontStyle: ReturnType<typeof vi.fn>;
@@ -28,9 +43,9 @@ describe('mountSignInWithBaseButton', () => {
 
   it('mounts the SignInWithBaseButton component', () => {
     const props = {
-      centered: true,
-      transparent: false,
-      darkMode: false,
+      align: 'center' as const,
+      variant: 'solid' as const,
+      colorScheme: 'light' as const,
       onClick: vi.fn(),
     };
 
@@ -52,9 +67,9 @@ describe('mountSignInWithBaseButton', () => {
   it('passes props correctly to the component', () => {
     const onClick = vi.fn();
     const props = {
-      centered: false,
-      transparent: true,
-      darkMode: true,
+      align: 'left' as const,
+      variant: 'transparent' as const,
+      colorScheme: 'dark' as const,
       onClick,
     };
 
@@ -97,9 +112,69 @@ describe('mountSignInWithBaseButton', () => {
       justifyContent: 'center',
       gap: '8px',
     });
+    // Default is system theme, and our mock returns light mode
+    expect(button).toHaveStyle({
+      backgroundColor: '#000',
+      color: '#FFF',
+    });
+  });
+
+  it('mounts with light mode styles', () => {
+    const props = {
+      colorScheme: 'light' as const,
+    };
+
+    mountSignInWithBaseButton(container, props);
+
+    const button = container.querySelector('button');
+    expect(button).toHaveStyle({
+      backgroundColor: '#000',
+      color: '#FFF',
+    });
+  });
+
+  it('mounts with dark mode styles', () => {
+    const props = {
+      colorScheme: 'dark' as const,
+    };
+
+    mountSignInWithBaseButton(container, props);
+
+    const button = container.querySelector('button');
     expect(button).toHaveStyle({
       backgroundColor: '#FFF',
       color: '#000',
+    });
+  });
+
+  it('mounts with transparent variant', () => {
+    const props = {
+      variant: 'transparent' as const,
+      colorScheme: 'light' as const,
+    };
+
+    mountSignInWithBaseButton(container, props);
+
+    const button = container.querySelector('button');
+    const buttonStyle = button?.getAttribute('style');
+
+    expect(buttonStyle).toContain('background-color: transparent');
+    expect(buttonStyle).toContain('border: 1px solid #1e2025');
+  });
+
+  it('mounts with left alignment', () => {
+    const props = {
+      align: 'left' as const,
+    };
+
+    mountSignInWithBaseButton(container, props);
+
+    const button = container.querySelector('button');
+    const buttonDiv = button?.querySelector('div');
+
+    expect(buttonDiv).toHaveStyle({
+      justifyContent: 'flex-start',
+      gap: '16px',
     });
   });
 });
