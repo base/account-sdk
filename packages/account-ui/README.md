@@ -12,7 +12,7 @@ This package provides UI components for both **React** and **Preact** applicatio
 ## Installation
 
 ```bash
-npm install @base/account-sdk-ui
+npm install @base/account-ui
 ```
 
 ## Usage
@@ -20,11 +20,11 @@ npm install @base/account-sdk-ui
 ### React
 
 ```tsx
-import { ReactSignInWithBaseButton } from '@base/account-sdk-ui';
+import { SignInWithBaseButton } from '@base/account-ui/react';
 
 function App() {
   return (
-    <ReactSignInWithBaseButton 
+    <SignInWithBaseButton 
       onClick={() => console.log('Sign in clicked!')}
       centered={true}
       darkMode={false}
@@ -37,11 +37,11 @@ function App() {
 ### Preact
 
 ```tsx
-import { PreactSignInWithBaseButton } from '@base/account-sdk-ui';
+import { SignInWithBaseButton } from '@base/account-ui/preact';
 
 function App() {
   return (
-    <PreactSignInWithBaseButton 
+    <SignInWithBaseButton 
       onClick={() => console.log('Sign in clicked!')}
       centered={true}
       darkMode={false}
@@ -51,23 +51,6 @@ function App() {
 }
 ```
 
-### Preact with Mounting Utilities
-
-```tsx
-import { mountSignInWithBaseButton, unmountSignInWithBaseButton } from '@base/account-sdk-ui';
-
-// Mount to a DOM element
-const container = document.getElementById('button-container');
-mountSignInWithBaseButton(container, {
-  onClick: () => console.log('Sign in clicked!'),
-  centered: true,
-  darkMode: false,
-  transparent: false,
-});
-
-// Cleanup when done
-unmountSignInWithBaseButton(container);
-```
 
 ## Props
 
@@ -77,35 +60,3 @@ unmountSignInWithBaseButton(container);
 | `transparent` | `boolean` | `false` | Use transparent background with border |
 | `darkMode` | `boolean` | `false` | Use dark theme colors |
 | `onClick` | `() => void` | `undefined` | Click handler |
-
-## Development
-
-This package uses separate TypeScript configurations for each framework:
-
-- `tsconfig.preact.json` - Preact-specific compilation
-- `tsconfig.react.json` - React-specific compilation  
-- `tsconfig.base.json` - Shared base configuration
-
-### Build Commands
-
-```bash
-# Build all frameworks
-npm run build
-
-# Build specific framework
-npm run build:preact
-npm run build:react
-
-# TypeScript checking
-npm run typecheck
-npm run typecheck:preact
-npm run typecheck:react
-```
-
-## Architecture
-
-This setup allows:
-- **Preact components** compiled with `jsxImportSource: "preact"`
-- **React components** compiled with `jsxImportSource: "react"`
-- **No JSX conflicts** between frameworks
-- **Optimized bundles** for each framework 

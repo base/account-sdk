@@ -6,7 +6,7 @@ import {
 } from './mountSignInWithBaseButton.js';
 
 // Mock the font injection module
-vi.mock('../../fonts/injectFontStyle.js', () => ({
+vi.mock('./fonts/injectFontStyle.js', () => ({
   injectFontStyle: vi.fn(),
 }));
 
