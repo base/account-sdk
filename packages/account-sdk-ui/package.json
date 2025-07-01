@@ -1,0 +1,53 @@
+{
+  "name": "@base/account-sdk-ui",
+  "version": "1.0.0",
+  "description": "Base Account SDK UI Components",
+  "keywords": [
+    "base",
+    "account",
+    "ui",
+    "components",
+    "react",
+    "preact",
+    "web3"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "repository": "https://github.com/base/account-sdk.git",
+  "author": "Base",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rm -rf dist && rm -rf node_modules",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "prebuild": "rm -rf ./dist",
+    "build": "tsc -p ./tsconfig.build.json && tsc-alias",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint ."
+  },
+  "devDependencies": {
+    "@coinbase/wallet-sdk": "workspace:*",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/preact": "^3.2.4",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.1.8",
+    "@vitest/coverage-v8": "2.1.2",
+    "preact": "^10.26.9",
+    "tsc-alias": "^1.8.8",
+    "tslib": "^2.6.0",
+    "typescript": "^5.1.6",
+    "vitest": "^2.1.9"
+  },
+  "peerDependencies": {
+    "@coinbase/wallet-sdk": "*",
+    "preact": "*",
+    "react": "*"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  }
+}
