@@ -1,0 +1,43 @@
+{
+  "name": "@base/account-ui-react",
+  "version": "1.0.0",
+  "description": "Base Account UI Components",
+  "keywords": [
+    "base",
+    "account",
+    "ui",
+    "components",
+    "react",
+    "web3"
+  ],
+  "type": "module",
+  "main": "./dist/account-ui-react/index.js",
+  "types": "./dist/account-ui-react/index.d.ts",
+  "sideEffects": false,
+  "repository": "https://github.com/base/account-sdk.git",
+  "author": "Base",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rm -rf dist && rm -rf node_modules",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "build": "rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint ."
+  },
+  "dependencies": {
+    "@base/account-ui-preact": "workspace:*"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.1.8",
+    "@vitest/coverage-v8": "2.1.2",
+    "tsc-alias": "^1.8.8",
+    "tslib": "^2.6.0",
+    "typescript": "^5.1.6",
+    "vitest": "^2.1.9"
+  },
+  "peerDependencies": {
+    "react": "*"
+  }
+}

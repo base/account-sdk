@@ -204,6 +204,40 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@base/account-ui-preact@workspace:*, @base/account-ui-preact@workspace:libs/account-ui-preact":
+  version: 0.0.0-use.local
+  resolution: "@base/account-ui-preact@workspace:libs/account-ui-preact"
+  dependencies:
+    "@testing-library/preact": "npm:^3.2.4"
+    "@types/react": "npm:^19.1.8"
+    "@vitest/coverage-v8": "npm:2.1.2"
+    preact: "npm:^10.26.9"
+    tsc-alias: "npm:^1.8.8"
+    tslib: "npm:^2.6.0"
+    typescript: "npm:^5.1.6"
+    vitest: "npm:^2.1.9"
+  peerDependencies:
+    preact: "*"
+  languageName: unknown
+  linkType: soft
+
+"@base/account-ui-react@workspace:libs/account-ui-react":
+  version: 0.0.0-use.local
+  resolution: "@base/account-ui-react@workspace:libs/account-ui-react"
+  dependencies:
+    "@base/account-ui-preact": "workspace:*"
+    "@testing-library/react": "npm:^16.3.0"
+    "@types/react": "npm:^19.1.8"
+    "@vitest/coverage-v8": "npm:2.1.2"
+    tsc-alias: "npm:^1.8.8"
+    tslib: "npm:^2.6.0"
+    typescript: "npm:^5.1.6"
+    vitest: "npm:^2.1.9"
+  peerDependencies:
+    react: "*"
+  languageName: unknown
+  linkType: soft
+
 "@bcoe/v8-coverage@npm:^0.2.3":
   version: 0.2.3
   resolution: "@bcoe/v8-coverage@npm:0.2.3"
