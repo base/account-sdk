@@ -113,7 +113,7 @@ describe('SignInWithBaseButton (Preact)', () => {
     const { container } = render(<SignInWithBaseButton darkMode={true} />);
     const path = container.querySelector('path');
 
-    expect(path).toHaveAttribute('fill', 'white');
+    expect(path).toHaveAttribute('fill', '#FFF');
   });
 
   it('renders TheSquare with light mode styling', () => {

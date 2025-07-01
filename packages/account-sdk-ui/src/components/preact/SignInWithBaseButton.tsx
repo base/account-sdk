@@ -1,6 +1,7 @@
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
 import { TheSquare } from '../../assets/base-logo.js';
+import { BLACK, DARK_MODE_BOARDER, LIGHT_MODE_BOARDER, WHITE } from '../../assets/colors.js';
 import { SignInWithBaseButtonProps } from '../../types.js';
 
 export const SignInWithBaseButton = ({
@@ -42,8 +43,3 @@ export const SignInWithBaseButton = ({
     </button>
   );
 };
-
-const LIGHT_MODE_BOARDER = '#1E2025';
-const DARK_MODE_BOARDER = '#282B31';
-const WHITE = '#FFF';
-const BLACK = '#000';
