@@ -7,6 +7,7 @@ import { SignInWithBaseButton } from './SignInWithBaseButton.js';
 
 // Mock the mount/unmount functions
 vi.mock('@base/account-ui-preact', () => ({
+  ...vi.importActual('@base/account-ui-preact'),
   mountSignInWithBaseButton: vi.fn(),
   unmountSignInWithBaseButton: vi.fn(),
 }));
