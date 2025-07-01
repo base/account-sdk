@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SignInWithBaseButton } from './SignInWithBaseButton.js';
 
 // Mock the mount/unmount functions
-vi.mock('../preact/mountSignInWithBaseButton.js', () => ({
+vi.mock('@base/account-ui-preact', () => ({
   mountSignInWithBaseButton: vi.fn(),
   unmountSignInWithBaseButton: vi.fn(),
 }));
