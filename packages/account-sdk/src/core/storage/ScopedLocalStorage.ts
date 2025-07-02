@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
 // TODO: clean up, or possibly deprecate Storage class
 export class ScopedLocalStorage {

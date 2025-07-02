@@ -9,7 +9,7 @@ import { BaseAccountProvider } from './BaseAccountProvider.js';
 function createProvider() {
   return new BaseAccountProvider({
     metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
-    preference: { options: 'all' },
+    preference: { telemetry: false },
   });
 }
 

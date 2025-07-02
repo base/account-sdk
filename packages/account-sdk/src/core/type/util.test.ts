@@ -10,7 +10,6 @@ import {
   ensureIntNumber,
   ensureParsedJSONObject,
   ensureRegExpString,
-  getFavicon,
   has0xPrefix,
   hexStringFromBuffer,
   hexStringFromNumber,
@@ -178,28 +177,5 @@ describe('util', () => {
 
   test('range', () => {
     expect(range(1, 5)).toMatchObject([1, 2, 3, 4]);
-  });
-
-  describe('getFavicon', () => {
-    test('return https', () => {
-      document.head.innerHTML = `
-      <link rel="shortcut icon" sizes="16x16 24x24" href="https://coinbase.com/favicon.ico">
-    `;
-      expect(getFavicon()).toEqual('https://coinbase.com/favicon.ico');
-    });
-
-    test('return http', () => {
-      document.head.innerHTML = `
-      <link rel="shortcut icon" sizes="16x16 24x24" href="//coinbase.com/favicon.ico">
-    `;
-      expect(getFavicon()).toEqual('http://coinbase.com/favicon.ico');
-    });
-
-    test('return localhost', () => {
-      document.head.innerHTML = `
-      <link rel="shortcut icon" sizes="16x16 24x24" href="/favicon.ico">
-    `;
-      expect(getFavicon()).toEqual('http://localhost:3000/favicon.ico');
-    });
   });
 });

@@ -54,7 +54,7 @@ describe('checkCrossOriginOpenerPolicy', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        "Coinbase Wallet SDK requires the Cross-Origin-Opener-Policy header to not be set to 'same-origin'."
+        "Base Account SDK requires the Cross-Origin-Opener-Policy header to not be set to 'same-origin'."
       )
     );
     expect(result).toBe('same-origin');

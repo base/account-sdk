@@ -18,7 +18,7 @@ export type CommunicatorOptions = {
 };
 
 /**
- * Communicates with a popup window for Coinbase keys.coinbase.com (or another url)
+ * Communicates with a popup window for specific Base Account environment
  * to send and receive messages.
  *
  * This class is responsible for opening a popup window, posting messages to it,

@@ -3,7 +3,7 @@ import { store } from ':store/store.js';
 import * as checkCrossOriginModule from ':util/checkCrossOriginOpenerPolicy.js';
 import * as validatePreferencesModule from ':util/validatePreferences.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CoinbaseWalletProvider } from './BaseAccountProvider.js';
+import { BaseAccountProvider } from './BaseAccountProvider.js';
 import { CreateProviderOptions, createBaseAccountSDK } from './createBaseAccountSDK.js';
 
 // Mock all dependencies
@@ -34,8 +34,8 @@ vi.mock(':util/validatePreferences.js', () => ({
   validateSubAccount: vi.fn(),
 }));
 
-vi.mock('./CoinbaseWalletProvider.js', () => ({
-  CoinbaseWalletProvider: vi.fn(),
+vi.mock('./BaseAccountProvider.js', () => ({
+  BaseAccountProvider: vi.fn(),
 }));
 
 const mockStore = store as any;
@@ -43,12 +43,12 @@ const mockLoadTelemetryScript = telemetryModule.loadTelemetryScript as any;
 const mockCheckCrossOriginOpenerPolicy = checkCrossOriginModule.checkCrossOriginOpenerPolicy as any;
 const mockValidatePreferences = validatePreferencesModule.validatePreferences as any;
 const mockValidateSubAccount = validatePreferencesModule.validateSubAccount as any;
-const mockCoinbaseWalletProvider = CoinbaseWalletProvider as any;
+const mockBaseAccountProvider = BaseAccountProvider as any;
 
 describe('createProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockCoinbaseWalletProvider.mockReturnValue({
+    mockBaseAccountProvider.mockReturnValue({
       mockProvider: true,
     });
   });
@@ -57,7 +57,7 @@ describe('createProvider', () => {
     it('should create a provider with minimal parameters', () => {
       const result = createBaseAccountSDK({}).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith({
         metadata: {
           appName: 'App',
           appLogoUrl: '',
@@ -79,7 +79,7 @@ describe('createProvider', () => {
 
       createBaseAccountSDK(params).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith({
         metadata: {
           appName: 'Test App',
           appLogoUrl: 'https://example.com/logo.png',
@@ -99,7 +99,7 @@ describe('createProvider', () => {
 
       createBaseAccountSDK(params).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith({
         metadata: {
           appName: 'App',
           appLogoUrl: '',
@@ -122,7 +122,7 @@ describe('createProvider', () => {
 
       createBaseAccountSDK(params).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           paymasterUrls: {
             1: 'https://paymaster.example.com',
@@ -351,7 +351,7 @@ describe('createProvider', () => {
       expect(mockLoadTelemetryScript).toHaveBeenCalled();
 
       // Check provider creation
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith({
         metadata: {
           appName: 'Integration Test',
           appLogoUrl: 'https://example.com/logo.png',
@@ -373,7 +373,7 @@ describe('createProvider', () => {
     it('should handle null app logo URL', () => {
       createBaseAccountSDK({ appLogoUrl: null }).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.objectContaining({
             appLogoUrl: '',
@@ -385,7 +385,7 @@ describe('createProvider', () => {
     it('should handle empty app chain IDs array', () => {
       createBaseAccountSDK({ appChainIds: [] }).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.objectContaining({
             appChainIds: [],
@@ -404,7 +404,7 @@ describe('createProvider', () => {
       createBaseAccountSDK({ preference: complexPreference }).getProvider();
 
       expect(mockValidatePreferences).toHaveBeenCalledWith(complexPreference);
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           preference: complexPreference,
         })

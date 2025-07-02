@@ -1,7 +1,7 @@
 import { LocalAccount, OneOf } from 'viem';
 import { WebAuthnAccount } from 'viem/account-abstraction';
 
-// Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 interface Tag<T extends string, RealType> {
   __tag__: T;
   __realType__: RealType;
