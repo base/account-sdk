@@ -264,9 +264,12 @@ __metadata:
   peerDependencies:
     preact: "*"
     react: "*"
+    svelte: "*"
     vue: "*"
   peerDependenciesMeta:
     react:
+      optional: true
+    svelte:
       optional: true
     vue:
       optional: true
