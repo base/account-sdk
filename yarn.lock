@@ -3384,6 +3384,14 @@ __metadata:
   languageName: node
   linkType: hard
 
+"account-sdk@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "account-sdk@workspace:."
+  dependencies:
+    "@biomejs/biome": "npm:^1.9.4"
+  languageName: unknown
+  linkType: soft
+
 "acorn-import-attributes@npm:^1.9.5":
   version: 1.9.5
   resolution: "acorn-import-attributes@npm:1.9.5"
@@ -3942,14 +3950,6 @@ __metadata:
   checksum: 10/5ded6f61f15f1fa0350e691ccec43a28b12fb8e64c8e94715f2a937bc3722d4c3ed41d6e945c971fc4dcc2a7213a43323beaf2e1c28654af63ba70c9968a8643
   languageName: node
   linkType: hard
-
-"coinbase-wallet-sdk@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "coinbase-wallet-sdk@workspace:."
-  dependencies:
-    "@biomejs/biome": "npm:^1.9.4"
-  languageName: unknown
-  linkType: soft
 
 "color-convert@npm:^1.9.0":
   version: 1.9.3
