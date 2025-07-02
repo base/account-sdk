@@ -1,5 +1,5 @@
 import { Hex, PublicKey, Signature, WebAuthnP256, WebCryptoP256 } from 'ox';
-import { hashMessage, hashTypedData, LocalAccount, OneOf } from 'viem';
+import { LocalAccount, OneOf, hashMessage, hashTypedData } from 'viem';
 import { type WebAuthnAccount } from 'viem/account-abstraction';
 
 import { createStorage } from './storage.js';
@@ -12,7 +12,7 @@ export type P256KeyPair = {
 // *****************************************************************
 // Constants
 // *****************************************************************
-export const STORAGE_SCOPE = 'cbwsdk';
+export const STORAGE_SCOPE = 'base-acc-sdk';
 export const STORAGE_NAME = 'keys';
 
 export const ACTIVE_ID_KEY = 'activeId';

@@ -144,7 +144,7 @@ export const sdkstore = createStore(
       ...createSubAccountConfigSlice(...args),
     }),
     {
-      name: 'cbwsdk.store',
+      name: 'base-acc-sdk.store',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => {
         // Explicitly select only the data properties we want to persist
