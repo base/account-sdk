@@ -1,10 +1,10 @@
 # Base Account SDK UI Components
 
-This package provides UI components for **React**, **Preact**, and **Vue** applications.
+This package provides UI components for **React**, **Preact**, **Vue**, and **Svelte** applications.
 
 ## Features
 
-- 🎯 **Multi-framework support**: React, Preact, and Vue components
+- 🎯 **Multi-framework support**: React, Preact, Vue, and Svelte components
 - 🛠️ **TypeScript support**: Full type safety for all frameworks
 - 📦 **Single package**: Import from one package, use with any framework
 - 🎨 **Consistent API**: Same props interface across frameworks
@@ -72,6 +72,25 @@ const handleClick = () => {
 </script>
 ```
 
+### Svelte
+
+```svelte
+<script>
+  import { SignInWithBaseButton } from '@base/account-ui/svelte';
+
+  const handleClick = () => {
+    console.log('Sign in clicked!');
+  };
+</script>
+
+<SignInWithBaseButton 
+  onClick={handleClick}
+  align="center"
+  variant="solid"
+  colorScheme="light"
+/>
+```
+
 ### Preact with Mounting Utilities
 
 ```tsx
@@ -99,7 +118,9 @@ unmountSignInWithBaseButton(container);
 | `colorScheme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme |
 | `onClick` | `() => void` | `undefined` | Click handler |
 
-## Vue Setup Requirements
+## Framework Setup Requirements
+
+### Vue
 
 For Vue applications, make sure your build tool can process `.vue` files. Most Vue setups (Vite, Vue CLI, Nuxt) handle this automatically.
 
@@ -119,6 +140,37 @@ module.exports = {
   plugins: [
     new VueLoaderPlugin()
   ]
+}
+```
+
+### Svelte
+
+For Svelte applications, make sure your build tool can process `.svelte` files. Most Svelte setups (SvelteKit, Vite with Svelte plugin) handle this automatically.
+
+If using a custom setup, ensure you have the Svelte compiler configured:
+
+```js
+// vite.config.js
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+
+export default {
+  plugins: [svelte()]
+}
+```
+
+Or for webpack:
+
+```js
+// webpack.config.js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.svelte$/,
+        use: 'svelte-loader'
+      }
+    ]
+  }
 }
 ```
 
@@ -143,7 +195,7 @@ npm run lint
 ## Architecture
 
 This package provides:
-- **Framework-specific exports**: `/react`, `/preact`, `/vue`
+- **Framework-specific exports**: `/react`, `/preact`, `/vue`, `/svelte`
 - **Shared component logic**: Preact components as the base implementation
-- **Framework wrappers**: React and Vue components that mount Preact components
+- **Framework wrappers**: React, Vue, and Svelte components that mount Preact components
 - **Type definitions**: Full TypeScript support for all frameworks 

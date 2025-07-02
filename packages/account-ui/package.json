@@ -10,6 +10,7 @@
     "react",
     "preact",
     "vue",
+    "svelte",
     "web3"
   ],
   "type": "module",
@@ -25,6 +26,10 @@
     "./vue": {
       "types": "./dist/frameworks/vue/index.d.ts",
       "default": "./dist/frameworks/vue/index.js"
+    },
+    "./svelte": {
+      "types": "./dist/frameworks/svelte/index.d.ts",
+      "default": "./dist/frameworks/svelte/index.js"
     }
   },
   "sideEffects": false,
@@ -35,7 +40,7 @@
     "clean": "rm -rf dist && rm -rf node_modules",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
-    "postbuild": "cp -r src/frameworks/vue/*.vue dist/frameworks/vue/",
+    "postbuild": "cp -r src/frameworks/vue/*.vue dist/frameworks/vue/ && cp -r src/frameworks/svelte/*.svelte dist/frameworks/svelte/",
     "build": "rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias && yarn postbuild",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint ."
@@ -56,13 +61,17 @@
   "peerDependencies": {
     "preact": "*",
     "react": "*",
-    "vue": "*"
+    "vue": "*",
+    "svelte": "*"
   },
   "peerDependenciesMeta": {
     "react": {
       "optional": true
     },
     "vue": {
+      "optional": true
+    },
+    "svelte": {
       "optional": true
     }
   }
