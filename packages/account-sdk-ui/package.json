@@ -35,7 +35,6 @@
     "lint": "biome lint ."
   },
   "devDependencies": {
-    "@coinbase/wallet-sdk": "workspace:*",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/preact": "^3.2.4",
     "@testing-library/react": "^16.3.0",
@@ -48,7 +47,6 @@
     "vitest": "^2.1.9"
   },
   "peerDependencies": {
-    "@coinbase/wallet-sdk": "*",
     "preact": "*",
     "react": "*"
   },
