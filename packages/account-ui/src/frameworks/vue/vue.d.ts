@@ -1,0 +1,12 @@
+declare module '*.vue' {
+  import { DefineComponent } from 'vue';
+  const component: DefineComponent<Record<string, any>, Record<string, any>, any>;
+  export default component;
+}
+
+declare module './SignInWithBaseButton.vue' {
+  import { DefineComponent } from 'vue';
+  import { SignInWithBaseButtonProps } from '../../types.js';
+  const component: DefineComponent<SignInWithBaseButtonProps>;
+  export default component;
+}

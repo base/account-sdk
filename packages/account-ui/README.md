@@ -1,11 +1,11 @@
 # Base Account SDK UI Components
 
-This package provides UI components for both **React** and **Preact** applications.
+This package provides UI components for **React**, **Preact**, and **Vue** applications.
 
 ## Features
 
-- 🎯 **Framework-specific builds**: Separate compilation for React and Preact
-- 🛠️ **TypeScript support**: Full type safety for both frameworks
+- 🎯 **Multi-framework support**: React, Preact, and Vue components
+- 🛠️ **TypeScript support**: Full type safety for all frameworks
 - 📦 **Single package**: Import from one package, use with any framework
 - 🎨 **Consistent API**: Same props interface across frameworks
 
@@ -20,15 +20,15 @@ npm install @base/account-ui
 ### React
 
 ```tsx
-import { ReactSignInWithBaseButton } from '@base/account-ui';
+import { SignInWithBaseButton } from '@base/account-ui/react';
 
 function App() {
   return (
-    <ReactSignInWithBaseButton 
+    <SignInWithBaseButton 
       onClick={() => console.log('Sign in clicked!')}
-      centered={true}
-      darkMode={false}
-      transparent={false}
+      align="center"
+      variant="solid"
+      colorScheme="light"
     />
   );
 }
@@ -37,32 +37,53 @@ function App() {
 ### Preact
 
 ```tsx
-import { PreactSignInWithBaseButton } from '@base/account-ui';
+import { SignInWithBaseButton } from '@base/account-ui/preact';
 
 function App() {
   return (
-    <PreactSignInWithBaseButton 
+    <SignInWithBaseButton 
       onClick={() => console.log('Sign in clicked!')}
-      centered={true}
-      darkMode={false}
-      transparent={false}
+      align="center"
+      variant="solid"
+      colorScheme="light"
     />
   );
 }
 ```
 
+### Vue
+
+```vue
+<template>
+  <SignInWithBaseButton 
+    :onClick="handleClick"
+    align="center"
+    variant="solid"
+    colorScheme="light"
+  />
+</template>
+
+<script setup>
+import { SignInWithBaseButton } from '@base/account-ui/vue';
+
+const handleClick = () => {
+  console.log('Sign in clicked!');
+};
+</script>
+```
+
 ### Preact with Mounting Utilities
 
 ```tsx
-import { mountSignInWithBaseButton, unmountSignInWithBaseButton } from '@base/account-ui';
+import { mountSignInWithBaseButton, unmountSignInWithBaseButton } from '@base/account-ui/preact';
 
 // Mount to a DOM element
 const container = document.getElementById('button-container');
 mountSignInWithBaseButton(container, {
   onClick: () => console.log('Sign in clicked!'),
-  centered: true,
-  darkMode: false,
-  transparent: false,
+  align: 'center',
+  variant: 'solid',
+  colorScheme: 'light',
 });
 
 // Cleanup when done
@@ -73,18 +94,35 @@ unmountSignInWithBaseButton(container);
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `centered` | `boolean` | `true` | Center the button horizontally |
-| `transparent` | `boolean` | `false` | Use transparent background with border |
-| `darkMode` | `boolean` | `false` | Use dark theme colors |
+| `align` | `'left' \| 'center'` | `'center'` | Button alignment |
+| `variant` | `'solid' \| 'transparent'` | `'solid'` | Button style variant |
+| `colorScheme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme |
 | `onClick` | `() => void` | `undefined` | Click handler |
 
+## Vue Setup Requirements
+
+For Vue applications, make sure your build tool can process `.vue` files. Most Vue setups (Vite, Vue CLI, Nuxt) handle this automatically.
+
+If using a custom webpack setup, ensure you have `vue-loader` configured:
+
+```js
+// webpack.config.js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader'
+      }
+    ]
+  },
+  plugins: [
+    new VueLoaderPlugin()
+  ]
+}
+```
+
 ## Development
-
-This package uses separate TypeScript configurations for each framework:
-
-- `tsconfig.preact.json` - Preact-specific compilation
-- `tsconfig.react.json` - React-specific compilation  
-- `tsconfig.base.json` - Shared base configuration
 
 ### Build Commands
 
@@ -92,20 +130,20 @@ This package uses separate TypeScript configurations for each framework:
 # Build all frameworks
 npm run build
 
-# Build specific framework
-npm run build:preact
-npm run build:react
-
 # TypeScript checking
 npm run typecheck
-npm run typecheck:preact
-npm run typecheck:react
+
+# Run tests
+npm run test
+
+# Lint
+npm run lint
 ```
 
 ## Architecture
 
-This setup allows:
-- **Preact components** compiled with `jsxImportSource: "preact"`
-- **React components** compiled with `jsxImportSource: "react"`
-- **No JSX conflicts** between frameworks
-- **Optimized bundles** for each framework 
+This package provides:
+- **Framework-specific exports**: `/react`, `/preact`, `/vue`
+- **Shared component logic**: Preact components as the base implementation
+- **Framework wrappers**: React and Vue components that mount Preact components
+- **Type definitions**: Full TypeScript support for all frameworks 

@@ -9,6 +9,7 @@
     "components",
     "react",
     "preact",
+    "vue",
     "web3"
   ],
   "type": "module",
@@ -20,6 +21,10 @@
     "./react": {
       "types": "./dist/frameworks/react/index.d.ts",
       "default": "./dist/frameworks/react/index.js"
+    },
+    "./vue": {
+      "types": "./dist/frameworks/vue/index.d.ts",
+      "default": "./dist/frameworks/vue/index.js"
     }
   },
   "sideEffects": false,
@@ -30,7 +35,8 @@
     "clean": "rm -rf dist && rm -rf node_modules",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
-    "build": "rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias",
+    "postbuild": "cp -r src/frameworks/vue/*.vue dist/frameworks/vue/",
+    "build": "rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias && yarn postbuild",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint ."
   },
@@ -44,14 +50,19 @@
     "tsc-alias": "^1.8.8",
     "tslib": "^2.6.0",
     "typescript": "^5.1.6",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "vue": "^3.5.17"
   },
   "peerDependencies": {
     "preact": "*",
-    "react": "*"
+    "react": "*",
+    "vue": "*"
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "vue": {
       "optional": true
     }
   }
