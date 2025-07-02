@@ -14,12 +14,12 @@
   "type": "module",
   "exports": {
     "./preact": {
-      "types": "./dist/components/preact/index.d.ts",
-      "default": "./dist/components/preact/index.js"
+      "types": "./dist/frameworks/preact/index.d.ts",
+      "default": "./dist/frameworks/preact/index.js"
     },
     "./react": {
-      "types": "./dist/components/react/index.d.ts",
-      "default": "./dist/components/react/index.js"
+      "types": "./dist/frameworks/react/index.d.ts",
+      "default": "./dist/frameworks/react/index.js"
     }
   },
   "sideEffects": false,
