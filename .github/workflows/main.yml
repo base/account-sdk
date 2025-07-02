@@ -81,7 +81,7 @@ jobs:
 
       - name: Runs compile asset script
         run: |
-          cd ./packages/wallet-sdk
+          cd ./packages/account-sdk
           yarn build
           node ./compile-assets.cjs
           cd ../../

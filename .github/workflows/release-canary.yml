@@ -44,7 +44,7 @@ jobs:
 
       - name: Publish to npm
         run: |
-          cd packages/wallet-sdk
+          cd packages/account-sdk
           npm publish --tag canary
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
