@@ -12,7 +12,7 @@ This package provides UI components for both **React** and **Preact** applicatio
 ## Installation
 
 ```bash
-npm install @base/account-sdk-ui
+npm install @base/account-ui
 ```
 
 ## Usage
@@ -20,7 +20,7 @@ npm install @base/account-sdk-ui
 ### React
 
 ```tsx
-import { ReactSignInWithBaseButton } from '@base/account-sdk-ui';
+import { ReactSignInWithBaseButton } from '@base/account-ui';
 
 function App() {
   return (
@@ -37,7 +37,7 @@ function App() {
 ### Preact
 
 ```tsx
-import { PreactSignInWithBaseButton } from '@base/account-sdk-ui';
+import { PreactSignInWithBaseButton } from '@base/account-ui';
 
 function App() {
   return (
@@ -54,7 +54,7 @@ function App() {
 ### Preact with Mounting Utilities
 
 ```tsx
-import { mountSignInWithBaseButton, unmountSignInWithBaseButton } from '@base/account-sdk-ui';
+import { mountSignInWithBaseButton, unmountSignInWithBaseButton } from '@base/account-ui';
 
 // Mount to a DOM element
 const container = document.getElementById('button-container');

@@ -1,7 +1,7 @@
 {
-  "name": "@base/account-sdk-ui",
+  "name": "@base/account-ui",
   "version": "1.0.0",
-  "description": "Base Account SDK UI Components",
+  "description": "Base Account UI Components",
   "keywords": [
     "base",
     "account",
