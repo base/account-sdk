@@ -21,7 +21,7 @@ import { correlationIds } from ':store/correlation-ids/store.js';
 import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 
-export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
+export class BaseAccountProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly communicator: Communicator;
   private readonly signer: Signer;
 

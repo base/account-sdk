@@ -3,7 +3,7 @@ import { store } from ':store/store.js';
 import * as checkCrossOriginModule from ':util/checkCrossOriginOpenerPolicy.js';
 import * as validatePreferencesModule from ':util/validatePreferences.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
+import { CoinbaseWalletProvider } from './BaseAccountProvider.js';
 import { CreateProviderOptions, createBaseAccountSDK } from './createBaseAccountSDK.js';
 
 // Mock all dependencies

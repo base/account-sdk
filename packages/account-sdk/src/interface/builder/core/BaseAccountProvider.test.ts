@@ -4,10 +4,10 @@ import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { store } from ':store/store.js';
 import * as providerUtil from ':util/provider.js';
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
+import { BaseAccountProvider } from './BaseAccountProvider.js';
 
 function createProvider() {
-  return new CoinbaseWalletProvider({
+  return new BaseAccountProvider({
     metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
     preference: { options: 'all' },
   });
@@ -18,7 +18,7 @@ const mockRequest = vi.fn();
 const mockCleanup = vi.fn();
 const mockFetchRPCRequest = vi.fn();
 
-let provider: CoinbaseWalletProvider;
+let provider: BaseAccountProvider;
 
 beforeEach(() => {
   vi.resetAllMocks();

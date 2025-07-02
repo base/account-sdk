@@ -9,7 +9,7 @@ import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { store } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
+import { CoinbaseWalletProvider } from './BaseAccountProvider.js';
 
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;

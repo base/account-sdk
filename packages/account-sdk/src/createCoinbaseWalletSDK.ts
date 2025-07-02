@@ -14,7 +14,7 @@ import { abi } from ':sign/base-account/utils/constants.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
-import { CoinbaseWalletProvider } from './interface/builder/core/CoinbaseWalletProvider.js';
+import { BaseAccountProvider } from './interface/builder/core/BaseAccountProvider.js';
 import { SubAccount, ToOwnerAccountFn, store } from './store/store.js';
 
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
@@ -83,7 +83,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
   const sdk = {
     getProvider() {
       if (!provider) {
-        provider = new CoinbaseWalletProvider(options);
+        provider = new BaseAccountProvider(options);
       }
       // @ts-expect-error - store reference to the sdk on the provider
       provider.sdk = sdk;
