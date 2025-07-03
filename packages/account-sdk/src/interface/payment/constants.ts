@@ -29,3 +29,8 @@ export const ERC20_TRANSFER_ABI = [
     outputs: [{ name: '', type: 'bool' }],
   },
 ] as const;
+
+/**
+ * USDC decimals
+ */
+export const USDC_DECIMALS = 6;

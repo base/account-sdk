@@ -26,7 +26,7 @@ export function createEphemeralSDK(chainId: number) {
     appName: 'Payment',
     appChainIds: [chainId],
     preference: {
-      telemetry: false,
+      telemetry: true,
     },
   });
 
@@ -78,11 +78,13 @@ export async function executePaymentWithSDK(requestParams: WalletSendCallsReques
   const chainId = CHAIN_IDS[network];
 
   const sdk = createEphemeralSDK(chainId);
+  const provider = sdk.getProvider();
 
   try {
     const transactionHash = await executePayment(sdk, requestParams);
     return transactionHash;
   } finally {
-    // TODO: SDK cleanup
+    // Clean up provider state for subsequent payments
+    await provider.disconnect();
   }
 }

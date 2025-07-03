@@ -1,5 +1,5 @@
 import { encodeFunctionData, parseUnits, type Address, type Hex } from 'viem';
-import { CHAIN_IDS, ERC20_TRANSFER_ABI, USDC_ADDRESS } from '../constants.js';
+import { CHAIN_IDS, ERC20_TRANSFER_ABI, USDC_ADDRESS, USDC_DECIMALS } from '../constants.js';
 
 /**
  * Encodes an ERC20 transfer call
@@ -8,8 +8,7 @@ import { CHAIN_IDS, ERC20_TRANSFER_ABI, USDC_ADDRESS } from '../constants.js';
  * @returns The encoded function data
  */
 export function encodeTransferCall(recipient: string, amount: string): Hex {
-  // Parse amount to USDC decimals (6)
-  const amountInUnits = parseUnits(amount, 6);
+  const amountInUnits = parseUnits(amount, USDC_DECIMALS);
 
   // Encode the transfer function call
   return encodeFunctionData({
