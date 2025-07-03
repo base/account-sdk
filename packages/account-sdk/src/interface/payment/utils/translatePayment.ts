@@ -1,5 +1,5 @@
 import { encodeFunctionData, parseUnits, type Address, type Hex } from 'viem';
-import { CHAIN_IDS, ERC20_TRANSFER_ABI, USDC_ADDRESS, USDC_DECIMALS } from '../constants.js';
+import { CHAIN_IDS, ERC20_TRANSFER_ABI, TOKENS } from '../constants.js';
 
 /**
  * Encodes an ERC20 transfer call
@@ -8,7 +8,7 @@ import { CHAIN_IDS, ERC20_TRANSFER_ABI, USDC_ADDRESS, USDC_DECIMALS } from '../c
  * @returns The encoded function data
  */
 export function encodeTransferCall(recipient: string, amount: string): Hex {
-  const amountInUnits = parseUnits(amount, USDC_DECIMALS);
+  const amountInUnits = parseUnits(amount, TOKENS.USDC.decimals);
 
   // Encode the transfer function call
   return encodeFunctionData({
@@ -27,7 +27,7 @@ export function encodeTransferCall(recipient: string, amount: string): Hex {
 export function buildSendCallsRequest(transferData: Hex, testnet: boolean) {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
-  const usdcAddress = USDC_ADDRESS[network];
+  const usdcAddress = TOKENS.USDC.addresses[network];
 
   // Build the call object
   const call = {

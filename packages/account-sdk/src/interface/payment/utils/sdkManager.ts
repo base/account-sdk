@@ -17,6 +17,14 @@ type WalletSendCallsRequestParams = {
 };
 
 /**
+ * Type for wallet_sendCalls response
+ */
+type WalletSendCallsResponse = {
+  id: string;
+  capabilities?: Record<string, any>;
+};
+
+/**
  * Creates an ephemeral SDK instance configured for payments
  * @param chainId - The chain ID to use
  * @returns The configured SDK instance
@@ -52,16 +60,10 @@ export async function executePayment(
 
   let transactionHash: Hex;
 
-  if (Array.isArray(result) && result.length > 0) {
-    transactionHash = result[0] as Hex;
-  } else if (typeof result === 'string') {
-    transactionHash = result as Hex;
+  if (result && typeof result === 'object' && 'id' in result) {
+    transactionHash = (result as WalletSendCallsResponse).id as Hex;
   } else {
     throw new Error('Unexpected response format from wallet_sendCalls');
-  }
-
-  if (transactionHash.length > 66) {
-    transactionHash = transactionHash.slice(0, 66) as Hex;
   }
 
   return transactionHash;

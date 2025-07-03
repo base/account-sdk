@@ -1,9 +1,14 @@
 /**
- * USDC contract addresses on different networks
+ * Token configuration for supported payment tokens
  */
-export const USDC_ADDRESS = {
-  base: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  baseSepolia: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+export const TOKENS = {
+  USDC: {
+    decimals: 6,
+    addresses: {
+      base: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      baseSepolia: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+    },
+  },
 } as const;
 
 /**
@@ -29,8 +34,3 @@ export const ERC20_TRANSFER_ABI = [
     outputs: [{ name: '', type: 'bool' }],
   },
 ] as const;
-
-/**
- * USDC decimals
- */
-export const USDC_DECIMALS = 6;

@@ -57,18 +57,14 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
     } else if (typeof error === 'string') {
       errorMessage = error;
     } else if (error && typeof error === 'object') {
-      // Check for various error message properties
-      if ('message' in error) {
-        errorMessage = String(error.message);
-      } else if (
-        'error' in error &&
-        error.error &&
-        typeof error.error === 'object' &&
-        'message' in error.error
-      ) {
-        errorMessage = String(error.error.message);
-      } else if ('reason' in error) {
-        errorMessage = String(error.reason);
+      // Check for various error message properties using optional chaining
+      const err = error as any;
+      if (typeof err?.message === 'string') {
+        errorMessage = err.message;
+      } else if (typeof err?.error?.message === 'string') {
+        errorMessage = err.error.message;
+      } else if (typeof err?.reason === 'string') {
+        errorMessage = err.reason;
       }
     }
 
