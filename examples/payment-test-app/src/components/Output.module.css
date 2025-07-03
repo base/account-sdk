@@ -133,7 +133,7 @@
 }
 
 code.resultValue {
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
   background: #f1f5f9;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
@@ -176,7 +176,7 @@ code.resultValue {
   margin: 0;
   padding: 1.5rem;
   color: #e2e8f0;
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
   font-size: 13px;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -215,7 +215,7 @@ code.resultValue {
     min-height: 350px;
     max-height: 60vh;
   }
-  
+
   .consoleCard {
     max-height: 300px;
   }
@@ -270,4 +270,4 @@ code.resultValue {
   .resultValue {
     font-size: 0.75rem;
   }
-} 
+}

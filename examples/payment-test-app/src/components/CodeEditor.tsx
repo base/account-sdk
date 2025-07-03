@@ -1,11 +1,11 @@
-import styles from './CodeEditor.module.css'
+import styles from './CodeEditor.module.css';
 
 interface CodeEditorProps {
-  code: string
-  onChange: (code: string) => void
-  onExecute: () => void
-  onReset: () => void
-  isLoading: boolean
+  code: string;
+  onChange: (code: string) => void;
+  onExecute: () => void;
+  onReset: () => void;
+  isLoading: boolean;
 }
 
 export const CodeEditor = ({ code, onChange, onExecute, onReset, isLoading }: CodeEditorProps) => {
@@ -13,28 +13,36 @@ export const CodeEditor = ({ code, onChange, onExecute, onReset, isLoading }: Co
     <div className={styles.editorPanel}>
       <div className={styles.panelHeader}>
         <h2 className={styles.panelTitle}>
-          <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M14 2l6 6v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2h8z"/>
-            <path d="M14 2v6h6"/>
-            <path d="M16 13H8"/>
-            <path d="M16 17H8"/>
-            <path d="M10 9H8"/>
+          <svg
+            className={styles.icon}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M14 2l6 6v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2h8z" />
+            <path d="M14 2v6h6" />
+            <path d="M16 13H8" />
+            <path d="M16 17H8" />
+            <path d="M10 9H8" />
           </svg>
           Code Editor
         </h2>
-        <button 
-          onClick={onReset} 
-          className={styles.resetButton}
-          disabled={isLoading}
-        >
-          <svg className={styles.buttonIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M1 4v6h6"/>
-            <path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+        <button onClick={onReset} className={styles.resetButton} disabled={isLoading}>
+          <svg
+            className={styles.buttonIcon}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M1 4v6h6" />
+            <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
           </svg>
           Reset
         </button>
       </div>
-      
+
       <div className={styles.editorWrapper}>
         <textarea
           value={code}
@@ -47,11 +55,7 @@ export const CodeEditor = ({ code, onChange, onExecute, onReset, isLoading }: Co
         <div className={styles.editorOverlay}></div>
       </div>
 
-      <button
-        onClick={onExecute}
-        disabled={isLoading}
-        className={styles.executeButton}
-      >
+      <button onClick={onExecute} disabled={isLoading} className={styles.executeButton}>
         {isLoading ? (
           <>
             <span className={styles.spinner}></span>
@@ -59,13 +63,19 @@ export const CodeEditor = ({ code, onChange, onExecute, onReset, isLoading }: Co
           </>
         ) : (
           <>
-            <svg className={styles.buttonIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polygon points="5 3 19 12 5 21 5 3"/>
+            <svg
+              className={styles.buttonIcon}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polygon points="5 3 19 12 5 21 5 3" />
             </svg>
             Execute Code
           </>
         )}
       </button>
     </div>
-  )
-} 
+  );
+};

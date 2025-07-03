@@ -1,18 +1,14 @@
-import { CHAIN_IDS, TOKENS } from './constants.js';
+import { CHAIN_IDS, USDC_ADDRESS } from './constants.js';
 import { pay } from './pay.js';
-import type { PaymentOptions, PaymentResult } from './types.js';
 
 /**
- * Base payment interface
+ * Base namespace for payment functions
  */
 export const base = {
   pay,
+  // Export useful constants under the base namespace
   constants: {
     CHAIN_IDS,
-    TOKENS,
+    USDC_ADDRESS,
   },
-  types: {} as {
-    PaymentOptions: PaymentOptions;
-    PaymentResult: PaymentResult;
-  },
-};
+} as const;

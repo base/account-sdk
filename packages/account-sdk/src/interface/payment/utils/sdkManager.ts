@@ -3,28 +3,6 @@ import { createBaseAccountSDK } from '../../../index.js';
 import { CHAIN_IDS } from '../constants.js';
 
 /**
- * Type for wallet_sendCalls request parameters
- */
-type WalletSendCallsRequestParams = {
-  version: string;
-  chainId: number;
-  calls: Array<{
-    to: Hex;
-    data: Hex;
-    value: Hex;
-  }>;
-  capabilities: Record<string, unknown>;
-};
-
-/**
- * Type for wallet_sendCalls response
- */
-type WalletSendCallsResponse = {
-  id: string;
-  capabilities?: Record<string, any>;
-};
-
-/**
  * Creates an ephemeral SDK instance configured for payments
  * @param chainId - The chain ID to use
  * @returns The configured SDK instance
@@ -34,7 +12,7 @@ export function createEphemeralSDK(chainId: number) {
     appName: 'Payment',
     appChainIds: [chainId],
     preference: {
-      telemetry: true,
+      telemetry: false,
     },
   });
 
@@ -49,7 +27,7 @@ export function createEphemeralSDK(chainId: number) {
  */
 export async function executePayment(
   sdk: ReturnType<typeof createBaseAccountSDK>,
-  requestParams: WalletSendCallsRequestParams
+  requestParams: any
 ): Promise<Hex> {
   const provider = sdk.getProvider();
 
@@ -60,10 +38,16 @@ export async function executePayment(
 
   let transactionHash: Hex;
 
-  if (result && typeof result === 'object' && 'id' in result) {
-    transactionHash = (result as WalletSendCallsResponse).id as Hex;
+  if (Array.isArray(result) && result.length > 0) {
+    transactionHash = result[0] as Hex;
+  } else if (typeof result === 'string') {
+    transactionHash = result as Hex;
   } else {
     throw new Error('Unexpected response format from wallet_sendCalls');
+  }
+
+  if (transactionHash.length > 66) {
+    transactionHash = transactionHash.slice(0, 66) as Hex;
   }
 
   return transactionHash;
@@ -75,18 +59,16 @@ export async function executePayment(
  * @param testnet - Whether to use testnet
  * @returns The transaction hash
  */
-export async function executePaymentWithSDK(requestParams: WalletSendCallsRequestParams, testnet: boolean): Promise<Hex> {
+export async function executePaymentWithSDK(requestParams: any, testnet: boolean): Promise<Hex> {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
 
   const sdk = createEphemeralSDK(chainId);
-  const provider = sdk.getProvider();
 
   try {
     const transactionHash = await executePayment(sdk, requestParams);
     return transactionHash;
   } finally {
-    // Clean up provider state for subsequent payments
-    await provider.disconnect();
+    // TODO: SDK cleanup
   }
 }
