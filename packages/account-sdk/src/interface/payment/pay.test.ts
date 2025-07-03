@@ -21,11 +21,13 @@ describe('pay', () => {
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '1.0',
       chainId: 8453,
-      calls: [{
-        to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-        data: '0xabcdef',
-        value: '0x0',
-      }],
+      calls: [
+        {
+          to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          data: '0xabcdef',
+          value: '0x0',
+        },
+      ],
       capabilities: {},
     });
     vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue(
@@ -46,7 +48,9 @@ describe('pay', () => {
     });
 
     expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 2);
-    expect(validation.validateAddress).toHaveBeenCalledWith('0xFe21034794A5a574B94fE4fDfD16e005F1C96e51');
+    expect(validation.validateAddress).toHaveBeenCalledWith(
+      '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51'
+    );
     expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       '10.50',
@@ -104,11 +108,13 @@ describe('pay', () => {
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '1.0',
       chainId: 84532,
-      calls: [{
-        to: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
-        data: '0xabcdef',
-        value: '0x0',
-      }],
+      calls: [
+        {
+          to: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+          data: '0xabcdef',
+          value: '0x0',
+        },
+      ],
       capabilities: {
         paymasterService: {
           url: 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',

@@ -1,2 +1,2 @@
-export { useCodeExecution } from './useCodeExecution'
-export { useConsoleCapture } from './useConsoleCapture' 
+export { useCodeExecution } from './useCodeExecution';
+export { useConsoleCapture } from './useConsoleCapture';

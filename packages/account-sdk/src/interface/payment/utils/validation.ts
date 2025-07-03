@@ -10,17 +10,17 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
   if (typeof amount !== 'string') {
     throw new Error('Invalid amount: must be a string');
   }
-  
+
   const numAmount = parseFloat(amount);
-  
+
   if (isNaN(numAmount)) {
     throw new Error('Invalid amount: must be a valid number');
   }
-  
+
   if (numAmount <= 0) {
     throw new Error('Invalid amount: must be greater than 0');
   }
-  
+
   // Only allow specified decimal places
   const decimalIndex = amount.indexOf('.');
   if (decimalIndex !== -1) {
@@ -40,7 +40,7 @@ export function validateAddress(address: string): void {
   if (!address) {
     throw new Error('Invalid recipient: address is required');
   }
-  
+
   if (!isAddress(address)) {
     throw new Error('Invalid recipient: must be a valid Ethereum address');
   }

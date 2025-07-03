@@ -6,14 +6,14 @@ const result = await pay({
   testnet: true
 })
 
-return result`
+return result`;
 
 export const PAY_QUICK_TIPS = [
   'Get testnet ETH at <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">https://faucet.circle.com/</a> - select "Base Sepolia" as the network',
   'Make sure to return the result at the end of your code',
   'testnet (`true`) toggles base sepolia testnet',
   'Amount is in USDC (e.g., "1" = 1 USDC)',
-  'Only USDC on base and base sepolia are supported'
-]
+  'Only USDC on base and base sepolia are supported',
+];
 
-export const QUICK_TIPS = PAY_QUICK_TIPS 
+export const QUICK_TIPS = PAY_QUICK_TIPS;
