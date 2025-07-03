@@ -142,7 +142,7 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
               <path d="M9 9h6v6H9z" />
             </svg>
-            <p>Click "Execute Code" to run your code</p>
+            <p>Click &quot;Execute Code&quot; to run your code</p>
           </div>
         )}
       </div>

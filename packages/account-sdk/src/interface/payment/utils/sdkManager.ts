@@ -3,6 +3,20 @@ import { createBaseAccountSDK } from '../../../index.js';
 import { CHAIN_IDS } from '../constants.js';
 
 /**
+ * Type for wallet_sendCalls request parameters
+ */
+type WalletSendCallsRequestParams = {
+  version: string;
+  chainId: number;
+  calls: Array<{
+    to: Hex;
+    data: Hex;
+    value: Hex;
+  }>;
+  capabilities: Record<string, unknown>;
+};
+
+/**
  * Creates an ephemeral SDK instance configured for payments
  * @param chainId - The chain ID to use
  * @returns The configured SDK instance
@@ -27,7 +41,7 @@ export function createEphemeralSDK(chainId: number) {
  */
 export async function executePayment(
   sdk: ReturnType<typeof createBaseAccountSDK>,
-  requestParams: any
+  requestParams: WalletSendCallsRequestParams
 ): Promise<Hex> {
   const provider = sdk.getProvider();
 
@@ -59,7 +73,7 @@ export async function executePayment(
  * @param testnet - Whether to use testnet
  * @returns The transaction hash
  */
-export async function executePaymentWithSDK(requestParams: any, testnet: boolean): Promise<Hex> {
+export async function executePaymentWithSDK(requestParams: WalletSendCallsRequestParams, testnet: boolean): Promise<Hex> {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
 
