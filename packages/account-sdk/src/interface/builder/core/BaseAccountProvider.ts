@@ -90,10 +90,13 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
           }
           case 'wallet_sendCalls':
           case 'wallet_sign': {
-            await this.signer.handshake({ method: 'handshake' }); // exchange session keys
-            const result = await this.signer.request(args); // send diffie-hellman encrypted request
-            await this.signer.cleanup(); // clean up (rotate) the ephemeral session keys
-            return result as T;
+            try {
+              await this.signer.handshake({ method: 'handshake' }); // exchange session keys
+              const result = await this.signer.request(args); // send diffie-hellman encrypted request
+              return result as T;
+            } finally {
+              await this.signer.cleanup(); // clean up (rotate) the ephemeral session keys
+            }
           }
           case 'wallet_getCallsStatus': {
             const result = await fetchRPCRequest(args, CB_WALLET_RPC_URL);
