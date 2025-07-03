@@ -34,24 +34,13 @@ This is a test application for the Base Account SDK Payment functionality. It pr
 The app provides a code editor where you can write and execute JavaScript code that uses the `pay` function. The default code shows an example of how to make a payment:
 
 ```javascript
-import { pay } from '@coinbase/wallet-sdk/payment'
+import { pay } from '@base/account-sdk'
 
-// Make a payment
 const result = await pay({
   amount: '1',
   recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
   testnet: true
 })
-
-// Handle the result
-if (result.success) {
-  console.log('Payment successful!')
-  console.log('Transaction ID:', result.id)
-  console.log('Amount sent:', result.amount, 'USDC')
-  console.log('Sent to:', result.recipient)
-} else {
-  console.error('Payment failed:', result.error)
-}
 
 return result
 ```
@@ -62,7 +51,7 @@ The app is built with:
 - Next.js
 - React
 - TypeScript
-- @coinbase/wallet-sdk
+- @base/account-sdk
 
 ## Note
 

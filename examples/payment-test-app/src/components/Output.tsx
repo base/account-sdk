@@ -1,4 +1,4 @@
-import type { PaymentResult } from '@coinbase/wallet-sdk/payment';
+import type { PaymentResult } from '@base/account-sdk';
 import styles from './Output.module.css';
 
 interface OutputProps {

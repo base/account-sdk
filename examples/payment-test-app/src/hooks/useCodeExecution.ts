@@ -1,5 +1,5 @@
-import type { PaymentResult } from '@coinbase/wallet-sdk/payment';
-import { pay } from '@coinbase/wallet-sdk/payment';
+import type { PaymentResult } from '@base/account-sdk';
+import { pay } from '@base/account-sdk';
 import { useCallback, useState } from 'react';
 import { transformImports } from '../utils/codeTransform';
 import { useConsoleCapture } from './useConsoleCapture';

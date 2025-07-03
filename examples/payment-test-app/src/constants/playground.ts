@@ -1,4 +1,4 @@
-export const DEFAULT_PAY_CODE = `import { pay } from '@coinbase/wallet-sdk/payment'
+export const DEFAULT_PAY_CODE = `import { pay } from '@base/account-sdk'
 
 const result = await pay({
   amount: '.01',

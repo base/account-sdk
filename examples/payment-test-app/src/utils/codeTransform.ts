@@ -2,10 +2,10 @@
 export const transformImports = (code: string): string => {
   let transformedCode = code;
 
-  // Special handling for @coinbase/wallet-sdk/payment - just remove the import line
+  // Special handling for @base/account-sdk - just remove the import line
   // since pay is provided in the context
   transformedCode = transformedCode.replace(
-    /import\s+{[^}]*(?:pay)[^}]*}\s+from\s+['"]@coinbase\/wallet-sdk\/payment['"]\s*;?\s*\n?/g,
+    /import\s+{[^}]*(?:pay)[^}]*}\s+from\s+['"]@base\/account-sdk['"]\s*;?\s*\n?/g,
     ''
   );
 
