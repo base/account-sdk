@@ -11,6 +11,18 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./payment": {
+      "types": "./dist/interface/payment/index.d.ts",
+      "import": "./dist/interface/payment/index.js",
+      "require": "./dist/interface/payment/index.js"
+    }
+  },
   "sideEffects": false,
   "repository": "https://github.com/base/account-sdk.git",
   "author": "Base",
