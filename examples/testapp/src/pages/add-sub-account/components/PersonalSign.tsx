@@ -1,5 +1,5 @@
+import { createBaseAccountSDK } from '@base/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { createPublicClient, http, toHex } from 'viem';
 import { baseSepolia } from 'viem/chains';
@@ -8,7 +8,7 @@ export function PersonalSign({
   sdk,
   subAccountAddress,
 }: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: ReturnType<typeof createBaseAccountSDK>;
   subAccountAddress: string;
 }) {
   const [state, setState] = useState<string>();

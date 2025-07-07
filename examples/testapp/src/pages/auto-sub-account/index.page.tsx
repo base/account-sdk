@@ -1,3 +1,5 @@
+import { getCryptoKeyAccount } from '@base/account-sdk';
+import { SpendPermissionConfig } from '@base/account-sdk/dist/core/provider/interface';
 import {
   Box,
   Button,
@@ -11,8 +13,6 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react';
-import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
-import { SpendPermissionConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import React, { useEffect, useState } from 'react';
 import { createPublicClient, http, numberToHex, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -317,7 +317,10 @@ export default function AutoSubAccount() {
           <RadioGroup
             value={(subAccountsConfig?.enableAutoSubAccounts || false).toString()}
             onChange={(value) =>
-              setSubAccountsConfig((prev) => ({ ...prev, enableAutoSubAccounts: value === 'true' }))
+              setSubAccountsConfig((prev) => ({
+                ...prev,
+                enableAutoSubAccounts: value === 'true',
+              }))
             }
           >
             <Stack direction="row">

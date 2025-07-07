@@ -1,5 +1,5 @@
+import { createBaseAccountSDK } from '@base/account-sdk';
 import { Container, VStack } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useEffect, useState } from 'react';
 import { Client, Hex, createPublicClient, http } from 'viem';
 import { SmartAccount, toCoinbaseSmartAccount } from 'viem/account-abstraction';
@@ -16,7 +16,7 @@ import { PersonalSign } from './components/PersonalSign';
 import { SendCalls } from './components/SendCalls';
 
 export default function SubAccounts() {
-  const [sdk, setSDK] = useState<ReturnType<typeof createCoinbaseWalletSDK>>();
+  const [sdk, setSDK] = useState<ReturnType<typeof createBaseAccountSDK>>();
   const [subAccount, setSubAccount] = useState<SmartAccount>();
   const [deployed, setDeployed] = useState<boolean>(false);
 
@@ -41,7 +41,7 @@ export default function SubAccounts() {
     const pk = unsafe_generateOrLoadPrivateKey();
     const account = privateKeyToAccount(pk);
 
-    const sdk = createCoinbaseWalletSDK({
+    const sdk = createBaseAccountSDK({
       appName: 'CryptoPlayground',
       preference: {
         walletUrl: 'http://localhost:3005/connect',

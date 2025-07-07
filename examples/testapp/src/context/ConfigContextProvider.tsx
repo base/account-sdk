@@ -1,5 +1,5 @@
-import { Preference } from '@coinbase/wallet-sdk';
-import { SubAccountOptions } from '@coinbase/wallet-sdk/dist/core/provider/interface';
+import { Preference } from '@base/account-sdk';
+import { SubAccountOptions } from '@base/account-sdk/dist/core/provider/interface';
 import {
   Dispatch,
   ReactNode,
@@ -12,13 +12,10 @@ import {
   useState,
 } from 'react';
 import {
-  OPTIONS_KEY,
-  OptionsType,
   SDKVersionType,
   SELECTED_SCW_URL_KEY,
   SELECTED_SDK_KEY,
   ScwUrlType,
-  options,
   scwUrls,
   sdkVersions,
 } from '../store/config';
@@ -30,10 +27,8 @@ type ConfigContextProviderProps = {
 
 type ConfigContextType = {
   version: SDKVersionType | undefined;
-  option: OptionsType | undefined;
   scwUrl: ScwUrlType | undefined;
   config: Preference;
-  setPreference: Dispatch<SetStateAction<OptionsType>>;
   setSDKVersion: Dispatch<SetStateAction<SDKVersionType>>;
   setScwUrlAndSave: Dispatch<SetStateAction<ScwUrlType>>;
   setConfig: Dispatch<SetStateAction<Preference>>;
@@ -45,10 +40,8 @@ const ConfigContext = createContext<ConfigContextType | null>(null);
 
 export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) => {
   const [version, setVersion] = useState<SDKVersionType | undefined>(undefined);
-  const [option, setOption] = useState<OptionsType | undefined>(undefined);
   const [scwUrl, setScwUrl] = useState<ScwUrlType | undefined>(undefined);
   const [config, setConfig] = useState<Preference>({
-    options: option,
     attribution: {
       auto: false,
     },
@@ -68,16 +61,6 @@ export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) 
   );
 
   useEffect(
-    function initializeOption() {
-      if (option === undefined) {
-        const option = localStorage.getItem(OPTIONS_KEY) as OptionsType;
-        setOption(options.includes(option) ? (option as OptionsType) : 'all');
-      }
-    },
-    [option]
-  );
-
-  useEffect(
     function initializeScwUrl() {
       if (scwUrl === undefined) {
         const savedScwUrl = localStorage.getItem(SELECTED_SCW_URL_KEY) as ScwUrlType;
@@ -86,12 +69,6 @@ export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) 
     },
     [scwUrl]
   );
-
-  const setPreference = useCallback((option: OptionsType) => {
-    cleanupSDKLocalStorage();
-    localStorage.setItem(OPTIONS_KEY, option);
-    setOption(option);
-  }, []);
 
   const setSDKVersion = useCallback((version: SDKVersionType) => {
     cleanupSDKLocalStorage();
@@ -115,10 +92,8 @@ export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) 
   const value = useMemo(() => {
     return {
       version,
-      option,
       scwUrl,
       config,
-      setPreference,
       setSDKVersion,
       setScwUrlAndSave,
       setConfig,
@@ -127,10 +102,8 @@ export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) 
     };
   }, [
     version,
-    option,
     scwUrl,
     config,
-    setPreference,
     setSDKVersion,
     setScwUrlAndSave,
     subAccountsConfig,

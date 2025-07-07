@@ -20,7 +20,7 @@ import {
 import NextLink from 'next/link';
 import React, { useMemo } from 'react';
 import { useConfig } from '../context/ConfigContextProvider';
-import { options, scwUrls, sdkVersions } from '../store/config';
+import { scwUrls, sdkVersions } from '../store/config';
 import { cleanupSDKLocalStorage } from '../utils/cleanupSDKLocalStorage';
 type LayoutProps = {
   children: React.ReactNode;
@@ -31,7 +31,7 @@ export const WIDTH_2XL = '1536px';
 const PAGES = ['/', '/add-sub-account', '/import-sub-account', '/auto-sub-account'];
 
 export function Layout({ children }: LayoutProps) {
-  const { option, setPreference, version, setSDKVersion, scwUrl, setScwUrlAndSave } = useConfig();
+  const { version, setSDKVersion, scwUrl, setScwUrlAndSave } = useConfig();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSmallScreen = useBreakpointValue({ base: true, xl: false });
@@ -64,24 +64,6 @@ export function Layout({ children }: LayoutProps) {
 
         <Menu>
           <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-            {`Option: ${option}`}
-          </MenuButton>
-          <MenuList>
-            {options.map((b) => (
-              <MenuItem
-                color={'MenuText'}
-                key={b.toString()}
-                icon={b === option ? <CheckIcon /> : null}
-                onClick={() => setPreference(b)}
-              >
-                {b.toString()}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Menu>
-
-        <Menu>
-          <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
             {`Env: ${scwUrl}`}
           </MenuButton>
           <MenuList>
@@ -99,7 +81,11 @@ export function Layout({ children }: LayoutProps) {
         </Menu>
       </>
     );
-  }, [version, option, setPreference, setSDKVersion, scwUrl, setScwUrlAndSave]);
+  }, [version, setSDKVersion, scwUrl, setScwUrlAndSave]);
+
+  const handleGoToHome = () => {
+    window.location.href = '/';
+  };
 
   const pages = useMemo(() => {
     return (
@@ -134,7 +120,7 @@ export function Layout({ children }: LayoutProps) {
             direction={isSmallScreen ? 'column' : 'row'}
             gap={2}
           >
-            <Heading>Coinbase Wallet SDK</Heading>
+            <Heading onClick={handleGoToHome}>Base Account SDK</Heading>
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
               {isSmallScreen ? (
                 <Button colorScheme="telegram" onClick={onOpen}>

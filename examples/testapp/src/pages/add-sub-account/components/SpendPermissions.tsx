@@ -1,7 +1,7 @@
+import { createBaseAccountSDK, getCryptoKeyAccount } from '@base/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
-import { encodeFunctionData, Hex, numberToHex } from 'viem';
+import { Hex, encodeFunctionData, numberToHex } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
 import {
@@ -13,7 +13,7 @@ export function SpendPermissions({
   sdk,
   subAccountAddress,
 }: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: ReturnType<typeof createBaseAccountSDK>;
   subAccountAddress: string;
 }) {
   const [state, setState] = useState<string>();
@@ -44,7 +44,6 @@ export function SpendPermissions({
       salt: data.salt,
       extraData: data.extraData,
     };
-
 
     try {
       const response = await provider?.request({

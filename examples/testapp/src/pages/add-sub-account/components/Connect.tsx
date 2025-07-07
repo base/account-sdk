@@ -1,8 +1,8 @@
+import { createBaseAccountSDK } from '@base/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useEffect, useState } from 'react';
 
-export function Connect({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
+export function Connect({ sdk }: { sdk: ReturnType<typeof createBaseAccountSDK> }) {
   const [state, setState] = useState<string[]>();
   const handleConnect = useCallback(async () => {
     if (!sdk) {

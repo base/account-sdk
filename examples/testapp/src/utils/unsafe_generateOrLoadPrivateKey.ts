@@ -9,10 +9,12 @@ import { generatePrivateKey } from 'viem/accounts';
  * @returns a private key
  */
 export function unsafe_generateOrLoadPrivateKey() {
-  let privateKey = localStorage.getItem('cbwsdk.demo.add-sub-account.pk') as `0x${string}` | null;
+  let privateKey = localStorage.getItem('base-acc-sdk.demo.add-sub-account.pk') as
+    | `0x${string}`
+    | null;
   if (!privateKey) {
     privateKey = generatePrivateKey();
-    localStorage.setItem('cbwsdk.demo.add-sub-account.pk', privateKey);
+    localStorage.setItem('base-acc-sdk.demo.add-sub-account.pk', privateKey);
   }
   return privateKey;
 }

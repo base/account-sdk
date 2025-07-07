@@ -1,3 +1,4 @@
+import { getCryptoKeyAccount } from '@base/account-sdk';
 import {
   Container,
   FormControl,
@@ -7,7 +8,6 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react';
-import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { useEffect, useState } from 'react';
 import { privateKeyToAccount } from 'viem/accounts';
 
@@ -75,30 +75,23 @@ export default function SubAccounts() {
             </Stack>
           </RadioGroup>
         </FormControl>
-        {/* @ts-expect-error - sdk is not typed correctly */}
+
         <Connect sdk={sdk} />
         <AddSubAccount
-          // @ts-expect-error - sdk is not typed correctly
           sdk={sdk}
           onAddSubAccount={setSubAccountAddress}
           signerFn={getSubAccountSigner}
         />
         <AddSubAccountWithoutKeys
-          // @ts-expect-error - sdk is not typed correctly
           sdk={sdk}
           onAddSubAccount={setSubAccountAddress}
           signerFn={getSubAccountSigner}
         />
-        {/* @ts-expect-error - sdk is not typed correctly */}
         <PersonalSign sdk={sdk} subAccountAddress={subAccountAddress} />
-        {/* @ts-expect-error - sdk is not typed correctly */}
         <SendCalls sdk={sdk} subAccountAddress={subAccountAddress} />
-        {/* @ts-expect-error - sdk is not typed correctly */}
         <GrantSpendPermission sdk={sdk} subAccountAddress={subAccountAddress} />
-        {/* @ts-expect-error - sdk is not typed correctly */}
         <SpendPermissions sdk={sdk} subAccountAddress={subAccountAddress} />
         <GenerateNewSigner />
-        {/* @ts-expect-error - sdk is not typed correctly */}
         <AddOwner sdk={sdk} />
       </VStack>
     </Container>

@@ -1,9 +1,9 @@
+import { createBaseAccountSDK, getCryptoKeyAccount } from '@base/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { baseSepolia } from 'viem/chains';
 
-export function AddOwner({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
+export function AddOwner({ sdk }: { sdk: ReturnType<typeof createBaseAccountSDK> }) {
   const [subAccount, setSubAccount] = useState<string>();
 
   const handleAddOwner = useCallback(async () => {

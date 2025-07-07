@@ -1,5 +1,5 @@
+import { createBaseAccountSDK } from '@base/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { Client, createPublicClient, encodeFunctionData, http, toHex } from 'viem';
 import { SmartAccount, createBundlerClient, createPaymasterClient } from 'viem/account-abstraction';
@@ -10,7 +10,7 @@ export function AddGlobalOwner({
   sdk,
   subAccount,
 }: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: ReturnType<typeof createBaseAccountSDK>;
   subAccount: SmartAccount;
 }) {
   const [state, setState] = useState<string>();

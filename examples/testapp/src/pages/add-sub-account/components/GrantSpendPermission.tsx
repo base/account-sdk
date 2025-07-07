@@ -1,5 +1,5 @@
+import { createBaseAccountSDK } from '@base/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { Address, Hex } from 'viem';
 import { baseSepolia } from 'viem/chains';
@@ -69,7 +69,7 @@ export function GrantSpendPermission({
   sdk,
   subAccountAddress,
 }: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: ReturnType<typeof createBaseAccountSDK>;
   subAccountAddress: string;
 }) {
   const [state, setState] = useState<Hex>();

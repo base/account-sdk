@@ -1,12 +1,12 @@
+import { createBaseAccountSDK } from '@base/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { numberToHex } from 'viem';
 import { SmartAccount } from 'viem/account-abstraction';
 import { baseSepolia } from 'viem/chains';
 
 type AddSubAccountProps = {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: ReturnType<typeof createBaseAccountSDK>;
   subAccount: SmartAccount;
 };
 

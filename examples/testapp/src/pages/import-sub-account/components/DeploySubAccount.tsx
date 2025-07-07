@@ -1,15 +1,15 @@
-import { Box, Button } from "@chakra-ui/react";
-import { createCoinbaseWalletSDK } from "@coinbase/wallet-sdk";
-import { useCallback, useState } from "react";
-import { Client, createPublicClient, http } from "viem";
-import { SmartAccount, createBundlerClient, createPaymasterClient } from "viem/account-abstraction";
-import { baseSepolia } from "viem/chains";
+import { createBaseAccountSDK } from '@base/account-sdk';
+import { Box, Button } from '@chakra-ui/react';
+import { useCallback, useState } from 'react';
+import { Client, createPublicClient, http } from 'viem';
+import { SmartAccount, createBundlerClient, createPaymasterClient } from 'viem/account-abstraction';
+import { baseSepolia } from 'viem/chains';
 
 export function DeploySubAccount({
   sdk,
   subAccount,
 }: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: ReturnType<typeof createBaseAccountSDK>;
   subAccount: SmartAccount;
 }) {
   const [state, setState] = useState<string>();
@@ -24,13 +24,17 @@ export function DeploySubAccount({
         chain: baseSepolia,
         transport: http(),
       });
-      const paymasterClient = createPaymasterClient({ 
-        transport: http('https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'), 
-      }) 
+      const paymasterClient = createPaymasterClient({
+        transport: http(
+          'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
+        ),
+      });
       const bundlerClient = createBundlerClient({
         account: subAccount,
         client: client as Client,
-        transport: http("https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O"),
+        transport: http(
+          'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
+        ),
         paymaster: paymasterClient,
       });
 
@@ -39,10 +43,10 @@ export function DeploySubAccount({
         calls: [],
       });
 
-      console.info("response", hash);
+      console.info('response', hash);
       setState(hash as string);
     } catch (e) {
-      console.error("error", e);
+      console.error('error', e);
     }
   }, [sdk, subAccount]);
 

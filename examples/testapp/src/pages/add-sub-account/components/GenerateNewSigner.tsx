@@ -1,5 +1,5 @@
+import { getCryptoKeyAccount, removeCryptoKey } from '@base/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
-import { getCryptoKeyAccount, removeCryptoKey } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 
 export function GenerateNewSigner() {

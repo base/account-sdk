@@ -1,10 +1,10 @@
+import { createBaseAccountSDK, getCryptoKeyAccount } from '@base/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { numberToHex } from 'viem';
 
 type AddSubAccountWithoutKeysProps = {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: ReturnType<typeof createBaseAccountSDK>;
   onAddSubAccount: (address: string) => void;
   signerFn: typeof getCryptoKeyAccount;
 };
