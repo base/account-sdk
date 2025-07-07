@@ -1,4 +1,4 @@
-import { standardErrors } from '@coinbase/wallet-sdk/dist/core/error/errors';
+import { standardErrors } from '@base/account-sdk/dist/core/error/errors';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSpyOnDisconnectedError } from './useSpyOnDisconnectedError';
