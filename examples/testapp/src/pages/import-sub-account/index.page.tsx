@@ -1,5 +1,5 @@
 import { createBaseAccountSDK } from '@base/account-sdk';
-import { Container, VStack } from '@chakra-ui/react';
+import { Container, Text, VStack } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { Client, Hex, createPublicClient, http } from 'viem';
 import { SmartAccount, toCoinbaseSmartAccount } from 'viem/account-abstraction';
@@ -74,6 +74,9 @@ export default function SubAccounts() {
 
   return (
     <Container mb={16}>
+      <Text fontSize="3xl" fontWeight="bold" mb={4}>
+        Import Sub Account
+      </Text>
       <VStack w="full" spacing={4}>
         <Connect sdk={sdk} />
         {deployed ? (
