@@ -45,7 +45,7 @@ export default function Home() {
             />
           </div>
 
-          <QuickTips activeTab="pay" />
+          <QuickTips />
         </section>
       </main>
     </div>
