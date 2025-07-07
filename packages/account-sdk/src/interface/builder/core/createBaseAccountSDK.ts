@@ -5,9 +5,11 @@ import {
   ProviderInterface,
   SubAccountOptions,
 } from ':core/provider/interface.js';
+import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
+import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { abi } from ':sign/base-account/utils/constants.js';
-import { store } from ':store/store.js';
+import { SubAccount, ToOwnerAccountFn, store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
@@ -85,6 +87,44 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
       return provider;
     },
     subAccount: {
+      async create(account: AddSubAccountAccount): Promise<SubAccount> {
+        const state = store.getState();
+        assertPresence(state.subAccount?.address, new Error('subaccount already exists'));
+
+        return (await sdk.getProvider()?.request({
+          method: 'wallet_addSubAccount',
+          params: [
+            {
+              version: '1',
+              account,
+            },
+          ],
+        })) as SubAccount;
+      },
+      async get(): Promise<SubAccount | null> {
+        const subAccount = store.subAccounts.get();
+
+        if (subAccount?.address) {
+          return subAccount;
+        }
+
+        const response = (await sdk.getProvider()?.request({
+          method: 'wallet_connect',
+          params: [
+            {
+              version: '1',
+              capabilities: {},
+            },
+          ],
+        })) as WalletConnectResponse;
+
+        const subAccounts = response.accounts[0].capabilities?.subAccounts;
+        if (!Array.isArray(subAccounts)) {
+          return null;
+        }
+
+        return subAccounts[0] as SubAccount;
+      },
       addOwner: async ({
         address,
         publicKey,
@@ -136,6 +176,12 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
             },
           ],
         })) as string;
+      },
+      setToOwnerAccount(toSubAccountOwner: ToOwnerAccountFn): void {
+        validateSubAccount(toSubAccountOwner);
+        store.subAccountsConfig.set({
+          toOwnerAccount: toSubAccountOwner,
+        });
       },
     },
   };
