@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CodeEditor, Header, Output, QuickTips } from '../components';
 import { DEFAULT_PAY_CODE } from '../constants';
 import { useCodeExecution } from '../hooks';
@@ -26,7 +26,7 @@ export default function Home() {
         {/* pay Section */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>pay Function</h2>
-          <p className={styles.sectionDescription}>Send USDC payments to any address on Base</p>
+          <p className={styles.sectionDescription}>Send USDC payments on Base</p>
 
           <div className={styles.playground}>
             <CodeEditor

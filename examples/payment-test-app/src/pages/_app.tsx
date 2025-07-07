@@ -1,7 +1,7 @@
 import '@/styles/globals.css';
-import type { AppProps } from 'next/app';
 import { OnchainKitProvider } from '@coinbase/onchainkit';
-import { base, baseSepolia } from 'viem/chains';
+import type { AppProps } from 'next/app';
+import { baseSepolia } from 'viem/chains';
 
 // Use Base Sepolia for testing
 const chain = baseSepolia;

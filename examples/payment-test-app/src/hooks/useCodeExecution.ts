@@ -23,14 +23,11 @@ export const useCodeExecution = () => {
 
       try {
         // Create a function from the user's code with additional context
-        const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+        const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
 
         // Create a context object with commonly used utilities
         const context = {
           pay,
-          // Add other utilities that users might want to import
-          ethers: (window as any).ethers, // if ethers is available globally
-          // You can add more pre-bundled libraries here
         };
 
         // Transform imports in the code
@@ -39,10 +36,11 @@ export const useCodeExecution = () => {
         // Create function with destructured context
         const userFunction = new AsyncFunction(...Object.keys(context), transformedCode);
 
-        console.log('Executing user code at:', new Date().toISOString());
         const paymentResult = await userFunction(...Object.values(context));
 
+        // biome-ignore lint/suspicious/noConsole: Useful for debugging payment results
         console.log('Payment result:', paymentResult);
+        
         setResult(paymentResult);
         setConsoleOutput(logs);
       } catch (error) {

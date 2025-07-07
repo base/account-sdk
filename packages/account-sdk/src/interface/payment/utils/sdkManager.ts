@@ -23,7 +23,7 @@ type WalletSendCallsRequestParams = {
  */
 export function createEphemeralSDK(chainId: number) {
   const sdk = createBaseAccountSDK({
-    appName: 'Payment',
+    appName: 'Base Pay Playground',
     appChainIds: [chainId],
     preference: {
       telemetry: false,

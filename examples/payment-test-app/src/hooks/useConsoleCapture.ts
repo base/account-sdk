@@ -6,13 +6,13 @@ export const useConsoleCapture = () => {
     const originalLog = console.log;
     const originalError = console.error;
 
-    const formatArgs = (args: any[]) => {
+    const formatArgs = (args: unknown[]) => {
       return args
         .map((arg) => {
           if (typeof arg === 'object' && arg !== null) {
             try {
               return safeStringify(arg);
-            } catch (e) {
+            } catch (_e) {
               return '[Object with circular reference]';
             }
           }

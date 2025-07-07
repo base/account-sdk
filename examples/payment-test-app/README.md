@@ -38,7 +38,7 @@ import { pay } from '@base/account-sdk'
 
 const result = await pay({
   amount: '1',
-  recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+  recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
   testnet: true
 })
 

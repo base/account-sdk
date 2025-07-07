@@ -34,11 +34,11 @@ export const transformImports = (code: string): string => {
 };
 
 // Helper function to safely stringify objects with circular references
-export const safeStringify = (obj: any): string => {
+export const safeStringify = (obj: unknown): string => {
   const seen = new WeakSet();
   return JSON.stringify(
     obj,
-    (key, value) => {
+    (_key, value) => {
       if (typeof value === 'object' && value !== null) {
         if (seen.has(value)) {
           return '[Circular Reference]';

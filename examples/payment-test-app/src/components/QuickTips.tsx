@@ -1,11 +1,30 @@
 import { PAY_QUICK_TIPS } from '../constants/playground';
 import styles from './QuickTips.module.css';
 
-interface QuickTipsProps {
-  activeTab?: 'pay';
-}
+// Helper function to safely render tips with links
+const renderTip = (tip: string) => {
+  // Check if the tip contains an HTML link
+  const linkMatch = tip.match(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/);
+  
+  if (linkMatch) {
+    const [fullMatch, href, text] = linkMatch;
+    const parts = tip.split(fullMatch);
+    
+    return (
+      <>
+        {parts[0]}
+        <a href={href} target="_blank" rel="noopener noreferrer">
+          {text}
+        </a>
+        {parts[1]}
+      </>
+    );
+  }
+  
+  return tip;
+};
 
-export const QuickTips = ({ activeTab }: QuickTipsProps) => {
+export const QuickTips = () => {
   return (
     <div className={styles.infoSection}>
       <div className={styles.infoCard}>
@@ -25,7 +44,7 @@ export const QuickTips = ({ activeTab }: QuickTipsProps) => {
         </h3>
         <ul className={styles.infoList}>
           {PAY_QUICK_TIPS.map((tip, index) => (
-            <li key={index} dangerouslySetInnerHTML={{ __html: tip }} />
+            <li key={index}>{renderTip(tip)}</li>
           ))}
         </ul>
       </div>
