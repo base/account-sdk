@@ -17,21 +17,15 @@ type WalletSendCallsRequestParams = {
 };
 
 /**
- * Type for wallet_sendCalls response
- */
-type WalletSendCallsResponse = {
-  id: string;
-  capabilities?: Record<string, any>;
-};
-
-/**
  * Creates an ephemeral SDK instance configured for payments
  * @param chainId - The chain ID to use
  * @returns The configured SDK instance
  */
 export function createEphemeralSDK(chainId: number) {
+  const appName = typeof window !== 'undefined' ? window.location.origin : 'Base Pay SDK';
+  
   const sdk = createBaseAccountSDK({
-    appName: 'Payment',
+    appName: appName,
     appChainIds: [chainId],
     preference: {
       telemetry: true,
@@ -60,10 +54,10 @@ export async function executePayment(
 
   let transactionHash: Hex;
 
-  if (result && typeof result === 'object' && 'id' in result) {
-    transactionHash = (result as WalletSendCallsResponse).id as Hex;
+  if (typeof result === 'string' && result.length >= 66) {
+    transactionHash = result.slice(0, 66) as Hex;
   } else {
-    throw new Error('Unexpected response format from wallet_sendCalls');
+    throw new Error(`Unexpected response format from wallet_sendCalls: expected string with length > 66, got ${typeof result} with length ${typeof result === 'string' ? result.length : 'N/A'}`);
   }
 
   return transactionHash;
