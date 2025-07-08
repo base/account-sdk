@@ -36,7 +36,7 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '10.50',
-      recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       testnet: false,
     });
 
@@ -44,15 +44,15 @@ describe('pay', () => {
       success: true,
       id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
       amount: '10.50',
-      recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
     });
 
     expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 2);
     expect(validation.validateAddress).toHaveBeenCalledWith(
-      '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+      '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51'
     );
     expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(
-      '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       '10.50',
       false
     );
@@ -65,14 +65,14 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '0',
-      recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
     });
 
     expect(payment).toEqual({
       success: false,
       error: 'Invalid amount: must be greater than 0',
       amount: '0',
-      recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
     });
   });
 
@@ -91,14 +91,14 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '10.50',
-      recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
     });
 
     expect(payment).toEqual({
       success: false,
       error: 'User rejected the request',
       amount: '10.50',
-      recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
     });
   });
 
@@ -127,13 +127,13 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '5.00',
-      recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       testnet: true,
     });
 
     expect(payment.success).toBe(true);
     expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(
-      '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       '5.00',
       true
     );

@@ -17,7 +17,7 @@ import { validateAddress, validateStringAmount } from './utils/validation.js';
  * ```typescript
  * const payment = await pay({
  *   amount: "10.50",
- *   recipient: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+ *   recipient: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
  *   testnet: true
  * });
  *
@@ -57,18 +57,14 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
     } else if (typeof error === 'string') {
       errorMessage = error;
     } else if (error && typeof error === 'object') {
-      // Check for various error message properties
-      if ('message' in error) {
-        errorMessage = String(error.message);
-      } else if (
-        'error' in error &&
-        error.error &&
-        typeof error.error === 'object' &&
-        'message' in error.error
-      ) {
-        errorMessage = String(error.error.message);
-      } else if ('reason' in error) {
-        errorMessage = String(error.reason);
+      // Check for various error message properties using optional chaining
+      const err = error as any;
+      if (typeof err?.message === 'string') {
+        errorMessage = err.message;
+      } else if (typeof err?.error?.message === 'string') {
+        errorMessage = err.error.message;
+      } else if (typeof err?.reason === 'string') {
+        errorMessage = err.reason;
       }
     }
 
