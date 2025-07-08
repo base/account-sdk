@@ -1,6 +1,6 @@
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/dialogues.js';
+import { logDialogueActionClicked, logDialogueShown } from ':core/telemetry/events/dialogues.js';
 import { initDialogue } from '../ui/Dialogue/index.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 
@@ -67,14 +67,14 @@ function appendAppInfoQueryParams(url: URL) {
 function openPopupWithDialogue(tryOpenPopup: () => Window | null) {
   const dialogue = initDialogue();
   return new Promise<Window>((resolve, reject) => {
-    logSnackbarShown({ snackbarContext: 'popup_blocked' });
+    logDialogueShown({ dialogueContext: 'popup_blocked' });
     dialogue.presentItem({
       title: POPUP_BLOCKED_TITLE,
       message: POPUP_BLOCKED_MESSAGE,
       onClose: () => {
-        logSnackbarActionClicked({
-          snackbarContext: 'popup_blocked',
-          snackbarAction: 'cancel',
+        logDialogueActionClicked({
+          dialogueContext: 'popup_blocked',
+          dialogueAction: 'cancel',
         });
         reject(standardErrors.rpc.internal('Popup window was blocked'));
       },
@@ -83,9 +83,9 @@ function openPopupWithDialogue(tryOpenPopup: () => Window | null) {
           text: 'Try again',
           variant: 'primary',
           onClick: () => {
-            logSnackbarActionClicked({
-              snackbarContext: 'popup_blocked',
-              snackbarAction: 'confirm',
+            logDialogueActionClicked({
+              dialogueContext: 'popup_blocked',
+              dialogueAction: 'confirm',
             });
             const popup = tryOpenPopup();
             if (popup) {
@@ -100,9 +100,9 @@ function openPopupWithDialogue(tryOpenPopup: () => Window | null) {
           text: 'Cancel',
           variant: 'secondary',
           onClick: () => {
-            logSnackbarActionClicked({
-              snackbarContext: 'popup_blocked',
-              snackbarAction: 'cancel',
+            logDialogueActionClicked({
+              dialogueContext: 'popup_blocked',
+              dialogueAction: 'cancel',
             });
             reject(standardErrors.rpc.internal('Popup window was blocked'));
             dialogue.clear();
