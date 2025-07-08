@@ -1,3 +1,4 @@
+import { Preference } from '@base/account-sdk';
 import {
   Box,
   Card,
@@ -10,7 +11,6 @@ import {
   Switch,
   Text,
 } from '@chakra-ui/react';
-import { Preference } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import React, { useCallback, useMemo, useState } from 'react';
 import { keccak256, slice, toHex } from 'viem';
 

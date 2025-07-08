@@ -1,20 +1,19 @@
+import { getCryptoKeyAccount } from '@base/account-sdk';
+import { SpendPermissionConfig } from '@base/account-sdk/dist/core/provider/interface';
 import {
-    Box,
-    Button,
-    Container,
-    FormControl,
-    FormLabel,
-    HStack,
-    Input,
-    Radio,
-    RadioGroup,
-    Stack,
-    VStack,
+  Box,
+  Button,
+  Container,
+  FormControl,
+  FormLabel,
+  HStack,
+  Input,
+  Radio,
+  RadioGroup,
+  Stack,
+  Text,
+  VStack,
 } from '@chakra-ui/react';
-import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
-import { SpendPermissionConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
-import type { OwnerAccount } from '@coinbase/wallet-sdk/dist/core/type/index.js';
-import type { ToOwnerAccountFn } from '@coinbase/wallet-sdk/dist/store/store.js';
 import React, { useEffect, useState } from 'react';
 import { createPublicClient, http, numberToHex, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -59,15 +58,12 @@ export default function AutoSubAccount() {
             // THIS IS NOT SAFE, THIS IS ONLY FOR TESTING
             // IN A REAL APP YOU SHOULD NOT STORE/EXPOSE A PRIVATE KEY
             const privateKey = unsafe_generateOrLoadPrivateKey();
-            const account = privateKeyToAccount(privateKey);
-            
-            // Return the account in the expected format
             return {
-              account: account as OwnerAccount,
+              account: privateKeyToAccount(privateKey),
             };
           };
 
-    setSubAccountsConfig((prev) => ({ ...prev, toOwnerAccount: getSigner as ToOwnerAccountFn }));
+    setSubAccountsConfig((prev) => ({ ...prev, toOwnerAccount: getSigner }));
   }, [signerType, setSubAccountsConfig]);
 
   const handleRequestAccounts = async () => {
@@ -304,6 +300,9 @@ export default function AutoSubAccount() {
 
   return (
     <Container mb={16}>
+      <Text fontSize="3xl" fontWeight="bold" mb={4}>
+        Auto Sub Account
+      </Text>
       <VStack w="full" spacing={4}>
         <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
           Configuration
@@ -322,7 +321,10 @@ export default function AutoSubAccount() {
           <RadioGroup
             value={(subAccountsConfig?.enableAutoSubAccounts || false).toString()}
             onChange={(value) =>
-              setSubAccountsConfig((prev) => ({ ...prev, enableAutoSubAccounts: value === 'true' }))
+              setSubAccountsConfig((prev) => ({
+                ...prev,
+                enableAutoSubAccounts: value === 'true',
+              }))
             }
           >
             <Stack direction="row">
@@ -373,10 +375,12 @@ export default function AutoSubAccount() {
                 <Box
                   key={account}
                   p={3}
-                  bg="gray.700"
+                  bg="gray.100"
                   borderRadius="md"
                   fontFamily="monospace"
                   fontSize="sm"
+                  color="gray.800"
+                  _dark={{ bg: 'gray.700', color: 'gray.200' }}
                 >
                   {account}
                 </Box>
@@ -387,19 +391,86 @@ export default function AutoSubAccount() {
         <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
           RPCs
         </Box>
-        <Button w="full" onClick={handleRequestAccounts}>
+        <Button
+          w="full"
+          onClick={handleRequestAccounts}
+          bg="blue.500"
+          color="white"
+          border="1px solid"
+          borderColor="blue.500"
+          _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
+          _dark={{
+            bg: 'blue.600',
+            borderColor: 'blue.600',
+            _hover: { bg: 'blue.700', borderColor: 'blue.700' },
+          }}
+        >
           eth_requestAccounts
         </Button>
-        <Button w="full" onClick={handleSendTransaction} isDisabled={!accounts.length}>
+        <Button
+          w="full"
+          onClick={handleSendTransaction}
+          isDisabled={!accounts.length}
+          bg="blue.500"
+          color="white"
+          border="1px solid"
+          borderColor="blue.500"
+          _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
+          _dark={{
+            bg: 'blue.600',
+            borderColor: 'blue.600',
+            _hover: { bg: 'blue.700', borderColor: 'blue.700' },
+          }}
+        >
           eth_sendTransaction
         </Button>
-        <Button w="full" onClick={handleSignTypedData} isDisabled={!accounts.length}>
+        <Button
+          w="full"
+          onClick={handleSignTypedData}
+          isDisabled={!accounts.length}
+          bg="blue.500"
+          color="white"
+          border="1px solid"
+          borderColor="blue.500"
+          _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
+          _dark={{
+            bg: 'blue.600',
+            borderColor: 'blue.600',
+            _hover: { bg: 'blue.700', borderColor: 'blue.700' },
+          }}
+        >
           eth_signTypedData_v4
         </Button>
-        <Button w="full" onClick={handleWalletConnectWithSubAccount}>
+        <Button
+          w="full"
+          onClick={handleWalletConnectWithSubAccount}
+          bg="blue.500"
+          color="white"
+          border="1px solid"
+          borderColor="blue.500"
+          _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
+          _dark={{
+            bg: 'blue.600',
+            borderColor: 'blue.600',
+            _hover: { bg: 'blue.700', borderColor: 'blue.700' },
+          }}
+        >
           wallet_connect (addSubAccount)
         </Button>
-        <Button w="full" onClick={handleWalletConnect}>
+        <Button
+          w="full"
+          onClick={handleWalletConnect}
+          bg="blue.500"
+          color="white"
+          border="1px solid"
+          borderColor="blue.500"
+          _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
+          _dark={{
+            bg: 'blue.600',
+            borderColor: 'blue.600',
+            _hover: { bg: 'blue.700', borderColor: 'blue.700' },
+          }}
+        >
           wallet_connect
         </Button>
         <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
@@ -415,6 +486,16 @@ export default function AutoSubAccount() {
               isLoading={sendingAmounts[amount]}
               loadingText="Sending..."
               size="lg"
+              bg="green.500"
+              color="white"
+              border="1px solid"
+              borderColor="green.500"
+              _hover={{ bg: 'green.600', borderColor: 'green.600' }}
+              _dark={{
+                bg: 'green.600',
+                borderColor: 'green.600',
+                _hover: { bg: 'green.700', borderColor: 'green.700' },
+              }}
             >
               {amount} ETH
             </Button>
@@ -425,12 +506,14 @@ export default function AutoSubAccount() {
             as="pre"
             w="full"
             p={2}
-            bg="gray.900"
+            bg="gray.50"
             borderRadius="md"
             border="1px solid"
-            borderColor="gray.700"
+            borderColor="gray.300"
             overflow="auto"
             whiteSpace="pre-wrap"
+            color="gray.800"
+            _dark={{ bg: 'gray.900', borderColor: 'gray.700', color: 'gray.200' }}
           >
             {lastResult}
           </Box>

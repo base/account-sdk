@@ -1,6 +1,5 @@
-import { Container, VStack } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
-import type { OwnerAccount } from '@coinbase/wallet-sdk/dist/core/type/index.js';
+import { createBaseAccountSDK } from '@base/account-sdk';
+import { Container, Text, VStack } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { Client, Hex, createPublicClient, http } from 'viem';
 import { SmartAccount, toCoinbaseSmartAccount } from 'viem/account-abstraction';
@@ -17,7 +16,7 @@ import { PersonalSign } from './components/PersonalSign';
 import { SendCalls } from './components/SendCalls';
 
 export default function SubAccounts() {
-  const [sdk, setSDK] = useState<ReturnType<typeof createCoinbaseWalletSDK>>();
+  const [sdk, setSDK] = useState<ReturnType<typeof createBaseAccountSDK>>();
   const [subAccount, setSubAccount] = useState<SmartAccount>();
   const [deployed, setDeployed] = useState<boolean>(false);
 
@@ -42,14 +41,14 @@ export default function SubAccounts() {
     const pk = unsafe_generateOrLoadPrivateKey();
     const account = privateKeyToAccount(pk);
 
-    const sdk = createCoinbaseWalletSDK({
+    const sdk = createBaseAccountSDK({
       appName: 'CryptoPlayground',
       preference: {
         walletUrl: 'http://localhost:3005/connect',
         options: 'smartWalletOnly',
       },
       subAccounts: {
-        toOwnerAccount: () => Promise.resolve({ account: account as OwnerAccount }),
+        toOwnerAccount: () => Promise.resolve({ account }),
       },
     });
 
@@ -75,6 +74,9 @@ export default function SubAccounts() {
 
   return (
     <Container mb={16}>
+      <Text fontSize="3xl" fontWeight="bold" mb={4}>
+        Import Sub Account
+      </Text>
       <VStack w="full" spacing={4}>
         <Connect sdk={sdk} />
         {deployed ? (
