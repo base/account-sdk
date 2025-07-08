@@ -6,9 +6,19 @@ interface CodeEditorProps {
   onExecute: () => void;
   onReset: () => void;
   isLoading: boolean;
+  includeInfoRequests: boolean;
+  onInfoRequestsToggle: (checked: boolean) => void;
 }
 
-export const CodeEditor = ({ code, onChange, onExecute, onReset, isLoading }: CodeEditorProps) => {
+export const CodeEditor = ({ 
+  code, 
+  onChange, 
+  onExecute, 
+  onReset, 
+  isLoading, 
+  includeInfoRequests, 
+  onInfoRequestsToggle 
+}: CodeEditorProps) => {
   return (
     <div className={styles.editorPanel}>
       <div className={styles.panelHeader}>
@@ -41,6 +51,19 @@ export const CodeEditor = ({ code, onChange, onExecute, onReset, isLoading }: Co
           </svg>
           Reset
         </button>
+      </div>
+
+      <div className={styles.checkboxContainer}>
+        <label className={styles.checkboxLabel}>
+          <input
+            type="checkbox"
+            checked={includeInfoRequests}
+            onChange={(e) => onInfoRequestsToggle(e.target.checked)}
+            disabled={isLoading}
+            className={styles.checkbox}
+          />
+          <span className={styles.checkboxText}>Include info requests</span>
+        </label>
       </div>
 
       <div className={styles.editorWrapper}>

@@ -1,1 +1,1 @@
-export { DEFAULT_PAY_CODE, PAY_QUICK_TIPS, QUICK_TIPS } from './playground';
+export { DEFAULT_PAY_CODE, PAY_CODE_WITH_INFO_REQUESTS, PAY_QUICK_TIPS, QUICK_TIPS } from './playground';

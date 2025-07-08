@@ -145,6 +145,64 @@ code.resultValue {
   font-size: 0.875rem;
 }
 
+/* User data section */
+.userDataSection {
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.userDataHeader {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.userDataIcon {
+  width: 18px;
+  height: 18px;
+  color: #64748b;
+}
+
+.userDataBody {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.userDataRow {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.userDataLabel {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.userDataValue {
+  font-size: 0.875rem;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+code.userDataValue {
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+  background: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid #e2e8f0;
+}
+
 /* Console output */
 .consoleCard {
   background: #1e293b;
@@ -243,6 +301,18 @@ code.resultValue {
     padding: 1rem;
   }
 
+  .userDataHeader {
+    padding: 0.75rem 1rem;
+  }
+
+  .userDataBody {
+    padding: 1rem;
+  }
+
+  .userDataRow {
+    grid-template-columns: 100px 1fr;
+  }
+
   .consoleCard {
     max-height: 250px;
   }
@@ -268,6 +338,19 @@ code.resultValue {
   }
 
   .resultValue {
+    font-size: 0.75rem;
+  }
+
+  .userDataRow {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .userDataLabel {
+    font-size: 0.75rem;
+  }
+
+  .userDataValue {
     font-size: 0.75rem;
   }
 }
