@@ -1,4 +1,3 @@
-import { standardErrors } from '@base/account-sdk/dist/core/error/errors';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSpyOnDisconnectedError } from './useSpyOnDisconnectedError';
@@ -40,7 +39,7 @@ describe('useSpyOnDisconnectedError', () => {
   });
 
   it('should re-throw errors that are not code 4100', async () => {
-    const testError = standardErrors.rpc.internal();
+    const testError = new Error('Internal JSON-RPC error.');
     originalRequest.mockRejectedValue(testError);
 
     const { result } = renderHook(() => useSpyOnDisconnectedError());
@@ -54,7 +53,7 @@ describe('useSpyOnDisconnectedError', () => {
   });
 
   it('should trigger onOpen when error code 4100 is detected', async () => {
-    const disconnectError = standardErrors.provider.unauthorized();
+    const disconnectError = new Error('Unauthorized');
     originalRequest.mockRejectedValue(disconnectError);
 
     const { result } = renderHook(() => useSpyOnDisconnectedError());
