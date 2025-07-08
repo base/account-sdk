@@ -22,8 +22,5 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4"
   },
-  "packageManager": "yarn@4.8.1",
-  "dependencies": {
-    "payment-test-app": "workspace:examples/payment-test-app"
-  }
+  "packageManager": "yarn@4.8.1"
 }

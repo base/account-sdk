@@ -4680,7 +4680,6 @@ __metadata:
   resolution: "account-sdk@workspace:."
   dependencies:
     "@biomejs/biome": "npm:^1.9.4"
-    payment-test-app: "workspace:examples/payment-test-app"
   languageName: unknown
   linkType: soft
 
