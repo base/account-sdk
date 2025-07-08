@@ -13,8 +13,8 @@ import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_co
 import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
 import { Address } from ':core/type/index.js';
 import { config, store } from ':store/store.js';
+import { initDialogue } from ':ui/Dialogue/index.js';
 import { get } from ':util/get.js';
-import { initSnackbar } from ':util/web.js';
 import { waitForCallsStatus } from 'viem/experimental';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 import { spendPermissionManagerAddress } from './utils/constants.js';
@@ -418,65 +418,55 @@ export function createWalletSendCallsRequest({
 }
 
 export async function presentSubAccountFundingDialog() {
-  const snackbar = initSnackbar();
+  const dialogue = initDialogue();
   const userChoice = await new Promise<'update_permission' | 'continue_popup' | 'cancel'>(
     (resolve) => {
       logSnackbarShown({ snackbarContext: 'sub_account_insufficient_balance' });
-      snackbar.presentItem({
-        autoExpand: true,
+      dialogue.presentItem({
+        title: 'Insufficient spend permission',
         message: 'Insufficient spend permission. Choose how to proceed:',
-        menuItems: [
+        actionItems: [
           {
-            isRed: false,
-            info: 'Create new Spend Permission',
-            svgWidth: '10',
-            svgHeight: '11',
-            path: '',
-            defaultFillRule: 'evenodd',
-            defaultClipRule: 'evenodd',
+            text: 'Create new Spend Permission',
+            variant: 'primary',
             onClick: () => {
               logSnackbarActionClicked({
                 snackbarContext: 'sub_account_insufficient_balance',
                 snackbarAction: 'create_permission',
               });
-              snackbar.clear();
+              dialogue.clear();
               resolve('update_permission');
             },
           },
           {
-            isRed: false,
-            info: 'Continue in Popup',
-            svgWidth: '10',
-            svgHeight: '11',
-            path: '',
-            defaultFillRule: 'evenodd',
-            defaultClipRule: 'evenodd',
+            text: 'Continue in Popup',
+            variant: 'primary',
             onClick: () => {
               logSnackbarActionClicked({
                 snackbarContext: 'sub_account_insufficient_balance',
                 snackbarAction: 'continue_in_popup',
               });
-              snackbar.clear();
+              dialogue.clear();
               resolve('continue_popup');
             },
           },
-          {
-            isRed: true,
-            info: 'Cancel',
-            svgWidth: '10',
-            svgHeight: '11',
-            path: '',
-            defaultFillRule: 'evenodd',
-            defaultClipRule: 'evenodd',
-            onClick: () => {
-              logSnackbarActionClicked({
-                snackbarContext: 'sub_account_insufficient_balance',
-                snackbarAction: 'cancel',
-              });
-              snackbar.clear();
-              resolve('cancel');
-            },
-          },
+          // {
+          //   isRed: true,
+          //   info: 'Cancel',
+          //   svgWidth: '10',
+          //   svgHeight: '11',
+          //   path: '',
+          //   defaultFillRule: 'evenodd',
+          //   defaultClipRule: 'evenodd',
+          //   onClick: () => {
+          //     logSnackbarActionClicked({
+          //       snackbarContext: 'sub_account_insufficient_balance',
+          //       snackbarAction: 'cancel',
+          //     });
+          //     snackbar.clear();
+          //     resolve('cancel');
+          //   },
+          // },
         ],
       });
     }
@@ -591,7 +581,8 @@ export async function getCachedWalletConnectResponse(): Promise<WalletConnectRes
       address: account,
       capabilities: {
         subAccounts: subAccount ? [subAccount] : undefined,
-        spendPermissions: spendPermissions.length > 0 ? { permissions: spendPermissions } : undefined,
+        spendPermissions:
+          spendPermissions.length > 0 ? { permissions: spendPermissions } : undefined,
       },
     })
   );
