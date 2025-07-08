@@ -8,6 +8,8 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
+import type { OwnerAccount } from '@coinbase/wallet-sdk/dist/core/type/index.js';
+import type { ToOwnerAccountFn } from '@coinbase/wallet-sdk/dist/store/store.js';
 import { useEffect, useState } from 'react';
 import { privateKeyToAccount } from 'viem/accounts';
 
@@ -54,13 +56,16 @@ export default function SubAccounts() {
             // THIS IS NOT SAFE, THIS IS ONLY FOR TESTING
             // IN A REAL APP YOU SHOULD NOT STORE/EXPOSE A PRIVATE KEY
             const privateKey = unsafe_generateOrLoadPrivateKey();
+            const account = privateKeyToAccount(privateKey);
+            
+            // Return the account in the expected format
             return {
-              account: privateKeyToAccount(privateKey),
+              account: account as OwnerAccount,
             };
           };
 
-    setGetSubAccountSigner(() => getSigner);
-    setSubAccountsConfig({ toOwnerAccount: getSigner });
+    setGetSubAccountSigner(() => getSigner as typeof getCryptoKeyAccount);
+    setSubAccountsConfig({ toOwnerAccount: getSigner as ToOwnerAccountFn });
   }, [signerType, setSubAccountsConfig]);
 
   return (

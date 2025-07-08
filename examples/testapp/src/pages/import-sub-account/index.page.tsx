@@ -1,5 +1,6 @@
 import { Container, VStack } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
+import type { OwnerAccount } from '@coinbase/wallet-sdk/dist/core/type/index.js';
 import { useEffect, useState } from 'react';
 import { Client, Hex, createPublicClient, http } from 'viem';
 import { SmartAccount, toCoinbaseSmartAccount } from 'viem/account-abstraction';
@@ -48,7 +49,7 @@ export default function SubAccounts() {
         options: 'smartWalletOnly',
       },
       subAccounts: {
-        toOwnerAccount: () => Promise.resolve({ account }),
+        toOwnerAccount: () => Promise.resolve({ account: account as OwnerAccount }),
       },
     });
 

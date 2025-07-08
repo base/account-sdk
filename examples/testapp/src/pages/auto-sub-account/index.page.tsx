@@ -1,18 +1,20 @@
 import {
-  Box,
-  Button,
-  Container,
-  FormControl,
-  FormLabel,
-  HStack,
-  Input,
-  Radio,
-  RadioGroup,
-  Stack,
-  VStack,
+    Box,
+    Button,
+    Container,
+    FormControl,
+    FormLabel,
+    HStack,
+    Input,
+    Radio,
+    RadioGroup,
+    Stack,
+    VStack,
 } from '@chakra-ui/react';
 import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { SpendPermissionConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
+import type { OwnerAccount } from '@coinbase/wallet-sdk/dist/core/type/index.js';
+import type { ToOwnerAccountFn } from '@coinbase/wallet-sdk/dist/store/store.js';
 import React, { useEffect, useState } from 'react';
 import { createPublicClient, http, numberToHex, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -57,12 +59,15 @@ export default function AutoSubAccount() {
             // THIS IS NOT SAFE, THIS IS ONLY FOR TESTING
             // IN A REAL APP YOU SHOULD NOT STORE/EXPOSE A PRIVATE KEY
             const privateKey = unsafe_generateOrLoadPrivateKey();
+            const account = privateKeyToAccount(privateKey);
+            
+            // Return the account in the expected format
             return {
-              account: privateKeyToAccount(privateKey),
+              account: account as OwnerAccount,
             };
           };
 
-    setSubAccountsConfig((prev) => ({ ...prev, toOwnerAccount: getSigner }));
+    setSubAccountsConfig((prev) => ({ ...prev, toOwnerAccount: getSigner as ToOwnerAccountFn }));
   }, [signerType, setSubAccountsConfig]);
 
   const handleRequestAccounts = async () => {
