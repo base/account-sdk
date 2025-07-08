@@ -26,11 +26,23 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
+
+    // Phone portrait mode - bottom sheet
+    @media (max-width: 600px) and (orientation: portrait) {
+      align-items: flex-end;
+      justify-content: stretch;
+      padding: 0;
+    }
   }
 
   .-cbwsdk-dialogue {
     position: relative;
     z-index: 2147483648;
+
+    // Phone portrait mode - full width
+    @media (max-width: 600px) and (orientation: portrait) {
+      width: 100%;
+    }
   }
 
   .-cbwsdk-dialogue-instance {
@@ -44,14 +56,50 @@
     opacity: 0;
     transition: all 0.2s ease-in-out;
 
+    // Enable touch-action for better mobile interaction
+    @media (max-width: 600px) and (orientation: portrait) {
+      touch-action: pan-y;
+      user-select: none;
+    }
+
     &-hidden {
       transform: scale(0.9);
       opacity: 0;
+
+      // Phone portrait mode - slide down animation
+      @media (max-width: 600px) and (orientation: portrait) {
+        transform: translateY(100%);
+      }
     }
 
     &:not(.-cbwsdk-dialogue-instance-hidden) {
       transform: scale(1);
       opacity: 1;
+
+      // Phone portrait mode - slide up animation
+      @media (max-width: 600px) and (orientation: portrait) {
+        transform: translateY(0);
+      }
+    }
+
+    // Phone portrait mode - bottom sheet styling
+    @media (max-width: 600px) and (orientation: portrait) {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.15);
+      max-height: 80vh;
+      transform: translateY(0);
+
+      &-hidden {
+        transform: translateY(100%);
+        opacity: 1;
+      }
+
+      &:not(.-cbwsdk-dialogue-instance-hidden) {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
 
     &-header {
@@ -59,6 +107,11 @@
       align-items: center;
       justify-content: space-between;
       padding: 16px 20px 0 20px;
+
+      // Phone portrait mode - adjusted padding
+      @media (max-width: 600px) and (orientation: portrait) {
+        padding: 16px 20px 12px 20px;
+      }
 
       &-icon {
         display: flex;
@@ -98,6 +151,11 @@
       padding: 16px 20px;
       font-family: 'BaseSans-Regular', sans-serif;
 
+      // Phone portrait mode - better spacing for bottom sheet
+      @media (max-width: 600px) and (orientation: portrait) {
+        padding: 20px 20px 0 20px;
+      }
+
       &-title {
         font-size: 20px;
         font-weight: 600;
@@ -119,6 +177,12 @@
       display: flex;
       padding: 16px 20px 20px 20px;
       flex-direction: column;
+
+      // Phone portrait mode - bottom sheet actions
+      @media (max-width: 600px) and (orientation: portrait) {
+        padding: 16px 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+        gap: 6px;
+      }
     }
 
     &-button {
@@ -164,6 +228,30 @@
           background-color: #D4D8DD;
         }
       }
+    }
+  }
+
+  // Handle bar component styles
+  .-cbwsdk-dialogue-handle-bar {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 4px;
+    background-color: #D1D5DB;
+    border-radius: 2px;
+    opacity: 0;
+    animation: handleBarFadeIn 0.2s ease-in-out 0.2s forwards;
+  }
+
+  // Keyframe animation for handle bar fade in
+  @keyframes handleBarFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
     }
   }
 } 

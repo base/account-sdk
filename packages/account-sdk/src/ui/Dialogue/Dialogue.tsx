@@ -11,6 +11,41 @@ import { BaseLogo } from ':ui/assets/BaseLogo.js';
 import { closeIcon } from ':ui/assets/icons.js';
 import css from './Dialogue-css.js';
 
+// Helper function to detect phone portrait mode
+function isPhonePortrait(): boolean {
+  return window.innerWidth <= 600 && window.innerHeight > window.innerWidth;
+}
+
+// Handle bar component for mobile bottom sheet
+const DialogueHandleBar: FunctionComponent = () => {
+  const [showHandleBar, setShowHandleBar] = useState(false);
+
+  useEffect(() => {
+    // Only show handle bar on phone portrait mode
+    const checkOrientation = () => {
+      setShowHandleBar(isPhonePortrait());
+    };
+
+    // Initial check
+    checkOrientation();
+
+    // Listen for orientation/resize changes
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
+
+  if (!showHandleBar) {
+    return null;
+  }
+
+  return <div class="-cbwsdk-dialogue-handle-bar" />;
+};
+
 export type DialogueProps = {
   title: string;
   message: string;
@@ -81,14 +116,77 @@ export class Dialogue {
   }
 }
 
-export const DialogueContainer: FunctionComponent = (props) => (
-  <div class={clsx('-cbwsdk-dialogue-container')}>
-    <style>{css}</style>
-    <div class="-cbwsdk-dialogue-backdrop">
-      <div class="-cbwsdk-dialogue">{props.children}</div>
+export const DialogueContainer: FunctionComponent = (props) => {
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startY, setStartY] = useState(0);
+
+  // Touch event handlers for drag-to-dismiss (entire dialogue area)
+  const handleTouchStart = (e: any) => {
+    // Only enable drag on mobile portrait mode
+    if (!isPhonePortrait()) return;
+
+    const touch = e.touches[0];
+    setStartY(touch.clientY);
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: any) => {
+    if (!isDragging) return;
+
+    const touch = e.touches[0];
+    const deltaY = touch.clientY - startY;
+
+    // Only allow dragging down (positive deltaY)
+    if (deltaY > 0) {
+      setDragY(deltaY);
+      e.preventDefault(); // Prevent scrolling
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+
+    setIsDragging(false);
+
+    // Dismiss if dragged down more than 100px
+    if (dragY > 100) {
+      // Find the dialogue instance and trigger its close handler
+      const closeButton = document.querySelector(
+        '.-cbwsdk-dialogue-instance-header-close'
+      ) as HTMLElement;
+      if (closeButton) {
+        closeButton.click();
+      }
+    } else {
+      // Animate back to original position
+      setDragY(0);
+    }
+  };
+
+  return (
+    <div class={clsx('-cbwsdk-dialogue-container')}>
+      <style>{css}</style>
+      <div
+        class="-cbwsdk-dialogue-backdrop"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div
+          class="-cbwsdk-dialogue"
+          style={{
+            transform: `translateY(${dragY}px)`,
+            transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+          }}
+        >
+          <DialogueHandleBar />
+          {props.children}
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const DialogueInstance: FunctionComponent<DialogueInstanceProps> = ({
   title,
