@@ -1,5 +1,4 @@
 import { getCryptoKeyAccount } from '@base/account-sdk';
-import { SpendPermissionConfig } from '@base/account-sdk/dist/core/provider/interface';
 import {
   Box,
   Button,
@@ -216,24 +215,6 @@ export default function AutoSubAccount() {
     }
   };
 
-  const handleSetDefaultSpendPermissions = (value: string) => {
-    const defaultSpendPermissions = {
-      [baseSepolia.id]: [
-        {
-          token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-          allowance: '0x2386F26FC10000',
-          period: 86400,
-        } as SpendPermissionConfig,
-      ],
-    };
-
-    if (value === 'true') {
-      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendPermissions }));
-    } else {
-      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendPermissions: {} }));
-    }
-  };
-
   const handleEthSend = async (amount: string) => {
     if (!provider || !accounts.length) return;
 
@@ -326,18 +307,6 @@ export default function AutoSubAccount() {
                 enableAutoSubAccounts: value === 'true',
               }))
             }
-          >
-            <Stack direction="row">
-              <Radio value="true">Enabled</Radio>
-              <Radio value="false">Disabled</Radio>
-            </Stack>
-          </RadioGroup>
-        </FormControl>
-        <FormControl>
-          <FormLabel>Default Spend Permissions</FormLabel>
-          <RadioGroup
-            value={subAccountsConfig?.defaultSpendPermissions?.[baseSepolia.id] ? 'true' : 'false'}
-            onChange={handleSetDefaultSpendPermissions}
           >
             <Stack direction="row">
               <Radio value="true">Enabled</Radio>
