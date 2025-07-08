@@ -210,7 +210,7 @@ export const DialogueInstance: FunctionComponent<DialogueInstanceProps> = ({
     <div class={clsx('-cbwsdk-dialogue-instance', hidden && '-cbwsdk-dialogue-instance-hidden')}>
       <div class="-cbwsdk-dialogue-instance-header">
         <div class="-cbwsdk-dialogue-instance-header-icon">
-          <BaseLogo />
+          <BaseLogo fill="blue" />
         </div>
         <div class="-cbwsdk-dialogue-instance-header-close" onClick={handleClose}>
           <img src={closeIcon} class="-cbwsdk-dialogue-instance-header-close-icon" />

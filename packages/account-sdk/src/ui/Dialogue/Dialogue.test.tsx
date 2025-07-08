@@ -10,7 +10,12 @@ import { DialogueContainer, DialogueInstance, DialogueInstanceProps } from './Di
 const renderDialogueContainer = (props?: Partial<DialogueInstanceProps>) =>
   render(
     <DialogueContainer>
-      <DialogueInstance title="Test Title" message="Test message" {...props} />
+      <DialogueInstance
+        title="Test Title"
+        message="Test message"
+        handleClose={() => {}}
+        {...props}
+      />
     </DialogueContainer>
   );
 
@@ -80,15 +85,15 @@ describe('DialogueContainer', () => {
   });
 
   test('calls onClose when close button is clicked', () => {
-    const onClose = vi.fn();
-    renderDialogueContainer({ onClose });
+    const handleClose = vi.fn();
+    renderDialogueContainer({ handleClose });
 
     const closeButton = document.getElementsByClassName(
       '-cbwsdk-dialogue-instance-header-close'
     )[0];
     fireEvent.click(closeButton);
 
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(handleClose).toHaveBeenCalledTimes(1);
   });
 
   test('renders both buttons when provided', () => {

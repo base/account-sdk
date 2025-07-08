@@ -18,8 +18,8 @@ const mockInstance = {
   attach: mockAttach,
 };
 
-vi.mock('../ui/Snackbar/Snackbar.js', () => ({
-  Snackbar: vi.fn().mockImplementation(() => mockInstance),
+vi.mock(':ui/Dialogue/index.js', () => ({
+  initDialogue: vi.fn().mockImplementation(() => mockInstance),
 }));
 
 const mockOrigin = 'http://localhost';
@@ -87,13 +87,20 @@ describe('PopupManager', () => {
     await waitFor(() => {
       expect(mockPresentItem).toHaveBeenCalledWith(
         expect.objectContaining({
-          autoExpand: true,
-          message: 'Popup was blocked. Try again.',
+          title: 'Popup blocked',
+          message:
+            'Looks like the wallet popup was blocked—possibly by your browser settings. Please try again.',
+          actionItems: expect.arrayContaining([
+            expect.objectContaining({
+              text: 'Try again',
+              variant: 'primary',
+            }),
+          ]),
         })
       );
     });
 
-    const retryButton = mockPresentItem.mock.calls[0][0].menuItems[0];
+    const retryButton = mockPresentItem.mock.calls[0][0].actionItems[0];
     retryButton.onClick();
 
     const popup = await promise;
@@ -111,13 +118,20 @@ describe('PopupManager', () => {
     await waitFor(() => {
       expect(mockPresentItem).toHaveBeenCalledWith(
         expect.objectContaining({
-          autoExpand: true,
-          message: 'Popup was blocked. Try again.',
+          title: 'Popup blocked',
+          message:
+            'Looks like the wallet popup was blocked—possibly by your browser settings. Please try again.',
+          actionItems: expect.arrayContaining([
+            expect.objectContaining({
+              text: 'Try again',
+              variant: 'primary',
+            }),
+          ]),
         })
       );
     });
 
-    const retryButton = mockPresentItem.mock.calls[0][0].menuItems[0];
+    const retryButton = mockPresentItem.mock.calls[0][0].actionItems[0];
     retryButton.onClick();
 
     await expect(promise).rejects.toThrow('Popup window was blocked');

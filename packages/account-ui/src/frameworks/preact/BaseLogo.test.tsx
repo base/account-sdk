@@ -18,8 +18,8 @@ describe('BaseLogo', () => {
     const svg = container.querySelector('svg');
 
     expect(svg).toHaveAttribute('width', '16');
-    expect(svg).toHaveAttribute('height', '17');
-    expect(svg).toHaveAttribute('viewBox', '0 0 16 17');
+    expect(svg).toHaveAttribute('height', '16');
+    expect(svg).toHaveAttribute('viewBox', '0 0 16 16');
     expect(svg).toHaveAttribute('fill', 'none');
     expect(svg).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
   });
@@ -93,9 +93,8 @@ describe('BaseLogo', () => {
     const { container } = render(<BaseLogo fill="blue" />);
     const svg = container.querySelector('svg');
 
-    // 16:17 aspect ratio should be maintained through viewBox
-    expect(svg).toHaveAttribute('viewBox', '0 0 16 17');
+    expect(svg).toHaveAttribute('viewBox', '0 0 16 16');
     expect(svg).toHaveAttribute('width', '16');
-    expect(svg).toHaveAttribute('height', '17');
+    expect(svg).toHaveAttribute('height', '16');
   });
 });

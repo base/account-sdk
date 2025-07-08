@@ -143,7 +143,7 @@ describe('SignInWithBaseButton (Preact)', () => {
 
     expect(svg).toBeInTheDocument();
     expect(svg).toHaveAttribute('width', '16');
-    expect(svg).toHaveAttribute('height', '17');
+    expect(svg).toHaveAttribute('height', '16');
   });
 
   it('renders BaseLogo with blue fill in dark mode solid variant', () => {
