@@ -1,43 +1,46 @@
-import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
+import {
+  logDialogueActionClicked,
+  logDialogueDismissed,
+  logDialogueShown,
+} from ':core/telemetry/events/dialogues.js';
 import { initDialogue } from ':ui/Dialogue/index.js';
 
 export async function presentAddOwnerDialog() {
   const dialogue = initDialogue();
   return new Promise<'authenticate' | 'cancel'>((resolve) => {
-    logSnackbarShown({ snackbarContext: 'sub_account_add_owner' });
+    logDialogueShown({ dialogueContext: 'sub_account_add_owner' });
     dialogue.presentItem({
       title: 'App requires a signer update',
       message: 'App requires a signer update',
+      onClose: () => {
+        logDialogueDismissed({ dialogueContext: 'sub_account_add_owner' });
+        resolve('cancel');
+      },
       actionItems: [
         {
           text: 'Confirm',
           variant: 'primary',
           onClick: () => {
-            logSnackbarActionClicked({
-              snackbarContext: 'sub_account_add_owner',
-              snackbarAction: 'confirm',
+            logDialogueActionClicked({
+              dialogueContext: 'sub_account_add_owner',
+              dialogueAction: 'confirm',
             });
             dialogue.clear();
             resolve('authenticate');
           },
         },
-        // {
-        //   isRed: true,
-        //   info: 'Cancel',
-        //   svgWidth: '10',
-        //   svgHeight: '11',
-        //   path: '',
-        //   defaultFillRule: 'evenodd',
-        //   defaultClipRule: 'evenodd',
-        //   onClick: () => {
-        //     logSnackbarActionClicked({
-        //       snackbarContext: 'sub_account_add_owner',
-        //       snackbarAction: 'cancel',
-        //     });
-        //     snackbar.clear();
-        //     resolve('cancel');
-        //   },
-        // },
+        {
+          text: 'Not now',
+          variant: 'secondary',
+          onClick: () => {
+            logDialogueActionClicked({
+              dialogueContext: 'sub_account_add_owner',
+              dialogueAction: 'cancel',
+            });
+            dialogue.clear();
+            resolve('cancel');
+          },
+        },
       ],
     });
   });

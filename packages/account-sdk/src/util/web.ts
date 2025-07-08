@@ -1,6 +1,6 @@
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
+import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/dialogues.js';
 import { initDialogue } from '../ui/Dialogue/index.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 
@@ -112,5 +112,3 @@ function openPopupWithDialogue(tryOpenPopup: () => Window | null) {
     });
   });
 }
-
-export function initSnackbar() {}

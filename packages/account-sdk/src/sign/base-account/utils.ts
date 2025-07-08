@@ -10,7 +10,11 @@ import {
   FetchPermissionsRequest,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
-import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
+import {
+  logDialogueActionClicked,
+  logDialogueDismissed,
+  logDialogueShown,
+} from ':core/telemetry/events/dialogues.js';
 import { Address } from ':core/type/index.js';
 import { config, store } from ':store/store.js';
 import { initDialogue } from ':ui/Dialogue/index.js';
@@ -421,52 +425,40 @@ export async function presentSubAccountFundingDialog() {
   const dialogue = initDialogue();
   const userChoice = await new Promise<'update_permission' | 'continue_popup' | 'cancel'>(
     (resolve) => {
-      logSnackbarShown({ snackbarContext: 'sub_account_insufficient_balance' });
+      logDialogueShown({ dialogueContext: 'sub_account_insufficient_balance' });
       dialogue.presentItem({
         title: 'Insufficient spend permission',
-        message: 'Insufficient spend permission. Choose how to proceed:',
+        message:
+          "Your spend permission's remaining balance cannot cover this transaction. Please choose how to proceed:",
+        onClose: () => {
+          logDialogueDismissed({ dialogueContext: 'sub_account_insufficient_balance' });
+          dialogue.clear();
+        },
         actionItems: [
           {
-            text: 'Create new Spend Permission',
+            text: 'Edit spend permission',
             variant: 'primary',
             onClick: () => {
-              logSnackbarActionClicked({
-                snackbarContext: 'sub_account_insufficient_balance',
-                snackbarAction: 'create_permission',
+              logDialogueActionClicked({
+                dialogueContext: 'sub_account_insufficient_balance',
+                dialogueAction: 'create_permission',
               });
               dialogue.clear();
               resolve('update_permission');
             },
           },
           {
-            text: 'Continue in Popup',
-            variant: 'primary',
+            text: 'Use primary account',
+            variant: 'secondary',
             onClick: () => {
-              logSnackbarActionClicked({
-                snackbarContext: 'sub_account_insufficient_balance',
-                snackbarAction: 'continue_in_popup',
+              logDialogueActionClicked({
+                dialogueContext: 'sub_account_insufficient_balance',
+                dialogueAction: 'continue_in_popup',
               });
               dialogue.clear();
               resolve('continue_popup');
             },
           },
-          // {
-          //   isRed: true,
-          //   info: 'Cancel',
-          //   svgWidth: '10',
-          //   svgHeight: '11',
-          //   path: '',
-          //   defaultFillRule: 'evenodd',
-          //   defaultClipRule: 'evenodd',
-          //   onClick: () => {
-          //     logSnackbarActionClicked({
-          //       snackbarContext: 'sub_account_insufficient_balance',
-          //       snackbarAction: 'cancel',
-          //     });
-          //     snackbar.clear();
-          //     resolve('cancel');
-          //   },
-          // },
         ],
       });
     }
