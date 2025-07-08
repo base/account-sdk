@@ -81,6 +81,22 @@ export default function AutoSubAccount() {
     }
   };
 
+  const handleEthAccounts = async () => {
+    if (!provider) return;
+
+    try {
+      const response = await provider.request({
+        method: 'eth_accounts',
+        params: [],
+      });
+      setAccounts(response as string[]);
+      setLastResult(JSON.stringify(response, null, 2));
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    }
+  };
+
   const handleSendTransaction = async () => {
     if (!provider || !accounts.length) return;
 
@@ -375,6 +391,22 @@ export default function AutoSubAccount() {
           }}
         >
           eth_requestAccounts
+        </Button>
+        <Button
+          w="full"
+          onClick={handleEthAccounts}
+          bg="blue.500"
+          color="white"
+          border="1px solid"
+          borderColor="blue.500"
+          _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
+          _dark={{
+            bg: 'blue.600',
+            borderColor: 'blue.600',
+            _hover: { bg: 'blue.700', borderColor: 'blue.700' },
+          }}
+        >
+          eth_accounts
         </Button>
         <Button
           w="full"
