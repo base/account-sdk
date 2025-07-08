@@ -39,7 +39,10 @@ describe('useSpyOnDisconnectedError', () => {
   });
 
   it('should re-throw errors that are not code 4100', async () => {
-    const testError = new Error('Internal JSON-RPC error.');
+    const testError = {
+      code: -32000,
+      message: 'Internal JSON-RPC error.',
+    };
     originalRequest.mockRejectedValue(testError);
 
     const { result } = renderHook(() => useSpyOnDisconnectedError());
@@ -53,7 +56,10 @@ describe('useSpyOnDisconnectedError', () => {
   });
 
   it('should trigger onOpen when error code 4100 is detected', async () => {
-    const disconnectError = new Error('Unauthorized');
+    const disconnectError = {
+      code: 4100,
+      message: 'User rejected the request.',
+    };
     originalRequest.mockRejectedValue(disconnectError);
 
     const { result } = renderHook(() => useSpyOnDisconnectedError());
