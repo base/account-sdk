@@ -1,4 +1,4 @@
-import { CHAIN_IDS, TOKENS, VERSION, WALLET_RPC_URL } from './constants.js';
+import { CHAIN_IDS, TOKENS } from './constants.js';
 import { pay } from './pay.js';
 import type { PaymentOptions, PaymentResult } from './types.js';
 
@@ -10,8 +10,6 @@ export const base = {
   constants: {
     CHAIN_IDS,
     TOKENS,
-    WALLET_RPC_URL,
-    VERSION,
   },
   types: {} as {
     PaymentOptions: PaymentOptions;

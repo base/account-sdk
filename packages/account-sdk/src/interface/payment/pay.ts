@@ -1,10 +1,9 @@
 import type { Address } from 'viem';
-import { isENSName } from './constants.js';
 import type { PaymentOptions, PaymentResult } from './types.js';
 import { resolveENS } from './utils/ensResolution.js';
 import { executePaymentWithSDK } from './utils/sdkManager.js';
 import { translatePaymentToSendCalls } from './utils/translatePayment.js';
-import { validateRecipient, validateStringAmount } from './utils/validation.js';
+import { isENSName, validateRecipient, validateStringAmount } from './utils/validation.js';
 
 /**
  * Pay a specified address or ENS name with USDC on Base network using an ephemeral wallet

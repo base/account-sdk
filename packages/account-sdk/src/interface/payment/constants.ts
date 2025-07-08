@@ -1,3 +1,4 @@
+
 /**
  * Token configuration for supported payment tokens
  */
@@ -44,21 +45,3 @@ export const ERC20_TRANSFER_ABI = [
     outputs: [{ name: '', type: 'bool' }],
   },
 ] as const;
-
-/**
- * Checks if a string is a valid ENS name
- * @param name - The string to check
- * @returns True if the string appears to be an ENS name
- */
-export function isENSName(name: string): boolean {
-  // Must have content and contain a dot
-  if (!name || !name.includes('.')) {
-    return false;
-  }
-  
-  // Check if it ends with a valid ENS domain and has content before the domain
-  const validDomains = ['.eth', '.xyz', '.base', '.cb.id'];
-  return validDomains.some(domain => {
-    return name.endsWith(domain) && name.length > domain.length;
-  });
-}

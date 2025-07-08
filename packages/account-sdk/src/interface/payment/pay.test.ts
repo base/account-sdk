@@ -20,6 +20,7 @@ describe('pay', () => {
     // Setup mocks
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
+    vi.mocked(validation.isENSName).mockReturnValue(false);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '1.0',
       chainId: 8453,
@@ -67,6 +68,7 @@ describe('pay', () => {
     // Setup mocks
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
+    vi.mocked(validation.isENSName).mockReturnValue(true);
     vi.mocked(ensResolution.resolveENS).mockResolvedValue(resolvedAddress);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '1.0',
@@ -113,6 +115,7 @@ describe('pay', () => {
     // Setup mocks
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
+    vi.mocked(validation.isENSName).mockReturnValue(true);
     vi.mocked(ensResolution.resolveENS).mockRejectedValue(
       new Error('Failed to resolve ENS name "nonexistent.eth": ENS name "nonexistent.eth" not found')
     );
@@ -156,6 +159,7 @@ describe('pay', () => {
   it('should handle SDK execution errors', async () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
+    vi.mocked(validation.isENSName).mockReturnValue(false);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '1.0',
       chainId: 8453,
@@ -182,6 +186,7 @@ describe('pay', () => {
   it('should support testnet with paymaster', async () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
+    vi.mocked(validation.isENSName).mockReturnValue(false);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '1.0',
       chainId: 84532,

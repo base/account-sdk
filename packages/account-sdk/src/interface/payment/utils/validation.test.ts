@@ -32,12 +32,18 @@ describe('validateRecipient', () => {
     expect(() => validateRecipient('test.xyz')).not.toThrow();
     expect(() => validateRecipient('name.base')).not.toThrow();
     expect(() => validateRecipient('user.cb.id')).not.toThrow();
+    expect(() => validateRecipient('test.com')).not.toThrow();
+    expect(() => validateRecipient('example.org')).not.toThrow();
+    expect(() => validateRecipient('sub.domain.eth')).not.toThrow();
   });
 
   it('should reject invalid recipients', () => {
     expect(() => validateRecipient('')).toThrow('Invalid recipient: address or ENS name is required');
     expect(() => validateRecipient('invalid-address')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
     expect(() => validateRecipient('0xinvalid')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
+    expect(() => validateRecipient('nodots')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
+    expect(() => validateRecipient('test.')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
+    expect(() => validateRecipient('.eth')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
   });
 });
 

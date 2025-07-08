@@ -1,5 +1,29 @@
 import { isAddress } from 'viem';
-import { isENSName } from '../constants.js';
+
+/**
+ * Checks if a string is a valid ENS name
+ * @param name - The string to check
+ * @returns True if the string appears to be an ENS name
+ */
+export function isENSName(name: string): boolean {
+  // Must have content
+  if (!name) {
+    return false;
+  }
+  
+  // Must contain a dot
+  if (!name.includes('.')) {
+    return false;
+  }
+  
+  // Cannot be just a dot or have leading/trailing dots
+  if (name === '.' || name.startsWith('.') || name.endsWith('.')) {
+    return false;
+  }
+  
+  // Must not be a valid address
+  return !isAddress(name);
+}
 
 /**
  * Validates that the amount is a positive string with max decimal places
