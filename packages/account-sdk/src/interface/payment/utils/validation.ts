@@ -1,4 +1,5 @@
 import { isAddress } from 'viem';
+import { isENSName } from '../constants.js';
 
 /**
  * Validates that the amount is a positive string with max decimal places
@@ -32,16 +33,32 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
 }
 
 /**
+ * Validates that the recipient is a valid Ethereum address or ENS name
+ * @param recipient - The recipient address or ENS name to validate
+ * @throws Error if recipient is invalid
+ */
+export function validateRecipient(recipient: string): void {
+  if (!recipient) {
+    throw new Error('Invalid recipient: address or ENS name is required');
+  }
+
+  // Check if it's a valid ENS name
+  if (isENSName(recipient)) {
+    return; // ENS names are valid, will be resolved later
+  }
+
+  // Check if it's a valid Ethereum address
+  if (!isAddress(recipient)) {
+    throw new Error('Invalid recipient: must be a valid Ethereum address or ENS name');
+  }
+}
+
+/**
+ * @deprecated Use validateRecipient instead
  * Validates that the address is a valid Ethereum address
  * @param address - The address to validate
  * @throws Error if address is invalid
  */
 export function validateAddress(address: string): void {
-  if (!address) {
-    throw new Error('Invalid recipient: address is required');
-  }
-
-  if (!isAddress(address)) {
-    throw new Error('Invalid recipient: must be a valid Ethereum address');
-  }
+  validateRecipient(address);
 }
