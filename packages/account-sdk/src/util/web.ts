@@ -1,15 +1,16 @@
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { logDialogueActionClicked, logDialogueShown } from ':core/telemetry/events/dialogues.js';
+import { store } from ':store/store.js';
 import { initDialogue } from '../ui/Dialogue/index.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 700;
 
-const POPUP_BLOCKED_TITLE = 'Popup blocked';
+const POPUP_BLOCKED_TITLE = 'Proceed in Base Account';
 const POPUP_BLOCKED_MESSAGE =
-  'Looks like the wallet popup was blocked—possibly by your browser settings. Please try again.';
+  '{app} is requesting to proceed in your Base Account. Would you like to proceed?';
 
 export function openPopup(url: URL): Promise<Window> {
   const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
@@ -65,12 +66,13 @@ function appendAppInfoQueryParams(url: URL) {
 }
 
 function openPopupWithDialogue(tryOpenPopup: () => Window | null) {
+  const dappName = store.config.get().metadata?.appName ?? 'App';
   const dialogue = initDialogue();
   return new Promise<Window>((resolve, reject) => {
     logDialogueShown({ dialogueContext: 'popup_blocked' });
     dialogue.presentItem({
       title: POPUP_BLOCKED_TITLE,
-      message: POPUP_BLOCKED_MESSAGE,
+      message: POPUP_BLOCKED_MESSAGE.replace('{app}', dappName),
       onClose: () => {
         logDialogueActionClicked({
           dialogueContext: 'popup_blocked',

@@ -87,9 +87,10 @@ describe('PopupManager', () => {
     await waitFor(() => {
       expect(mockPresentItem).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Popup blocked',
-          message:
-            'Looks like the wallet popup was blocked—possibly by your browser settings. Please try again.',
+          title: 'Proceed in Base Account',
+          message: expect.stringContaining(
+            'is requesting to proceed in your Base Account. Would you like to proceed?'
+          ),
           actionItems: expect.arrayContaining([
             expect.objectContaining({
               text: 'Try again',
@@ -118,9 +119,10 @@ describe('PopupManager', () => {
     await waitFor(() => {
       expect(mockPresentItem).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Popup blocked',
-          message:
-            'Looks like the wallet popup was blocked—possibly by your browser settings. Please try again.',
+          title: 'Proceed in Base Account',
+          message: expect.stringContaining(
+            'is requesting to proceed in your Base Account. Would you like to proceed?'
+          ),
           actionItems: expect.arrayContaining([
             expect.objectContaining({
               text: 'Try again',
