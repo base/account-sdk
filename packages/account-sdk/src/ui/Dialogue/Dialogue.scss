@@ -143,6 +143,10 @@
         &-icon {
           width: 14px;
           height: 14px;
+
+          @media (max-width: 600px) and (orientation: portrait) {
+            display: none;
+          }
         }
       }
     }
