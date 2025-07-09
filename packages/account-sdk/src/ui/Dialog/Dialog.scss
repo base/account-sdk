@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
 .-cbwsdk-css-reset {
-  .-cbwsdk-dialogue-container {
+  .-cbwsdk-dialog-container {
     position: fixed;
     top: 0;
     left: 0;
@@ -15,7 +15,7 @@
     }
   }
 
-  .-cbwsdk-dialogue-backdrop {
+  .-cbwsdk-dialog-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -35,7 +35,7 @@
     }
   }
 
-  .-cbwsdk-dialogue {
+  .-cbwsdk-dialog {
     position: relative;
     z-index: 2147483648;
 
@@ -45,7 +45,7 @@
     }
   }
 
-  .-cbwsdk-dialogue-instance {
+  .-cbwsdk-dialog-instance {
     background: #ffffff;
     border-radius: 12px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -72,7 +72,7 @@
       }
     }
 
-    &:not(.-cbwsdk-dialogue-instance-hidden) {
+    &:not(.-cbwsdk-dialog-instance-hidden) {
       transform: scale(1);
       opacity: 1;
 
@@ -96,7 +96,7 @@
         opacity: 1;
       }
 
-      &:not(.-cbwsdk-dialogue-instance-hidden) {
+      &:not(.-cbwsdk-dialog-instance-hidden) {
         transform: translateY(0);
         opacity: 1;
       }
@@ -241,7 +241,7 @@
   }
 
   // Handle bar component styles
-  .-cbwsdk-dialogue-handle-bar {
+  .-cbwsdk-dialog-handle-bar {
     position: absolute;
     top: -16px;
     left: 50%;

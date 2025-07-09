@@ -61,8 +61,8 @@ type CCAEventData = {
   method?: string; // RPC method
   correlationId?: string;
   errorMessage?: string;
-  dialogueContext?: string;
-  dialogueAction?: string;
+  dialogContext?: string;
+  dialogAction?: string;
   enableAutoSubAccounts?: boolean;
 };
 

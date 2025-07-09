@@ -5,21 +5,16 @@ import { fireEvent, render, screen } from '@testing-library/preact';
 import { h } from 'preact';
 import { vi } from 'vitest';
 
-import { DialogueContainer, DialogueInstance, DialogueInstanceProps } from './Dialogue.js';
+import { DialogContainer, DialogInstance, DialogInstanceProps } from './Dialog.js';
 
-const renderDialogueContainer = (props?: Partial<DialogueInstanceProps>) =>
+const renderDialogContainer = (props?: Partial<DialogInstanceProps>) =>
   render(
-    <DialogueContainer>
-      <DialogueInstance
-        title="Test Title"
-        message="Test message"
-        handleClose={() => {}}
-        {...props}
-      />
-    </DialogueContainer>
+    <DialogContainer>
+      <DialogInstance title="Test Title" message="Test message" handleClose={() => {}} {...props} />
+    </DialogContainer>
   );
 
-describe('DialogueContainer', () => {
+describe('DialogContainer', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.spyOn(window, 'setTimeout');
@@ -30,16 +25,16 @@ describe('DialogueContainer', () => {
   });
 
   test('renders with title and message', () => {
-    renderDialogueContainer();
+    renderDialogContainer();
 
     expect(screen.getByText('Test Title')).toBeInTheDocument();
     expect(screen.getByText('Test message')).toBeInTheDocument();
   });
 
   test('renders hidden initially', () => {
-    renderDialogueContainer();
+    renderDialogContainer();
 
-    const hiddenClass = document.getElementsByClassName('-cbwsdk-dialogue-instance-hidden');
+    const hiddenClass = document.getElementsByClassName('-cbwsdk-dialog-instance-hidden');
     expect(hiddenClass.length).toEqual(1);
 
     vi.runAllTimers();
@@ -48,7 +43,7 @@ describe('DialogueContainer', () => {
 
   test('shows action button when provided', () => {
     const onClick = vi.fn();
-    renderDialogueContainer({
+    renderDialogContainer({
       actionItems: [
         {
           text: 'Try again',
@@ -67,7 +62,7 @@ describe('DialogueContainer', () => {
 
   test('shows secondary button when provided', () => {
     const onClick = vi.fn();
-    renderDialogueContainer({
+    renderDialogContainer({
       actionItems: [
         {
           text: 'Cancel',
@@ -86,11 +81,9 @@ describe('DialogueContainer', () => {
 
   test('calls onClose when close button is clicked', () => {
     const handleClose = vi.fn();
-    renderDialogueContainer({ handleClose });
+    renderDialogContainer({ handleClose });
 
-    const closeButton = document.getElementsByClassName(
-      '-cbwsdk-dialogue-instance-header-close'
-    )[0];
+    const closeButton = document.getElementsByClassName('-cbwsdk-dialog-instance-header-close')[0];
     fireEvent.click(closeButton);
 
     expect(handleClose).toHaveBeenCalledTimes(1);
@@ -100,7 +93,7 @@ describe('DialogueContainer', () => {
     const primaryClick = vi.fn();
     const secondaryClick = vi.fn();
 
-    renderDialogueContainer({
+    renderDialogContainer({
       actionItems: [
         {
           text: 'Primary',

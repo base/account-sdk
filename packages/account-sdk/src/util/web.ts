@@ -1,8 +1,8 @@
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import { logDialogueActionClicked, logDialogueShown } from ':core/telemetry/events/dialogues.js';
+import { logDialogActionClicked, logDialogShown } from ':core/telemetry/events/dialog.js';
 import { store } from ':store/store.js';
-import { initDialogue } from '../ui/Dialogue/index.js';
+import { initDialog } from '../ui/Dialog/index.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 
 const POPUP_WIDTH = 420;
@@ -38,7 +38,7 @@ export function openPopup(url: URL): Promise<Window> {
 
   // If the popup was blocked, show a snackbar with a retry button
   if (!popup) {
-    return openPopupWithDialogue(tryOpenPopup);
+    return openPopupWithDialog(tryOpenPopup);
   }
 
   return Promise.resolve(popup);
@@ -65,18 +65,18 @@ function appendAppInfoQueryParams(url: URL) {
   }
 }
 
-function openPopupWithDialogue(tryOpenPopup: () => Window | null) {
+function openPopupWithDialog(tryOpenPopup: () => Window | null) {
   const dappName = store.config.get().metadata?.appName ?? 'App';
-  const dialogue = initDialogue();
+  const dialog = initDialog();
   return new Promise<Window>((resolve, reject) => {
-    logDialogueShown({ dialogueContext: 'popup_blocked' });
-    dialogue.presentItem({
+    logDialogShown({ dialogContext: 'popup_blocked' });
+    dialog.presentItem({
       title: POPUP_BLOCKED_TITLE,
       message: POPUP_BLOCKED_MESSAGE.replace('{app}', dappName),
       onClose: () => {
-        logDialogueActionClicked({
-          dialogueContext: 'popup_blocked',
-          dialogueAction: 'cancel',
+        logDialogActionClicked({
+          dialogContext: 'popup_blocked',
+          dialogAction: 'cancel',
         });
         reject(standardErrors.rpc.internal('Popup window was blocked'));
       },
@@ -85,9 +85,9 @@ function openPopupWithDialogue(tryOpenPopup: () => Window | null) {
           text: 'Try again',
           variant: 'primary',
           onClick: () => {
-            logDialogueActionClicked({
-              dialogueContext: 'popup_blocked',
-              dialogueAction: 'confirm',
+            logDialogActionClicked({
+              dialogContext: 'popup_blocked',
+              dialogAction: 'confirm',
             });
             const popup = tryOpenPopup();
             if (popup) {
@@ -95,19 +95,19 @@ function openPopupWithDialogue(tryOpenPopup: () => Window | null) {
             } else {
               reject(standardErrors.rpc.internal('Popup window was blocked'));
             }
-            dialogue.clear();
+            dialog.clear();
           },
         },
         {
           text: 'Cancel',
           variant: 'secondary',
           onClick: () => {
-            logDialogueActionClicked({
-              dialogueContext: 'popup_blocked',
-              dialogueAction: 'cancel',
+            logDialogActionClicked({
+              dialogContext: 'popup_blocked',
+              dialogAction: 'cancel',
             });
             reject(standardErrors.rpc.internal('Popup window was blocked'));
-            dialogue.clear();
+            dialog.clear();
           },
         },
       ],

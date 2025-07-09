@@ -1,16 +1,16 @@
 import { injectFontStyle } from ':ui/assets/injectFontStyle.js';
-import { Dialogue } from './Dialogue.js';
+import { Dialog } from './Dialog.js';
 
-let dialogue: Dialogue | null = null;
+let dialog: Dialog | null = null;
 
-export function initDialogue() {
-  if (!dialogue) {
+export function initDialog() {
+  if (!dialog) {
     const root = document.createElement('div');
     root.className = '-cbwsdk-css-reset';
     document.body.appendChild(root);
-    dialogue = new Dialogue();
-    dialogue.attach(root);
+    dialog = new Dialog();
+    dialog.attach(root);
   }
   injectFontStyle();
-  return dialogue;
+  return dialog;
 }

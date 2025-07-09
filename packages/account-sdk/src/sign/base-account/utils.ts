@@ -11,13 +11,13 @@ import {
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import {
-  logDialogueActionClicked,
-  logDialogueDismissed,
-  logDialogueShown,
-} from ':core/telemetry/events/dialogues.js';
+  logDialogActionClicked,
+  logDialogDismissed,
+  logDialogShown,
+} from ':core/telemetry/events/dialog.js';
 import { Address } from ':core/type/index.js';
 import { config, store } from ':store/store.js';
-import { initDialogue } from ':ui/Dialogue/index.js';
+import { initDialog } from ':ui/Dialog/index.js';
 import { get } from ':util/get.js';
 import { waitForCallsStatus } from 'viem/experimental';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
@@ -422,28 +422,28 @@ export function createWalletSendCallsRequest({
 }
 
 export async function presentSubAccountFundingDialog() {
-  const dialogue = initDialogue();
+  const dialog = initDialog();
   const userChoice = await new Promise<'update_permission' | 'continue_popup' | 'cancel'>(
     (resolve) => {
-      logDialogueShown({ dialogueContext: 'sub_account_insufficient_balance' });
-      dialogue.presentItem({
+      logDialogShown({ dialogContext: 'sub_account_insufficient_balance' });
+      dialog.presentItem({
         title: 'Insufficient spend permission',
         message:
           "Your spend permission's remaining balance cannot cover this transaction. Please choose how to proceed:",
         onClose: () => {
-          logDialogueDismissed({ dialogueContext: 'sub_account_insufficient_balance' });
-          dialogue.clear();
+          logDialogDismissed({ dialogContext: 'sub_account_insufficient_balance' });
+          dialog.clear();
         },
         actionItems: [
           {
             text: 'Edit spend permission',
             variant: 'primary',
             onClick: () => {
-              logDialogueActionClicked({
-                dialogueContext: 'sub_account_insufficient_balance',
-                dialogueAction: 'create_permission',
+              logDialogActionClicked({
+                dialogContext: 'sub_account_insufficient_balance',
+                dialogAction: 'create_permission',
               });
-              dialogue.clear();
+              dialog.clear();
               resolve('update_permission');
             },
           },
@@ -451,11 +451,11 @@ export async function presentSubAccountFundingDialog() {
             text: 'Use primary account',
             variant: 'secondary',
             onClick: () => {
-              logDialogueActionClicked({
-                dialogueContext: 'sub_account_insufficient_balance',
-                dialogueAction: 'continue_in_popup',
+              logDialogActionClicked({
+                dialogContext: 'sub_account_insufficient_balance',
+                dialogAction: 'continue_in_popup',
               });
-              dialogue.clear();
+              dialog.clear();
               resolve('continue_popup');
             },
           },

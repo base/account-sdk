@@ -18,8 +18,8 @@ const mockInstance = {
   attach: mockAttach,
 };
 
-vi.mock(':ui/Dialogue/index.js', () => ({
-  initDialogue: vi.fn().mockImplementation(() => mockInstance),
+vi.mock(':ui/Dialog/index.js', () => ({
+  initDialog: vi.fn().mockImplementation(() => mockInstance),
 }));
 
 const mockOrigin = 'http://localhost';

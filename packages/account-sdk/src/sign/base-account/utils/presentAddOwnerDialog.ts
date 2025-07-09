@@ -1,21 +1,21 @@
 import {
-  logDialogueActionClicked,
-  logDialogueDismissed,
-  logDialogueShown,
-} from ':core/telemetry/events/dialogues.js';
+  logDialogActionClicked,
+  logDialogDismissed,
+  logDialogShown,
+} from ':core/telemetry/events/dialog.js';
 import { store } from ':store/store.js';
-import { initDialogue } from ':ui/Dialogue/index.js';
+import { initDialog } from ':ui/Dialog/index.js';
 
 export async function presentAddOwnerDialog() {
   const dappName = store.config.get().metadata?.appName ?? 'App';
-  const dialogue = initDialogue();
+  const dialog = initDialog();
   return new Promise<'authenticate' | 'cancel'>((resolve) => {
-    logDialogueShown({ dialogueContext: 'sub_account_add_owner' });
-    dialogue.presentItem({
+    logDialogShown({ dialogContext: 'sub_account_add_owner' });
+    dialog.presentItem({
       title: `Re-authorize ${dappName}`,
       message: `${dappName} has lost access to your account. Please sign at the next step to re-authorize ${dappName}`,
       onClose: () => {
-        logDialogueDismissed({ dialogueContext: 'sub_account_add_owner' });
+        logDialogDismissed({ dialogContext: 'sub_account_add_owner' });
         resolve('cancel');
       },
       actionItems: [
@@ -23,11 +23,11 @@ export async function presentAddOwnerDialog() {
           text: 'Continue',
           variant: 'primary',
           onClick: () => {
-            logDialogueActionClicked({
-              dialogueContext: 'sub_account_add_owner',
-              dialogueAction: 'confirm',
+            logDialogActionClicked({
+              dialogContext: 'sub_account_add_owner',
+              dialogAction: 'confirm',
             });
-            dialogue.clear();
+            dialog.clear();
             resolve('authenticate');
           },
         },
@@ -35,11 +35,11 @@ export async function presentAddOwnerDialog() {
           text: 'Not now',
           variant: 'secondary',
           onClick: () => {
-            logDialogueActionClicked({
-              dialogueContext: 'sub_account_add_owner',
-              dialogueAction: 'cancel',
+            logDialogActionClicked({
+              dialogContext: 'sub_account_add_owner',
+              dialogAction: 'cancel',
             });
-            dialogue.clear();
+            dialog.clear();
             resolve('cancel');
           },
         },

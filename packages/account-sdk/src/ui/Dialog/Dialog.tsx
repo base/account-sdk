@@ -10,7 +10,7 @@ import { store } from ':store/store.js';
 import { BaseLogo } from ':ui/assets/BaseLogo.js';
 import { closeIcon } from ':ui/assets/icons.js';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import css from './Dialogue-css.js';
+import css from './Dialog-css.js';
 
 // Helper function to detect phone portrait mode
 function isPhonePortrait(): boolean {
@@ -18,7 +18,7 @@ function isPhonePortrait(): boolean {
 }
 
 // Handle bar component for mobile bottom sheet
-const DialogueHandleBar: FunctionComponent = () => {
+const DialogHandleBar: FunctionComponent = () => {
   const [showHandleBar, setShowHandleBar] = useState(false);
 
   useEffect(() => {
@@ -44,28 +44,28 @@ const DialogueHandleBar: FunctionComponent = () => {
     return null;
   }
 
-  return <div class="-cbwsdk-dialogue-handle-bar" />;
+  return <div class="-cbwsdk-dialog-handle-bar" />;
 };
 
-export type DialogueProps = {
+export type DialogProps = {
   title: string;
   message: string;
-  actionItems?: DialogueActionItem[];
+  actionItems?: DialogActionItem[];
   onClose?: () => void;
 };
 
-export type DialogueInstanceProps = Omit<DialogueProps, 'onClose'> & {
+export type DialogInstanceProps = Omit<DialogProps, 'onClose'> & {
   handleClose: () => void;
 };
 
-export type DialogueActionItem = {
+export type DialogActionItem = {
   text: string;
   onClick: () => void;
   variant?: 'primary' | 'secondary';
 };
 
-export class Dialogue {
-  private readonly items = new Map<number, DialogueProps>();
+export class Dialog {
+  private readonly items = new Map<number, DialogProps>();
 
   private nextItemKey = 0;
   private root: Element | null = null;
@@ -75,13 +75,13 @@ export class Dialogue {
   public attach(el: Element): void {
     this.root = document.createElement('div');
 
-    this.root.className = '-cbwsdk-dialogue-root';
+    this.root.className = '-cbwsdk-dialog-root';
     el.appendChild(this.root);
 
     this.render();
   }
 
-  public presentItem(itemProps: DialogueProps): void {
+  public presentItem(itemProps: DialogProps): void {
     const key = this.nextItemKey++;
     this.items.set(key, itemProps);
     this.render();
@@ -98,9 +98,9 @@ export class Dialogue {
     if (this.root) {
       render(
         <div>
-          <DialogueContainer>
+          <DialogContainer>
             {Array.from(this.items.entries()).map(([key, itemProps]) => (
-              <DialogueInstance
+              <DialogInstance
                 {...itemProps}
                 key={key}
                 handleClose={() => {
@@ -109,7 +109,7 @@ export class Dialogue {
                 }}
               />
             ))}
-          </DialogueContainer>
+          </DialogContainer>
         </div>,
         this.root
       );
@@ -117,12 +117,12 @@ export class Dialogue {
   }
 }
 
-export const DialogueContainer: FunctionComponent = (props) => {
+export const DialogContainer: FunctionComponent = (props) => {
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
 
-  // Touch event handlers for drag-to-dismiss (entire dialogue area)
+  // Touch event handlers for drag-to-dismiss (entire dialog area)
   const handleTouchStart = (e: any) => {
     // Only enable drag on mobile portrait mode
     if (!isPhonePortrait()) return;
@@ -152,9 +152,9 @@ export const DialogueContainer: FunctionComponent = (props) => {
 
     // Dismiss if dragged down more than 100px
     if (dragY > 100) {
-      // Find the dialogue instance and trigger its close handler
+      // Find the dialog instance and trigger its close handler
       const closeButton = document.querySelector(
-        '.-cbwsdk-dialogue-instance-header-close'
+        '.-cbwsdk-dialog-instance-header-close'
       ) as HTMLElement;
       if (closeButton) {
         closeButton.click();
@@ -166,22 +166,22 @@ export const DialogueContainer: FunctionComponent = (props) => {
   };
 
   return (
-    <div class={clsx('-cbwsdk-dialogue-container')}>
+    <div class={clsx('-cbwsdk-dialog-container')}>
       <style>{css}</style>
       <div
-        class="-cbwsdk-dialogue-backdrop"
+        class="-cbwsdk-dialog-backdrop"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div
-          class="-cbwsdk-dialogue"
+          class="-cbwsdk-dialog"
           style={{
             transform: `translateY(${dragY}px)`,
             transition: isDragging ? 'none' : 'transform 0.2s ease-out',
           }}
         >
-          <DialogueHandleBar />
+          <DialogHandleBar />
           {props.children}
         </div>
       </div>
@@ -189,7 +189,7 @@ export const DialogueContainer: FunctionComponent = (props) => {
   );
 };
 
-export const DialogueInstance: FunctionComponent<DialogueInstanceProps> = ({
+export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
   title,
   message,
   actionItems,
@@ -230,30 +230,30 @@ export const DialogueInstance: FunctionComponent<DialogueInstanceProps> = ({
   const shouldShowHeaderTitle = !isLoadingUsername;
 
   return (
-    <div class={clsx('-cbwsdk-dialogue-instance', hidden && '-cbwsdk-dialogue-instance-hidden')}>
-      <div class="-cbwsdk-dialogue-instance-header">
-        <div class="-cbwsdk-dialogue-instance-header-icon-and-title">
+    <div class={clsx('-cbwsdk-dialog-instance', hidden && '-cbwsdk-dialog-instance-hidden')}>
+      <div class="-cbwsdk-dialog-instance-header">
+        <div class="-cbwsdk-dialog-instance-header-icon-and-title">
           <BaseLogo fill="blue" />
           {shouldShowHeaderTitle && (
-            <div class="-cbwsdk-dialogue-instance-header-icon-and-title-title">{headerTitle}</div>
+            <div class="-cbwsdk-dialog-instance-header-icon-and-title-title">{headerTitle}</div>
           )}
         </div>
-        <div class="-cbwsdk-dialogue-instance-header-close" onClick={handleClose}>
-          <img src={closeIcon} class="-cbwsdk-dialogue-instance-header-close-icon" />
+        <div class="-cbwsdk-dialog-instance-header-close" onClick={handleClose}>
+          <img src={closeIcon} class="-cbwsdk-dialog-instance-header-close-icon" />
         </div>
       </div>
-      <div class="-cbwsdk-dialogue-instance-content">
-        <div class="-cbwsdk-dialogue-instance-content-title">{title}</div>
-        <div class="-cbwsdk-dialogue-instance-content-message">{message}</div>
+      <div class="-cbwsdk-dialog-instance-content">
+        <div class="-cbwsdk-dialog-instance-content-title">{title}</div>
+        <div class="-cbwsdk-dialog-instance-content-message">{message}</div>
       </div>
       {actionItems && actionItems.length > 0 && (
-        <div class="-cbwsdk-dialogue-instance-actions">
+        <div class="-cbwsdk-dialog-instance-actions">
           {actionItems.map((action, i) => (
             <button
               class={clsx(
-                '-cbwsdk-dialogue-instance-button',
-                action.variant === 'primary' && '-cbwsdk-dialogue-instance-button-primary',
-                action.variant === 'secondary' && '-cbwsdk-dialogue-instance-button-secondary'
+                '-cbwsdk-dialog-instance-button',
+                action.variant === 'primary' && '-cbwsdk-dialog-instance-button-primary',
+                action.variant === 'secondary' && '-cbwsdk-dialog-instance-button-secondary'
               )}
               onClick={action.onClick}
               key={i}
