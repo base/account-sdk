@@ -32,7 +32,7 @@ describe('presentAddOwnerDialog', () => {
       message: expect.stringContaining('has lost access to your account'),
       actionItems: expect.arrayContaining([
         expect.objectContaining({
-          text: 'Confirm',
+          text: 'Continue',
           variant: 'primary',
         }),
         expect.objectContaining({

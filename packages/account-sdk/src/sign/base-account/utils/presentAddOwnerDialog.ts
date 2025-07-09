@@ -20,7 +20,7 @@ export async function presentAddOwnerDialog() {
       },
       actionItems: [
         {
-          text: 'Confirm',
+          text: 'Continue',
           variant: 'primary',
           onClick: () => {
             logDialogueActionClicked({
