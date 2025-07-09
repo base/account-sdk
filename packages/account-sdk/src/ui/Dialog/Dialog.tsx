@@ -44,7 +44,7 @@ const DialogHandleBar: FunctionComponent = () => {
     return null;
   }
 
-  return <div class="-cbwsdk-dialog-handle-bar" />;
+  return <div class="-base-acc-sdk-dialog-handle-bar" />;
 };
 
 export type DialogProps = {
@@ -75,7 +75,7 @@ export class Dialog {
   public attach(el: Element): void {
     this.root = document.createElement('div');
 
-    this.root.className = '-cbwsdk-dialog-root';
+    this.root.className = '-base-acc-sdk-dialog-root';
     el.appendChild(this.root);
 
     this.render();
@@ -154,7 +154,7 @@ export const DialogContainer: FunctionComponent = (props) => {
     if (dragY > 100) {
       // Find the dialog instance and trigger its close handler
       const closeButton = document.querySelector(
-        '.-cbwsdk-dialog-instance-header-close'
+        '.-base-acc-sdk-dialog-instance-header-close'
       ) as HTMLElement;
       if (closeButton) {
         closeButton.click();
@@ -166,16 +166,16 @@ export const DialogContainer: FunctionComponent = (props) => {
   };
 
   return (
-    <div class={clsx('-cbwsdk-dialog-container')}>
+    <div class={clsx('-base-acc-sdk-dialog-container')}>
       <style>{css}</style>
       <div
-        class="-cbwsdk-dialog-backdrop"
+        class="-base-acc-sdk-dialog-backdrop"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div
-          class="-cbwsdk-dialog"
+          class="-base-acc-sdk-dialog"
           style={{
             transform: `translateY(${dragY}px)`,
             transition: isDragging ? 'none' : 'transform 0.2s ease-out',
@@ -230,30 +230,37 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
   const shouldShowHeaderTitle = !isLoadingUsername;
 
   return (
-    <div class={clsx('-cbwsdk-dialog-instance', hidden && '-cbwsdk-dialog-instance-hidden')}>
-      <div class="-cbwsdk-dialog-instance-header">
-        <div class="-cbwsdk-dialog-instance-header-icon-and-title">
+    <div
+      class={clsx(
+        '-base-acc-sdk-dialog-instance',
+        hidden && '-base-acc-sdk-dialog-instance-hidden'
+      )}
+    >
+      <div class="-base-acc-sdk-dialog-instance-header">
+        <div class="-base-acc-sdk-dialog-instance-header-icon-and-title">
           <BaseLogo fill="blue" />
           {shouldShowHeaderTitle && (
-            <div class="-cbwsdk-dialog-instance-header-icon-and-title-title">{headerTitle}</div>
+            <div class="-base-acc-sdk-dialog-instance-header-icon-and-title-title">
+              {headerTitle}
+            </div>
           )}
         </div>
-        <div class="-cbwsdk-dialog-instance-header-close" onClick={handleClose}>
-          <img src={closeIcon} class="-cbwsdk-dialog-instance-header-close-icon" />
+        <div class="-base-acc-sdk-dialog-instance-header-close" onClick={handleClose}>
+          <img src={closeIcon} class="-base-acc-sdk-dialog-instance-header-close-icon" />
         </div>
       </div>
-      <div class="-cbwsdk-dialog-instance-content">
-        <div class="-cbwsdk-dialog-instance-content-title">{title}</div>
-        <div class="-cbwsdk-dialog-instance-content-message">{message}</div>
+      <div class="-base-acc-sdk-dialog-instance-content">
+        <div class="-base-acc-sdk-dialog-instance-content-title">{title}</div>
+        <div class="-base-acc-sdk-dialog-instance-content-message">{message}</div>
       </div>
       {actionItems && actionItems.length > 0 && (
-        <div class="-cbwsdk-dialog-instance-actions">
+        <div class="-base-acc-sdk-dialog-instance-actions">
           {actionItems.map((action, i) => (
             <button
               class={clsx(
-                '-cbwsdk-dialog-instance-button',
-                action.variant === 'primary' && '-cbwsdk-dialog-instance-button-primary',
-                action.variant === 'secondary' && '-cbwsdk-dialog-instance-button-secondary'
+                '-base-acc-sdk-dialog-instance-button',
+                action.variant === 'primary' && '-base-acc-sdk-dialog-instance-button-primary',
+                action.variant === 'secondary' && '-base-acc-sdk-dialog-instance-button-secondary'
               )}
               onClick={action.onClick}
               key={i}

@@ -34,7 +34,7 @@ describe('DialogContainer', () => {
   test('renders hidden initially', () => {
     renderDialogContainer();
 
-    const hiddenClass = document.getElementsByClassName('-cbwsdk-dialog-instance-hidden');
+    const hiddenClass = document.getElementsByClassName('-base-acc-sdk-dialog-instance-hidden');
     expect(hiddenClass.length).toEqual(1);
 
     vi.runAllTimers();
@@ -83,7 +83,9 @@ describe('DialogContainer', () => {
     const handleClose = vi.fn();
     renderDialogContainer({ handleClose });
 
-    const closeButton = document.getElementsByClassName('-cbwsdk-dialog-instance-header-close')[0];
+    const closeButton = document.getElementsByClassName(
+      '-base-acc-sdk-dialog-instance-header-close'
+    )[0];
     fireEvent.click(closeButton);
 
     expect(handleClose).toHaveBeenCalledTimes(1);

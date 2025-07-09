@@ -28,8 +28,10 @@ export function SpendPermissions({
       return;
     }
 
-    const signature = localStorage.getItem('cbwsdk.demo.spend-permission.signature') as Hex;
-    const data = JSON.parse(localStorage.getItem('cbwsdk.demo.spend-permission.data') as string);
+    const signature = localStorage.getItem('base-acc-sdk.demo.spend-permission.signature') as Hex;
+    const data = JSON.parse(
+      localStorage.getItem('base-acc-sdk.demo.spend-permission.data') as string
+    );
     if (!signature || !data) {
       return;
     }

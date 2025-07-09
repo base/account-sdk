@@ -111,8 +111,8 @@ export function GrantSpendPermission({
         params: [accounts[1] as Address, spendPermission],
       });
       console.info('response', response);
-      localStorage.setItem('cbwsdk.demo.spend-permission.signature', response as Hex);
-      localStorage.setItem('cbwsdk.demo.spend-permission.data', JSON.stringify(data));
+      localStorage.setItem('base-acc-sdk.demo.spend-permission.signature', response as Hex);
+      localStorage.setItem('base-acc-sdk.demo.spend-permission.data', JSON.stringify(data));
       setState(response as Hex);
     } catch (error) {
       console.error('error', error);
