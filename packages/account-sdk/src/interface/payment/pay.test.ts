@@ -39,7 +39,7 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '10.50',
-      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       testnet: false,
     });
 
@@ -47,7 +47,7 @@ describe('pay', () => {
       success: true,
       id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
       amount: '10.50',
-      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       infoResponses: undefined,
     });
 
@@ -90,7 +90,7 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '5.00',
-      recipient: ensName,
+      to: ensName,
       testnet: false,
     });
 
@@ -98,7 +98,7 @@ describe('pay', () => {
       success: true,
       id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
       amount: '5.00',
-      recipient: resolvedAddress,
+      to: resolvedAddress,
       infoResponses: undefined,
     });
 
@@ -126,7 +126,7 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '10.50',
-      recipient: ensName,
+      to: ensName,
       testnet: false,
     });
 
@@ -134,7 +134,7 @@ describe('pay', () => {
       success: false,
       error: 'Failed to resolve ENS name "nonexistent.eth": ENS name "nonexistent.eth" not found',
       amount: '10.50',
-      recipient: ensName,
+      to: ensName,
     });
 
     expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 2);
@@ -149,14 +149,14 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '0',
-      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
     });
 
     expect(payment).toEqual({
       success: false,
       error: 'Invalid amount: must be greater than 0',
       amount: '0',
-      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
     });
   });
 
@@ -176,14 +176,14 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '10.50',
-      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
     });
 
     expect(payment).toEqual({
       success: false,
       error: 'User rejected the request',
       amount: '10.50',
-      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
     });
   });
 
@@ -213,7 +213,7 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '5.00',
-      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       testnet: true,
     });
 
@@ -243,7 +243,13 @@ describe('pay', () => {
 
     const infoResponses = {
       email: 'test@example.com',
-      physicalAddress: '123 Main St',
+      physicalAddress: {
+        address1: '123 Main St',
+        city: 'New York',
+        state: 'NY',
+        postalCode: '10001',
+        countryCode: 'US',
+      },
     };
 
     // Setup mocks
@@ -276,7 +282,7 @@ describe('pay', () => {
 
     const payment = await pay({
       amount: '10.50',
-      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       testnet: false,
       infoRequests,
     });
@@ -285,7 +291,7 @@ describe('pay', () => {
       success: true,
       id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
       amount: '10.50',
-      recipient: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       infoResponses: infoResponses,
     });
 

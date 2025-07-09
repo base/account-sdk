@@ -103,6 +103,20 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                   <span>User Info</span>
                 </div>
                 <div className={styles.userDataBody}>
+                  {result.infoResponses.name && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>Name</span>
+                      <span className={styles.userDataValue}>
+                        {(() => {
+                          const name = result.infoResponses.name as unknown as {
+                            firstName: string;
+                            familyName: string;
+                          };
+                          return `${name.firstName} ${name.familyName}`;
+                        })()}
+                      </span>
+                    </div>
+                  )}
                   {result.infoResponses.email && (
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>Email</span>
@@ -120,19 +134,36 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                   {result.infoResponses.physicalAddress && (
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>Address</span>
-                      <span className={styles.userDataValue}>{result.infoResponses.physicalAddress}</span>
-                    </div>
-                  )}
-                  {result.infoResponses.name && (
-                    <div className={styles.userDataRow}>
-                      <span className={styles.userDataLabel}>Name</span>
-                      <span className={styles.userDataValue}>{result.infoResponses.name}</span>
+                      <span className={styles.userDataValue}>
+                        {(() => {
+                          const addr = result.infoResponses.physicalAddress as unknown as {
+                            address1: string;
+                            address2?: string;
+                            city: string;
+                            state: string;
+                            postalCode: string;
+                            countryCode: string;
+                            name?: {
+                              firstName: string;
+                              familyName: string;
+                            };
+                          };
+                          const parts = [
+                            addr.name ? `${addr.name.firstName} ${addr.name.familyName}` : null,
+                            addr.address1,
+                            addr.address2,
+                            `${addr.city}, ${addr.state} ${addr.postalCode}`,
+                            addr.countryCode
+                          ].filter(Boolean);
+                          return parts.join(', ');
+                        })()}
+                      </span>
                     </div>
                   )}
                   {result.infoResponses.onchainAddress && (
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>On-chain Address</span>
-                      <code className={styles.userDataValue}>{result.infoResponses.onchainAddress}</code>
+                      <span className={styles.userDataValue}>{result.infoResponses.onchainAddress}</span>
                     </div>
                   )}
                 </div>

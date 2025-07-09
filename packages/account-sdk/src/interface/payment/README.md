@@ -10,7 +10,7 @@ import { pay } from '@base/account-sdk';
 // Basic payment
 const payment = await pay({
   amount: "10.50",
-  recipient: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
+  to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
   testnet: true
 });
 
@@ -30,7 +30,7 @@ import { pay, InfoRequest } from '@base/account-sdk';
 
 const payment = await pay({
   amount: "10.50",
-  recipient: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
+  to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
   testnet: true,
   infoRequests: [
     { request: 'email' },
@@ -61,20 +61,26 @@ By default, all information requests are required (`optional: false`). You can m
 #### PaymentOptions
 
 - `amount: string` - Amount of USDC to send as a string (e.g., "10.50")
-- `recipient: string` - Ethereum address or ENS name of the recipient
+- `to: string` - Ethereum address or ENS name to send payment to
 - `testnet?: boolean` - Whether to use Base Sepolia testnet (default: false)
 - `infoRequests?: InfoRequest[]` - Optional information requests for data callbacks
 
 #### InfoRequest
 
 - `request: string` - The type of information being requested
-- `optional?: boolean` - Whether this information is optional (default: false)
+- `optional?: boolean` - Whether the information is optional (default: false)
 
 #### PaymentResult
 
-- `success: boolean` - Whether the payment was initiated successfully
-- `id?: string` - The transaction hash if successful
-- `error?: string` - Error message if payment failed
-- `amount: string` - The amount that was attempted to be sent
-- `recipient: string` - The recipient address (resolved from ENS if applicable)
-- `infoResponses?: InfoResponses` - Information responses collected from info requests (if any) 
+Success:
+- `success: true`
+- `id: string` - Transaction ID (hash) of the payment
+- `amount: string` - The amount that was sent
+- `to: string` - The address that received the payment (resolved from ENS if applicable)
+- `infoResponses?: InfoResponses` - Responses from information requests (if any)
+
+Error:
+- `success: false`
+- `error: string` - Error message describing what went wrong
+- `amount: string` - The amount that was attempted
+- `to: string` - The address that would have received the payment 

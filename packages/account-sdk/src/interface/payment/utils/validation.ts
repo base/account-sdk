@@ -76,13 +76,3 @@ export function validateRecipient(recipient: string): void {
     throw new Error('Invalid recipient: must be a valid Ethereum address or ENS name');
   }
 }
-
-/**
- * @deprecated Use validateRecipient instead
- * Validates that the address is a valid Ethereum address
- * @param address - The address to validate
- * @throws Error if address is invalid
- */
-export function validateAddress(address: string): void {
-  validateRecipient(address);
-}

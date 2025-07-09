@@ -2,7 +2,7 @@ export const DEFAULT_PAY_CODE = `import { pay } from '@base/account-sdk'
 
 const result = await pay({
   amount: '.01',
-  recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+  to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
   testnet: true
 })
 
@@ -12,7 +12,7 @@ export const PAY_CODE_WITH_INFO_REQUESTS = `import { pay } from '@base/account-s
 
 const result = await pay({
   amount: '.01',
-  recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+  to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
   testnet: true,
   infoRequests: [
     { request: 'email' },

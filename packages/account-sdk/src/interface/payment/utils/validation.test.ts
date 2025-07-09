@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateAddress, validateRecipient, validateStringAmount } from './validation.js';
+import { validateRecipient, validateStringAmount } from './validation.js';
 
 describe('validateStringAmount', () => {
   it('should validate valid amounts', () => {
@@ -46,11 +46,3 @@ describe('validateRecipient', () => {
     expect(() => validateRecipient('.eth')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
   });
 });
-
-describe('validateAddress (deprecated)', () => {
-  it('should work the same as validateRecipient', () => {
-    expect(() => validateAddress('0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')).not.toThrow();
-    expect(() => validateAddress('vitalik.eth')).not.toThrow();
-    expect(() => validateAddress('invalid')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
-  });
-}); 

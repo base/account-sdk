@@ -33,12 +33,14 @@ This is a test application for the Base Account SDK Payment functionality. It pr
 
 The app provides a code editor where you can write and execute JavaScript code that uses the `pay` function. The default code shows an example of how to make a payment:
 
-```javascript
+### Default Code Example
+
+```typescript
 import { pay } from '@base/account-sdk'
 
 const result = await pay({
-  amount: '1',
-  recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+  amount: '.01',
+  to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
   testnet: true
 })
 

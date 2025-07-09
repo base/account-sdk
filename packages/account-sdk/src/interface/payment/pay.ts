@@ -10,7 +10,7 @@ import { isENSName, validateRecipient, validateStringAmount } from './utils/vali
  *
  * @param options - Payment options
  * @param options.amount - Amount of USDC to send as a string (e.g., "10.50")
- * @param options.recipient - Ethereum address or ENS name of the recipient
+ * @param options.to - Ethereum address or ENS name to send payment to
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.infoRequests - Optional information requests for data callbacks
  * @returns Promise<PaymentResult> - Result of the payment transaction
@@ -20,14 +20,14 @@ import { isENSName, validateRecipient, validateStringAmount } from './utils/vali
  * // Pay to an Ethereum address
  * const payment = await pay({
  *   amount: "10.50",
- *   recipient: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
+ *   to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
  *   testnet: true
  * });
  *
  * // Pay to an ENS name with info requests
  * const payment = await pay({
  *   amount: "5.00",
- *   recipient: "vitalik.eth",
+ *   to: "vitalik.eth",
  *   testnet: false,
  *   infoRequests: [
  *     { request: 'email' },
@@ -43,18 +43,18 @@ import { isENSName, validateRecipient, validateStringAmount } from './utils/vali
  * ```
  */
 export async function pay(options: PaymentOptions): Promise<PaymentResult> {
-  const { amount, recipient, testnet = false, infoRequests } = options;
+  const { amount, to, testnet = false, infoRequests } = options;
 
   try {
     validateStringAmount(amount, 2);
-    validateRecipient(recipient);
+    validateRecipient(to);
 
     // Resolve ENS name if necessary
     let resolvedRecipient: Address;
-    if (isENSName(recipient)) {
-      resolvedRecipient = await resolveENS(recipient);
+    if (isENSName(to)) {
+      resolvedRecipient = await resolveENS(to);
     } else {
-      resolvedRecipient = recipient as Address;
+      resolvedRecipient = to as Address;
     }
 
     // Step 2: Translate payment to sendCalls format
@@ -68,7 +68,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
       success: true,
       id: executionResult.transactionHash,
       amount: amount,
-      recipient: resolvedRecipient,
+      to: resolvedRecipient,
       infoResponses: executionResult.infoResponses,
     };
   } catch (error) {
@@ -96,7 +96,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
       success: false,
       error: errorMessage,
       amount: amount,
-      recipient: recipient as Address,
+      to: to as Address,
     };
   }
 }
