@@ -7,13 +7,13 @@ import { store } from ':store/store.js';
 import { initDialog } from ':ui/Dialog/index.js';
 
 export async function presentAddOwnerDialog() {
-  const dappName = store.config.get().metadata?.appName ?? 'App';
+  const appName = store.config.get().metadata?.appName ?? 'App';
   const dialog = initDialog();
   return new Promise<'authenticate' | 'cancel'>((resolve) => {
     logDialogShown({ dialogContext: 'sub_account_add_owner' });
     dialog.presentItem({
-      title: `Re-authorize ${dappName}`,
-      message: `${dappName} has lost access to your account. Please sign at the next step to re-authorize ${dappName}`,
+      title: `Re-authorize ${appName}`,
+      message: `${appName} has lost access to your account. Please sign at the next step to re-authorize ${appName}`,
       onClose: () => {
         logDialogDismissed({ dialogContext: 'sub_account_add_owner' });
         resolve('cancel');
