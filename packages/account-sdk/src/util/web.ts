@@ -34,7 +34,7 @@ export function openPopup(url: URL): Promise<Window> {
     return popup;
   }
 
-  const popup = null;
+  const popup = tryOpenPopup();
 
   // If the popup was blocked, show a snackbar with a retry button
   if (!popup) {
