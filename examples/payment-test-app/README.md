@@ -36,7 +36,7 @@ The app provides a code editor where you can write and execute JavaScript code t
 ### Default Code Example
 
 ```typescript
-import { pay } from '@base/account-sdk'
+import { pay } from '@base-org/account-sdk'
 
 const result = await pay({
   amount: '.01',
@@ -53,7 +53,7 @@ The app is built with:
 - Next.js
 - React
 - TypeScript
-- @base/account-sdk
+- @base-org/account-sdk
 
 ## Note
 

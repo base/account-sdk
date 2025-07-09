@@ -221,9 +221,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@base/account-sdk@workspace:*, @base/account-sdk@workspace:packages/account-sdk":
+"@base-org/account-sdk@workspace:*, @base-org/account-sdk@workspace:packages/account-sdk":
   version: 0.0.0-use.local
-  resolution: "@base/account-sdk@workspace:packages/account-sdk"
+  resolution: "@base-org/account-sdk@workspace:packages/account-sdk"
   dependencies:
     "@noble/hashes": "npm:1.4.0"
     "@size-limit/preset-big-lib": "npm:^11.1.6"
@@ -253,9 +253,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@base/account-ui@workspace:packages/account-ui":
+"@base-org/account-ui@workspace:packages/account-ui":
   version: 0.0.0-use.local
-  resolution: "@base/account-ui@workspace:packages/account-ui"
+  resolution: "@base-org/account-ui@workspace:packages/account-ui"
   dependencies:
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/preact": "npm:^3.2.4"
@@ -8788,7 +8788,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "payment-test-app@workspace:examples/payment-test-app"
   dependencies:
-    "@base/account-sdk": "workspace:*"
+    "@base-org/account-sdk": "workspace:*"
     "@coinbase/onchainkit": "npm:^0.35.5"
     "@types/node": "npm:^20"
     "@types/react": "npm:^18"
@@ -9721,7 +9721,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "sdk-playground@workspace:examples/testapp"
   dependencies:
-    "@base/account-sdk": "workspace:*"
+    "@base-org/account-sdk": "workspace:*"
     "@chakra-ui/icons": "npm:^2.1.1"
     "@chakra-ui/react": "npm:^2.8.0"
     "@emotion/react": "npm:^11.11.1"

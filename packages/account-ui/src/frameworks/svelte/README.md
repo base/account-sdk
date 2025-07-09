@@ -5,7 +5,7 @@ This guide covers how to use Base Account UI components in Svelte applications.
 ## Installation
 
 ```bash
-npm install @base/account-ui
+npm install @base-org/account-ui
 ```
 
 ## Usage
@@ -14,7 +14,7 @@ npm install @base/account-ui
 
 ```svelte
 <script>
-  import { SignInWithBaseButton } from '@base/account-ui/svelte';
+  import { SignInWithBaseButton } from '@base-org/account-ui/svelte';
 
   const handleClick = () => {
     console.log('Sign in clicked!');
@@ -33,7 +33,7 @@ npm install @base/account-ui
 
 ```svelte
 <script>
-  import { SignInWithBaseButton } from '@base/account-ui/svelte';
+  import { SignInWithBaseButton } from '@base-org/account-ui/svelte';
 
   const handleClick = (type) => {
     console.log(`${type} button clicked`);
@@ -77,7 +77,7 @@ npm install @base/account-ui
 
 ```svelte
 <script lang="ts">
-  import { SignInWithBaseButton } from '@base/account-ui/svelte';
+  import { SignInWithBaseButton } from '@base-org/account-ui/svelte';
 
   interface User {
     id: string;

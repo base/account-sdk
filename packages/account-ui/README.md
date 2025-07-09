@@ -12,7 +12,7 @@ This package provides UI components for **React**, **Preact**, **Vue**, and **Sv
 ## Installation
 
 ```bash
-npm install @base/account-ui
+npm install @base-org/account-ui
 ```
 
 ## Framework-Specific Documentation
@@ -27,7 +27,7 @@ For detailed usage examples and setup instructions for each framework:
 ## Quick Start - React
 
 ```tsx
-import { SignInWithBaseButton } from '@base/account-ui/react';
+import { SignInWithBaseButton } from '@base-org/account-ui/react';
 
 function App() {
   return (

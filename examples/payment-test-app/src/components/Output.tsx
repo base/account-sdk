@@ -1,4 +1,4 @@
-import type { PaymentResult } from '@base/account-sdk';
+import type { PaymentResult } from '@base-org/account-sdk';
 import styles from './Output.module.css';
 
 interface OutputProps {
@@ -127,7 +127,8 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>Phone</span>
                       <span className={styles.userDataValue}>
-                        {result.infoResponses.phoneNumber.number} ({result.infoResponses.phoneNumber.country})
+                        {result.infoResponses.phoneNumber.number} (
+                        {result.infoResponses.phoneNumber.country})
                       </span>
                     </div>
                   )}
@@ -153,7 +154,7 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                             addr.address1,
                             addr.address2,
                             `${addr.city}, ${addr.state} ${addr.postalCode}`,
-                            addr.countryCode
+                            addr.countryCode,
                           ].filter(Boolean);
                           return parts.join(', ');
                         })()}
@@ -163,7 +164,9 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                   {result.infoResponses.onchainAddress && (
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>On-chain Address</span>
-                      <span className={styles.userDataValue}>{result.infoResponses.onchainAddress}</span>
+                      <span className={styles.userDataValue}>
+                        {result.infoResponses.onchainAddress}
+                      </span>
                     </div>
                   )}
                 </div>

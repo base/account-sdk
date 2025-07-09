@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: false,
-  transpilePackages: ['@base/account-sdk'],
+  transpilePackages: ['@base-org/account-sdk'],
 };
 
 export default nextConfig;

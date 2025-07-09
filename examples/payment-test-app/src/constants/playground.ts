@@ -1,4 +1,4 @@
-export const DEFAULT_PAY_CODE = `import { pay } from '@base/account-sdk'
+export const DEFAULT_PAY_CODE = `import { pay } from '@base-org/account-sdk'
 
 const result = await pay({
   amount: '.01',
@@ -8,7 +8,7 @@ const result = await pay({
 
 return result`;
 
-export const PAY_CODE_WITH_INFO_REQUESTS = `import { pay } from '@base/account-sdk'
+export const PAY_CODE_WITH_INFO_REQUESTS = `import { pay } from '@base-org/account-sdk'
 
 const result = await pay({
   amount: '.01',

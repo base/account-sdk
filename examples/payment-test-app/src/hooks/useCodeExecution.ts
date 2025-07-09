@@ -1,5 +1,5 @@
-import type { PaymentResult } from '@base/account-sdk';
-import { pay } from '@base/account-sdk';
+import type { PaymentResult } from '@base-org/account-sdk';
+import { pay } from '@base-org/account-sdk';
 import { useCallback, useState } from 'react';
 import { transformImports } from '../utils/codeTransform';
 import { useConsoleCapture } from './useConsoleCapture';
@@ -40,7 +40,7 @@ export const useCodeExecution = () => {
 
         // biome-ignore lint/suspicious/noConsole: Useful for debugging payment results
         console.log('Payment result:', paymentResult);
-        
+
         setResult(paymentResult);
         setConsoleOutput(logs);
       } catch (error) {

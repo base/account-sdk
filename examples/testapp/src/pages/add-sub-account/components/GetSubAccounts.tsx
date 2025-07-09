@@ -1,4 +1,4 @@
-import { createBaseAccountSDK } from '@base/account-sdk';
+import { createBaseAccountSDK } from '@base-org/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 
@@ -26,22 +26,26 @@ export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
     setError(undefined);
     try {
       const provider = sdk.getProvider();
-      const accounts = await provider.request({
+      const accounts = (await provider.request({
         method: 'eth_requestAccounts',
-      }) as string[];
+      })) as string[];
       if (accounts.length < 2) {
         throw new Error('Create a sub account first by clicking the Add Address button');
       }
       const response = await provider.request({
         method: 'wallet_getSubAccounts',
-        params: [{
-          account: accounts[1],
-          domain: window.location.origin,
-        }],
+        params: [
+          {
+            account: accounts[1],
+            domain: window.location.origin,
+          },
+        ],
       });
 
       console.info('getSubAccounts response', response);
-      setSubAccounts(response as { subAccounts: { address: string; factory: string; factoryData: string; }[] });
+      setSubAccounts(
+        response as { subAccounts: { address: string; factory: string; factoryData: string }[] }
+      );
     } catch (error) {
       console.error('Error getting sub accounts:', error);
       setError(error instanceof Error ? error.message : 'Unknown error');

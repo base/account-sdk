@@ -5,7 +5,7 @@ This guide covers how to use Base Account UI components in Preact applications.
 ## Installation
 
 ```bash
-npm install @base/account-ui
+npm install @base-org/account-ui
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @base/account-ui
 ### Basic Usage
 
 ```tsx
-import { SignInWithBaseButton } from '@base/account-ui/preact';
+import { SignInWithBaseButton } from '@base-org/account-ui/preact';
 
 function App() {
   return (
@@ -30,7 +30,7 @@ function App() {
 ### Different Variants
 
 ```tsx
-import { SignInWithBaseButton } from '@base/account-ui/preact';
+import { SignInWithBaseButton } from '@base-org/account-ui/preact';
 
 function VariantExamples() {
   return (

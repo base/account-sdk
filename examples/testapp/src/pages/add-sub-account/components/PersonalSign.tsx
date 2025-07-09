@@ -1,4 +1,4 @@
-import { createBaseAccountSDK } from '@base/account-sdk';
+import { createBaseAccountSDK } from '@base-org/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { createPublicClient, http, toHex } from 'viem';
