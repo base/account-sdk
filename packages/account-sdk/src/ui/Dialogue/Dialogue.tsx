@@ -5,10 +5,11 @@ import { FunctionComponent, render } from 'preact';
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
 
-import { useEffect, useState } from 'preact/hooks';
-
+import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
+import { store } from ':store/store.js';
 import { BaseLogo } from ':ui/assets/BaseLogo.js';
 import { closeIcon } from ':ui/assets/icons.js';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import css from './Dialogue-css.js';
 
 // Helper function to detect phone portrait mode
@@ -195,6 +196,8 @@ export const DialogueInstance: FunctionComponent<DialogueInstanceProps> = ({
   handleClose,
 }) => {
   const [hidden, setHidden] = useState(true);
+  const [isLoadingUsername, setIsLoadingUsername] = useState(true);
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -206,11 +209,34 @@ export const DialogueInstance: FunctionComponent<DialogueInstanceProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    const fetchEnsName = async () => {
+      const address = store.account.get().accounts?.[0];
+
+      if (address) {
+        const username = await getDisplayableUsername(address);
+        setUsername(username);
+      }
+
+      setIsLoadingUsername(false);
+    };
+    fetchEnsName();
+  }, []);
+
+  const headerTitle = useMemo(() => {
+    return username ? `Signed in as ${username}` : 'Base Account';
+  }, [username]);
+
+  const shouldShowHeaderTitle = !isLoadingUsername;
+
   return (
     <div class={clsx('-cbwsdk-dialogue-instance', hidden && '-cbwsdk-dialogue-instance-hidden')}>
       <div class="-cbwsdk-dialogue-instance-header">
-        <div class="-cbwsdk-dialogue-instance-header-icon">
+        <div class="-cbwsdk-dialogue-instance-header-icon-and-title">
           <BaseLogo fill="blue" />
+          {shouldShowHeaderTitle && (
+            <div class="-cbwsdk-dialogue-instance-header-icon-and-title-title">{headerTitle}</div>
+          )}
         </div>
         <div class="-cbwsdk-dialogue-instance-header-close" onClick={handleClose}>
           <img src={closeIcon} class="-cbwsdk-dialogue-instance-header-close-icon" />
