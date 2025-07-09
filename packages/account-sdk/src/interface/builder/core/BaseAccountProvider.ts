@@ -17,6 +17,7 @@ import {
 } from ':core/telemetry/events/provider.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { Signer } from ':sign/base-account/Signer.js';
+import { initSubAccountConfig } from ':sign/base-account/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
 import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
@@ -73,14 +74,24 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
       if (!this.signer.isConnected) {
         switch (args.method) {
           case 'eth_requestAccounts': {
-            const subAccountsConfig = store.subAccountsConfig.get();
-            if (subAccountsConfig?.enableAutoSubAccounts) {
-              await this.signer.handshake({ method: 'handshake' });
-              // eth_requestAccounts gets translated to wallet_connect at SCWSigner level
-              await this.signer.request(args);
-            } else {
-              await this.signer.handshake(args);
-            }
+            await this.signer.handshake({ method: 'handshake' });
+            // We are translating eth_requestAccounts to wallet_connect always
+            await initSubAccountConfig();
+            await this.signer.request({
+              method: 'wallet_connect',
+              params: [
+                {
+                  version: '1',
+                  capabilities: {
+                    ...(store.subAccountsConfig.get()?.capabilities ?? {}),
+                  },
+                },
+              ],
+            });
+
+            // wallet_connect will retrieve and save the account info in the store
+            // continue to requesting it again at L130 for emitting the connect event +
+            // returning the accounts
             break;
           }
           case 'wallet_connect': {

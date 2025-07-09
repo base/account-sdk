@@ -163,26 +163,7 @@ export class Signer {
   async _request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
-        case 'eth_requestAccounts': {
-          // Wait for the popup to be loaded before making async calls
-          await this.communicator.waitForPopupLoaded?.();
-          await initSubAccountConfig();
-          // This will populate the store with the sub account
-          await this.request({
-            method: 'wallet_connect',
-            params: [
-              {
-                version: '1',
-                capabilities: {
-                  ...(store.subAccountsConfig.get()?.capabilities ?? {}),
-                },
-              },
-            ],
-          });
-          this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
-          return this.accounts;
-        }
-        case 'wallet_switchEthereumChain': { 
+        case 'wallet_switchEthereumChain': {
           assertParamsChainId(request.params);
           this.chain.id = Number(request.params[0].chainId);
           return;
@@ -239,6 +220,7 @@ export class Signer {
             : appendWithoutDuplicates(this.accounts, subAccount.address);
         }
 
+        this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
         return this.accounts;
       }
       case 'eth_coinbase':
@@ -296,7 +278,10 @@ export class Signer {
         if (!this.chain.rpcUrl) {
           throw standardErrors.rpc.internal('No RPC URL set for chain');
         }
-        const response = await fetchRPCRequest(request, this.chain.rpcUrl) as GetSubAccountsResponse;
+        const response = (await fetchRPCRequest(
+          request,
+          this.chain.rpcUrl
+        )) as GetSubAccountsResponse;
         assertArrayPresence(response.subAccounts, 'subAccounts');
         if (response.subAccounts.length > 0) {
           // cache the sub account

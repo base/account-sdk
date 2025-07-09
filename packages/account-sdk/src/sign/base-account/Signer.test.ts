@@ -703,109 +703,6 @@ describe('Signer', () => {
       expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
     });
 
-    it('should route eth_requestAccounts through wallet_connect', async () => {
-      expect(signer['accounts']).toEqual([]);
-
-      const mockSetAccount = vi.spyOn(store.account, 'set');
-      const mockSetSubAccounts = vi.spyOn(store.subAccounts, 'set');
-
-      (decryptContent as Mock).mockResolvedValueOnce({
-        result: {
-          value: {
-            accounts: [
-              {
-                address: globalAccountAddress,
-                capabilities: {},
-              },
-            ],
-          },
-        },
-      });
-
-      const accounts = await signer.request({
-        method: 'eth_requestAccounts',
-        params: [],
-      });
-
-      // Should persist global account to accounts store
-      expect(mockSetAccount).toHaveBeenCalledWith({
-        accounts: [globalAccountAddress],
-      });
-
-      // No sub account to be persisted
-      expect(mockSetSubAccounts).not.toHaveBeenCalled();
-
-      // Should return [globalAccount]
-      expect(accounts).toEqual([globalAccountAddress]);
-
-      // eth_accounts should also return [globalAccount]
-      const ethAccounts = await signer.request({ method: 'eth_accounts' });
-      expect(ethAccounts).toEqual([globalAccountAddress]);
-    });
-
-    it('should route eth_requestAccounts through wallet_connect and handle sub account', async () => {
-      expect(signer['accounts']).toEqual([]);
-      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
-        capabilities: {
-          addSubAccount: {
-            account: {
-              type: 'create',
-              keys: [{ type: 'p256', publicKey: '0x123' }],
-            },
-          },
-        },
-      });
-
-      const mockSetAccount = vi.spyOn(store.account, 'set');
-      const mockSetSubAccounts = vi.spyOn(store.subAccounts, 'set');
-
-      (decryptContent as Mock).mockResolvedValueOnce({
-        result: {
-          value: {
-            accounts: [
-              {
-                address: globalAccountAddress,
-                capabilities: {
-                  subAccounts: [
-                    {
-                      address: subAccountAddress,
-                      factory: globalAccountAddress,
-                      factoryData: '0x',
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      });
-
-      const accounts = await signer.request({
-        method: 'eth_requestAccounts',
-        params: [],
-      });
-
-      // Should persist global account to accounts store
-      expect(mockSetAccount).toHaveBeenCalledWith({
-        accounts: [globalAccountAddress],
-      });
-
-      // Should persist sub account to subAccounts store
-      expect(mockSetSubAccounts).toHaveBeenCalledWith({
-        address: subAccountAddress,
-        factory: globalAccountAddress,
-        factoryData: '0x',
-      });
-
-      // Should return [subAccount, globalAccount]
-      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
-
-      // eth_accounts should also return [subAccount, globalAccount]
-      const ethAccounts = await signer.request({ method: 'eth_accounts' });
-      expect(ethAccounts).toEqual([subAccountAddress, globalAccountAddress]);
-    });
-
     it('should use cached response for subsequent wallet_connect calls', async () => {
       // First wallet_connect call
       const mockRequest: RequestArguments = {
@@ -1227,16 +1124,6 @@ describe('Signer', () => {
       vi.restoreAllMocks();
     });
 
-    it('should create a sub account when eth_requestAccounts is called', async () => {
-      const mockRequest: RequestArguments = {
-        method: 'eth_requestAccounts',
-        params: [],
-      };
-
-      const accounts = await signer.request(mockRequest);
-      expect(accounts).toContain(subAccountAddress);
-    });
-
     it('update the owner index for the sub account', async () => {
       await signer.cleanup();
 
@@ -1324,7 +1211,7 @@ describe('Signer', () => {
       });
 
       await signer.request({
-        method: 'eth_requestAccounts',
+        method: 'wallet_connect',
         params: [],
       });
 
@@ -1396,7 +1283,7 @@ describe('Signer', () => {
       });
 
       await signer.request({
-        method: 'eth_requestAccounts',
+        method: 'wallet_connect',
         params: [],
       });
 
