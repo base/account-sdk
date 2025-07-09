@@ -1,6 +1,4 @@
 import { render } from '@testing-library/preact';
-// biome-ignore lint/correctness/noUnusedImports: preact
-import { h } from 'preact';
 import { describe, expect, it } from 'vitest';
 import { BaseLogo } from './BaseLogo.js';
 

@@ -15,8 +15,8 @@
       ":ui/*": ["src/ui/*"]
     },
     "target": "es2017",
-    "jsx": "react",
-    "jsxFactory": "h",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "esModuleInterop": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,

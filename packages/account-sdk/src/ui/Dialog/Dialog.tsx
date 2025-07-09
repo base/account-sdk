@@ -2,8 +2,6 @@
 
 import { clsx } from 'clsx';
 import { FunctionComponent, render } from 'preact';
-// biome-ignore lint/correctness/noUnusedImports: preact
-import { h } from 'preact';
 
 import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
 import { store } from ':store/store.js';

@@ -1,8 +1,6 @@
 import '@testing-library/jest-dom';
 
 import { fireEvent, render, screen } from '@testing-library/preact';
-// biome-ignore lint/correctness/noUnusedImports: preact
-import { h } from 'preact';
 import { vi } from 'vitest';
 
 import { DialogContainer, DialogInstance, DialogInstanceProps } from './Dialog.js';

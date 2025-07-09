@@ -1,6 +1,3 @@
-// biome-ignore lint/correctness/noUnusedImports: preact
-import { h } from 'preact';
-
 export const BaseLogo = ({ fill }: { fill: 'blue' | 'white' }) => {
   const fillColor = fill === 'blue' ? '#0000FF' : '#FFF';
 
