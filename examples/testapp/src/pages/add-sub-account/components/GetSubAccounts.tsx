@@ -1,9 +1,9 @@
+import { createBaseAccountSDK } from '@base/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 
 type GetSubAccountsProps = {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: ReturnType<typeof createBaseAccountSDK>;
 };
 
 export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
@@ -11,7 +11,7 @@ export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
     subAccounts: {
       address: string;
       factory: string;
-      factoryCalldata: string;
+      factoryData: string;
     }[];
   }>();
   const [error, setError] = useState<string>();
@@ -23,6 +23,7 @@ export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
     }
 
     setIsLoading(true);
+    setError(undefined);
     try {
       const provider = sdk.getProvider();
       const accounts = await provider.request({
@@ -40,7 +41,7 @@ export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
       });
 
       console.info('getSubAccounts response', response);
-      setSubAccounts(response as { subAccounts: { address: string; factory: string; factoryCalldata: string; }[] });
+      setSubAccounts(response as { subAccounts: { address: string; factory: string; factoryData: string; }[] });
     } catch (error) {
       console.error('Error getting sub accounts:', error);
       setError(error instanceof Error ? error.message : 'Unknown error');
@@ -51,7 +52,22 @@ export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
 
   return (
     <>
-      <Button w="full" onClick={handleGetSubAccounts} isLoading={isLoading} loadingText="Getting Sub Accounts...">
+      <Button
+        w="full"
+        onClick={handleGetSubAccounts}
+        isLoading={isLoading}
+        loadingText="Getting Sub Accounts..."
+        bg="blue.500"
+        color="white"
+        border="1px solid"
+        borderColor="blue.500"
+        _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
+        _dark={{
+          bg: 'blue.600',
+          borderColor: 'blue.600',
+          _hover: { bg: 'blue.700', borderColor: 'blue.700' },
+        }}
+      >
         Get Sub Accounts
       </Button>
       {subAccounts && (
@@ -59,12 +75,14 @@ export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
           as="pre"
           w="full"
           p={2}
-          bg="gray.900"
+          bg="gray.50"
           borderRadius="md"
           border="1px solid"
-          borderColor="gray.700"
+          borderColor="gray.300"
+          color="gray.800"
           overflow="auto"
           whiteSpace="pre-wrap"
+          _dark={{ bg: 'gray.900', borderColor: 'gray.700', color: 'gray.200' }}
         >
           {JSON.stringify(subAccounts, null, 2)}
         </Box>
@@ -74,12 +92,14 @@ export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
           as="pre"
           w="full"
           p={2}
-          bg="red.900"
+          bg="red.50"
           borderRadius="md"
           border="1px solid"
-          borderColor="red.700"
+          borderColor="red.300"
+          color="red.800"
           overflow="auto"
           whiteSpace="pre-wrap"
+          _dark={{ bg: 'red.900', borderColor: 'red.700', color: 'red.200' }}
         >
           {error}
         </Box>
