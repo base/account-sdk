@@ -139,16 +139,8 @@ describe('createProvider', () => {
       const params: CreateProviderOptions = {
         subAccounts: {
           toOwnerAccount: mockToOwnerAccount,
+          // @ts-expect-error - enableAutoSubAccounts is not officially supported yet
           enableAutoSubAccounts: true,
-          defaultSpendPermissions: {
-            1: [
-              {
-                token: '0x1234567890123456789012345678901234567890',
-                allowance: '0x1000',
-                period: 3600,
-              },
-            ],
-          },
         },
       };
 
@@ -158,21 +150,13 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: mockToOwnerAccount,
         enableAutoSubAccounts: true,
-        defaultSpendPermissions: {
-          1: [
-            {
-              token: '0x1234567890123456789012345678901234567890',
-              allowance: '0x1000',
-              period: 3600,
-            },
-          ],
-        },
       });
     });
 
     it('should handle partial sub-account configuration', () => {
       const params: CreateProviderOptions = {
         subAccounts: {
+          // @ts-expect-error - enableAutoSubAccounts is not officially supported yet
           enableAutoSubAccounts: true,
         },
       };
@@ -183,7 +167,6 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: undefined,
         enableAutoSubAccounts: true,
-        defaultSpendPermissions: undefined,
       });
     });
 
@@ -306,6 +289,7 @@ describe('createProvider', () => {
         },
         subAccounts: {
           toOwnerAccount: mockToOwnerAccount,
+          // @ts-expect-error - enableAutoSubAccounts is not officially supported yet
           enableAutoSubAccounts: true,
         },
         paymasterUrls: {
@@ -320,7 +304,6 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: mockToOwnerAccount,
         enableAutoSubAccounts: true,
-        defaultSpendPermissions: undefined,
       });
 
       // Check store configuration
