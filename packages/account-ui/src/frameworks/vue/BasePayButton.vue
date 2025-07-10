@@ -1,21 +1,16 @@
-<!-- SignInWithBaseButton.vue -->
+<!-- BasePayButton.vue -->
 <template>
   <div ref="mountPoint" :style="{ display: 'block', width: '100%' }" />
 </template>
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { SignInWithBaseButtonProps } from '../../types.js';
-import {
-  mountSignInWithBaseButton,
-  unmountSignInWithBaseButton,
-} from '../preact/mountSignInWithBaseButton.js';
+import { BasePayButtonProps } from '../../types.js';
+import { mountBasePayButton, unmountBasePayButton } from '../preact/mountBasePayButton.js';
 
-interface Props extends SignInWithBaseButtonProps {}
+interface Props extends BasePayButtonProps {}
 
 const props = withDefaults(defineProps<Props>(), {
-  align: 'center',
-  variant: 'solid',
   colorScheme: 'system',
 });
 
@@ -25,13 +20,13 @@ const mountWidget = () => {
   if (mountPoint.value) {
     // Clone props to avoid extensibility issues
     const clonedProps = { ...props };
-    mountSignInWithBaseButton(mountPoint.value, clonedProps);
+    mountBasePayButton(mountPoint.value, clonedProps);
   }
 };
 
 const unmountWidget = () => {
   if (mountPoint.value) {
-    unmountSignInWithBaseButton(mountPoint.value);
+    unmountBasePayButton(mountPoint.value);
   }
 };
 
@@ -52,4 +47,4 @@ watch(
   },
   { deep: true }
 );
-</script>
+</script> 
