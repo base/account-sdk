@@ -38,11 +38,11 @@
   "license": "Apache-2.0",
   "scripts": {
     "clean": "rm -rf dist && rm -rf node_modules",
+    "pretest": "node compile-assets.cjs",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
-    "compile-assets": "node compile-assets.cjs",
     "postbuild": "cp -r src/frameworks/vue/*.vue dist/frameworks/vue/ && cp -r src/frameworks/svelte/*.svelte dist/frameworks/svelte/",
-    "build": "yarn compile-assets && rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias && yarn postbuild",
+    "build": "node compile-assets.cjs && rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias && yarn postbuild",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint ."
   },
