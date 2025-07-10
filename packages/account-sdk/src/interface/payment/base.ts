@@ -1,12 +1,14 @@
 import { CHAIN_IDS, TOKENS } from './constants.js';
+import { getPaymentStatus } from './getPaymentStatus.js';
 import { pay } from './pay.js';
-import type { PaymentOptions, PaymentResult } from './types.js';
+import type { PaymentOptions, PaymentResult, PaymentStatus, PaymentStatusOptions } from './types.js';
 
 /**
  * Base payment interface
  */
 export const base = {
   pay,
+  getPaymentStatus,
   constants: {
     CHAIN_IDS,
     TOKENS,
@@ -14,5 +16,7 @@ export const base = {
   types: {} as {
     PaymentOptions: PaymentOptions;
     PaymentResult: PaymentResult;
+    PaymentStatusOptions: PaymentStatusOptions;
+    PaymentStatus: PaymentStatus;
   },
 };

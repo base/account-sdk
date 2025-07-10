@@ -1,0 +1,286 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getPaymentStatus } from './getPaymentStatus.js';
+import type { PaymentStatus } from './types.js';
+
+// Mock fetch globally
+global.fetch = vi.fn();
+
+describe('getPaymentStatus', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Mock console methods to avoid noise in tests
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it('should return completed status for successful payment', async () => {
+    const mockReceipt = {
+      jsonrpc: '2.0',
+      id: 1,
+      result: {
+        success: true,
+        receipt: {
+          transactionHash: '0xabc123',
+          logs: [
+            {
+              address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+              data: '0x0000000000000000000000000000000000000000000000000000000000989680', // 10 USDC (10 * 10^6)
+              topics: [
+                '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', // Transfer event topic
+                '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce', // from address (padded)
+                '0x000000000000000000000000f1ddf1fc0310cb11f0ca87508207012f4a9cb336', // to address (padded)
+              ],
+            },
+          ],
+        },
+        sender: '0xsender',
+      },
+    };
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => mockReceipt,
+    } as Response);
+
+    const status = await getPaymentStatus({
+      id: '0x123456',
+      testnet: false,
+    });
+
+    expect(status).toEqual<PaymentStatus>({
+      status: 'completed',
+      id: '0x123456',
+      message: 'Payment completed successfully',
+      sender: '0xsender',
+      amount: '10',
+      recipient: '0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336',
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'eth_getUserOperationReceipt',
+          params: ['0x123456'],
+        }),
+      })
+    );
+  });
+
+  it('should return failed status for failed payment', async () => {
+    const mockReceipt = {
+      jsonrpc: '2.0',
+      id: 1,
+      result: {
+        success: false,
+        receipt: {
+          transactionHash: '0xdef456',
+        },
+        sender: '0xsender',
+        reason: 'Insufficient USDC balance',
+      },
+    };
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => mockReceipt,
+    } as Response);
+
+    const status = await getPaymentStatus({
+      id: '0x789abc',
+      testnet: false,
+    });
+
+    expect(status).toEqual<PaymentStatus>({
+      status: 'failed',
+      id: '0x789abc',
+      message: 'Payment failed',
+      sender: '0xsender',
+      error: 'Insufficient USDC balance',
+    });
+  });
+
+  it('should return pending status when userOp exists but no receipt', async () => {
+    // First call returns no receipt
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => ({ jsonrpc: '2.0', id: 1, result: null }),
+    } as Response);
+
+    // Second call returns userOp
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => ({
+        jsonrpc: '2.0',
+        id: 2,
+        result: {
+          sender: '0xpendingSender',
+          // other userOp fields...
+        },
+      }),
+    } as Response);
+
+    const status = await getPaymentStatus({
+      id: '0xpending123',
+      testnet: false,
+    });
+
+    expect(status).toEqual<PaymentStatus>({
+      status: 'pending',
+      id: '0xpending123',
+      message: 'Your payment is being processed. This usually takes a few seconds.',
+      sender: '0xpendingSender',
+    });
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('should return not_found status when payment does not exist', async () => {
+    // Both calls return null
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        json: async () => ({ jsonrpc: '2.0', id: 1, result: null }),
+      } as Response)
+      .mockResolvedValueOnce({
+        json: async () => ({ jsonrpc: '2.0', id: 2, result: null }),
+      } as Response);
+
+    const status = await getPaymentStatus({
+      id: '0xnotfound',
+      testnet: false,
+    });
+
+    expect(status).toEqual<PaymentStatus>({
+      status: 'not_found',
+      id: '0xnotfound',
+      message: 'Payment not found. Please check your transaction ID.',
+    });
+  });
+
+  it('should handle RPC errors gracefully', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => ({
+        jsonrpc: '2.0',
+        id: 1,
+        error: {
+          code: -32602,
+          message: 'Invalid params',
+        },
+      }),
+    } as Response);
+
+    const status = await getPaymentStatus({
+      id: '0xinvalid',
+      testnet: false,
+    });
+
+    expect(status).toEqual<PaymentStatus>({
+      status: 'failed',
+      id: '0xinvalid',
+      message: 'Unable to check payment status. Please try again later.',
+      error: 'Invalid params',
+    });
+  });
+
+  it('should handle network errors gracefully', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'));
+
+    const status = await getPaymentStatus({
+      id: '0xnetworkerror',
+      testnet: false,
+    });
+
+    expect(status).toEqual<PaymentStatus>({
+      status: 'failed',
+      id: '0xnetworkerror',
+      message: 'Unable to check payment status',
+      error: 'Network error',
+    });
+  });
+
+  it('should use testnet bundler URL when testnet is true', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => ({ jsonrpc: '2.0', id: 1, result: null }),
+    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => ({ jsonrpc: '2.0', id: 2, result: null }),
+    } as Response);
+
+    await getPaymentStatus({
+      id: '0xtestnet',
+      testnet: true,
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+      expect.any(Object)
+    );
+  });
+
+  it('should parse user-friendly failure reasons', async () => {
+    const testCases = [
+      { reason: 'execution reverted: insufficient balance', expected: 'Insufficient USDC balance' },
+      { reason: 'transaction reverted', expected: 'Payment was rejected' },
+      { reason: 'custom error message', expected: 'custom error message' },
+    ];
+
+    for (const { reason, expected } of testCases) {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        json: async () => ({
+          jsonrpc: '2.0',
+          id: 1,
+          result: {
+            success: false,
+            receipt: { transactionHash: '0xfailed' },
+            sender: '0xsender',
+            reason,
+          },
+        }),
+      } as Response);
+
+      const status = await getPaymentStatus({
+        id: '0xfailedreason',
+        testnet: false,
+      });
+
+      expect(status.error).toBe(expected);
+    }
+  });
+
+  it('should handle logs with different USDC addresses on testnet', async () => {
+    const mockReceipt = {
+      jsonrpc: '2.0',
+      id: 1,
+      result: {
+        success: true,
+        receipt: {
+          transactionHash: '0xabc123',
+          logs: [
+            {
+              address: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // testnet USDC
+              data: '0x0000000000000000000000000000000000000000000000000000000000989680', // 10 USDC
+              topics: [
+                '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce', // from address (padded)
+                '0x000000000000000000000000f1ddf1fc0310cb11f0ca87508207012f4a9cb336', // to address (padded)
+              ],
+            },
+          ],
+        },
+        sender: '0xsender',
+      },
+    };
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => mockReceipt,
+    } as Response);
+
+    const status = await getPaymentStatus({
+      id: '0x123456',
+      testnet: true,
+    });
+
+    expect(status.amount).toBe('10');
+    expect(status.recipient).toBe('0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336');
+  });
+}); 

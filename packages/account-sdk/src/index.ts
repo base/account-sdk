@@ -5,6 +5,16 @@ export { createBaseAccountSDK } from './interface/builder/core/createBaseAccount
 export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js';
 
 // Payment interface exports
-export { base, pay } from './interface/payment/index.js';
-export type { PaymentOptions, PaymentResult } from './interface/payment/index.js';
+export { base, getPaymentStatus, pay } from './interface/payment/index.js';
+export type {
+    InfoRequest,
+    InfoResponses,
+    PaymentError,
+    PaymentOptions,
+    PaymentResult,
+    PaymentStatus,
+    PaymentStatusOptions,
+    PaymentStatusType,
+    PaymentSuccess
+} from './interface/payment/index.js';
 

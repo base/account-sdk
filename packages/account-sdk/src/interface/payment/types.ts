@@ -1,4 +1,4 @@
-import type { Address } from 'viem';
+import type { Address, Hex } from 'viem';
 
 /**
  * Information request type for payment data callbacks
@@ -89,3 +89,44 @@ export interface PaymentError {
  * Result of a payment transaction
  */
 export type PaymentResult = PaymentSuccess | PaymentError;
+
+/**
+ * Options for checking payment status
+ */
+export interface PaymentStatusOptions {
+  /** Transaction ID (userOp hash) to check status for */
+  id: string;
+  /** Whether to check on testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+}
+
+/**
+ * Possible payment status types
+ */
+export type PaymentStatusType = 'pending' | 'completed' | 'failed' | 'not_found';
+
+/**
+ * Payment status information
+ */
+export interface PaymentStatus {
+  /** Current status of the payment */
+  status: PaymentStatusType;
+  /** Transaction ID that was checked */
+  id: Hex;
+  /** Human-readable message about the status */
+  message: string;
+  
+  // Additional fields that may be present depending on status
+  /** Sender address (present for pending, completed, and failed) */
+  sender?: string;
+  /** Amount sent (present for completed transactions, parsed from logs) */
+  amount?: string;
+  /** Recipient address (present for completed transactions, parsed from logs) */
+  recipient?: string;
+  /** Error message (present for failed status - includes both on-chain failure reasons and off-chain errors) */
+  error?: string;
+}
+
+/**
+ * Internal type for payment execution result
+ */
