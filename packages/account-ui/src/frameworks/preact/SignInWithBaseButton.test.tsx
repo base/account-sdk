@@ -1,7 +1,5 @@
 import { fireEvent } from '@testing-library/dom';
 import { render } from '@testing-library/preact';
-// biome-ignore lint/correctness/noUnusedImports: preact
-import { h } from 'preact';
 import { describe, expect, it, vi } from 'vitest';
 import { SignInWithBaseButton } from './SignInWithBaseButton.js';
 
@@ -34,10 +32,8 @@ describe('SignInWithBaseButton (Preact)', () => {
     const button = container.querySelector('button');
     const buttonDiv = button?.querySelector('div');
 
-    expect(buttonDiv).toHaveStyle({
-      justifyContent: 'center',
-      gap: '8px',
-    });
+    expect(buttonDiv).toHaveClass('-base-ui-sign-in-button-content');
+    expect(buttonDiv).not.toHaveClass('-base-ui-sign-in-button-content-left');
   });
 
   it('renders with left-aligned layout when align="left"', () => {
@@ -45,10 +41,7 @@ describe('SignInWithBaseButton (Preact)', () => {
     const button = container.querySelector('button');
     const buttonDiv = button?.querySelector('div');
 
-    expect(buttonDiv).toHaveStyle({
-      justifyContent: 'flex-start',
-      gap: '16px',
-    });
+    expect(buttonDiv).toHaveClass('-base-ui-sign-in-button-content-left');
   });
 
   it('applies transparent style when variant="transparent"', () => {
@@ -56,8 +49,8 @@ describe('SignInWithBaseButton (Preact)', () => {
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
-    expect(style).toContain('background-color: transparent');
-    expect(style).toContain('border: 1px solid #1e2025');
+    expect(style).toContain('--button-bg-color: transparent');
+    expect(style).toContain('--button-border: 1px solid #1E2025');
   });
 
   it('applies dark mode transparent style when variant="transparent" and colorScheme="dark"', () => {
@@ -65,28 +58,26 @@ describe('SignInWithBaseButton (Preact)', () => {
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
-    expect(style).toContain('background-color: transparent');
-    expect(style).toContain('border: 1px solid #282b31');
+    expect(style).toContain('--button-bg-color: transparent');
+    expect(style).toContain('--button-border: 1px solid #282B31');
   });
 
   it('applies dark mode styles when colorScheme="dark"', () => {
     const { container } = render(<SignInWithBaseButton colorScheme="dark" />);
     const button = container.querySelector('button');
+    const style = button?.getAttribute('style');
 
-    expect(button).toHaveStyle({
-      backgroundColor: '#FFF',
-      color: '#000',
-    });
+    expect(style).toContain('--button-bg-color: #FFF');
+    expect(style).toContain('--button-text-color: #000');
   });
 
   it('applies light mode styles when colorScheme="light"', () => {
     const { container } = render(<SignInWithBaseButton colorScheme="light" />);
     const button = container.querySelector('button');
+    const style = button?.getAttribute('style');
 
-    expect(button).toHaveStyle({
-      backgroundColor: '#000',
-      color: '#FFF',
-    });
+    expect(style).toContain('--button-bg-color: #000');
+    expect(style).toContain('--button-text-color: #FFF');
   });
 
   it('detects system dark mode when colorScheme="system"', () => {
@@ -104,27 +95,19 @@ describe('SignInWithBaseButton (Preact)', () => {
 
     const { container } = render(<SignInWithBaseButton colorScheme="system" />);
     const button = container.querySelector('button');
+    const style = button?.getAttribute('style');
 
-    expect(button).toHaveStyle({
-      backgroundColor: '#FFF',
-      color: '#000',
-    });
+    expect(style).toContain('--button-bg-color: #FFF');
+    expect(style).toContain('--button-text-color: #000');
   });
 
-  it('has correct button dimensions and styling', () => {
+  it('has correct button CSS classes', () => {
     const { container } = render(<SignInWithBaseButton />);
     const button = container.querySelector('button');
 
-    expect(button).toHaveStyle({
-      width: '327px',
-      height: '56px',
-      padding: '16px 24px',
-      borderRadius: '8px',
-      fontSize: '17px',
-      fontWeight: '400',
-      fontFamily: 'BaseSans-Regular',
-      cursor: 'pointer',
-    });
+    expect(button).toHaveClass('-base-ui-sign-in-button');
+    expect(button).toHaveClass('-base-ui-sign-in-button-solid');
+    expect(button).not.toHaveClass('-base-ui-sign-in-button-transparent');
   });
 
   it('calls onClick handler when clicked', () => {
@@ -189,9 +172,9 @@ describe('SignInWithBaseButton (Preact)', () => {
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
-    expect(style).toContain('background-color: transparent');
-    expect(style).toContain('color: rgb(255, 255, 255)');
-    expect(style).toContain('border: 1px solid #282b31');
+    expect(style).toContain('--button-bg-color: transparent');
+    expect(style).toContain('--button-text-color: #FFF');
+    expect(style).toContain('--button-border: 1px solid #282B31');
   });
 
   it('combines transparent and light mode styles correctly', () => {
@@ -201,8 +184,8 @@ describe('SignInWithBaseButton (Preact)', () => {
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
-    expect(style).toContain('background-color: transparent');
-    expect(style).toContain('color: rgb(0, 0, 0)');
-    expect(style).toContain('border: 1px solid #1e2025');
+    expect(style).toContain('--button-bg-color: transparent');
+    expect(style).toContain('--button-text-color: #000');
+    expect(style).toContain('--button-border: 1px solid #1E2025');
   });
 });

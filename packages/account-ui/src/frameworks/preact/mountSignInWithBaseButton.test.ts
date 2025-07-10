@@ -1,13 +1,30 @@
+import * as injectFontModule from '@base-org/account-sdk/ui-assets';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as injectFontModule from '../../fonts/injectFontStyle.js';
 import {
   mountSignInWithBaseButton,
   unmountSignInWithBaseButton,
 } from './mountSignInWithBaseButton.js';
 
-// Mock the font injection module
-vi.mock('../../fonts/injectFontStyle.js', () => ({
+// Mock the ui-assets module with all required exports
+vi.mock('@base-org/account-sdk/ui-assets', () => ({
   injectFontStyle: vi.fn(),
+  WHITE: '#FFF',
+  BLACK: '#000',
+  LIGHT_MODE_BOARDER: '#1E2025',
+  DARK_MODE_BOARDER: '#282B31',
+  BUTTON_HOVER_LIGHT_SOLID: '#2A2A2A',
+  BUTTON_HOVER_DARK_SOLID: '#F5F5F5',
+  BUTTON_HOVER_LIGHT_TRANSPARENT: 'rgba(0, 0, 0, 0.02)',
+  BUTTON_HOVER_DARK_TRANSPARENT: 'rgba(255, 255, 255, 0.05)',
+  BUTTON_ACTIVE_LIGHT_SOLID: '#3A3A3A',
+  BUTTON_ACTIVE_DARK_SOLID: '#EEEEEE',
+  BUTTON_ACTIVE_LIGHT_TRANSPARENT: 'rgba(0, 0, 0, 0.04)',
+  BUTTON_ACTIVE_DARK_TRANSPARENT: 'rgba(255, 255, 255, 0.08)',
+  BUTTON_HOVER_BORDER_LIGHT: '#1A1A1A',
+  BUTTON_HOVER_BORDER_DARK: '#FFFFFF',
+  BUTTON_ACTIVE_BORDER_LIGHT: '#2A2A2A',
+  BUTTON_ACTIVE_BORDER_DARK: '#FFFFFF',
+  BaseLogo: ({ fill }: { fill: string }) => `<svg fill="${fill}">Mock Logo</svg>`,
 }));
 
 // Mock window.matchMedia for system color scheme tests
@@ -78,15 +95,12 @@ describe('mountSignInWithBaseButton', () => {
     const button = container.querySelector('button');
     const buttonDiv = button?.querySelector('div');
 
-    expect(buttonDiv).toHaveStyle({
-      justifyContent: 'flex-start',
-      gap: '16px',
-    });
+    expect(buttonDiv).toHaveClass('-base-ui-sign-in-button-content-left');
 
     const buttonStyle = button?.getAttribute('style');
-    expect(buttonStyle).toContain('background-color: transparent');
-    expect(buttonStyle).toContain('color: rgb(255, 255, 255)');
-    expect(buttonStyle).toContain('border: 1px solid #282b31');
+    expect(buttonStyle).toContain('--button-bg-color: transparent');
+    expect(buttonStyle).toContain('--button-text-color: #FFF');
+    expect(buttonStyle).toContain('--button-border: 1px solid #282B31');
   });
 
   it('handles click events on mounted component', () => {
@@ -108,15 +122,12 @@ describe('mountSignInWithBaseButton', () => {
     const buttonDiv = button?.querySelector('div');
 
     expect(button).toBeInTheDocument();
-    expect(buttonDiv).toHaveStyle({
-      justifyContent: 'center',
-      gap: '8px',
-    });
+    expect(buttonDiv).toHaveClass('-base-ui-sign-in-button-content');
+
     // Default is system theme, and our mock returns light mode
-    expect(button).toHaveStyle({
-      backgroundColor: '#000',
-      color: '#FFF',
-    });
+    const buttonStyle = button?.getAttribute('style');
+    expect(buttonStyle).toContain('--button-bg-color: #000');
+    expect(buttonStyle).toContain('--button-text-color: #FFF');
   });
 
   it('mounts with light mode styles', () => {
@@ -127,10 +138,9 @@ describe('mountSignInWithBaseButton', () => {
     mountSignInWithBaseButton(container, props);
 
     const button = container.querySelector('button');
-    expect(button).toHaveStyle({
-      backgroundColor: '#000',
-      color: '#FFF',
-    });
+    const buttonStyle = button?.getAttribute('style');
+    expect(buttonStyle).toContain('--button-bg-color: #000');
+    expect(buttonStyle).toContain('--button-text-color: #FFF');
   });
 
   it('mounts with dark mode styles', () => {
@@ -141,10 +151,9 @@ describe('mountSignInWithBaseButton', () => {
     mountSignInWithBaseButton(container, props);
 
     const button = container.querySelector('button');
-    expect(button).toHaveStyle({
-      backgroundColor: '#FFF',
-      color: '#000',
-    });
+    const buttonStyle = button?.getAttribute('style');
+    expect(buttonStyle).toContain('--button-bg-color: #FFF');
+    expect(buttonStyle).toContain('--button-text-color: #000');
   });
 
   it('mounts with transparent variant', () => {
@@ -158,8 +167,8 @@ describe('mountSignInWithBaseButton', () => {
     const button = container.querySelector('button');
     const buttonStyle = button?.getAttribute('style');
 
-    expect(buttonStyle).toContain('background-color: transparent');
-    expect(buttonStyle).toContain('border: 1px solid #1e2025');
+    expect(buttonStyle).toContain('--button-bg-color: transparent');
+    expect(buttonStyle).toContain('--button-border: 1px solid #1E2025');
   });
 
   it('mounts with left alignment', () => {
@@ -172,10 +181,7 @@ describe('mountSignInWithBaseButton', () => {
     const button = container.querySelector('button');
     const buttonDiv = button?.querySelector('div');
 
-    expect(buttonDiv).toHaveStyle({
-      justifyContent: 'flex-start',
-      gap: '16px',
-    });
+    expect(buttonDiv).toHaveClass('-base-ui-sign-in-button-content-left');
   });
 });
 

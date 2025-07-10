@@ -21,6 +21,11 @@
       "types": "./dist/interface/payment/index.d.ts",
       "import": "./dist/interface/payment/index.js",
       "require": "./dist/interface/payment/index.js"
+    },
+    "./ui-assets": {
+      "types": "./dist/ui/assets/index.d.ts",
+      "import": "./dist/ui/assets/index.js",
+      "require": "./dist/ui/assets/index.js"
     }
   },
   "sideEffects": false,

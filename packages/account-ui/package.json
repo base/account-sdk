@@ -40,18 +40,22 @@
     "clean": "rm -rf dist && rm -rf node_modules",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
+    "compile-assets": "node compile-assets.cjs",
     "postbuild": "cp -r src/frameworks/vue/*.vue dist/frameworks/vue/ && cp -r src/frameworks/svelte/*.svelte dist/frameworks/svelte/",
-    "build": "rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias && yarn postbuild",
+    "build": "yarn compile-assets && rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias && yarn postbuild",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint ."
   },
   "devDependencies": {
+    "@base-org/account-sdk": "workspace:*",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/preact": "^3.2.4",
     "@testing-library/react": "^16.3.0",
     "@types/react": "^19.1.8",
     "@vitest/coverage-v8": "2.1.2",
+    "glob": "^7.2.0",
     "preact": "^10.26.9",
+    "sass": "^1.64.1",
     "tsc-alias": "^1.8.8",
     "tslib": "^2.6.0",
     "typescript": "^5.1.6",
@@ -59,6 +63,7 @@
     "vue": "^3.5.17"
   },
   "peerDependencies": {
+    "@base-org/account-sdk": "*",
     "preact": "*",
     "react": "*",
     "svelte": "*",
