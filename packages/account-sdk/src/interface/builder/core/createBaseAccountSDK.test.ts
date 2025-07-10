@@ -5,6 +5,7 @@ import * as validatePreferencesModule from ':util/validatePreferences.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
 import { CreateProviderOptions, createBaseAccountSDK } from './createBaseAccountSDK.js';
+import * as getInjectedProviderModule from './getInjectedProvider.js';
 
 // Mock all dependencies
 vi.mock(':store/store.js', () => ({
@@ -38,12 +39,17 @@ vi.mock('./BaseAccountProvider.js', () => ({
   BaseAccountProvider: vi.fn(),
 }));
 
+vi.mock('./getInjectedProvider.js', () => ({
+  getInjectedProvider: vi.fn(),
+}));
+
 const mockStore = store as any;
 const mockLoadTelemetryScript = telemetryModule.loadTelemetryScript as any;
 const mockCheckCrossOriginOpenerPolicy = checkCrossOriginModule.checkCrossOriginOpenerPolicy as any;
 const mockValidatePreferences = validatePreferencesModule.validatePreferences as any;
 const mockValidateSubAccount = validatePreferencesModule.validateSubAccount as any;
 const mockBaseAccountProvider = BaseAccountProvider as any;
+const mockGetInjectedProvider = getInjectedProviderModule.getInjectedProvider as any;
 
 describe('createProvider', () => {
   beforeEach(() => {
@@ -51,6 +57,8 @@ describe('createProvider', () => {
     mockBaseAccountProvider.mockReturnValue({
       mockProvider: true,
     });
+    // Default: getInjectedProvider returns null to test BaseAccountProvider fallback
+    mockGetInjectedProvider.mockReturnValue(null);
   });
 
   describe('Basic functionality', () => {
@@ -274,6 +282,41 @@ describe('createProvider', () => {
           subAccounts: { toOwnerAccount: 'not-a-function' as any },
         }).getProvider();
       }).toThrow('Invalid sub-account function');
+    });
+  });
+
+  describe('Provider fallback behavior', () => {
+    it('should use injected provider when getInjectedProvider returns a provider', () => {
+      const mockInjectedProvider = {
+        request: vi.fn(),
+        isCoinbaseBrowser: true,
+        type: 'injected',
+      };
+      mockGetInjectedProvider.mockReturnValue(mockInjectedProvider);
+
+      const result = createBaseAccountSDK({}).getProvider();
+
+      expect(mockGetInjectedProvider).toHaveBeenCalled();
+      expect(mockBaseAccountProvider).not.toHaveBeenCalled();
+      expect(result).toBe(mockInjectedProvider);
+    });
+
+    it('should fallback to BaseAccountProvider when getInjectedProvider returns null', () => {
+      mockGetInjectedProvider.mockReturnValue(null);
+
+      const result = createBaseAccountSDK({}).getProvider();
+
+      expect(mockGetInjectedProvider).toHaveBeenCalled();
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith({
+        metadata: {
+          appName: 'App',
+          appLogoUrl: '',
+          appChainIds: [],
+        },
+        preference: {},
+        paymasterUrls: undefined,
+      });
+      expect(result).toEqual({ mockProvider: true });
     });
   });
 

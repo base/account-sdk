@@ -15,6 +15,7 @@ import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
 import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
+import { getInjectedProvider } from './getInjectedProvider.js';
 
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;
@@ -81,7 +82,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   const sdk = {
     getProvider: () => {
       if (!provider) {
-        provider = new BaseAccountProvider(options);
+        provider = getInjectedProvider() ?? new BaseAccountProvider(options);
       }
 
       return provider;
