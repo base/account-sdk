@@ -70,6 +70,16 @@
   border-color: #fca5a5;
 }
 
+.resultCard.pending {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.resultCard.notFound {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
 .resultCard.info {
   background: #f0f9ff;
   border-color: #93c5fd;
@@ -91,6 +101,16 @@
 .resultCard.error .resultHeader {
   background: #fee2e2;
   color: #991b1b;
+}
+
+.resultCard.pending .resultHeader {
+  background: #fde68a;
+  color: #92400e;
+}
+
+.resultCard.notFound .resultHeader {
+  background: #e5e7eb;
+  color: #374151;
 }
 
 .resultCard.info .resultHeader {

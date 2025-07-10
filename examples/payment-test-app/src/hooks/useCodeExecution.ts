@@ -1,12 +1,12 @@
-import type { PaymentResult } from '@base-org/account-sdk';
-import { pay } from '@base-org/account-sdk';
+import type { PaymentResult, PaymentStatus } from '@base-org/account-sdk';
+import { getPaymentStatus, pay } from '@base-org/account-sdk';
 import { useCallback, useState } from 'react';
 import { transformImports } from '../utils/codeTransform';
 import { useConsoleCapture } from './useConsoleCapture';
 
 export const useCodeExecution = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<PaymentResult | null>(null);
+  const [result, setResult] = useState<PaymentResult | PaymentStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
   const { captureConsole } = useConsoleCapture();
@@ -28,6 +28,7 @@ export const useCodeExecution = () => {
         // Create a context object with commonly used utilities
         const context = {
           pay,
+          getPaymentStatus,
         };
 
         // Transform imports in the code

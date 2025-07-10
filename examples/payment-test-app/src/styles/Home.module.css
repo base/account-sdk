@@ -37,10 +37,25 @@
   align-items: start;
 }
 
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Responsive design */
 @media (max-width: 1600px) {
   .playground {
     grid-template-columns: 1fr;
+  }
+  
+  .leftColumn {
+    margin-bottom: 2rem;
   }
 }
 
