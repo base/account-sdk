@@ -8,9 +8,8 @@ import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 700;
 
-const POPUP_BLOCKED_TITLE = 'Proceed in Base Account';
-const POPUP_BLOCKED_MESSAGE =
-  '{app} is requesting to proceed in your Base Account. Would you like to proceed?';
+const POPUP_BLOCKED_TITLE = '{app} wants to continue in Base Account';
+const POPUP_BLOCKED_MESSAGE = 'This action requires your permission to open a new window.';
 
 export function openPopup(url: URL): Promise<Window> {
   const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
