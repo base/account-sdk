@@ -1,63 +1,62 @@
-import { initSnackbar } from ":util/web.js";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { presentAddOwnerDialog } from "./presentAddOwnerDialog.js";
+import { initDialog } from ':ui/Dialog/index.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { presentAddOwnerDialog } from './presentAddOwnerDialog.js';
 
-vi.mock(":util/web.js", () => ({
-  initSnackbar: vi.fn(),
+vi.mock(':ui/Dialog/index.js', () => ({
+  initDialog: vi.fn(),
 }));
 
-describe("presentAddOwnerDialog", () => {
-  let mockSnackbar: {
+describe('presentAddOwnerDialog', () => {
+  let mockDialog: {
     presentItem: ReturnType<typeof vi.fn>;
     clear: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
-    mockSnackbar = {
+    mockDialog = {
       presentItem: vi.fn(),
       clear: vi.fn(),
     };
-    (initSnackbar as ReturnType<typeof vi.fn>).mockReturnValue(mockSnackbar);
+    (initDialog as ReturnType<typeof vi.fn>).mockReturnValue(mockDialog);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should present snackbar with correct options", async () => {
+  it('should present snackbar with correct options', async () => {
     const promise = presentAddOwnerDialog();
-    
-    expect(mockSnackbar.presentItem).toHaveBeenCalledWith({
-      autoExpand: true,
-      message: "App requires a signer update",
-      menuItems: expect.arrayContaining([
+
+    expect(mockDialog.presentItem).toHaveBeenCalledWith({
+      title: expect.stringContaining('Re-authorize'),
+      message: expect.stringContaining('has lost access to your account'),
+      actionItems: expect.arrayContaining([
         expect.objectContaining({
-          isRed: false,
-          info: "Confirm",
+          text: 'Continue',
+          variant: 'primary',
         }),
         expect.objectContaining({
-          isRed: true,
-          info: "Cancel",
+          text: 'Not now',
+          variant: 'secondary',
         }),
       ]),
+      onClose: expect.any(Function),
     });
 
-    // Simulate confirm click
-    const confirmClick = mockSnackbar.presentItem.mock.calls[0][0].menuItems[0].onClick;
+    const confirmClick = mockDialog.presentItem.mock.calls[0][0].actionItems[0].onClick;
     confirmClick();
-    
-    await expect(promise).resolves.toBe("authenticate");
-    expect(mockSnackbar.clear).toHaveBeenCalled();
+
+    await expect(promise).resolves.toBe('authenticate');
+    expect(mockDialog.clear).toHaveBeenCalled();
   });
 
-  it("should resolve with cancel when cancel is clicked", async () => {
+  it('should resolve with cancel when cancel is clicked', async () => {
     const promise = presentAddOwnerDialog();
-    
-    // Simulate cancel click
-    const cancelClick = mockSnackbar.presentItem.mock.calls[0][0].menuItems[1].onClick;
+
+    const cancelClick = mockDialog.presentItem.mock.calls[0][0].actionItems[1].onClick;
     cancelClick();
-    
-    await expect(promise).resolves.toBe("cancel");
-    expect(mockSnackbar.clear).toHaveBeenCalled();
+
+    await expect(promise).resolves.toBe('cancel');
+    expect(mockDialog.clear).toHaveBeenCalled();
   });
-}); 
+});

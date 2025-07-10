@@ -1,7 +1,7 @@
 import { standardErrors } from ':core/error/errors.js';
-import { Address, Client, Hex, decodeFunctionData, getAddress, isAddress, pad } from 'viem';
+import { Address, Client, Hex, decodeFunctionData, isAddress, pad } from 'viem';
 import { getCode, readContract } from 'viem/actions';
-import { abi, factoryAbi, factoryAddress } from './constants.js';
+import { abi, factoryAbi } from './constants.js';
 
 type FindOwnerIndexParams = {
   /**
@@ -41,10 +41,6 @@ export async function findOwnerIndex({
   // Note: importing an undeployed contract might need to be handled differently
   // The implemention will likely require the signer to tell us the index
   if (!code && factory && factoryData) {
-    if (getAddress(factory) !== getAddress(factoryAddress)) {
-      throw standardErrors.rpc.internal('unknown factory address');
-    }
-
     const initData = decodeFunctionData({
       abi: factoryAbi,
       data: factoryData,

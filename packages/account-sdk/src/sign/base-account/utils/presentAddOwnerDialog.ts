@@ -1,45 +1,45 @@
-import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
-import { initSnackbar } from ':util/web.js';
+import {
+  logDialogActionClicked,
+  logDialogDismissed,
+  logDialogShown,
+} from ':core/telemetry/events/dialog.js';
+import { store } from ':store/store.js';
+import { initDialog } from ':ui/Dialog/index.js';
 
 export async function presentAddOwnerDialog() {
-  const snackbar = initSnackbar();
+  const appName = store.config.get().metadata?.appName ?? 'App';
+  const dialog = initDialog();
   return new Promise<'authenticate' | 'cancel'>((resolve) => {
-    logSnackbarShown({ snackbarContext: 'sub_account_add_owner' });
-    snackbar.presentItem({
-      autoExpand: true,
-      message: 'App requires a signer update',
-      menuItems: [
+    logDialogShown({ dialogContext: 'sub_account_add_owner' });
+    dialog.presentItem({
+      title: `Re-authorize ${appName}`,
+      message: `${appName} has lost access to your account. Please sign at the next step to re-authorize ${appName}`,
+      onClose: () => {
+        logDialogDismissed({ dialogContext: 'sub_account_add_owner' });
+        resolve('cancel');
+      },
+      actionItems: [
         {
-          isRed: false,
-          info: 'Confirm',
-          svgWidth: '10',
-          svgHeight: '11',
-          path: '',
-          defaultFillRule: 'evenodd',
-          defaultClipRule: 'evenodd',
+          text: 'Continue',
+          variant: 'primary',
           onClick: () => {
-            logSnackbarActionClicked({
-              snackbarContext: 'sub_account_add_owner',
-              snackbarAction: 'confirm',
+            logDialogActionClicked({
+              dialogContext: 'sub_account_add_owner',
+              dialogAction: 'confirm',
             });
-            snackbar.clear();
+            dialog.clear();
             resolve('authenticate');
           },
         },
         {
-          isRed: true,
-          info: 'Cancel',
-          svgWidth: '10',
-          svgHeight: '11',
-          path: '',
-          defaultFillRule: 'evenodd',
-          defaultClipRule: 'evenodd',
+          text: 'Not now',
+          variant: 'secondary',
           onClick: () => {
-            logSnackbarActionClicked({
-              snackbarContext: 'sub_account_add_owner',
-              snackbarAction: 'cancel',
+            logDialogActionClicked({
+              dialogContext: 'sub_account_add_owner',
+              dialogAction: 'cancel',
             });
-            snackbar.clear();
+            dialog.clear();
             resolve('cancel');
           },
         },

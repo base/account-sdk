@@ -5,7 +5,7 @@ This guide covers how to use Base Account UI components in Vue applications.
 ## Installation
 
 ```bash
-npm install @base/account-ui
+npm install @base-org/account-ui
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ npm install @base/account-ui
 </template>
 
 <script setup>
-import { SignInWithBaseButton } from '@base/account-ui/vue';
+import { SignInWithBaseButton } from '@base-org/account-ui/vue';
 
 const handleClick = () => {
   console.log('Sign in clicked!');
@@ -60,7 +60,7 @@ const handleClick = () => {
 </template>
 
 <script setup>
-import { SignInWithBaseButton } from '@base/account-ui/vue';
+import { SignInWithBaseButton } from '@base-org/account-ui/vue';
 
 const handleClick = (type) => {
   console.log(`${type} button clicked`);
@@ -98,7 +98,7 @@ If you're using TypeScript with Vue, the package includes full type definitions:
 </template>
 
 <script setup lang="ts">
-import { SignInWithBaseButton } from '@base/account-ui/vue';
+import { SignInWithBaseButton } from '@base-org/account-ui/vue';
 import type { Ref } from 'vue';
 
 interface User {

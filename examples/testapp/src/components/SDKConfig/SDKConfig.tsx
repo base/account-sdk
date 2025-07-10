@@ -1,4 +1,4 @@
-import { Preference } from '@base/account-sdk';
+import { Preference } from '@base-org/account-sdk';
 import {
   Box,
   Card,

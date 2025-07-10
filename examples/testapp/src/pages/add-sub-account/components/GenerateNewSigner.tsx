@@ -1,4 +1,4 @@
-import { getCryptoKeyAccount, removeCryptoKey } from '@base/account-sdk';
+import { getCryptoKeyAccount, removeCryptoKey } from '@base-org/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 

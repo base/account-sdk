@@ -2,6 +2,7 @@ import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
+import * as signerUtils from ':sign/base-account/utils.js';
 import { store } from ':store/store.js';
 import * as providerUtil from ':util/provider.js';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
@@ -17,6 +18,7 @@ const mockHandshake = vi.fn();
 const mockRequest = vi.fn();
 const mockCleanup = vi.fn();
 const mockFetchRPCRequest = vi.fn();
+const mockInitSubAccountConfig = vi.fn();
 
 let provider: BaseAccountProvider;
 
@@ -24,11 +26,18 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   vi.spyOn(providerUtil, 'fetchRPCRequest').mockImplementation(mockFetchRPCRequest);
+  vi.spyOn(signerUtils, 'initSubAccountConfig').mockImplementation(mockInitSubAccountConfig);
 
   provider = createProvider();
   provider['signer'].request = mockRequest;
   provider['signer'].handshake = mockHandshake;
   provider['signer'].cleanup = mockCleanup;
+
+  // Ensure signer is not connected initially
+  Object.defineProperty(provider['signer'], 'isConnected', {
+    value: false,
+    writable: true,
+  });
 });
 
 describe('Event handling', () => {
@@ -114,5 +123,79 @@ describe('Auto sub account', () => {
 
     await provider.request({ method: 'eth_requestAccounts' });
     expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+  });
+});
+
+describe('Auto translate eth_requestAccounts to wallet_connect', () => {
+  it('should call handshake, initSubAccountConfig, and request with proper parameters', async () => {
+    const mockCapabilities = {
+      subAccounts: { enabled: true },
+      spendPermissions: { enabled: true },
+    };
+
+    vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+      capabilities: mockCapabilities,
+    });
+
+    await provider.request({ method: 'eth_requestAccounts' });
+
+    // Verify handshake is called first
+    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+
+    // Verify initSubAccountConfig is called
+    expect(mockInitSubAccountConfig).toHaveBeenCalled();
+
+    // Verify wallet_connect is called with correct parameters
+    expect(mockRequest).toHaveBeenNthCalledWith(1, {
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: mockCapabilities,
+        },
+      ],
+    });
+
+    // Verify eth_requestAccounts is called after wallet_connect
+    expect(mockRequest).toHaveBeenNthCalledWith(2, {
+      method: 'eth_requestAccounts',
+    });
+
+    // Verify the order of operations and total calls
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+  });
+
+  it('should handle empty capabilities from store', async () => {
+    vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+      capabilities: undefined,
+    });
+
+    await provider.request({ method: 'eth_requestAccounts' });
+
+    expect(mockRequest).toHaveBeenNthCalledWith(1, {
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: {},
+        },
+      ],
+    });
+  });
+
+  it('should handle undefined subAccountsConfig from store', async () => {
+    vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue(undefined);
+
+    await provider.request({ method: 'eth_requestAccounts' });
+
+    expect(mockRequest).toHaveBeenNthCalledWith(1, {
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: {},
+        },
+      ],
+    });
   });
 });

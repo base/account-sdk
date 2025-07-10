@@ -2,7 +2,7 @@
 export const transformImports = (code: string): string => {
   let transformedCode = code;
 
-  // Special handling for @base/account-sdk - just remove the import line
+  // Special handling for @base-org/account-sdk - just remove the import line
   // since pay is provided in the context
   transformedCode = transformedCode.replace(
     /import\s+{[^}]*(?:pay)[^}]*}\s+from\s+['"]@base\/account-sdk['"]\s*;?\s*\n?/g,

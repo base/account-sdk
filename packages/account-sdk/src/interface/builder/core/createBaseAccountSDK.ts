@@ -15,10 +15,11 @@ import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
 import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
+import { getInjectedProvider } from './getInjectedProvider.js';
 
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;
-  subAccounts?: SubAccountOptions;
+  subAccounts?: Omit<SubAccountOptions, 'enableAutoSubAccounts'>;
   paymasterUrls?: Record<number, string>;
 };
 
@@ -48,8 +49,8 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
 
   store.subAccountsConfig.set({
     toOwnerAccount: params.subAccounts?.toOwnerAccount,
+    // @ts-expect-error - enableSubAccounts is not officially supported yet
     enableAutoSubAccounts: params.subAccounts?.enableAutoSubAccounts,
-    defaultSpendPermissions: params.subAccounts?.defaultSpendPermissions,
   });
 
   //  ====================================================================
@@ -81,7 +82,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   const sdk = {
     getProvider: () => {
       if (!provider) {
-        provider = new BaseAccountProvider(options);
+        provider = getInjectedProvider() ?? new BaseAccountProvider(options);
       }
 
       return provider;

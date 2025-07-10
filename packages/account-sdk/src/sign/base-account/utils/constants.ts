@@ -1,7 +1,7 @@
 /**********************************************************************
  * Constants
  **********************************************************************/
-export const factoryAddress = '0x0ba5ed0c6aa8c49038f819e587e2633c4a9f428a';
+export const factoryAddress = '0xba5ed110efdba3d005bfc882d75358acbbb85842';
 
 export const spendPermissionManagerAddress = '0xf85210B21cC50302F477BA56686d2019dC9b67Ad';
 

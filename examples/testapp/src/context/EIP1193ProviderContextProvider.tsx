@@ -1,4 +1,4 @@
-import { createBaseAccountSDK as createBaseAccountSDKHEAD } from '@base/account-sdk';
+import { createBaseAccountSDK as createBaseAccountSDKHEAD } from '@base-org/account-sdk';
 import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { DisconnectedAlert } from '../components/alerts/DisconnectedAlert';
 import { useEventListeners } from '../hooks/useEventListeners';

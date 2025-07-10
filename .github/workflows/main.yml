@@ -79,12 +79,8 @@ jobs:
       - name: 'Setup'
         uses: ./.github/actions/setup
 
-      - name: Runs compile asset script
-        run: |
-          cd ./packages/account-sdk
-          yarn build
-          node ./compile-assets.cjs
-          cd ../../
+      - name: Build packages
+        run: yarn build:packages
 
       - name: Run Unit Tests
         run: yarn test

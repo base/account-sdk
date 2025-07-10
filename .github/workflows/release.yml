@@ -29,14 +29,14 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: yarn workspace @base/account-sdk version ${{ env.PACKAGE_VERSION }}
+        run: yarn workspace @base-org/account-sdk version ${{ env.PACKAGE_VERSION }}
 
       # Build the package
       - name: Prebuild Packages
-        run: yarn workspace @base/account-sdk prebuild
+        run: yarn workspace @base-org/account-sdk prebuild
 
       - name: Build Packages
-        run: yarn workspace @base/account-sdk build
+        run: yarn workspace @base-org/account-sdk build
 
       # Publish to npm
       - name: Set deployment token

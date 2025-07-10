@@ -1,4 +1,4 @@
-import { createBaseAccountSDK } from '@base/account-sdk';
+import { createBaseAccountSDK } from '@base-org/account-sdk';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { Address, Hex } from 'viem';
@@ -91,9 +91,10 @@ export function GrantSpendPermission({
         ],
       })) as string[];
 
+      const universalAddress = accounts[0] as Address;
       const data = {
         chainId: baseSepolia.id,
-        account: accounts[1] as Address,
+        account: universalAddress,
         spender: subAccountAddress as Address,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         allowance: '0x5AF3107A4000',
@@ -108,11 +109,11 @@ export function GrantSpendPermission({
 
       const response = await provider?.request({
         method: 'eth_signTypedData_v4',
-        params: [accounts[1] as Address, spendPermission],
+        params: [universalAddress, spendPermission],
       });
       console.info('response', response);
-      localStorage.setItem('cbwsdk.demo.spend-permission.signature', response as Hex);
-      localStorage.setItem('cbwsdk.demo.spend-permission.data', JSON.stringify(data));
+      localStorage.setItem('base-acc-sdk.demo.spend-permission.signature', response as Hex);
+      localStorage.setItem('base-acc-sdk.demo.spend-permission.data', JSON.stringify(data));
       setState(response as Hex);
     } catch (error) {
       console.error('error', error);

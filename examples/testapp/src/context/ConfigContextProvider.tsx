@@ -1,5 +1,5 @@
-import { Preference } from '@base/account-sdk';
-import { SubAccountOptions } from '@base/account-sdk/dist/core/provider/interface';
+import { Preference } from '@base-org/account-sdk';
+import { SubAccountOptions } from '@base-org/account-sdk/dist/core/provider/interface';
 import {
   Dispatch,
   ReactNode,

@@ -1,8 +1,29 @@
-// biome-ignore lint/correctness/noUnusedImports: preact
-import { h } from 'preact';
-import { BLACK, DARK_MODE_BOARDER, LIGHT_MODE_BOARDER, WHITE } from '../../assets/colors.js';
+import {
+  BLACK,
+  BUTTON_ACTIVE_BORDER_DARK,
+  BUTTON_ACTIVE_BORDER_LIGHT,
+  BUTTON_ACTIVE_DARK_SOLID,
+  BUTTON_ACTIVE_DARK_TRANSPARENT,
+  BUTTON_ACTIVE_LIGHT_SOLID,
+  BUTTON_ACTIVE_LIGHT_TRANSPARENT,
+  BUTTON_HOVER_BORDER_DARK,
+  BUTTON_HOVER_BORDER_LIGHT,
+  BUTTON_HOVER_DARK_SOLID,
+  BUTTON_HOVER_DARK_TRANSPARENT,
+  BUTTON_HOVER_LIGHT_SOLID,
+  BUTTON_HOVER_LIGHT_TRANSPARENT,
+  BaseLogo,
+  DARK_MODE_BOARDER,
+  LIGHT_MODE_BOARDER,
+  WHITE,
+} from '@base-org/account-sdk/ui-assets';
 import { SignInWithBaseButtonProps } from '../../types.js';
-import { BaseLogo } from './BaseLogo.js';
+import css from './SignInWithBaseButton-css.js';
+
+// Simple clsx implementation for conditional classes
+const clsx = (...classes: (string | undefined | boolean)[]): string => {
+  return classes.filter(Boolean).join(' ');
+};
 
 export const SignInWithBaseButton = ({
   align = 'center',
@@ -27,34 +48,76 @@ export const SignInWithBaseButton = ({
   const logoFill =
     variant === 'transparent' ? (isDarkMode ? 'white' : 'blue') : isDarkMode ? 'blue' : 'white';
 
+  // Hover states
+  const hoverBackgroundColor =
+    variant === 'transparent'
+      ? isDarkMode
+        ? BUTTON_HOVER_DARK_TRANSPARENT
+        : BUTTON_HOVER_LIGHT_TRANSPARENT
+      : isDarkMode
+        ? BUTTON_HOVER_DARK_SOLID
+        : BUTTON_HOVER_LIGHT_SOLID;
+
+  const hoverForegroundColor = variant === 'transparent' ? foregroundColor : foregroundColor;
+
+  const hoverBorderColor =
+    variant === 'transparent'
+      ? isDarkMode
+        ? BUTTON_HOVER_BORDER_DARK
+        : BUTTON_HOVER_BORDER_LIGHT
+      : 'none';
+
+  // Active states
+  const activeBackgroundColor =
+    variant === 'transparent'
+      ? isDarkMode
+        ? BUTTON_ACTIVE_DARK_TRANSPARENT
+        : BUTTON_ACTIVE_LIGHT_TRANSPARENT
+      : isDarkMode
+        ? BUTTON_ACTIVE_DARK_SOLID
+        : BUTTON_ACTIVE_LIGHT_SOLID;
+
+  const activeForegroundColor = variant === 'transparent' ? foregroundColor : foregroundColor;
+
+  const activeBorderColor =
+    variant === 'transparent'
+      ? isDarkMode
+        ? BUTTON_ACTIVE_BORDER_DARK
+        : BUTTON_ACTIVE_BORDER_LIGHT
+      : 'none';
+
   return (
-    <button
-      style={{
-        width: '327px',
-        height: '56px',
-        padding: '16px 24px',
-        borderRadius: '8px',
-        fontSize: '17px',
-        fontWeight: '400',
-        fontFamily: 'BaseSans-Regular',
-        cursor: 'pointer',
-        backgroundColor,
-        color: foregroundColor,
-        border: borderColor,
-      }}
-      onClick={onClick}
-    >
-      <div
+    <div class="-base-ui-css-reset">
+      <style>{css}</style>
+      <button
+        class={clsx(
+          '-base-ui-sign-in-button',
+          variant === 'transparent' && '-base-ui-sign-in-button-transparent',
+          variant === 'solid' && '-base-ui-sign-in-button-solid'
+        )}
         style={{
-          display: 'flex',
-          gap: align === 'center' ? '8px' : '16px',
-          alignItems: 'center',
-          justifyContent: align === 'center' ? 'center' : 'flex-start',
+          '--button-bg-color': backgroundColor,
+          '--button-text-color': foregroundColor,
+          '--button-border': borderColor,
+          '--button-bg-color-hover': hoverBackgroundColor,
+          '--button-text-color-hover': hoverForegroundColor,
+          '--button-border-color-hover': hoverBorderColor,
+          '--button-bg-color-active': activeBackgroundColor,
+          '--button-text-color-active': activeForegroundColor,
+          '--button-border-color-active': activeBorderColor,
         }}
+        onClick={onClick}
       >
-        <BaseLogo fill={logoFill} />
-        Sign in with Base
-      </div>
-    </button>
+        <div
+          class={clsx(
+            '-base-ui-sign-in-button-content',
+            align === 'left' && '-base-ui-sign-in-button-content-left'
+          )}
+        >
+          <BaseLogo fill={logoFill} />
+          Sign in with Base
+        </div>
+      </button>
+    </div>
   );
 };

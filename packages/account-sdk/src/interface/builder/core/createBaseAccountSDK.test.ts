@@ -5,6 +5,7 @@ import * as validatePreferencesModule from ':util/validatePreferences.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
 import { CreateProviderOptions, createBaseAccountSDK } from './createBaseAccountSDK.js';
+import * as getInjectedProviderModule from './getInjectedProvider.js';
 
 // Mock all dependencies
 vi.mock(':store/store.js', () => ({
@@ -38,12 +39,17 @@ vi.mock('./BaseAccountProvider.js', () => ({
   BaseAccountProvider: vi.fn(),
 }));
 
+vi.mock('./getInjectedProvider.js', () => ({
+  getInjectedProvider: vi.fn(),
+}));
+
 const mockStore = store as any;
 const mockLoadTelemetryScript = telemetryModule.loadTelemetryScript as any;
 const mockCheckCrossOriginOpenerPolicy = checkCrossOriginModule.checkCrossOriginOpenerPolicy as any;
 const mockValidatePreferences = validatePreferencesModule.validatePreferences as any;
 const mockValidateSubAccount = validatePreferencesModule.validateSubAccount as any;
 const mockBaseAccountProvider = BaseAccountProvider as any;
+const mockGetInjectedProvider = getInjectedProviderModule.getInjectedProvider as any;
 
 describe('createProvider', () => {
   beforeEach(() => {
@@ -51,6 +57,8 @@ describe('createProvider', () => {
     mockBaseAccountProvider.mockReturnValue({
       mockProvider: true,
     });
+    // Default: getInjectedProvider returns null to test BaseAccountProvider fallback
+    mockGetInjectedProvider.mockReturnValue(null);
   });
 
   describe('Basic functionality', () => {
@@ -139,16 +147,8 @@ describe('createProvider', () => {
       const params: CreateProviderOptions = {
         subAccounts: {
           toOwnerAccount: mockToOwnerAccount,
+          // @ts-expect-error - enableAutoSubAccounts is not officially supported yet
           enableAutoSubAccounts: true,
-          defaultSpendPermissions: {
-            1: [
-              {
-                token: '0x1234567890123456789012345678901234567890',
-                allowance: '0x1000',
-                period: 3600,
-              },
-            ],
-          },
         },
       };
 
@@ -158,21 +158,13 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: mockToOwnerAccount,
         enableAutoSubAccounts: true,
-        defaultSpendPermissions: {
-          1: [
-            {
-              token: '0x1234567890123456789012345678901234567890',
-              allowance: '0x1000',
-              period: 3600,
-            },
-          ],
-        },
       });
     });
 
     it('should handle partial sub-account configuration', () => {
       const params: CreateProviderOptions = {
         subAccounts: {
+          // @ts-expect-error - enableAutoSubAccounts is not officially supported yet
           enableAutoSubAccounts: true,
         },
       };
@@ -183,7 +175,6 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: undefined,
         enableAutoSubAccounts: true,
-        defaultSpendPermissions: undefined,
       });
     });
 
@@ -294,6 +285,41 @@ describe('createProvider', () => {
     });
   });
 
+  describe('Provider fallback behavior', () => {
+    it('should use injected provider when getInjectedProvider returns a provider', () => {
+      const mockInjectedProvider = {
+        request: vi.fn(),
+        isCoinbaseBrowser: true,
+        type: 'injected',
+      };
+      mockGetInjectedProvider.mockReturnValue(mockInjectedProvider);
+
+      const result = createBaseAccountSDK({}).getProvider();
+
+      expect(mockGetInjectedProvider).toHaveBeenCalled();
+      expect(mockBaseAccountProvider).not.toHaveBeenCalled();
+      expect(result).toBe(mockInjectedProvider);
+    });
+
+    it('should fallback to BaseAccountProvider when getInjectedProvider returns null', () => {
+      mockGetInjectedProvider.mockReturnValue(null);
+
+      const result = createBaseAccountSDK({}).getProvider();
+
+      expect(mockGetInjectedProvider).toHaveBeenCalled();
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith({
+        metadata: {
+          appName: 'App',
+          appLogoUrl: '',
+          appChainIds: [],
+        },
+        preference: {},
+        paymasterUrls: undefined,
+      });
+      expect(result).toEqual({ mockProvider: true });
+    });
+  });
+
   describe('Integration', () => {
     it('should perform all setup steps in correct order', () => {
       const mockToOwnerAccount = vi.fn();
@@ -306,6 +332,7 @@ describe('createProvider', () => {
         },
         subAccounts: {
           toOwnerAccount: mockToOwnerAccount,
+          // @ts-expect-error - enableAutoSubAccounts is not officially supported yet
           enableAutoSubAccounts: true,
         },
         paymasterUrls: {
@@ -320,7 +347,6 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: mockToOwnerAccount,
         enableAutoSubAccounts: true,
-        defaultSpendPermissions: undefined,
       });
 
       // Check store configuration

@@ -139,6 +139,7 @@ describe('Signer', () => {
     store.keys.clear();
     store.spendPermissions.clear();
     store.subAccounts.clear();
+    store.subAccountsConfig.clear();
     store.setState({});
   });
 
@@ -177,11 +178,25 @@ describe('Signer', () => {
         capabilities: mockCapabilities,
       });
 
+      // Mock the wallet_connect response that eth_requestAccounts now calls internally
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: '0xAddress',
+                capabilities: {},
+              },
+            ],
+          },
+        },
+      });
+
       await expect(signer.request({ method: 'eth_requestAccounts' })).resolves.toEqual([
         '0xAddress',
       ]);
+      expect(mockCallback).toHaveBeenCalledWith('chainChanged', '0x1');
       expect(mockCallback).toHaveBeenCalledWith('accountsChanged', ['0xAddress']);
-      expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
     });
 
     it('should perform a successful handshake for handshake', async () => {
@@ -234,6 +249,9 @@ describe('Signer', () => {
       'should perform a successful request after handshake',
       async (method) => {
         const mockRequest: RequestArguments = { method };
+
+        // Reset and setup mocks for handshake
+        (decryptContent as Mock).mockReset();
         (decryptContent as Mock).mockResolvedValueOnce({
           result: {
             value: null,
@@ -269,6 +287,9 @@ describe('Signer', () => {
     let stateSpy: MockInstance;
 
     beforeAll(() => {
+      signer['accounts'] = ['0xAddress'];
+      signer['chain'] = { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' };
+
       stateSpy = vi.spyOn(store, 'getState').mockImplementation(() => ({
         account: {
           accounts: ['0xAddress'],
@@ -432,6 +453,64 @@ describe('Signer', () => {
     });
   });
 
+  describe('eth_accounts', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should return accounts in correct order based on enableAutoSubAccounts', async () => {
+      // Set up the signer with a global account
+      signer['accounts'] = [globalAccountAddress];
+      signer['chain'] = { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' };
+
+      // Set a sub account in the store
+      const subAccountsSpy = vi.spyOn(store.subAccounts, 'get').mockReturnValue({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      // Test with enableAutoSubAccounts = false
+      const configSpy = vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: false,
+      });
+
+      let accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
+
+      // Test with enableAutoSubAccounts = true
+      configSpy.mockReturnValue({
+        enableAutoSubAccounts: true,
+      });
+
+      accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
+
+      // Test when enableAutoSubAccounts is undefined (should default to false behavior)
+      configSpy.mockReturnValue(undefined);
+
+      accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
+
+      subAccountsSpy.mockRestore();
+      configSpy.mockRestore();
+    });
+
+    it('should return only global account when no sub account exists', async () => {
+      // Set up the signer with only a global account
+      signer['accounts'] = [globalAccountAddress];
+      signer['chain'] = { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' };
+
+      // No sub account in the store
+      const subAccountsSpy = vi.spyOn(store.subAccounts, 'get').mockReturnValue(undefined);
+
+      const accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([globalAccountAddress]);
+
+      subAccountsSpy.mockRestore();
+    });
+  });
+
   describe('wallet_connect', () => {
     beforeEach(async () => {
       await signer.cleanup();
@@ -441,6 +520,10 @@ describe('Signer', () => {
         },
       });
       await signer.handshake({ method: 'handshake' });
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
     });
 
     it('should handle wallet_connect with no capabilities', async () => {
@@ -488,9 +571,9 @@ describe('Signer', () => {
         factoryData: '0x',
       });
 
-      // eth_accounts should return only global account
+      // eth_accounts should return both accounts with global account first
       const accounts = await signer.request({ method: 'eth_accounts' });
-      expect(accounts).toEqual([globalAccountAddress]);
+      expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
     });
 
     it('should handle wallet_connect with addSubAccount capability', async () => {
@@ -549,10 +632,10 @@ describe('Signer', () => {
         factoryData: '0x',
       });
 
-      // eth_accounts should return [subAccount, globalAccount]
+      // eth_accounts should return [globalAccount, subAccount] when enableAutoSubAccounts is not true
       const accounts = await signer.request({ method: 'eth_accounts' });
 
-      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
+      expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
     });
 
     it('should handle wallet_addSubAccount creating new sub account', async () => {
@@ -615,72 +698,9 @@ describe('Signer', () => {
         factoryData: '0x',
       });
 
-      // eth_accounts should return [subAccount, globalAccount]
+      // eth_accounts should return [globalAccount, subAccount] when enableAutoSubAccounts is not true
       const accounts = await signer.request({ method: 'eth_accounts' });
-      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
-    });
-
-    it('should handle eth_requestAccounts with auto sub accounts enabled', async () => {
-      expect(signer['accounts']).toEqual([]);
-      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
-        capabilities: {
-          addSubAccount: {
-            account: {
-              type: 'create',
-              keys: [{ type: 'p256', publicKey: '0x123' }],
-            },
-          },
-        },
-      });
-
-      const mockSetAccount = vi.spyOn(store.account, 'set');
-      const mockSetSubAccounts = vi.spyOn(store.subAccounts, 'set');
-
-      (decryptContent as Mock).mockResolvedValueOnce({
-        result: {
-          value: {
-            accounts: [
-              {
-                address: globalAccountAddress,
-                capabilities: {
-                  subAccounts: [
-                    {
-                      address: subAccountAddress,
-                      factory: globalAccountAddress,
-                      factoryData: '0x',
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      });
-
-      const accounts = await signer.request({
-        method: 'eth_requestAccounts',
-        params: [],
-      });
-
-      // Should persist global account to accounts store
-      expect(mockSetAccount).toHaveBeenCalledWith({
-        accounts: [globalAccountAddress],
-      });
-
-      // Should persist sub account to subAccounts store
-      expect(mockSetSubAccounts).toHaveBeenCalledWith({
-        address: subAccountAddress,
-        factory: globalAccountAddress,
-        factoryData: '0x',
-      });
-
-      // Should return [subAccount, globalAccount]
-      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
-
-      // eth_accounts should also return [subAccount, globalAccount]
-      const ethAccounts = await signer.request({ method: 'eth_accounts' });
-      expect(ethAccounts).toEqual([subAccountAddress, globalAccountAddress]);
+      expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
     });
 
     it('should use cached response for subsequent wallet_connect calls', async () => {
@@ -759,9 +779,71 @@ describe('Signer', () => {
         ],
       });
     });
+
+    it('should always return sub account first when enableAutoSubAccounts is true', async () => {
+      expect(signer['accounts']).toEqual([]);
+
+      // Enable auto sub accounts
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      const mockSetAccount = vi.spyOn(store.account, 'set');
+      const mockSetSubAccounts = vi.spyOn(store.subAccounts, 'set');
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      await signer.request(mockRequest);
+
+      // Should persist accounts correctly
+      expect(mockSetAccount).toHaveBeenCalledWith({
+        accounts: [globalAccountAddress],
+      });
+      expect(mockSetSubAccounts).toHaveBeenCalledWith({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      // When enableAutoSubAccounts is true, sub account should be first
+      const accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
+
+      // Test with eth_requestAccounts as well
+      const requestedAccounts = await signer.request({ method: 'eth_requestAccounts' });
+      expect(requestedAccounts).toEqual([subAccountAddress, globalAccountAddress]);
+    });
   });
 
   describe('wallet_addSubAccount', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     it('should update internal state for successful wallet_addSubAccount', async () => {
       await signer.cleanup();
 
@@ -824,7 +906,7 @@ describe('Signer', () => {
       });
 
       const accounts = await signer.request({ method: 'eth_accounts' });
-      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
+      expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
 
       expect(mockSetAccount).toHaveBeenCalledWith({
         accounts: [globalAccountAddress],
@@ -915,7 +997,81 @@ describe('Signer', () => {
       );
 
       const accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
+    });
+
+    it('should always return sub account first when enableAutoSubAccounts is true', async () => {
+      await signer.cleanup();
+
+      // Enable auto sub accounts
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: null,
+        },
+      });
+
+      await signer.handshake({ method: 'handshake' });
+      expect(signer['accounts']).toEqual([]);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {},
+              },
+            ],
+          },
+        },
+      });
+
+      await signer.request(mockRequest);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: subAccountAddress,
+            factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+            factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+          },
+        },
+      });
+
+      await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'create',
+              keys: [
+                {
+                  publicKey: '0x123',
+                  type: 'p256',
+                },
+              ],
+            },
+          },
+        ],
+      });
+
+      // wallet_addSubAccount now respects enableAutoSubAccounts, so sub account should be first
+      const accounts = await signer.request({ method: 'eth_accounts' });
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
+
+      // However, eth_requestAccounts will reorder based on enableAutoSubAccounts
+      const requestedAccounts = await signer.request({ method: 'eth_requestAccounts' });
+      expect(requestedAccounts).toEqual([subAccountAddress, globalAccountAddress]);
     });
   });
 
@@ -964,14 +1120,8 @@ describe('Signer', () => {
       });
     });
 
-    it('should create a sub account when eth_requestAccounts is called', async () => {
-      const mockRequest: RequestArguments = {
-        method: 'eth_requestAccounts',
-        params: [],
-      };
-
-      const accounts = await signer.request(mockRequest);
-      expect(accounts).toContain(subAccountAddress);
+    afterEach(() => {
+      vi.restoreAllMocks();
     });
 
     it('update the owner index for the sub account', async () => {
@@ -982,6 +1132,13 @@ describe('Signer', () => {
       });
 
       (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
+      (handleAddSubAccountOwner as Mock).mockResolvedValueOnce(0);
+
+      // Ensure createSubAccountSigner returns the expected shape
+      (createSubAccountSigner as Mock).mockResolvedValueOnce({
+        request: vi.fn().mockResolvedValue('0xResult'),
+      });
+
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           value: null,
@@ -1054,7 +1211,7 @@ describe('Signer', () => {
       });
 
       await signer.request({
-        method: 'eth_requestAccounts',
+        method: 'wallet_connect',
         params: [],
       });
 
@@ -1126,7 +1283,7 @@ describe('Signer', () => {
       });
 
       await signer.request({
-        method: 'eth_requestAccounts',
+        method: 'wallet_connect',
         params: [],
       });
 

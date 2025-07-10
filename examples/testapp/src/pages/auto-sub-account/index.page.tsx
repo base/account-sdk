@@ -1,5 +1,4 @@
-import { getCryptoKeyAccount } from '@base/account-sdk';
-import { SpendPermissionConfig } from '@base/account-sdk/dist/core/provider/interface';
+import { getCryptoKeyAccount } from '@base-org/account-sdk';
 import {
   Box,
   Button,
@@ -72,6 +71,22 @@ export default function AutoSubAccount() {
     try {
       const response = await provider.request({
         method: 'eth_requestAccounts',
+        params: [],
+      });
+      setAccounts(response as string[]);
+      setLastResult(JSON.stringify(response, null, 2));
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    }
+  };
+
+  const handleEthAccounts = async () => {
+    if (!provider) return;
+
+    try {
+      const response = await provider.request({
+        method: 'eth_accounts',
         params: [],
       });
       setAccounts(response as string[]);
@@ -216,24 +231,6 @@ export default function AutoSubAccount() {
     }
   };
 
-  const handleSetDefaultSpendPermissions = (value: string) => {
-    const defaultSpendPermissions = {
-      [baseSepolia.id]: [
-        {
-          token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-          allowance: '0x2386F26FC10000',
-          period: 86400,
-        } as SpendPermissionConfig,
-      ],
-    };
-
-    if (value === 'true') {
-      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendPermissions }));
-    } else {
-      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendPermissions: {} }));
-    }
-  };
-
   const handleEthSend = async (amount: string) => {
     if (!provider || !accounts.length) return;
 
@@ -334,18 +331,6 @@ export default function AutoSubAccount() {
           </RadioGroup>
         </FormControl>
         <FormControl>
-          <FormLabel>Default Spend Permissions</FormLabel>
-          <RadioGroup
-            value={subAccountsConfig?.defaultSpendPermissions?.[baseSepolia.id] ? 'true' : 'false'}
-            onChange={handleSetDefaultSpendPermissions}
-          >
-            <Stack direction="row">
-              <Radio value="true">Enabled</Radio>
-              <Radio value="false">Disabled</Radio>
-            </Stack>
-          </RadioGroup>
-        </FormControl>
-        <FormControl>
           <FormLabel>Attribution</FormLabel>
           <RadioGroup value={getAttributionMode()} onChange={handleAttributionModeChange}>
             <Stack direction="row">
@@ -406,6 +391,22 @@ export default function AutoSubAccount() {
           }}
         >
           eth_requestAccounts
+        </Button>
+        <Button
+          w="full"
+          onClick={handleEthAccounts}
+          bg="blue.500"
+          color="white"
+          border="1px solid"
+          borderColor="blue.500"
+          _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
+          _dark={{
+            bg: 'blue.600',
+            borderColor: 'blue.600',
+            _hover: { bg: 'blue.700', borderColor: 'blue.700' },
+          }}
+        >
+          eth_accounts
         </Button>
         <Button
           w="full"

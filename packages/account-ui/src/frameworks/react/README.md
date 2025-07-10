@@ -5,7 +5,7 @@ This guide covers how to use Base Account UI components in React applications.
 ## Installation
 
 ```bash
-npm install @base/account-ui
+npm install @base-org/account-ui
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @base/account-ui
 ### Basic Usage
 
 ```tsx
-import { SignInWithBaseButton } from '@base/account-ui/react';
+import { SignInWithBaseButton } from '@base-org/account-ui/react';
 
 function App() {
   return (
@@ -30,7 +30,7 @@ function App() {
 ### Different Variants
 
 ```tsx
-import { SignInWithBaseButton } from '@base/account-ui/react';
+import { SignInWithBaseButton } from '@base-org/account-ui/react';
 
 function VariantExamples() {
   return (
@@ -69,7 +69,7 @@ React applications typically work out of the box with this package. Make sure yo
 If you're using TypeScript, the package includes full type definitions:
 
 ```tsx
-import { SignInWithBaseButton } from '@base/account-ui/react';
+import { SignInWithBaseButton } from '@base-org/account-ui/react';
 import type { FC } from 'react';
 
 interface LoginProps {

@@ -179,7 +179,7 @@
 			"attributePosition": "auto",
 			"bracketSpacing": true
 		},
-		"jsxRuntime": "reactClassic",
+		"jsxRuntime": "transparent",
 		"globals": [
 			"global",
 			"browser",
