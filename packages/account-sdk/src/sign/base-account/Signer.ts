@@ -264,7 +264,10 @@ export class Signer {
           request,
           subAccountsConfig?.capabilities ?? {}
         );
-        return this.sendRequestToPopup(modifiedRequest);
+        const result = await this.sendRequestToPopup(modifiedRequest);
+
+        this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
+        return result;
       }
       // Sub Account Support
       case 'wallet_getSubAccounts': {
