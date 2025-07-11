@@ -1,0 +1,91 @@
+import type { Address } from 'viem';
+
+/**
+ * Information request type for payment data callbacks
+ */
+export interface InfoRequest {
+  /** The type of information being requested */
+  request: 'email' | 'physicalAddress' | 'phoneNumber' | 'name' | 'onchainAddress' | string;
+  /** Whether this information is optional */
+  optional?: boolean;
+}
+
+/**
+ * Information responses collected from info requests
+ */
+export interface InfoResponses {
+  /** User's email address */
+  email?: string;
+  /** User's physical address */
+  physicalAddress?: {
+    address1: string;
+    address2?: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    countryCode: string;
+    name?: {
+      firstName: string;
+      familyName: string;
+    };
+  };
+  /** User's phone number */
+  phoneNumber?: {
+    number: string;
+    country: string;
+  };
+  /** User's name */
+  name?: {
+    firstName: string;
+    familyName: string;
+  };
+  /** User's on-chain address */
+  onchainAddress?: string;
+}
+
+/**
+ * Options for making a payment
+ */
+export interface PaymentOptions {
+  /** Amount of USDC to send as a string (e.g., "10.50") */
+  amount: string;
+  /** Ethereum address or ENS name to send payment to */
+  to: string;
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+  /** Optional information requests for data callbacks */
+  infoRequests?: InfoRequest[];
+}
+
+/**
+ * Successful payment result
+ */
+export interface PaymentSuccess {
+  success: true;
+  /** Transaction ID (hash) of the payment */
+  id: string;
+  /** The amount that was sent */
+  amount: string;
+  /** The address that received the payment (resolved from ENS if applicable) */
+  to: Address;
+  /** Optional responses from information requests */
+  infoResponses?: InfoResponses;
+}
+
+/**
+ * Failed payment result
+ */
+export interface PaymentError {
+  success: false;
+  /** Error message describing what went wrong */
+  error: string;
+  /** The amount that was attempted */
+  amount: string;
+  /** The address that would have received the payment */
+  to: Address;
+}
+
+/**
+ * Result of a payment transaction
+ */
+export type PaymentResult = PaymentSuccess | PaymentError;

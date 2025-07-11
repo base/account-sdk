@@ -1,3 +1,4 @@
+import { getCryptoKeyAccount } from '@base-org/account-sdk';
 import {
   Container,
   FormControl,
@@ -7,7 +8,6 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react';
-import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { useEffect, useState } from 'react';
 import { privateKeyToAccount } from 'viem/accounts';
 
@@ -19,6 +19,7 @@ import { AddSubAccount } from './components/AddSubAccount';
 import { AddSubAccountWithoutKeys } from './components/AddSubAccountWithoutKeys';
 import { Connect } from './components/Connect';
 import { GenerateNewSigner } from './components/GenerateNewSigner';
+import { GetSubAccounts } from './components/GetSubAccounts';
 import { GrantSpendPermission } from './components/GrantSpendPermission';
 import { PersonalSign } from './components/PersonalSign';
 import { SendCalls } from './components/SendCalls';
@@ -75,12 +76,14 @@ export default function SubAccounts() {
             </Stack>
           </RadioGroup>
         </FormControl>
+
         <Connect sdk={sdk} />
         <AddSubAccount
           sdk={sdk}
           onAddSubAccount={setSubAccountAddress}
           signerFn={getSubAccountSigner}
         />
+        <GetSubAccounts sdk={sdk} />
         <AddSubAccountWithoutKeys
           sdk={sdk}
           onAddSubAccount={setSubAccountAddress}

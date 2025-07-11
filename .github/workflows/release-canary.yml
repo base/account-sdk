@@ -37,14 +37,14 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}-canary.$(date +'%Y%m%d%H%M%S')
+        run: yarn workspace @base-org/account-sdk version ${{ env.PACKAGE_VERSION }}-canary.$(date +'%Y%m%d%H%M%S')
         
       # Build the package
       - name: Prebuild Packages
-        run: yarn workspace @coinbase/wallet-sdk prebuild
+        run: yarn workspace @base-org/account-sdk prebuild
 
       - name: Build Packages
-        run: yarn workspace @coinbase/wallet-sdk build
+        run: yarn workspace @base-org/account-sdk build
 
       # Publish to npm
       - name: Set deployment token
@@ -52,7 +52,7 @@ jobs:
 
       - name: Publish to npm
         run: |
-          cd packages/wallet-sdk
+          cd packages/account-sdk
           npm publish --tag canary
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

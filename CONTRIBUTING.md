@@ -15,21 +15,21 @@
 
 ## How to Contribute
 
-🎉 First off, thank you for considering contributing to the Coinbase Wallet SDK! 🎉
+🎉 First off, thank you for considering contributing to the Base Account SDK! 🎉
 
-The following is a set of guidelines for contributing to the Coinbase Wallet SDK. These are just guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
+The following is a set of guidelines for contributing to the Base Account SDK. These are just guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
 
 ### Reporting Bugs
 
-1. **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/coinbase/coinbase-wallet-sdk/issues).
+1. **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/base/account-sdk/issues).
 
-2. If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/coinbase/coinbase-wallet-sdk/issues/new). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring.
+2. If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/base/account-sdk/issues/new). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring.
 
 ### Suggesting Enhancements
 
-1. **Check the [Issues](https://github.com/coinbase/coinbase-wallet-sdk/issues)** to see if there's someone who has already suggested the same enhancement.
+1. **Check the [Issues](https://github.com/base/account-sdk/issues)** to see if there's someone who has already suggested the same enhancement.
 
-2. If it doesn't exist, [create a new issue](https://github.com/coinbase/coinbase-wallet-sdk/issues/new). Provide a clear and detailed explanation of the feature you want and why it's important to add.
+2. If it doesn't exist, [create a new issue](https://github.com/base/account-sdk/issues/new). Provide a clear and detailed explanation of the feature you want and why it's important to add.
 
 ### Pull Requests
 
@@ -52,7 +52,7 @@ The following is a set of guidelines for contributing to the Coinbase Wallet SDK
 First, ensure that the following are installed globally on your machine:
 
 - [Node.js 20.11+](https://nodejs.org/en/download/releases)
-- [Yarn v3](https://yarnpkg.com/getting-started/install)
+- [Yarn v4](https://yarnpkg.com/getting-started/install)
 
 Then, from the root folder run:
 
@@ -65,7 +65,7 @@ Then, from the root folder run:
 
 The SDK is built using yarn workspaces. 
 
-- `packages/wallet-sdk` - The main package that exports the SDK
+- `packages/account-sdk` - The main package that exports the SDK
 - `examples/test-app` - An example React app that is used to test the SDK in a real browser environment
 
 Use `yarn dev` to start the example app and build the package with hot reloading.

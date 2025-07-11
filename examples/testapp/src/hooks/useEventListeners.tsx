@@ -1,5 +1,5 @@
+import { ProviderInterface } from '@base-org/account-sdk';
 import { useToast } from '@chakra-ui/react';
-import { ProviderInterface } from '@coinbase/wallet-sdk';
 import { useCallback } from 'react';
 
 export const useEventListeners = () => {

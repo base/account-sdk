@@ -1,0 +1,64 @@
+import { useState } from 'react';
+import { CodeEditor, Header, Output, QuickTips } from '../components';
+import { DEFAULT_PAY_CODE, PAY_CODE_WITH_INFO_REQUESTS } from '../constants';
+import { useCodeExecution } from '../hooks';
+import styles from '../styles/Home.module.css';
+
+export default function Home() {
+  const [includeInfoRequests, setIncludeInfoRequests] = useState(false);
+  const [payCode, setPayCode] = useState(DEFAULT_PAY_CODE);
+
+  const payExecution = useCodeExecution();
+
+  const handlePayExecute = () => {
+    payExecution.executeCode(payCode);
+  };
+
+  const handlePayReset = () => {
+    setIncludeInfoRequests(false);
+    setPayCode(DEFAULT_PAY_CODE);
+    payExecution.reset();
+  };
+
+  const handleInfoRequestsToggle = (checked: boolean) => {
+    setIncludeInfoRequests(checked);
+    const newCode = checked ? PAY_CODE_WITH_INFO_REQUESTS : DEFAULT_PAY_CODE;
+    setPayCode(newCode);
+    payExecution.reset();
+  };
+
+  return (
+    <div className={styles.container}>
+      <Header />
+
+      <main className={styles.main}>
+        {/* pay Section */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>pay Function</h2>
+          <p className={styles.sectionDescription}>Send USDC payments on Base</p>
+
+          <div className={styles.playground}>
+            <CodeEditor
+              code={payCode}
+              onChange={setPayCode}
+              onExecute={handlePayExecute}
+              onReset={handlePayReset}
+              isLoading={payExecution.isLoading}
+              includeInfoRequests={includeInfoRequests}
+              onInfoRequestsToggle={handleInfoRequestsToggle}
+            />
+
+            <Output
+              result={payExecution.result}
+              error={payExecution.error}
+              consoleOutput={payExecution.consoleOutput}
+              isLoading={payExecution.isLoading}
+            />
+          </div>
+
+          <QuickTips />
+        </section>
+      </main>
+    </div>
+  );
+}

@@ -1,8 +1,8 @@
 {
-  "name": "coinbase-wallet-sdk",
+  "name": "account-sdk",
   "version": "0.0.1",
-  "repository": "https://github.com/coinbase/coinbase-wallet-sdk",
-  "author": "Coinbase, Inc.",
+  "repository": "https://github.com/base/account-sdk",
+  "author": "Base",
   "license": "MIT",
   "private": true,
   "workspaces": [
@@ -11,7 +11,7 @@
     "examples/*"
   ],
   "scripts": {
-    "build:packages": "yarn workspace @coinbase/wallet-sdk build",
+    "build:packages": "yarn workspace @base-org/account-sdk build && yarn workspace @base-org/account-ui build",
     "clean": "yarn workspaces foreach -A -ipv run clean && rm -rf node_modules && yarn",
     "deploy": "yarn build:packages && yarn workspace sdk-playground export",
     "dev": "yarn workspaces foreach -A -ipv run dev",

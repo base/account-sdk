@@ -1,5 +1,4 @@
-import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@coinbase/wallet-sdk';
-import { createCoinbaseWalletSDK as createCoinbaseWalletSDKLatest } from '@coinbase/wallet-sdk-latest';
+import { createBaseAccountSDK as createBaseAccountSDKHEAD } from '@base-org/account-sdk';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,14 +11,8 @@ import {
   useEIP1193Provider,
 } from './EIP1193ProviderContextProvider';
 
-vi.mock('@coinbase/wallet-sdk', () => ({
-  createCoinbaseWalletSDK: vi.fn(() => ({
-    getProvider: vi.fn(() => mockProvider),
-  })),
-}));
-
-vi.mock('@coinbase/wallet-sdk-latest', () => ({
-  createCoinbaseWalletSDK: vi.fn(() => ({
+vi.mock('@base-org/account-sdk', () => ({
+  createBaseAccountSDK: vi.fn(() => ({
     getProvider: vi.fn(() => mockProvider),
   })),
 }));
@@ -49,11 +42,9 @@ function TestConsumer() {
 describe('EIP1193ProviderContextProvider', () => {
   beforeEach(() => {
     vi.spyOn(ConfigContext, 'useConfig').mockReturnValue({
-      option: 'all',
       version: 'HEAD',
       scwUrl: 'https://keys-dev.coinbase.com/connect',
-      config: { options: 'all', attribution: { dataSuffix: '0xtestattribution' } },
-      setPreference: vi.fn(),
+      config: { attribution: { dataSuffix: '0xtestattribution' } },
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
       setConfig: vi.fn(),
@@ -89,13 +80,12 @@ describe('EIP1193ProviderContextProvider', () => {
       </EIP1193ProviderContextProvider>
     );
 
-    expect(createCoinbaseWalletSDKHEAD).toHaveBeenCalledWith({
+    expect(createBaseAccountSDKHEAD).toHaveBeenCalledWith({
       appName: 'SDK Playground',
       appChainIds: [84532, 8452],
       preference: {
-        options: 'all',
         attribution: { dataSuffix: '0xtestattribution' },
-        keysUrl: 'https://keys-dev.coinbase.com/connect',
+        walletUrl: 'https://keys-dev.coinbase.com/connect',
       },
       subAccounts: {
         enableAutoSubAccounts: true,
@@ -109,14 +99,12 @@ describe('EIP1193ProviderContextProvider', () => {
 
   it('initializes SDK with latest version when version is not HEAD', () => {
     vi.spyOn(ConfigContext, 'useConfig').mockReturnValue({
-      option: 'all',
-      version: 'latest',
+      version: 'HEAD',
       scwUrl: 'https://keys-dev.coinbase.com/connect',
-      config: { options: 'all', attribution: { dataSuffix: '0xtestattribution' } },
+      config: { attribution: { dataSuffix: '0xtestattribution' } },
       subAccountsConfig: {
         enableAutoSubAccounts: true,
       },
-      setPreference: vi.fn(),
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
       setConfig: vi.fn(),
@@ -129,13 +117,12 @@ describe('EIP1193ProviderContextProvider', () => {
       </EIP1193ProviderContextProvider>
     );
 
-    expect(createCoinbaseWalletSDKLatest).toHaveBeenCalledWith({
+    expect(createBaseAccountSDKHEAD).toHaveBeenCalledWith({
       appName: 'SDK Playground',
       appChainIds: [84532, 8452],
       preference: {
-        options: 'all',
         attribution: { dataSuffix: '0xtestattribution' },
-        keysUrl: 'https://keys-dev.coinbase.com/connect',
+        walletUrl: 'https://keys-dev.coinbase.com/connect',
       },
       subAccounts: {
         enableAutoSubAccounts: true,
