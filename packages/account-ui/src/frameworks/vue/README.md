@@ -10,7 +10,9 @@ npm install @base-org/account-ui
 
 ## Usage
 
-### Basic Usage
+### SignInWithBaseButton
+
+#### Basic Usage
 
 ```vue
 <template>
@@ -31,7 +33,7 @@ const handleClick = () => {
 </script>
 ```
 
-### Different Variants
+#### Different Variants
 
 ```vue
 <template>
@@ -61,6 +63,70 @@ const handleClick = () => {
 
 <script setup>
 import { SignInWithBaseButton } from '@base-org/account-ui/vue';
+
+const handleClick = (type) => {
+  console.log(`${type} button clicked`);
+};
+</script>
+
+<style scoped>
+.button-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 300px;
+}
+</style>
+```
+
+### BasePayButton
+
+#### Basic Usage
+
+```vue
+<template>
+  <BasePayButton 
+    :onClick="handleClick"
+    colorScheme="light"
+  />
+</template>
+
+<script setup>
+import { BasePayButton } from '@base-org/account-ui/vue';
+
+const handleClick = () => {
+  console.log('Pay with Base clicked!');
+};
+</script>
+```
+
+#### Different Color Schemes
+
+```vue
+<template>
+  <div class="button-examples">
+    <!-- Light mode -->
+    <BasePayButton 
+      :onClick="() => handleClick('light')"
+      colorScheme="light"
+    />
+    
+    <!-- Dark mode -->
+    <BasePayButton 
+      :onClick="() => handleClick('dark')"
+      colorScheme="dark"
+    />
+    
+    <!-- System theme (adapts to user's preference) -->
+    <BasePayButton 
+      :onClick="() => handleClick('system')"
+      colorScheme="system"
+    />
+  </div>
+</template>
+
+<script setup>
+import { BasePayButton } from '@base-org/account-ui/vue';
 
 const handleClick = (type) => {
   console.log(`${type} button clicked`);
@@ -121,10 +187,19 @@ const handleSignIn = async (): Promise<void> => {
 
 ## Props Reference
 
+### SignInWithBaseButton
+
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `align` | `'left' \| 'center'` | `'center'` | Button alignment |
 | `variant` | `'solid' \| 'transparent'` | `'solid'` | Button style variant |
+| `colorScheme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme |
+| `onClick` | `() => void` | `undefined` | Click handler |
+
+### BasePayButton
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
 | `colorScheme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme |
 | `onClick` | `() => void` | `undefined` | Click handler |
 

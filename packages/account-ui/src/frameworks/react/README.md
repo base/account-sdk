@@ -10,7 +10,9 @@ npm install @base-org/account-ui
 
 ## Usage
 
-### Basic Usage
+### SignInWithBaseButton
+
+#### Basic Usage
 
 ```tsx
 import { SignInWithBaseButton } from '@base-org/account-ui/react';
@@ -27,7 +29,7 @@ function App() {
 }
 ```
 
-### Different Variants
+#### Different Variants
 
 ```tsx
 import { SignInWithBaseButton } from '@base-org/account-ui/react';
@@ -54,6 +56,53 @@ function VariantExamples() {
         onClick={() => console.log('Left aligned clicked')}
         align="left"
         variant="solid"
+      />
+    </div>
+  );
+}
+```
+
+### BasePayButton
+
+#### Basic Usage
+
+```tsx
+import { BasePayButton } from '@base-org/account-ui/react';
+
+function App() {
+  return (
+    <BasePayButton 
+      onClick={() => console.log('Pay with Base clicked!')}
+      colorScheme="light"
+    />
+  );
+}
+```
+
+#### Different Color Schemes
+
+```tsx
+import { BasePayButton } from '@base-org/account-ui/react';
+
+function ColorSchemeExamples() {
+  return (
+    <div>
+      {/* Light mode */}
+      <BasePayButton 
+        onClick={() => console.log('Light mode clicked')}
+        colorScheme="light"
+      />
+      
+      {/* Dark mode */}
+      <BasePayButton 
+        onClick={() => console.log('Dark mode clicked')}
+        colorScheme="dark"
+      />
+      
+      {/* System theme (adapts to user's preference) */}
+      <BasePayButton 
+        onClick={() => console.log('System theme clicked')}
+        colorScheme="system"
       />
     </div>
   );
@@ -90,10 +139,19 @@ const LoginComponent: FC<LoginProps> = ({ onSignIn }) => {
 
 ## Props Reference
 
+### SignInWithBaseButton
+
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `align` | `'left' \| 'center'` | `'center'` | Button alignment |
 | `variant` | `'solid' \| 'transparent'` | `'solid'` | Button style variant |
+| `colorScheme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme |
+| `onClick` | `() => void` | `undefined` | Click handler |
+
+### BasePayButton
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
 | `colorScheme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme |
 | `onClick` | `() => void` | `undefined` | Click handler |
 
