@@ -25,10 +25,10 @@ const result = await pay({
 
 return result`;
 
-export const DEFAULT_GET_PAYMENT_STATUS_CODE = `import { getPaymentStatus } from '@base/account-sdk'
+export const DEFAULT_GET_PAYMENT_STATUS_CODE = `import { getPaymentStatus } from '@base-org/account-sdk'
 
 const result = await getPaymentStatus({
-  id: '0x...', // Replace with a transaction ID from a payment
+  id: '0x...', // Replace with an ID
   testnet: true
 })
 
