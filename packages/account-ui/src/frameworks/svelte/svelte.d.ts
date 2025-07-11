@@ -10,3 +10,10 @@ declare module './SignInWithBaseButton.svelte' {
 
   export default class SignInWithBaseButton extends SvelteComponent<SignInWithBaseButtonProps> {}
 }
+
+declare module './BasePayButton.svelte' {
+  import { SvelteComponent } from 'svelte';
+  import { BasePayButtonProps } from '../../types.js';
+
+  export default class BasePayButton extends SvelteComponent<BasePayButtonProps> {}
+}

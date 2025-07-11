@@ -4,3 +4,8 @@ export type SignInWithBaseButtonProps = {
   colorScheme?: 'light' | 'dark' | 'system';
   onClick?: () => void;
 };
+
+export type BasePayButtonProps = {
+  colorScheme?: 'light' | 'dark' | 'system';
+  onClick?: () => void;
+};

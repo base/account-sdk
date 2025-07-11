@@ -6,9 +6,10 @@ import { FunctionComponent, render } from 'preact';
 import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
 import { store } from ':store/store.js';
 import { BaseLogo } from ':ui/assets/BaseLogo.js';
-import { closeIcon } from ':ui/assets/icons.js';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import css from './Dialog-css.js';
+
+const closeIcon = `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEzIDFMMSAxM20wLTEyTDEzIDEzIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+`;
 
 // Helper function to detect phone portrait mode
 function isPhonePortrait(): boolean {

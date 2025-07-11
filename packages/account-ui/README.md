@@ -26,6 +26,8 @@ For detailed usage examples and setup instructions for each framework:
 
 ## Quick Start - React
 
+### SignInWithBaseButton
+
 ```tsx
 import { SignInWithBaseButton } from '@base-org/account-ui/react';
 
@@ -41,12 +43,36 @@ function App() {
 }
 ```
 
+### BasePayButton
+
+```tsx
+import { BasePayButton } from '@base-org/account-ui/react';
+
+function App() {
+  return (
+    <BasePayButton 
+      onClick={() => console.log('Pay with Base clicked!')}
+      colorScheme="light"
+    />
+  );
+}
+```
+
 ## Props
+
+### SignInWithBaseButton
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `align` | `'left' \| 'center'` | `'center'` | Button alignment |
 | `variant` | `'solid' \| 'transparent'` | `'solid'` | Button style variant |
+| `colorScheme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme |
+| `onClick` | `() => void` | `undefined` | Click handler |
+
+### BasePayButton
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
 | `colorScheme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme |
 | `onClick` | `() => void` | `undefined` | Click handler |
 

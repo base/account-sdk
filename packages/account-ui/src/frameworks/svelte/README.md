@@ -10,7 +10,9 @@ npm install @base-org/account-ui
 
 ## Usage
 
-### Basic Usage
+### SignInWithBaseButton
+
+#### Basic Usage
 
 ```svelte
 <script>
@@ -29,7 +31,7 @@ npm install @base-org/account-ui
 />
 ```
 
-### Different Variants
+#### Different Variants
 
 ```svelte
 <script>
@@ -60,6 +62,66 @@ npm install @base-org/account-ui
     onClick={() => handleClick('left-aligned')}
     align="left"
     variant="solid"
+  />
+</div>
+
+<style>
+  .button-examples {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 300px;
+  }
+</style>
+```
+
+### BasePayButton
+
+#### Basic Usage
+
+```svelte
+<script>
+  import { BasePayButton } from '@base-org/account-ui/svelte';
+
+  const handleClick = () => {
+    console.log('Pay with Base clicked!');
+  };
+</script>
+
+<BasePayButton 
+  onClick={handleClick}
+  colorScheme="light"
+/>
+```
+
+#### Different Color Schemes
+
+```svelte
+<script>
+  import { BasePayButton } from '@base-org/account-ui/svelte';
+
+  const handleClick = (type) => {
+    console.log(`${type} button clicked`);
+  };
+</script>
+
+<div class="button-examples">
+  <!-- Light mode -->
+  <BasePayButton 
+    onClick={() => handleClick('light')}
+    colorScheme="light"
+  />
+  
+  <!-- Dark mode -->
+  <BasePayButton 
+    onClick={() => handleClick('dark')}
+    colorScheme="dark"
+  />
+  
+  <!-- System theme (adapts to user's preference) -->
+  <BasePayButton 
+    onClick={() => handleClick('system')}
+    colorScheme="system"
   />
 </div>
 
@@ -118,10 +180,19 @@ npm install @base-org/account-ui
 
 ## Props Reference
 
+### SignInWithBaseButton
+
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `align` | `'left' \| 'center'` | `'center'` | Button alignment |
 | `variant` | `'solid' \| 'transparent'` | `'solid'` | Button style variant |
+| `colorScheme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme |
+| `onClick` | `() => void` | `undefined` | Click handler |
+
+### BasePayButton
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
 | `colorScheme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme |
 | `onClick` | `() => void` | `undefined` | Click handler |
 

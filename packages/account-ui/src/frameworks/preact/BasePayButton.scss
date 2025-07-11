@@ -1,11 +1,11 @@
-.-base-ui-sign-in-css-reset {
+.-base-ui-pay-css-reset {
   display: block;
   width: 100%;
   -webkit-font-smoothing: antialiased;
   
-  .-base-ui-sign-in-button {
+  .-base-ui-pay-button {
     width: 100%;
-    min-width: 220px;
+    min-width: 160px;
     height: 56px;
     padding: 16px 24px;
     border-radius: 8px;
@@ -34,7 +34,7 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
     
-    &.-base-ui-sign-in-button-transparent {
+    &.-base-ui-pay-button-transparent {
       background-color: transparent;
       border: var(--button-border);
       
@@ -49,7 +49,7 @@
       }
     }
     
-    &.-base-ui-sign-in-button-solid {
+    &.-base-ui-pay-button-solid {
       border: none;
       
       &:hover {
@@ -61,13 +61,13 @@
       }
     }
     
-    .-base-ui-sign-in-button-content {
+    .-base-ui-pay-button-content {
       display: flex;
       align-items: center;
       gap: 8px;
       justify-content: center;
       
-      &.-base-ui-sign-in-button-content-left {
+      &.-base-ui-pay-button-content-left {
         justify-content: flex-start;
         gap: 16px;
       }
