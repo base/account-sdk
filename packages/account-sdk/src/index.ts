@@ -9,6 +9,7 @@ export { base, getPaymentStatus, pay } from './interface/payment/index.js';
 export type {
     InfoRequest,
     InfoResponses,
+    PayerInfo,
     PaymentError,
     PaymentOptions,
     PaymentResult,

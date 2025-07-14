@@ -47,6 +47,27 @@ const result = await pay({
 return result
 ```
 
+### With Payer Info Example
+
+```typescript
+import { pay } from '@base-org/account-sdk'
+
+const result = await pay({
+  amount: '.01',
+  to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+  testnet: true,
+  payerInfo: {
+    requests: [
+      { request: 'email' },
+      { request: 'name', optional: true }
+    ],
+    callbackUrl: 'https://example.com/callback'
+  }
+})
+
+return result
+```
+
 ## Development
 
 The app is built with:

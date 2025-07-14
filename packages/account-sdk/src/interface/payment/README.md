@@ -52,22 +52,25 @@ switch (status.status) {
 
 ## Information Requests (Data Callbacks)
 
-You can request additional information from the user during payment using the `infoRequests` parameter:
+You can request additional information from the user during payment using the `payerInfo` parameter:
 
 ```typescript
-import { pay, InfoRequest } from '@base-org/account-sdk';
+import { pay } from '@base-org/account-sdk';
 
 const payment = await pay({
   amount: "10.50",
   to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
   testnet: true,
-  infoRequests: [
-    { request: 'email' },
-    { request: 'physicalAddress', optional: true },
-    { request: 'phoneNumber', optional: false },
-    { request: 'name', optional: true },
-    { request: 'onchainAddress' },
-  ]
+  payerInfo: {
+    requests: [
+      { request: 'email' },
+      { request: 'physicalAddress', optional: true },
+      { request: 'phoneNumber', optional: false },
+      { request: 'name', optional: true },
+      { request: 'onchainAddress' },
+    ],
+    callbackUrl: 'https://example.com/callback'
+  }
 });
 ```
 
@@ -83,6 +86,10 @@ const payment = await pay({
 
 By default, all information requests are required (`optional: false`). You can make a request optional by setting `optional: true`.
 
+### Callback URL
+
+The `callbackUrl` specifies where the collected user information will be sent after the payment is completed.
+
 ## API Reference
 
 ### `pay(options: PaymentOptions): Promise<PaymentResult>`
@@ -92,7 +99,12 @@ By default, all information requests are required (`optional: false`). You can m
 - `amount: string` - Amount of USDC to send as a string (e.g., "10.50")
 - `to: string` - Ethereum address or ENS name to send payment to
 - `testnet?: boolean` - Whether to use Base Sepolia testnet (default: false)
-- `infoRequests?: InfoRequest[]` - Optional information requests for data callbacks
+- `payerInfo?: PayerInfo` - Optional payer information configuration for data callbacks
+
+#### PayerInfo
+
+- `requests: InfoRequest[]` - Array of information requests
+- `callbackUrl: string` - URL where the collected information will be sent
 
 #### InfoRequest
 

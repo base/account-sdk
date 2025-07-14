@@ -8,19 +8,22 @@ const result = await pay({
 
 return result`;
 
-export const PAY_CODE_WITH_INFO_REQUESTS = `import { pay } from '@base-org/account-sdk'
+export const PAY_CODE_WITH_PAYER_INFO = `import { pay } from '@base-org/account-sdk'
 
 const result = await pay({
   amount: '.01',
   to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
   testnet: true,
-  infoRequests: [
-    { request: 'name'},
-    { request: 'email' },
-    { request: 'phoneNumber', optional: true },
-    { request: 'physicalAddress', optional: true },
-    { request: 'onchainAddress' }
-  ]
+  payerInfo: {
+    requests: [
+      { request: 'name'},
+      { request: 'email' },
+      { request: 'phoneNumber', optional: true },
+      { request: 'physicalAddress', optional: true },
+      { request: 'onchainAddress' }
+    ],
+    callbackUrl: 'https://example.com/callback'
+  }
 })
 
 return result`;
@@ -39,6 +42,7 @@ export const PAY_QUICK_TIPS = [
   'testnet (`true`) toggles base sepolia testnet',
   'Amount is in USDC (e.g., "1" = 1 USDC)',
   'Only USDC on base and base sepolia are supported',
+  'Use payerInfo to request user information with a callback URL',
 ];
 
 export const GET_PAYMENT_STATUS_QUICK_TIPS = [

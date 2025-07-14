@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { CodeEditor, Header, Output, QuickTips } from '../components';
-import { DEFAULT_GET_PAYMENT_STATUS_CODE, DEFAULT_PAY_CODE, GET_PAYMENT_STATUS_QUICK_TIPS, PAY_CODE_WITH_INFO_REQUESTS, PAY_QUICK_TIPS } from '../constants';
+import { DEFAULT_GET_PAYMENT_STATUS_CODE, DEFAULT_PAY_CODE, GET_PAYMENT_STATUS_QUICK_TIPS, PAY_CODE_WITH_PAYER_INFO, PAY_QUICK_TIPS } from '../constants';
 import { useCodeExecution } from '../hooks';
 import styles from '../styles/Home.module.css';
 
 export default function Home() {
-  const [includeInfoRequests, setIncludeInfoRequests] = useState(false);
+  const [includePayerInfo, setIncludePayerInfo] = useState(false);
   const [payCode, setPayCode] = useState(DEFAULT_PAY_CODE);
   const [getPaymentStatusCode, setGetPaymentStatusCode] = useState(DEFAULT_GET_PAYMENT_STATUS_CODE);
 
@@ -17,14 +17,14 @@ export default function Home() {
   };
 
   const handlePayReset = () => {
-    setIncludeInfoRequests(false);
+    setIncludePayerInfo(false);
     setPayCode(DEFAULT_PAY_CODE);
     payExecution.reset();
   };
 
-  const handleInfoRequestsToggle = (checked: boolean) => {
-    setIncludeInfoRequests(checked);
-    const newCode = checked ? PAY_CODE_WITH_INFO_REQUESTS : DEFAULT_PAY_CODE;
+  const handlePayerInfoToggle = (checked: boolean) => {
+    setIncludePayerInfo(checked);
+    const newCode = checked ? PAY_CODE_WITH_PAYER_INFO : DEFAULT_PAY_CODE;
     setPayCode(newCode);
     payExecution.reset();
   };
@@ -56,9 +56,9 @@ export default function Home() {
                 onExecute={handlePayExecute}
                 onReset={handlePayReset}
                 isLoading={payExecution.isLoading}
-                includeInfoRequests={includeInfoRequests}
-                onInfoRequestsToggle={handleInfoRequestsToggle}
-                showInfoRequestsToggle={true}
+                includePayerInfo={includePayerInfo}
+                onPayerInfoToggle={handlePayerInfoToggle}
+                showPayerInfoToggle={true}
               />
               <QuickTips tips={PAY_QUICK_TIPS} />
             </div>
@@ -87,9 +87,9 @@ export default function Home() {
                 onExecute={handleGetPaymentStatusExecute}
                 onReset={handleGetPaymentStatusReset}
                 isLoading={getPaymentStatusExecution.isLoading}
-                includeInfoRequests={false}
-                onInfoRequestsToggle={() => {}}
-                showInfoRequestsToggle={false}
+                includePayerInfo={false}
+                onPayerInfoToggle={() => {}}
+                showPayerInfoToggle={false}
               />
               <QuickTips tips={GET_PAYMENT_STATUS_QUICK_TIPS} />
             </div>

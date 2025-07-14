@@ -44,6 +44,16 @@ export interface InfoResponses {
 }
 
 /**
+ * Payer information configuration for payment data callbacks
+ */
+export interface PayerInfo {
+  /** Information requests from the payer */
+  requests: InfoRequest[];
+  /** Callback URL for sending the payer information */
+  callbackUrl: string;
+}
+
+/**
  * Options for making a payment
  */
 export interface PaymentOptions {
@@ -53,8 +63,8 @@ export interface PaymentOptions {
   to: string;
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
-  /** Optional information requests for data callbacks */
-  infoRequests?: InfoRequest[];
+  /** Optional payer information configuration for data callbacks */
+  payerInfo?: PayerInfo;
 }
 
 /**

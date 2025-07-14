@@ -1,6 +1,6 @@
 import { encodeFunctionData, parseUnits, type Address, type Hex } from 'viem';
 import { CHAIN_IDS, ERC20_TRANSFER_ABI, TOKENS } from '../constants.js';
-import type { InfoRequest } from '../types.js';
+import type { PayerInfo } from '../types.js';
 
 /**
  * Encodes an ERC20 transfer call
@@ -23,10 +23,10 @@ export function encodeTransferCall(recipient: string, amount: string): Hex {
  * Builds the wallet_sendCalls request parameters
  * @param transferData - The encoded transfer call data
  * @param testnet - Whether to use testnet
- * @param infoRequests - Optional information requests for data callbacks
+ * @param payerInfo - Optional payer information configuration for data callbacks
  * @returns The request parameters for wallet_sendCalls
  */
-export function buildSendCallsRequest(transferData: Hex, testnet: boolean, infoRequests?: InfoRequest[]) {
+export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payerInfo?: PayerInfo) {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
   const usdcAddress = TOKENS.USDC.addresses[network];
@@ -41,13 +41,14 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, infoR
   // Build the capabilities object
   const capabilities: Record<string, unknown> = {};
   
-  // Add dataCallback capability if infoRequests are provided
-  if (infoRequests && infoRequests.length > 0) {
+  // Add dataCallback capability if payerInfo is provided
+  if (payerInfo && payerInfo.requests.length > 0) {
     capabilities.dataCallback = {
-      requests: infoRequests.map(request => ({
+      requests: payerInfo.requests.map(request => ({
         type: request.request,
         optional: request.optional ?? false,
       })),
+      callbackUrl: payerInfo.callbackUrl,
     };
   }
 
@@ -67,13 +68,13 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, infoR
  * @param recipient - The recipient address
  * @param amount - The amount to send
  * @param testnet - Whether to use testnet
- * @param infoRequests - Optional information requests for data callbacks
+ * @param payerInfo - Optional payer information configuration for data callbacks
  * @returns The complete request parameters
  */
-export function translatePaymentToSendCalls(recipient: string, amount: string, testnet: boolean, infoRequests?: InfoRequest[]) {
+export function translatePaymentToSendCalls(recipient: string, amount: string, testnet: boolean, payerInfo?: PayerInfo) {
   // Encode the transfer call
   const transferData = encodeTransferCall(recipient, amount);
 
   // Build and return the sendCalls request
-  return buildSendCallsRequest(transferData, testnet, infoRequests);
+  return buildSendCallsRequest(transferData, testnet, payerInfo);
 }

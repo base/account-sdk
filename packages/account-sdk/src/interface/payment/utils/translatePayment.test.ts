@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CHAIN_IDS, TOKENS } from '../constants.js';
-import type { InfoRequest } from '../types.js';
+import type { PayerInfo } from '../types.js';
 import { buildSendCallsRequest, encodeTransferCall, translatePaymentToSendCalls } from './translatePayment.js';
 
 describe('translatePayment', () => {
@@ -17,7 +17,7 @@ describe('translatePayment', () => {
   });
 
   describe('buildSendCallsRequest', () => {
-    it('should build request without infoRequests', () => {
+    it('should build request without payerInfo', () => {
       const transferData = '0xabcdef';
       const testnet = false;
 
@@ -37,15 +37,18 @@ describe('translatePayment', () => {
       });
     });
 
-    it('should build request with infoRequests', () => {
+    it('should build request with payerInfo', () => {
       const transferData = '0xabcdef';
       const testnet = false;
-      const infoRequests: InfoRequest[] = [
-        { request: 'email' },
-        { request: 'physicalAddress', optional: true },
-      ];
+      const payerInfo: PayerInfo = {
+        requests: [
+          { request: 'email' },
+          { request: 'physicalAddress', optional: true },
+        ],
+        callbackUrl: 'https://example.com/callback'
+      };
 
-      const result = buildSendCallsRequest(transferData, testnet, infoRequests);
+      const result = buildSendCallsRequest(transferData, testnet, payerInfo);
 
       expect(result).toEqual({
         version: '1.0',
@@ -63,6 +66,7 @@ describe('translatePayment', () => {
               { type: 'email', optional: false },
               { type: 'physicalAddress', optional: true },
             ],
+            callbackUrl: 'https://example.com/callback',
           },
         },
       });
@@ -88,12 +92,15 @@ describe('translatePayment', () => {
       });
     });
 
-    it('should handle empty infoRequests array', () => {
+    it('should handle empty payerInfo array', () => {
       const transferData = '0xabcdef';
       const testnet = false;
-      const infoRequests: InfoRequest[] = [];
+      const payerInfo: PayerInfo = {
+        requests: [],
+        callbackUrl: 'https://example.com/callback'
+      };
 
-      const result = buildSendCallsRequest(transferData, testnet, infoRequests);
+      const result = buildSendCallsRequest(transferData, testnet, payerInfo);
 
       expect(result).toEqual({
         version: '1.0',
@@ -112,12 +119,15 @@ describe('translatePayment', () => {
     it('should default optional to false when not specified', () => {
       const transferData = '0xabcdef';
       const testnet = false;
-      const infoRequests: InfoRequest[] = [
-        { request: 'email' },
-        { request: 'name', optional: undefined },
-      ];
+      const payerInfo: PayerInfo = {
+        requests: [
+          { request: 'email' },
+          { request: 'name', optional: undefined },
+        ],
+        callbackUrl: 'https://example.com/callback'
+      };
 
-      const result = buildSendCallsRequest(transferData, testnet, infoRequests);
+      const result = buildSendCallsRequest(transferData, testnet, payerInfo);
 
       expect(result.capabilities).toEqual({
         dataCallback: {
@@ -125,13 +135,14 @@ describe('translatePayment', () => {
             { type: 'email', optional: false },
             { type: 'name', optional: false },
           ],
+          callbackUrl: 'https://example.com/callback',
         },
       });
     });
   });
 
   describe('translatePaymentToSendCalls', () => {
-    it('should translate payment without infoRequests', () => {
+    it('should translate payment without payerInfo', () => {
       const recipient = '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51';
       const amount = '10.50';
       const testnet = false;
@@ -152,17 +163,20 @@ describe('translatePayment', () => {
       });
     });
 
-    it('should translate payment with infoRequests', () => {
+    it('should translate payment with payerInfo', () => {
       const recipient = '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51';
       const amount = '10.50';
       const testnet = false;
-      const infoRequests: InfoRequest[] = [
-        { request: 'email' },
-        { request: 'physicalAddress', optional: true },
-        { request: 'phoneNumber', optional: false },
-      ];
+      const payerInfo: PayerInfo = {
+        requests: [
+          { request: 'email' },
+          { request: 'physicalAddress', optional: true },
+          { request: 'phoneNumber', optional: false },
+        ],
+        callbackUrl: 'https://example.com/callback'
+      };
 
-      const result = translatePaymentToSendCalls(recipient, amount, testnet, infoRequests);
+      const result = translatePaymentToSendCalls(recipient, amount, testnet, payerInfo);
 
       expect(result).toEqual({
         version: '1.0',
@@ -181,20 +195,24 @@ describe('translatePayment', () => {
               { type: 'physicalAddress', optional: true },
               { type: 'phoneNumber', optional: false },
             ],
+            callbackUrl: 'https://example.com/callback',
           },
         },
       });
     });
 
-    it('should translate payment for testnet with infoRequests', () => {
+    it('should translate payment for testnet with payerInfo', () => {
       const recipient = '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51';
       const amount = '5.00';
       const testnet = true;
-      const infoRequests: InfoRequest[] = [
-        { request: 'name', optional: true },
-      ];
+      const payerInfo: PayerInfo = {
+        requests: [
+          { request: 'name', optional: true },
+        ],
+        callbackUrl: 'https://example.com/callback'
+      };
 
-      const result = translatePaymentToSendCalls(recipient, amount, testnet, infoRequests);
+      const result = translatePaymentToSendCalls(recipient, amount, testnet, payerInfo);
 
       expect(result).toEqual({
         version: '1.0',
@@ -211,6 +229,7 @@ describe('translatePayment', () => {
             requests: [
               { type: 'name', optional: true },
             ],
+            callbackUrl: 'https://example.com/callback',
           },
         },
       });

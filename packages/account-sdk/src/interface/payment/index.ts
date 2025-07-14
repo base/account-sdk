@@ -7,6 +7,7 @@ export { pay } from './pay.js';
 export type {
     InfoRequest,
     InfoResponses,
+    PayerInfo,
     PaymentError,
     PaymentOptions,
     PaymentResult,

@@ -12,7 +12,7 @@ import { isENSName, validateRecipient, validateStringAmount } from './utils/vali
  * @param options.amount - Amount of USDC to send as a string (e.g., "10.50")
  * @param options.to - Ethereum address or ENS name to send payment to
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
- * @param options.infoRequests - Optional information requests for data callbacks
+ * @param options.payerInfo - Optional payer information configuration for data callbacks
  * @returns Promise<PaymentResult> - Result of the payment transaction
  *
  * @example
@@ -24,15 +24,18 @@ import { isENSName, validateRecipient, validateStringAmount } from './utils/vali
  *   testnet: true
  * });
  *
- * // Pay to an ENS name with info requests
+ * // Pay to an ENS name with payer info
  * const payment = await pay({
  *   amount: "5.00",
  *   to: "vitalik.eth",
  *   testnet: false,
- *   infoRequests: [
- *     { request: 'email' },
- *     { request: 'physicalAddress', optional: true },
- *   ]
+ *   payerInfo: {
+ *     requests: [
+ *       { request: 'email' },
+ *       { request: 'physicalAddress', optional: true },
+ *     ],
+ *     callbackUrl: 'https://example.com/callback'
+ *   }
  * });
  *
  * if (payment.success) {
@@ -43,7 +46,7 @@ import { isENSName, validateRecipient, validateStringAmount } from './utils/vali
  * ```
  */
 export async function pay(options: PaymentOptions): Promise<PaymentResult> {
-  const { amount, to, testnet = false, infoRequests } = options;
+  const { amount, to, testnet = false, payerInfo } = options;
 
   try {
     validateStringAmount(amount, 2);
@@ -58,7 +61,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
     }
 
     // Step 2: Translate payment to sendCalls format
-    const requestParams = translatePaymentToSendCalls(resolvedRecipient, amount, testnet, infoRequests);
+    const requestParams = translatePaymentToSendCalls(resolvedRecipient, amount, testnet, payerInfo);
 
     // Step 3: Execute payment with SDK
     const executionResult = await executePaymentWithSDK(requestParams, testnet);

@@ -6,9 +6,9 @@ interface CodeEditorProps {
   onExecute: () => void;
   onReset: () => void;
   isLoading: boolean;
-  includeInfoRequests: boolean;
-  onInfoRequestsToggle: (checked: boolean) => void;
-  showInfoRequestsToggle?: boolean;
+  includePayerInfo: boolean;
+  onPayerInfoToggle: (checked: boolean) => void;
+  showPayerInfoToggle?: boolean;
 }
 
 export const CodeEditor = ({ 
@@ -17,9 +17,9 @@ export const CodeEditor = ({
   onExecute, 
   onReset, 
   isLoading, 
-  includeInfoRequests, 
-  onInfoRequestsToggle,
-  showInfoRequestsToggle = true
+  includePayerInfo, 
+  onPayerInfoToggle,
+  showPayerInfoToggle = true
 }: CodeEditorProps) => {
   return (
     <div className={styles.editorPanel}>
@@ -55,17 +55,17 @@ export const CodeEditor = ({
         </button>
       </div>
 
-      {showInfoRequestsToggle && (
+      {showPayerInfoToggle && (
         <div className={styles.checkboxContainer}>
           <label className={styles.checkboxLabel}>
             <input
               type="checkbox"
-              checked={includeInfoRequests}
-              onChange={(e) => onInfoRequestsToggle(e.target.checked)}
+              checked={includePayerInfo}
+              onChange={(e) => onPayerInfoToggle(e.target.checked)}
               disabled={isLoading}
               className={styles.checkbox}
             />
-            <span className={styles.checkboxText}>Include info requests</span>
+            <span className={styles.checkboxText}>Include payer info</span>
           </label>
         </div>
       )}

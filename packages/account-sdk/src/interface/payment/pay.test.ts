@@ -235,11 +235,14 @@ describe('pay', () => {
     );
   });
 
-  it('should successfully process a payment with infoRequests', async () => {
-    const infoRequests = [
-      { request: 'email' },
-      { request: 'physicalAddress', optional: true },
-    ];
+  it('should successfully process a payment with payerInfo', async () => {
+    const payerInfo = {
+      requests: [
+        { request: 'email' },
+        { request: 'physicalAddress', optional: true },
+      ],
+      callbackUrl: 'https://example.com/callback'
+    };
 
     const infoResponses = {
       email: 'test@example.com',
@@ -272,6 +275,7 @@ describe('pay', () => {
             { type: 'email', optional: false },
             { type: 'physicalAddress', optional: true },
           ],
+          callbackUrl: 'https://example.com/callback',
         },
       },
     });
@@ -284,7 +288,7 @@ describe('pay', () => {
       amount: '10.50',
       to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       testnet: false,
-      infoRequests,
+      payerInfo,
     });
 
     expect(payment).toEqual({
@@ -303,7 +307,7 @@ describe('pay', () => {
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       '10.50',
       false,
-      infoRequests
+      payerInfo
     );
   });
 });
