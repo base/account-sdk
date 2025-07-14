@@ -3,9 +3,9 @@ export const transformImports = (code: string): string => {
   let transformedCode = code;
 
   // Special handling for @base-org/account-sdk - just remove the import line
-  // since pay is provided in the context
+  // since pay and getPaymentStatus are provided in the context
   transformedCode = transformedCode.replace(
-    /import\s+{[^}]*(?:pay)[^}]*}\s+from\s+['"]@base\/account-sdk['"]\s*;?\s*\n?/g,
+    /import\s+{[^}]*(?:pay|getPaymentStatus)[^}]*}\s+from\s+['"]@base-org\/account-sdk['"]\s*;?\s*\n?/g,
     ''
   );
 
@@ -34,19 +34,19 @@ export const transformImports = (code: string): string => {
 };
 
 // Helper function to safely stringify objects with circular references
-export const safeStringify = (obj: unknown): string => {
+export const safeStringify = (obj: unknown, indent = 2): string => {
   const seen = new WeakSet();
   return JSON.stringify(
     obj,
     (_key, value) => {
       if (typeof value === 'object' && value !== null) {
         if (seen.has(value)) {
-          return '[Circular Reference]';
+          return '[Circular]';
         }
         seen.add(value);
       }
       return value;
     },
-    2
+    indent
   );
 };

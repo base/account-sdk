@@ -8,6 +8,7 @@ interface CodeEditorProps {
   isLoading: boolean;
   includeInfoRequests: boolean;
   onInfoRequestsToggle: (checked: boolean) => void;
+  showInfoRequestsToggle?: boolean;
 }
 
 export const CodeEditor = ({ 
@@ -17,7 +18,8 @@ export const CodeEditor = ({
   onReset, 
   isLoading, 
   includeInfoRequests, 
-  onInfoRequestsToggle 
+  onInfoRequestsToggle,
+  showInfoRequestsToggle = true
 }: CodeEditorProps) => {
   return (
     <div className={styles.editorPanel}>
@@ -53,18 +55,20 @@ export const CodeEditor = ({
         </button>
       </div>
 
-      <div className={styles.checkboxContainer}>
-        <label className={styles.checkboxLabel}>
-          <input
-            type="checkbox"
-            checked={includeInfoRequests}
-            onChange={(e) => onInfoRequestsToggle(e.target.checked)}
-            disabled={isLoading}
-            className={styles.checkbox}
-          />
-          <span className={styles.checkboxText}>Include info requests</span>
-        </label>
-      </div>
+      {showInfoRequestsToggle && (
+        <div className={styles.checkboxContainer}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={includeInfoRequests}
+              onChange={(e) => onInfoRequestsToggle(e.target.checked)}
+              disabled={isLoading}
+              className={styles.checkbox}
+            />
+            <span className={styles.checkboxText}>Include info requests</span>
+          </label>
+        </div>
+      )}
 
       <div className={styles.editorWrapper}>
         <textarea

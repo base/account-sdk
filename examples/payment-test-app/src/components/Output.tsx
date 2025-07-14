@@ -1,12 +1,22 @@
-import type { PaymentResult } from '@base-org/account-sdk';
+import type { PaymentResult, PaymentStatus } from '@base-org/account-sdk';
 import styles from './Output.module.css';
 
 interface OutputProps {
-  result: PaymentResult | null;
+  result: PaymentResult | PaymentStatus | null;
   error: string | null;
   consoleOutput: string[];
   isLoading: boolean;
 }
+
+// Type guard to check if result is PaymentResult
+const isPaymentResult = (result: any): result is PaymentResult => {
+  return result && 'success' in result;
+};
+
+// Type guard to check if result is PaymentStatus
+const isPaymentStatus = (result: any): result is PaymentStatus => {
+  return result && 'status' in result && 'id' in result;
+};
 
 export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps) => {
   return (
@@ -29,7 +39,7 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
       </div>
 
       <div className={styles.outputContent}>
-        {result && (
+        {result && isPaymentResult(result) && (
           <div className={`${styles.resultCard} ${result.success ? styles.success : styles.error}`}>
             <div className={styles.resultHeader}>
               {result.success ? (
@@ -71,15 +81,15 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
               </div>
               <div className={styles.resultRow}>
                 <span className={styles.resultLabel}>Recipient</span>
-                <code className={styles.resultValue}>{result.recipient}</code>
+                <code className={styles.resultValue}>{result.to}</code>
               </div>
-              {result.id && (
+              {result.success && result.id && (
                 <div className={styles.resultRow}>
                   <span className={styles.resultLabel}>Transaction ID</span>
                   <code className={styles.resultValue}>{result.id}</code>
                 </div>
               )}
-              {result.error && (
+              {!result.success && result.error && (
                 <div className={styles.resultRow}>
                   <span className={styles.resultLabel}>Error</span>
                   <span className={styles.errorMessage}>{result.error}</span>
@@ -87,7 +97,7 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
               )}
             </div>
 
-            {result.infoResponses && (
+            {result.success && result.infoResponses && (
               <div className={styles.userDataSection}>
                 <div className={styles.userDataHeader}>
                   <svg
@@ -172,6 +182,119 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {result && isPaymentStatus(result) && (
+          <div className={`${styles.resultCard} ${
+            result.status === 'completed' ? styles.success : 
+            result.status === 'pending' ? styles.pending :
+            result.status === 'failed' ? styles.error :
+            styles.notFound
+          }`}>
+            <div className={styles.resultHeader}>
+              {result.status === 'completed' && (
+                <>
+                  <svg
+                    className={styles.resultIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <span className={styles.resultTitle}>Payment Completed</span>
+                </>
+              )}
+              {result.status === 'pending' && (
+                <>
+                  <svg
+                    className={styles.resultIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span className={styles.resultTitle}>Payment Pending</span>
+                </>
+              )}
+              {result.status === 'failed' && (
+                <>
+                  <svg
+                    className={styles.resultIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  <span className={styles.resultTitle}>Payment Failed</span>
+                </>
+              )}
+              {result.status === 'not_found' && (
+                <>
+                  <svg
+                    className={styles.resultIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span className={styles.resultTitle}>Payment Not Found</span>
+                </>
+              )}
+            </div>
+
+            <div className={styles.resultBody}>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Status</span>
+                <span className={styles.resultValue}>{result.status}</span>
+              </div>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Transaction ID</span>
+                <code className={styles.resultValue}>{result.id}</code>
+              </div>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Message</span>
+                <span className={styles.resultValue}>{result.message}</span>
+              </div>
+              {result.sender && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Sender</span>
+                  <code className={styles.resultValue}>{result.sender}</code>
+                </div>
+              )}
+              {result.amount && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Amount</span>
+                  <span className={styles.resultValue}>{result.amount} USDC</span>
+                </div>
+              )}
+              {result.recipient && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Recipient</span>
+                  <code className={styles.resultValue}>{result.recipient}</code>
+                </div>
+              )}
+              {result.error && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Error</span>
+                  <span className={styles.errorMessage}>{result.error}</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
