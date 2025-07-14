@@ -45,7 +45,7 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payer
   if (payerInfo && payerInfo.requests.length > 0) {
     capabilities.dataCallback = {
       requests: payerInfo.requests.map(request => ({
-        type: request.request,
+        type: request.type,
         optional: request.optional ?? false,
       })),
       callbackUrl: payerInfo.callbackUrl,

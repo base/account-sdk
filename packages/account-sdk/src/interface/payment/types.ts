@@ -5,7 +5,7 @@ import type { Address, Hex } from 'viem';
  */
 export interface InfoRequest {
   /** The type of information being requested */
-  request: 'email' | 'physicalAddress' | 'phoneNumber' | 'name' | 'onchainAddress' | string;
+  type: 'email' | 'physicalAddress' | 'phoneNumber' | 'name' | 'onchainAddress' | string;
   /** Whether this information is optional */
   optional?: boolean;
 }

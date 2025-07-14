@@ -42,8 +42,8 @@ describe('translatePayment', () => {
       const testnet = false;
       const payerInfo: PayerInfo = {
         requests: [
-          { request: 'email' },
-          { request: 'physicalAddress', optional: true },
+          { type: 'email' },
+          { type: 'physicalAddress', optional: true },
         ],
         callbackUrl: 'https://example.com/callback'
       };
@@ -121,8 +121,8 @@ describe('translatePayment', () => {
       const testnet = false;
       const payerInfo: PayerInfo = {
         requests: [
-          { request: 'email' },
-          { request: 'name', optional: undefined },
+          { type: 'email' },
+          { type: 'name', optional: undefined },
         ],
         callbackUrl: 'https://example.com/callback'
       };
@@ -169,9 +169,9 @@ describe('translatePayment', () => {
       const testnet = false;
       const payerInfo: PayerInfo = {
         requests: [
-          { request: 'email' },
-          { request: 'physicalAddress', optional: true },
-          { request: 'phoneNumber', optional: false },
+          { type: 'email' },
+          { type: 'physicalAddress', optional: true },
+          { type: 'phoneNumber', optional: false },
         ],
         callbackUrl: 'https://example.com/callback'
       };
@@ -207,7 +207,7 @@ describe('translatePayment', () => {
       const testnet = true;
       const payerInfo: PayerInfo = {
         requests: [
-          { request: 'name', optional: true },
+          { type: 'name', optional: true },
         ],
         callbackUrl: 'https://example.com/callback'
       };

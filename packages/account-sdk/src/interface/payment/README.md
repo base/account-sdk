@@ -63,11 +63,11 @@ const payment = await pay({
   testnet: true,
   payerInfo: {
     requests: [
-      { request: 'email' },
-      { request: 'physicalAddress', optional: true },
-      { request: 'phoneNumber', optional: false },
-      { request: 'name', optional: true },
-      { request: 'onchainAddress' },
+      { type: 'email' },
+      { type: 'physicalAddress', optional: true },
+      { type: 'phoneNumber', optional: false },
+      { type: 'name', optional: true },
+      { type: 'onchainAddress' },
     ],
     callbackUrl: 'https://example.com/callback'
   }
@@ -108,7 +108,7 @@ The `callbackUrl` specifies where the collected user information will be sent af
 
 #### InfoRequest
 
-- `request: string` - The type of information being requested
+- `type: string` - The type of information being requested
 - `optional?: boolean` - Whether the information is optional (default: false)
 
 #### PaymentResult

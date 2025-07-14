@@ -16,11 +16,11 @@ const result = await pay({
   testnet: true,
   payerInfo: {
     requests: [
-      { request: 'name'},
-      { request: 'email' },
-      { request: 'phoneNumber', optional: true },
-      { request: 'physicalAddress', optional: true },
-      { request: 'onchainAddress' }
+      { type: 'name'},
+      { type: 'email' },
+      { type: 'phoneNumber', optional: true },
+      { type: 'physicalAddress', optional: true },
+      { type: 'onchainAddress' }
     ],
     callbackUrl: 'https://example.com/callback'
   }
@@ -42,7 +42,7 @@ export const PAY_QUICK_TIPS = [
   'testnet (`true`) toggles base sepolia testnet',
   'Amount is in USDC (e.g., "1" = 1 USDC)',
   'Only USDC on base and base sepolia are supported',
-  'Use payerInfo to request user information with a callback URL',
+  'Use payerInfo to request user information.',
 ];
 
 export const GET_PAYMENT_STATUS_QUICK_TIPS = [

@@ -238,8 +238,8 @@ describe('pay', () => {
   it('should successfully process a payment with payerInfo', async () => {
     const payerInfo = {
       requests: [
-        { request: 'email' },
-        { request: 'physicalAddress', optional: true },
+        { type: 'email' },
+        { type: 'physicalAddress', optional: true },
       ],
       callbackUrl: 'https://example.com/callback'
     };

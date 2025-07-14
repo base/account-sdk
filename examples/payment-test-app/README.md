@@ -58,8 +58,8 @@ const result = await pay({
   testnet: true,
   payerInfo: {
     requests: [
-      { request: 'email' },
-      { request: 'name', optional: true }
+      { type: 'email' },
+      { type: 'name', optional: true }
     ],
     callbackUrl: 'https://example.com/callback'
   }

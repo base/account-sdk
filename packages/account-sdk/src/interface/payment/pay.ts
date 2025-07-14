@@ -31,8 +31,8 @@ import { isENSName, validateRecipient, validateStringAmount } from './utils/vali
  *   testnet: false,
  *   payerInfo: {
  *     requests: [
- *       { request: 'email' },
- *       { request: 'physicalAddress', optional: true },
+ *       { type: 'email' },
+ *       { type: 'physicalAddress', optional: true },
  *     ],
  *     callbackUrl: 'https://example.com/callback'
  *   }
