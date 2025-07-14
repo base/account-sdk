@@ -87,7 +87,7 @@ export const SignInWithBaseButton = ({
       : 'none';
 
   return (
-    <div class="-base-ui-css-reset">
+    <div class="-base-ui-sign-in-css-reset">
       <style>{css}</style>
       <button
         class={clsx(

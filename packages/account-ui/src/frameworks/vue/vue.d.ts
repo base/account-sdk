@@ -10,3 +10,10 @@ declare module './SignInWithBaseButton.vue' {
   const component: DefineComponent<SignInWithBaseButtonProps>;
   export default component;
 }
+
+declare module './BasePayButton.vue' {
+  import { DefineComponent } from 'vue';
+  import { BasePayButtonProps } from '../../types.js';
+  const component: DefineComponent<BasePayButtonProps>;
+  export default component;
+}
