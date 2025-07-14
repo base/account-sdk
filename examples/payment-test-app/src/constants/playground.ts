@@ -22,7 +22,7 @@ const result = await pay({
       { type: 'physicalAddress', optional: true },
       { type: 'onchainAddress' }
     ],
-    callbackUrl: 'https://example.com/callback'
+    callbackURL: 'https://example.com/callback'
   }
 })
 

@@ -241,7 +241,7 @@ describe('pay', () => {
         { type: 'email' },
         { type: 'physicalAddress', optional: true },
       ],
-      callbackUrl: 'https://example.com/callback'
+      callbackURL: 'https://example.com/callback'
     };
 
     const infoResponses = {
@@ -275,7 +275,7 @@ describe('pay', () => {
             { type: 'email', optional: false },
             { type: 'physicalAddress', optional: true },
           ],
-          callbackUrl: 'https://example.com/callback',
+                      callbackURL: 'https://example.com/callback',
         },
       },
     });

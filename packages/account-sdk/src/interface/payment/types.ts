@@ -50,7 +50,7 @@ export interface PayerInfo {
   /** Information requests from the payer */
   requests: InfoRequest[];
   /** Callback URL for sending the payer information */
-  callbackUrl: string;
+  callbackURL: string;
 }
 
 /**

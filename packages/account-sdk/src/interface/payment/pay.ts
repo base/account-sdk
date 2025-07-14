@@ -34,7 +34,7 @@ import { isENSName, validateRecipient, validateStringAmount } from './utils/vali
  *       { type: 'email' },
  *       { type: 'physicalAddress', optional: true },
  *     ],
- *     callbackUrl: 'https://example.com/callback'
+ *     callbackURL: 'https://example.com/callback'
  *   }
  * });
  *

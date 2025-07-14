@@ -61,7 +61,7 @@ const result = await pay({
       { type: 'email' },
       { type: 'name', optional: true }
     ],
-    callbackUrl: 'https://example.com/callback'
+    callbackURL: 'https://example.com/callback'
   }
 })
 

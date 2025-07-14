@@ -45,7 +45,7 @@ describe('translatePayment', () => {
           { type: 'email' },
           { type: 'physicalAddress', optional: true },
         ],
-        callbackUrl: 'https://example.com/callback'
+        callbackURL: 'https://example.com/callback'
       };
 
       const result = buildSendCallsRequest(transferData, testnet, payerInfo);
@@ -66,7 +66,7 @@ describe('translatePayment', () => {
               { type: 'email', optional: false },
               { type: 'physicalAddress', optional: true },
             ],
-            callbackUrl: 'https://example.com/callback',
+            callbackURL: 'https://example.com/callback',
           },
         },
       });
@@ -97,7 +97,7 @@ describe('translatePayment', () => {
       const testnet = false;
       const payerInfo: PayerInfo = {
         requests: [],
-        callbackUrl: 'https://example.com/callback'
+        callbackURL: 'https://example.com/callback'
       };
 
       const result = buildSendCallsRequest(transferData, testnet, payerInfo);
@@ -124,7 +124,7 @@ describe('translatePayment', () => {
           { type: 'email' },
           { type: 'name', optional: undefined },
         ],
-        callbackUrl: 'https://example.com/callback'
+        callbackURL: 'https://example.com/callback'
       };
 
       const result = buildSendCallsRequest(transferData, testnet, payerInfo);
@@ -135,7 +135,7 @@ describe('translatePayment', () => {
             { type: 'email', optional: false },
             { type: 'name', optional: false },
           ],
-          callbackUrl: 'https://example.com/callback',
+                      callbackURL: 'https://example.com/callback',
         },
       });
     });
@@ -173,7 +173,7 @@ describe('translatePayment', () => {
           { type: 'physicalAddress', optional: true },
           { type: 'phoneNumber', optional: false },
         ],
-        callbackUrl: 'https://example.com/callback'
+        callbackURL: 'https://example.com/callback'
       };
 
       const result = translatePaymentToSendCalls(recipient, amount, testnet, payerInfo);
@@ -195,7 +195,7 @@ describe('translatePayment', () => {
               { type: 'physicalAddress', optional: true },
               { type: 'phoneNumber', optional: false },
             ],
-            callbackUrl: 'https://example.com/callback',
+            callbackURL: 'https://example.com/callback',
           },
         },
       });
@@ -209,7 +209,7 @@ describe('translatePayment', () => {
         requests: [
           { type: 'name', optional: true },
         ],
-        callbackUrl: 'https://example.com/callback'
+        callbackURL: 'https://example.com/callback'
       };
 
       const result = translatePaymentToSendCalls(recipient, amount, testnet, payerInfo);
@@ -229,7 +229,7 @@ describe('translatePayment', () => {
             requests: [
               { type: 'name', optional: true },
             ],
-            callbackUrl: 'https://example.com/callback',
+            callbackURL: 'https://example.com/callback',
           },
         },
       });

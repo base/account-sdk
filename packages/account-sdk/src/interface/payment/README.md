@@ -69,7 +69,7 @@ const payment = await pay({
       { type: 'name', optional: true },
       { type: 'onchainAddress' },
     ],
-    callbackUrl: 'https://example.com/callback'
+    callbackURL: 'https://example.com/callback'
   }
 });
 ```
@@ -88,7 +88,7 @@ By default, all information requests are required (`optional: false`). You can m
 
 ### Callback URL
 
-The `callbackUrl` specifies where the collected user information will be sent after the payment is completed.
+The `callbackURL` specifies where the collected user information will be sent after the payment is completed.
 
 ## API Reference
 
@@ -104,7 +104,7 @@ The `callbackUrl` specifies where the collected user information will be sent af
 #### PayerInfo
 
 - `requests: InfoRequest[]` - Array of information requests
-- `callbackUrl: string` - URL where the collected information will be sent
+- `callbackURL: string` - URL where the collected information will be sent
 
 #### InfoRequest
 

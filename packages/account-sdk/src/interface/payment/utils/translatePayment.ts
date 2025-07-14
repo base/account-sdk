@@ -48,7 +48,7 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payer
         type: request.type,
         optional: request.optional ?? false,
       })),
-      callbackUrl: payerInfo.callbackUrl,
+      callbackURL: payerInfo.callbackURL,
     };
   }
 
