@@ -5,12 +5,23 @@ import type { PaymentStatus } from './types.js';
 // Mock fetch globally
 global.fetch = vi.fn();
 
+// Mock telemetry events
+vi.mock(':core/telemetry/events/payment.js', () => ({
+  logPaymentStatusCheckStarted: vi.fn(),
+  logPaymentStatusCheckCompleted: vi.fn(),
+  logPaymentStatusCheckError: vi.fn(),
+}));
+
 describe('getPaymentStatus', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock console methods to avoid noise in tests
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    // Mock crypto.randomUUID
+    global.crypto = {
+      randomUUID: vi.fn().mockReturnValue('mock-correlation-id'),
+    } as any;
   });
 
   it('should return completed status for successful payment', async () => {

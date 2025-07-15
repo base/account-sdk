@@ -11,9 +11,22 @@ vi.mock('./utils/translatePayment.js');
 vi.mock('./utils/sdkManager.js');
 vi.mock('./utils/ensResolution.js');
 
+// Mock telemetry events
+vi.mock(':core/telemetry/events/payment.js', () => ({
+  logPaymentStarted: vi.fn(),
+  logPaymentError: vi.fn(),
+  logPaymentCompleted: vi.fn(),
+  logENSResolutionStarted: vi.fn(),
+  logENSResolutionCompleted: vi.fn(),
+}));
+
 describe('pay', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock crypto.randomUUID
+    global.crypto = {
+      randomUUID: vi.fn().mockReturnValue('mock-correlation-id'),
+    } as any;
   });
 
   it('should successfully process a payment', async () => {
