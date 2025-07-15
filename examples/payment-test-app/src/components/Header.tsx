@@ -4,7 +4,7 @@ export const Header = () => {
   return (
     <header className={styles.header}>
       <div className={styles.headerContent}>
-        <h1 className={styles.title}>Base Pay SDK</h1>
+        <h1 className={styles.title}>Base Pay Playground</h1>
       </div>
     </header>
   );

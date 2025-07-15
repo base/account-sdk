@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { pay } from './pay.js';
-import * as ensResolution from './utils/ensResolution.js';
 import * as sdkManager from './utils/sdkManager.js';
 import * as translatePayment from './utils/translatePayment.js';
 import * as validation from './utils/validation.js';
@@ -9,7 +8,6 @@ import * as validation from './utils/validation.js';
 vi.mock('./utils/validation.js');
 vi.mock('./utils/translatePayment.js');
 vi.mock('./utils/sdkManager.js');
-vi.mock('./utils/ensResolution.js');
 
 describe('pay', () => {
   beforeEach(() => {
@@ -19,8 +17,7 @@ describe('pay', () => {
   it('should successfully process a payment', async () => {
     // Setup mocks
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
-    vi.mocked(validation.isENSName).mockReturnValue(false);
+    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '1.0',
       chainId: 8453,
@@ -52,7 +49,7 @@ describe('pay', () => {
     });
 
     expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 2);
-    expect(validation.validateRecipient).toHaveBeenCalledWith(
+    expect(validation.validateAddress).toHaveBeenCalledWith(
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51'
     );
     expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(
@@ -61,85 +58,6 @@ describe('pay', () => {
       false,
       undefined
     );
-  });
-
-  it('should successfully process a payment with ENS name', async () => {
-    const ensName = 'vitalik.eth';
-    const resolvedAddress = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-
-    // Setup mocks
-    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
-    vi.mocked(validation.isENSName).mockReturnValue(true);
-    vi.mocked(ensResolution.resolveENS).mockResolvedValue(resolvedAddress);
-    vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
-      version: '1.0',
-      chainId: 8453,
-      calls: [
-        {
-          to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-          data: '0xabcdef',
-          value: '0x0',
-        },
-      ],
-      capabilities: {},
-    });
-    vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
-      transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-    });
-
-    const payment = await pay({
-      amount: '5.00',
-      to: ensName,
-      testnet: false,
-    });
-
-    expect(payment).toEqual({
-      success: true,
-      id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-      amount: '5.00',
-      to: resolvedAddress,
-      payerInfoResponses: undefined,
-    });
-
-    expect(validation.validateStringAmount).toHaveBeenCalledWith('5.00', 2);
-    expect(validation.validateRecipient).toHaveBeenCalledWith(ensName);
-    expect(ensResolution.resolveENS).toHaveBeenCalledWith(ensName);
-    expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(
-      resolvedAddress,
-      '5.00',
-      false,
-      undefined
-    );
-  });
-
-  it('should handle ENS resolution failure', async () => {
-    const ensName = 'nonexistent.eth';
-
-    // Setup mocks
-    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
-    vi.mocked(validation.isENSName).mockReturnValue(true);
-    vi.mocked(ensResolution.resolveENS).mockRejectedValue(
-      new Error('Failed to resolve ENS name "nonexistent.eth": ENS name "nonexistent.eth" not found')
-    );
-
-    const payment = await pay({
-      amount: '10.50',
-      to: ensName,
-      testnet: false,
-    });
-
-    expect(payment).toEqual({
-      success: false,
-      error: 'Failed to resolve ENS name "nonexistent.eth": ENS name "nonexistent.eth" not found',
-      amount: '10.50',
-      to: ensName,
-    });
-
-    expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 2);
-    expect(validation.validateRecipient).toHaveBeenCalledWith(ensName);
-    expect(ensResolution.resolveENS).toHaveBeenCalledWith(ensName);
   });
 
   it('should handle validation errors', async () => {
@@ -162,8 +80,7 @@ describe('pay', () => {
 
   it('should handle SDK execution errors', async () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
-    vi.mocked(validation.isENSName).mockReturnValue(false);
+    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '1.0',
       chainId: 8453,
@@ -189,8 +106,7 @@ describe('pay', () => {
 
   it('should support testnet with paymaster', async () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
-    vi.mocked(validation.isENSName).mockReturnValue(false);
+    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '1.0',
       chainId: 84532,
@@ -257,8 +173,7 @@ describe('pay', () => {
 
     // Setup mocks
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateRecipient).mockReturnValue(undefined);
-    vi.mocked(validation.isENSName).mockReturnValue(false);
+    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '1.0',
       chainId: 8453,
@@ -300,7 +215,7 @@ describe('pay', () => {
     });
 
     expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 2);
-    expect(validation.validateRecipient).toHaveBeenCalledWith(
+    expect(validation.validateAddress).toHaveBeenCalledWith(
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51'
     );
     expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(

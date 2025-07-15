@@ -59,7 +59,7 @@ export interface PayerInfo {
 export interface PaymentOptions {
   /** Amount of USDC to send as a string (e.g., "10.50") */
   amount: string;
-  /** Ethereum address or ENS name to send payment to */
+  /** Ethereum address to send payment to */
   to: string;
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
@@ -76,7 +76,7 @@ export interface PaymentSuccess {
   id: string;
   /** The amount that was sent */
   amount: string;
-  /** The address that received the payment (resolved from ENS if applicable) */
+  /** The address that received the payment */
   to: Address;
   /** Optional responses from information requests */
   payerInfoResponses?: PayerInfoResponses;

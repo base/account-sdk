@@ -1,41 +1,25 @@
 import type { Address } from 'viem';
-import type { PaymentOptions, PaymentResult } from './types.js';
-import { resolveENS } from './utils/ensResolution.js';
+import type { PaymentError, PaymentOptions, PaymentResult, PaymentSuccess } from './types.js';
 import { executePaymentWithSDK } from './utils/sdkManager.js';
 import { translatePaymentToSendCalls } from './utils/translatePayment.js';
-import { isENSName, validateRecipient, validateStringAmount } from './utils/validation.js';
+import { validateAddress, validateStringAmount } from './utils/validation.js';
 
 /**
- * Pay a specified address or ENS name with USDC on Base network using an ephemeral wallet
+ * Pay a specified address with USDC on Base network using an ephemeral wallet
  *
  * @param options - Payment options
  * @param options.amount - Amount of USDC to send as a string (e.g., "10.50")
- * @param options.to - Ethereum address or ENS name to send payment to
+ * @param options.to - Ethereum address to send payment to
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.payerInfo - Optional payer information configuration for data callbacks
  * @returns Promise<PaymentResult> - Result of the payment transaction
  *
  * @example
  * ```typescript
- * // Pay to an Ethereum address
  * const payment = await pay({
  *   amount: "10.50",
  *   to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
  *   testnet: true
- * });
- *
- * // Pay to an ENS name with payer info
- * const payment = await pay({
- *   amount: "5.00",
- *   to: "vitalik.eth",
- *   testnet: false,
- *   payerInfo: {
- *     requests: [
- *       { type: 'email' },
- *       { type: 'physicalAddress', optional: true },
- *     ],
- *     callbackURL: 'https://example.com/callback'
- *   }
  * });
  *
  * if (payment.success) {
@@ -50,30 +34,24 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
 
   try {
     validateStringAmount(amount, 2);
-    validateRecipient(to);
-
-    // Resolve ENS name if necessary
-    let resolvedRecipient: Address;
-    if (isENSName(to)) {
-      resolvedRecipient = await resolveENS(to);
-    } else {
-      resolvedRecipient = to as Address;
-    }
+    validateAddress(to);
 
     // Step 2: Translate payment to sendCalls format
-    const requestParams = translatePaymentToSendCalls(resolvedRecipient, amount, testnet, payerInfo);
+    const requestParams = translatePaymentToSendCalls(to, amount, testnet, payerInfo);
 
     // Step 3: Execute payment with SDK
     const executionResult = await executePaymentWithSDK(requestParams, testnet);
 
     // Return success result
-    return {
+    const successResult: PaymentSuccess = {
       success: true,
       id: executionResult.transactionHash,
       amount: amount,
-      to: resolvedRecipient,
+      to: to as Address,
       payerInfoResponses: executionResult.payerInfoResponses,
     };
+
+    return successResult;
   } catch (error) {
     // Extract error message
     let errorMessage = 'Unknown error occurred';
@@ -95,11 +73,13 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
     }
 
     // Return error result
-    return {
+    const errorResult: PaymentError = {
       success: false,
       error: errorMessage,
       amount: amount,
       to: to as Address,
     };
+
+    return errorResult;
   }
 }
