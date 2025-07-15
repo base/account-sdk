@@ -21,7 +21,7 @@ type WalletSendCallsRequestParams = {
  * Type for wallet_sendCalls response when it returns an object
  */
 type WalletSendCallsObjectResponse = {
-  id: string;
+  callsId: string;
   capabilities?: {
     dataCallback?: PayerInfoResponses;
     [key: string]: unknown;
@@ -42,8 +42,10 @@ export interface PaymentExecutionResult {
  * @returns The configured SDK instance
  */
 export function createEphemeralSDK(chainId: number) {
+  const appName = typeof window !== 'undefined' ? window.location.origin : 'Base Pay SDK';
+  
   const sdk = createBaseAccountSDK({
-    appName: 'Payment',
+    appName: appName,
     appChainIds: [chainId],
     preference: {
       telemetry: true,
@@ -74,20 +76,26 @@ export async function executePayment(
   let payerInfoResponses: PayerInfoResponses | undefined;
 
   // Handle different response formats
-  if (typeof result === 'string') {
-    // Simple string response - just a transaction hash
-    transactionHash = result as Hex;
-  } else if (result && typeof result === 'object' && 'id' in result) {
-    // Object response - extract transaction hash and info responses
+  if (typeof result === 'string' && result.length >= 66) {
+    // Standard response format - just a transaction hash
+    transactionHash = result.slice(0, 66) as Hex;
+  } else if (typeof result === 'object' && result !== null) {
+    // Object response format - contains callsId and capabilities with dataCallback
     const resultObj = result as WalletSendCallsObjectResponse;
-    transactionHash = resultObj.id as Hex;
     
-    // Extract info responses from capabilities.dataCallback
-    if (resultObj.capabilities?.dataCallback) {
-      payerInfoResponses = resultObj.capabilities.dataCallback;
+    // Extract transaction hash from callsId
+    if (typeof resultObj.callsId === 'string' && resultObj.callsId.length >= 66) {
+      transactionHash = resultObj.callsId.slice(0, 66) as Hex;
+      
+      // Extract info responses from capabilities.dataCallback
+      if (resultObj.capabilities?.dataCallback) {
+        payerInfoResponses = resultObj.capabilities.dataCallback;
+      }
+    } else {
+      throw new Error(`Could not extract transaction hash from object response. Available fields: ${Object.keys(resultObj).join(', ')}`);
     }
   } else {
-    throw new Error('Unexpected response format from wallet_sendCalls');
+    throw new Error(`Unexpected response format from wallet_sendCalls: expected string with length > 66 or object with callsId, got ${typeof result}`);
   }
 
   return { transactionHash, payerInfoResponses };
