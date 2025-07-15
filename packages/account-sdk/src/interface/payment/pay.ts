@@ -72,7 +72,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
       id: executionResult.transactionHash,
       amount: amount,
       to: resolvedRecipient,
-      infoResponses: executionResult.infoResponses,
+      payerInfoResponses: executionResult.payerInfoResponses,
     };
   } catch (error) {
     // Extract error message

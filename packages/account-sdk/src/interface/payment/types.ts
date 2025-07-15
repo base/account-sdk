@@ -13,7 +13,7 @@ export interface InfoRequest {
 /**
  * Information responses collected from info requests
  */
-export interface InfoResponses {
+export interface PayerInfoResponses {
   /** User's email address */
   email?: string;
   /** User's physical address */
@@ -79,7 +79,7 @@ export interface PaymentSuccess {
   /** The address that received the payment (resolved from ENS if applicable) */
   to: Address;
   /** Optional responses from information requests */
-  infoResponses?: InfoResponses;
+  payerInfoResponses?: PayerInfoResponses;
 }
 
 /**

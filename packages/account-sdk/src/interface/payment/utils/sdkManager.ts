@@ -1,7 +1,7 @@
 import type { Hex } from 'viem';
 import { createBaseAccountSDK } from '../../../index.js';
 import { CHAIN_IDS } from '../constants.js';
-import type { InfoResponses } from '../types.js';
+import type { PayerInfoResponses } from '../types.js';
 
 /**
  * Type for wallet_sendCalls request parameters
@@ -23,7 +23,7 @@ type WalletSendCallsRequestParams = {
 type WalletSendCallsObjectResponse = {
   callsId: string;
   capabilities?: {
-    dataCallback?: InfoResponses;
+    dataCallback?: PayerInfoResponses;
     [key: string]: unknown;
   };
 };
@@ -33,7 +33,7 @@ type WalletSendCallsObjectResponse = {
  */
 export interface PaymentExecutionResult {
   transactionHash: Hex;
-  infoResponses?: InfoResponses;
+  payerInfoResponses?: PayerInfoResponses;
 }
 
 /**
@@ -73,7 +73,7 @@ export async function executePayment(
   });
 
   let transactionHash: Hex;
-  let infoResponses: InfoResponses | undefined;
+  let payerInfoResponses: PayerInfoResponses | undefined;
 
   // Handle different response formats
   if (typeof result === 'string' && result.length >= 66) {
@@ -89,7 +89,7 @@ export async function executePayment(
       
       // Extract info responses from capabilities.dataCallback
       if (resultObj.capabilities?.dataCallback) {
-        infoResponses = resultObj.capabilities.dataCallback;
+        payerInfoResponses = resultObj.capabilities.dataCallback;
       }
     } else {
       throw new Error(`Could not extract transaction hash from object response. Available fields: ${Object.keys(resultObj).join(', ')}`);
@@ -98,7 +98,7 @@ export async function executePayment(
     throw new Error(`Unexpected response format from wallet_sendCalls: expected string with length > 66 or object with callsId, got ${typeof result}`);
   }
 
-  return { transactionHash, infoResponses };
+  return { transactionHash, payerInfoResponses };
 }
 
 /**

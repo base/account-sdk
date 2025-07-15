@@ -8,7 +8,7 @@ export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js'
 export { base, getPaymentStatus, pay } from './interface/payment/index.js';
 export type {
     InfoRequest,
-    InfoResponses,
+    PayerInfoResponses,
     PayerInfo,
     PaymentError,
     PaymentOptions,

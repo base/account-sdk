@@ -97,7 +97,7 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
               )}
             </div>
 
-            {result.success && result.infoResponses && (
+            {result.success && result.payerInfoResponses && (
               <div className={styles.userDataSection}>
                 <div className={styles.userDataHeader}>
                   <svg
@@ -113,12 +113,12 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                   <span>User Info</span>
                 </div>
                 <div className={styles.userDataBody}>
-                  {result.infoResponses.name && (
+                  {result.payerInfoResponses.name && (
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>Name</span>
                       <span className={styles.userDataValue}>
                         {(() => {
-                          const name = result.infoResponses.name as unknown as {
+                          const name = result.payerInfoResponses.name as unknown as {
                             firstName: string;
                             familyName: string;
                           };
@@ -127,27 +127,27 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                       </span>
                     </div>
                   )}
-                  {result.infoResponses.email && (
+                  {result.payerInfoResponses.email && (
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>Email</span>
-                      <span className={styles.userDataValue}>{result.infoResponses.email}</span>
+                      <span className={styles.userDataValue}>{result.payerInfoResponses.email}</span>
                     </div>
                   )}
-                  {result.infoResponses.phoneNumber && (
+                  {result.payerInfoResponses.phoneNumber && (
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>Phone</span>
                       <span className={styles.userDataValue}>
-                        {result.infoResponses.phoneNumber.number} (
-                        {result.infoResponses.phoneNumber.country})
+                        {result.payerInfoResponses.phoneNumber.number} (
+                        {result.payerInfoResponses.phoneNumber.country})
                       </span>
                     </div>
                   )}
-                  {result.infoResponses.physicalAddress && (
+                  {result.payerInfoResponses.physicalAddress && (
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>Address</span>
                       <span className={styles.userDataValue}>
                         {(() => {
-                          const addr = result.infoResponses.physicalAddress as unknown as {
+                          const addr = result.payerInfoResponses.physicalAddress as unknown as {
                             address1: string;
                             address2?: string;
                             city: string;
@@ -171,11 +171,11 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                       </span>
                     </div>
                   )}
-                  {result.infoResponses.onchainAddress && (
+                  {result.payerInfoResponses.onchainAddress && (
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>On-chain Address</span>
                       <span className={styles.userDataValue}>
-                        {result.infoResponses.onchainAddress}
+                        {result.payerInfoResponses.onchainAddress}
                       </span>
                     </div>
                   )}

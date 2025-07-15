@@ -114,11 +114,11 @@ The `callbackURL` specifies where the collected user information will be sent af
 #### PaymentResult
 
 Success:
-- `success: true`
-- `id: string` - Transaction ID (hash) of the payment
-- `amount: string` - The amount that was sent
-- `to: string` - The address that received the payment (resolved from ENS if applicable)
-- `infoResponses?: InfoResponses` - Responses from information requests (if any)
+- `success: true` - Indicates successful payment
+- `id: string` - Transaction hash
+- `amount: string` - Amount sent in USDC
+- `to: Address` - Recipient address (resolved from ENS if applicable)
+- `payerInfoResponses?: PayerInfoResponses` - Responses from information requests (if any)
 
 Error:
 - `success: false`
