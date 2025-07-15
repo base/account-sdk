@@ -1,4 +1,3 @@
-
 /**
  * Token configuration for supported payment tokens
  */
@@ -19,16 +18,6 @@ export const CHAIN_IDS = {
   base: 8453,
   baseSepolia: 84532,
 } as const;
-
-/**
- * Wallet RPC base URL
- */
-export const WALLET_RPC_URL = 'https://api.wallet.coinbase.com/rpc';
-
-/**
- * API version
- */
-export const VERSION = 'v2';
 
 /**
  * ERC20 transfer function ABI

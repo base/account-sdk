@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateRecipient, validateStringAmount } from './validation.js';
+import { validateStringAmount } from './validation.js';
 
 describe('validateStringAmount', () => {
   it('should validate valid amounts', () => {
@@ -18,31 +18,5 @@ describe('validateStringAmount', () => {
 
   it('should reject non-string amounts', () => {
     expect(() => validateStringAmount(10 as any, 2)).toThrow('Invalid amount: must be a string');
-  });
-});
-
-describe('validateRecipient', () => {
-  it('should validate valid Ethereum addresses', () => {
-    expect(() => validateRecipient('0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')).not.toThrow();
-    expect(() => validateRecipient('0xFe21034794A5a574B94fE4fDfD16e005F1C96e51')).not.toThrow();
-  });
-
-  it('should validate ENS names', () => {
-    expect(() => validateRecipient('vitalik.eth')).not.toThrow();
-    expect(() => validateRecipient('test.xyz')).not.toThrow();
-    expect(() => validateRecipient('name.base')).not.toThrow();
-    expect(() => validateRecipient('user.cb.id')).not.toThrow();
-    expect(() => validateRecipient('test.com')).not.toThrow();
-    expect(() => validateRecipient('example.org')).not.toThrow();
-    expect(() => validateRecipient('sub.domain.eth')).not.toThrow();
-  });
-
-  it('should reject invalid recipients', () => {
-    expect(() => validateRecipient('')).toThrow('Invalid recipient: address or ENS name is required');
-    expect(() => validateRecipient('invalid-address')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
-    expect(() => validateRecipient('0xinvalid')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
-    expect(() => validateRecipient('nodots')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
-    expect(() => validateRecipient('test.')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
-    expect(() => validateRecipient('.eth')).toThrow('Invalid recipient: must be a valid Ethereum address or ENS name');
   });
 });

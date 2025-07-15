@@ -19,9 +19,9 @@ describe('getPaymentStatus', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
     // Mock crypto.randomUUID
-    global.crypto = {
+    vi.stubGlobal('crypto', {
       randomUUID: vi.fn().mockReturnValue('mock-correlation-id'),
-    } as any;
+    });
   });
 
   it('should return completed status for successful payment', async () => {

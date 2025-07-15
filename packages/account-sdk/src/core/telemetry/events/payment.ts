@@ -17,6 +17,8 @@ export const logPaymentStarted = ({
       method: 'pay',
       correlationId,
       signerType: 'base-account',
+      amount,
+      testnet,
     },
     AnalyticsEventImportance.high
   );
@@ -40,8 +42,10 @@ export const logPaymentError = ({
       componentType: ComponentType.unknown,
       method: 'pay',
       correlationId,
-      errorMessage,
       signerType: 'base-account',
+      amount,
+      testnet,
+      errorMessage,
     },
     AnalyticsEventImportance.high
   );
@@ -59,55 +63,19 @@ export const logPaymentCompleted = ({
   logEvent(
     'payment.pay.completed',
     {
-      action: ActionType.process,
+      action: ActionType.success,
       componentType: ComponentType.unknown,
       method: 'pay',
       correlationId,
       signerType: 'base-account',
+      amount,
+      testnet,
     },
     AnalyticsEventImportance.high
   );
 };
 
-export const logENSResolutionStarted = ({
-  ensName,
-  correlationId,
-}: {
-  ensName: string;
-  correlationId: string | undefined;
-}) => {
-  logEvent(
-    'payment.ens_resolution.started',
-    {
-      action: ActionType.process,
-      componentType: ComponentType.unknown,
-      method: 'ens_resolution',
-      correlationId,
-      signerType: 'base-account',
-    },
-    AnalyticsEventImportance.low
-  );
-};
 
-export const logENSResolutionCompleted = ({
-  ensName,
-  correlationId,
-}: {
-  ensName: string;
-  correlationId: string | undefined;
-}) => {
-  logEvent(
-    'payment.ens_resolution.completed',
-    {
-      action: ActionType.process,
-      componentType: ComponentType.unknown,
-      method: 'ens_resolution',
-      correlationId,
-      signerType: 'base-account',
-    },
-    AnalyticsEventImportance.low
-  );
-};
 
 export const logPaymentStatusCheckStarted = ({
   paymentId,
@@ -126,6 +94,8 @@ export const logPaymentStatusCheckStarted = ({
       method: 'getPaymentStatus',
       correlationId,
       signerType: 'base-account',
+      paymentId,
+      testnet,
     },
     AnalyticsEventImportance.low
   );
@@ -150,6 +120,9 @@ export const logPaymentStatusCheckCompleted = ({
       method: 'getPaymentStatus',
       correlationId,
       signerType: 'base-account',
+      paymentId,
+      testnet,
+      status,
     },
     AnalyticsEventImportance.low
   );
@@ -175,6 +148,8 @@ export const logPaymentStatusCheckError = ({
       correlationId,
       errorMessage,
       signerType: 'base-account',
+      paymentId,
+      testnet,
     },
     AnalyticsEventImportance.low
   );
