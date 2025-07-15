@@ -97,7 +97,7 @@ The `callbackURL` specifies where the collected user information will be sent af
 #### PaymentOptions
 
 - `amount: string` - Amount of USDC to send as a string (e.g., "10.50")
-- `to: string` - Ethereum address or ENS name to send payment to
+- `to: string` - Ethereum address to send payment to
 - `testnet?: boolean` - Whether to use Base Sepolia testnet (default: false)
 - `payerInfo?: PayerInfo` - Optional payer information configuration for data callbacks
 
@@ -117,7 +117,7 @@ Success:
 - `success: true` - Indicates successful payment
 - `id: string` - Transaction hash
 - `amount: string` - Amount sent in USDC
-- `to: Address` - Recipient address (resolved from ENS if applicable)
+- `to: Address` - Recipient address
 - `payerInfoResponses?: PayerInfoResponses` - Responses from information requests (if any)
 
 Error:
