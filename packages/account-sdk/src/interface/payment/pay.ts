@@ -1,5 +1,5 @@
 import type { Address } from 'viem';
-import type { PaymentError, PaymentOptions, PaymentResult, PaymentSuccess } from './types.js';
+import type { PaymentOptions, PaymentResult } from './types.js';
 import { executePaymentWithSDK } from './utils/sdkManager.js';
 import { translatePaymentToSendCalls } from './utils/translatePayment.js';
 import { validateAddress, validateStringAmount } from './utils/validation.js';
@@ -43,15 +43,13 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
     const executionResult = await executePaymentWithSDK(requestParams, testnet);
 
     // Return success result
-    const successResult: PaymentSuccess = {
+    return {
       success: true,
       id: executionResult.transactionHash,
       amount: amount,
       to: to as Address,
       payerInfoResponses: executionResult.payerInfoResponses,
     };
-
-    return successResult;
   } catch (error) {
     // Extract error message
     let errorMessage = 'Unknown error occurred';
@@ -73,13 +71,11 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
     }
 
     // Return error result
-    const errorResult: PaymentError = {
+    return {
       success: false,
       error: errorMessage,
       amount: amount,
       to: to as Address,
     };
-
-    return errorResult;
   }
 }
