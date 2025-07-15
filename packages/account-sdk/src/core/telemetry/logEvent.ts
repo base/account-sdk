@@ -64,6 +64,10 @@ type CCAEventData = {
   dialogContext?: string;
   dialogAction?: string;
   enableAutoSubAccounts?: boolean;
+  // Payment-specific attributes
+  amount?: string;
+  testnet?: boolean;
+  status?: string;
 };
 
 type AnalyticsEventData = {
@@ -106,3 +110,4 @@ export function identify(event: CCAEventData) {
 
 export { ActionType, AnalyticsEventImportance, ComponentType };
 export type { AnalyticsEventData, CCAEventData, LogEvent };
+

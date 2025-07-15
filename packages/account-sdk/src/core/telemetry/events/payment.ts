@@ -63,7 +63,7 @@ export const logPaymentCompleted = ({
   logEvent(
     'payment.pay.completed',
     {
-      action: ActionType.success,
+      action: ActionType.process,
       componentType: ComponentType.unknown,
       method: 'pay',
       correlationId,
@@ -78,11 +78,9 @@ export const logPaymentCompleted = ({
 
 
 export const logPaymentStatusCheckStarted = ({
-  paymentId,
   testnet,
   correlationId,
 }: {
-  paymentId: string;
   testnet: boolean;
   correlationId: string | undefined;
 }) => {
@@ -94,7 +92,6 @@ export const logPaymentStatusCheckStarted = ({
       method: 'getPaymentStatus',
       correlationId,
       signerType: 'base-account',
-      paymentId,
       testnet,
     },
     AnalyticsEventImportance.low
@@ -102,12 +99,10 @@ export const logPaymentStatusCheckStarted = ({
 };
 
 export const logPaymentStatusCheckCompleted = ({
-  paymentId,
   testnet,
   status,
   correlationId,
 }: {
-  paymentId: string;
   testnet: boolean;
   status: string;
   correlationId: string | undefined;
@@ -120,7 +115,6 @@ export const logPaymentStatusCheckCompleted = ({
       method: 'getPaymentStatus',
       correlationId,
       signerType: 'base-account',
-      paymentId,
       testnet,
       status,
     },
@@ -129,12 +123,10 @@ export const logPaymentStatusCheckCompleted = ({
 };
 
 export const logPaymentStatusCheckError = ({
-  paymentId,
   testnet,
   correlationId,
   errorMessage,
 }: {
-  paymentId: string;
   testnet: boolean;
   correlationId: string | undefined;
   errorMessage: string;
@@ -148,7 +140,6 @@ export const logPaymentStatusCheckError = ({
       correlationId,
       errorMessage,
       signerType: 'base-account',
-      paymentId,
       testnet,
     },
     AnalyticsEventImportance.low

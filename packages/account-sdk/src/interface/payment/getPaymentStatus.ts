@@ -26,7 +26,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
   const correlationId = crypto.randomUUID();
   
   // Log status check started
-  logPaymentStatusCheckStarted({ paymentId: id, testnet, correlationId });
+  logPaymentStatusCheckStarted({ testnet, correlationId });
 
   try {
     // Get the bundler URL based on network
@@ -52,7 +52,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
     if (receipt.error) {
       console.error('[getPaymentStatus] RPC error:', receipt.error);
       const errorMessage = receipt.error.message || 'Network error';
-      logPaymentStatusCheckError({ paymentId: id, testnet, correlationId, errorMessage });
+      logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
       return {
         status: 'failed',
         id: id as Hex,
@@ -79,7 +79,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
       if (userOpResponse.result) {
         // UserOp exists but no receipt yet - it's pending
-        logPaymentStatusCheckCompleted({ paymentId: id, testnet, status: 'pending', correlationId });
+        logPaymentStatusCheckCompleted({ testnet, status: 'pending', correlationId });
         const result = {
           status: 'pending' as const,
           id: id as Hex,
@@ -90,7 +90,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       }
 
       // Not found at all
-      logPaymentStatusCheckCompleted({ paymentId: id, testnet, status: 'not_found', correlationId });
+      logPaymentStatusCheckCompleted({ testnet, status: 'not_found', correlationId });
       const result = {
         status: 'not_found' as const,
         id: id as Hex,
@@ -143,7 +143,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         }
       }
       
-      logPaymentStatusCheckCompleted({ paymentId: id, testnet, status: 'completed', correlationId });
+      logPaymentStatusCheckCompleted({ testnet, status: 'completed', correlationId });
       const result = {
         status: 'completed' as const,
         id: id as Hex,
@@ -167,7 +167,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         }
       }
       
-      logPaymentStatusCheckCompleted({ paymentId: id, testnet, status: 'failed', correlationId });
+      logPaymentStatusCheckCompleted({ testnet, status: 'failed', correlationId });
       const result = {
         status: 'failed' as const,
         id: id as Hex,
@@ -181,7 +181,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
     console.error('[getPaymentStatus] Error checking status:', error);
     
     const errorMessage = error instanceof Error ? error.message : 'Connection error';
-    logPaymentStatusCheckError({ paymentId: id, testnet, correlationId, errorMessage });
+    logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
     
     const result = {
       status: 'failed' as const,
