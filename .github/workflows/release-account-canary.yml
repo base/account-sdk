@@ -1,5 +1,4 @@
-name: Release
-
+name: Release Account (Canary)
 on:
   workflow_dispatch:
     inputs:
@@ -9,16 +8,17 @@ on:
         default: ""
 
 jobs:
-  release:
-    env:
-      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
-    name: Release
+  canary:
+    name: Release canary
     runs-on: ubuntu-latest
     environment: release
     permissions:
       contents: write
       pull-requests: write
       id-token: write
+    timeout-minutes: 5
+    env:
+      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,8 +29,8 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}
-
+        run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}-canary.$(date +'%Y%m%d%H%M%S')
+        
       # Build the package
       - name: Prebuild Packages
         run: yarn workspace @base-org/account prebuild
@@ -45,6 +45,7 @@ jobs:
       - name: Publish to npm
         run: |
           cd packages/account-sdk
-          npm publish --tag latest
+          npm publish --tag canary
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+ 
