@@ -1,4 +1,5 @@
-import { Box, Container, Grid, Heading } from '@chakra-ui/react';
+import { Box, Container, Grid, Heading, HStack, Link, Text } from '@chakra-ui/react';
+import NextLink from 'next/link';
 import React, { useEffect } from 'react';
 
 import { EventListenersCard } from '../components/EventListeners/EventListenersCard';
@@ -111,6 +112,14 @@ export default function Home() {
           />
         </>
       )}
+      <Box mt={6} p={4} borderWidth={1} borderRadius="lg" bg="blue.50">
+        <HStack spacing={4} align="center">
+          <Text color="gray.900">Want to see the UI in action?</Text>
+          <Link as={NextLink} href="/ui" color="blue.600" fontWeight="medium" _hover={{ color: "blue.800", textDecoration: "underline" }}>
+            See the UI components demo.
+          </Link>
+        </HStack>
+      </Box>
     </Container>
   );
 }
