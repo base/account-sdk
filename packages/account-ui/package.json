@@ -13,6 +13,9 @@
     "svelte",
     "web3"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "exports": {
     "./preact": {
