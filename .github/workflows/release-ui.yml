@@ -1,4 +1,4 @@
-name: Release Account (Stable)
+name: Release Account UI
 
 on:
   workflow_dispatch:
@@ -29,18 +29,17 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}
-
-      # Build the package
-      - name: Prebuild Packages
-        run: yarn workspace @base-org/account prebuild
+        run: yarn workspace @base-org/account-ui version ${{ env.PACKAGE_VERSION }}
 
       - name: Build Packages
-        run: yarn workspace @base-org/account build
+        run: yarn workspace @base-org/account-ui build
 
       # Publish to npm
-      - name: Set deployment token
-        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
+      - name: Set up npm auth
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm
         run: |
