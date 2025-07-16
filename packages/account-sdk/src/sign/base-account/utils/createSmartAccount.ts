@@ -4,10 +4,14 @@ import type * as WebAuthnP256 from 'ox/WebAuthnP256';
 import {
   Assign,
   BaseError,
+  Chain,
   type Client,
   type Hash,
   type Hex,
+  JsonRpcAccount,
+  LocalAccount,
   type Prettify,
+  Transport,
   type TypedDataDefinition,
   decodeFunctionData,
   encodeAbiParameters,
@@ -34,7 +38,7 @@ import { abi, factoryAbi, factoryAddress } from './constants.js';
 
 export type CreateSmartAccountParameters = {
   address: Address;
-  client: Client;
+  client: Client<Transport, Chain | undefined, JsonRpcAccount | LocalAccount | undefined>;
   factoryData: Hex | undefined;
   ownerIndex: number;
   owner: OwnerAccount;

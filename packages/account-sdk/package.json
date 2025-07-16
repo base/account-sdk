@@ -1,5 +1,5 @@
 {
-  "name": "@base-org/account-sdk",
+  "name": "@base-org/account",
   "version": "1.0.0",
   "description": "Base Account SDK",
   "keywords": [
@@ -51,7 +51,7 @@
     "idb-keyval": "6.2.1",
     "ox": "0.6.9",
     "preact": "10.24.2",
-    "viem": "^2.27.2",
+    "viem": "^2.31.7",
     "zustand": "5.0.3"
   },
   "devDependencies": {
@@ -71,7 +71,16 @@
     "tsc-alias": "^1.8.8",
     "tslib": "^2.6.0",
     "typescript": "^5.1.6",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "wagmi": "^2.15.6"
+  },
+  "peerDependencies": {
+    "wagmi": "*"
+  },
+  "peerDependenciesMeta": {
+    "wagmi": {
+      "optional": true
+    }
   },
   "size-limit": [
     {

@@ -19,7 +19,7 @@ import { Address } from ':core/type/index.js';
 import { config, store } from ':store/store.js';
 import { initDialog } from ':ui/Dialog/index.js';
 import { get } from ':util/get.js';
-import { waitForCallsStatus } from 'viem/experimental';
+import { waitForCallsStatus } from 'viem/actions';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 import { spendPermissionManagerAddress } from './utils/constants.js';
 

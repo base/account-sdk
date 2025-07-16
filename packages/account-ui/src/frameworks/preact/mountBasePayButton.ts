@@ -1,4 +1,4 @@
-import { injectFontStyle } from '@base-org/account-sdk/ui-assets';
+import { injectFontStyle } from '@base-org/account/ui-assets';
 import { render } from 'preact';
 import { BasePayButtonProps } from '../../types.js';
 import { BasePayButton } from './BasePayButton.js';

@@ -1,4 +1,4 @@
-// import latestPkgJson from '@base-org/account-sdk/package.json';
+// import latestPkgJson from '@base-org/account/package.json';
 
 export const SELECTED_SDK_KEY = 'selected_sdk_version';
 export const sdkVersions = ['HEAD'] as const;

@@ -1,4 +1,4 @@
-import { ProviderInterface } from '@base-org/account-sdk';
+import { ProviderInterface } from '@base-org/account';
 import { useToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
 

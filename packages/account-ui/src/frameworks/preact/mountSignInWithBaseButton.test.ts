@@ -1,4 +1,4 @@
-import * as injectFontModule from '@base-org/account-sdk/ui-assets';
+import * as injectFontModule from '@base-org/account/ui-assets';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   mountSignInWithBaseButton,
@@ -6,7 +6,7 @@ import {
 } from './mountSignInWithBaseButton.js';
 
 // Mock the ui-assets module with all required exports
-vi.mock('@base-org/account-sdk/ui-assets', () => ({
+vi.mock('@base-org/account/ui-assets', () => ({
   injectFontStyle: vi.fn(),
   WHITE: '#FFF',
   BLACK: '#000',

@@ -5,7 +5,7 @@ The payment interface provides a simple way to make USDC payments on Base networ
 ## Basic Usage
 
 ```typescript
-import { pay } from '@base-org/account-sdk';
+import { pay } from '@base-org/account';
 
 // Basic payment
 const payment = await pay({
@@ -55,7 +55,7 @@ switch (status.status) {
 You can request additional information from the user during payment using the `payerInfo` parameter:
 
 ```typescript
-import { pay } from '@base-org/account-sdk';
+import { pay } from '@base-org/account';
 
 const payment = await pay({
   amount: "10.50",

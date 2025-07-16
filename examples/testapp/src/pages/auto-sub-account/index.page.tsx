@@ -1,4 +1,4 @@
-import { getCryptoKeyAccount } from '@base-org/account-sdk';
+import { getCryptoKeyAccount } from '@base-org/account';
 import {
   Box,
   Button,
