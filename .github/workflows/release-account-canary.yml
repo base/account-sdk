@@ -11,7 +11,7 @@ jobs:
   canary:
     name: Release canary
     runs-on: ubuntu-latest
-    environment: release
+    environment: publish
     permissions:
       contents: write
       pull-requests: write

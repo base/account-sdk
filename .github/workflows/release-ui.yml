@@ -14,7 +14,7 @@ jobs:
       PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
     name: Release
     runs-on: ubuntu-latest
-    environment: release
+    environment: publish
     permissions:
       contents: write
       pull-requests: write
