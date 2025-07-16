@@ -43,8 +43,8 @@ describe('BasePayButton (Preact)', () => {
     const style = button?.getAttribute('style');
 
     expect(style).toContain('--button-bg-color: #FFF');
-    expect(style).toContain('--button-bg-color-hover: #F5F5F5');
-    expect(style).toContain('--button-bg-color-active: #EEEEEE');
+    expect(style).toContain('--button-bg-color-hover: #EEF0F3');
+    expect(style).toContain('--button-bg-color-active: #CED2DB');
   });
 
   it('applies light mode styles when colorScheme="light"', () => {
@@ -53,8 +53,8 @@ describe('BasePayButton (Preact)', () => {
     const style = button?.getAttribute('style');
 
     expect(style).toContain('--button-bg-color: #0000FF');
-    expect(style).toContain('--button-bg-color-hover: #3333FF');
-    expect(style).toContain('--button-bg-color-active: #1A1AFF');
+    expect(style).toContain('--button-bg-color-hover: #0A0AE6');
+    expect(style).toContain('--button-bg-color-active: #0000D0');
   });
 
   it('detects system dark mode when colorScheme="system"', () => {
@@ -75,8 +75,8 @@ describe('BasePayButton (Preact)', () => {
     const style = button?.getAttribute('style');
 
     expect(style).toContain('--button-bg-color: #FFF');
-    expect(style).toContain('--button-bg-color-hover: #F5F5F5');
-    expect(style).toContain('--button-bg-color-active: #EEEEEE');
+    expect(style).toContain('--button-bg-color-hover: #EEF0F3');
+    expect(style).toContain('--button-bg-color-active: #CED2DB');
   });
 
   it('detects system light mode when colorScheme="system"', () => {
@@ -97,8 +97,8 @@ describe('BasePayButton (Preact)', () => {
     const style = button?.getAttribute('style');
 
     expect(style).toContain('--button-bg-color: #0000FF');
-    expect(style).toContain('--button-bg-color-hover: #3333FF');
-    expect(style).toContain('--button-bg-color-active: #1A1AFF');
+    expect(style).toContain('--button-bg-color-hover: #0A0AE6');
+    expect(style).toContain('--button-bg-color-active: #0000D0');
   });
 
   it('has correct button CSS classes', () => {
@@ -199,7 +199,7 @@ describe('BasePayButton (Preact)', () => {
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
-    expect(style).toContain('--button-bg-color-hover: #3333FF');
+    expect(style).toContain('--button-bg-color-hover: #0A0AE6');
   });
 
   it('applies active styles correctly', () => {
@@ -207,7 +207,7 @@ describe('BasePayButton (Preact)', () => {
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
-    expect(style).toContain('--button-bg-color-active: #1A1AFF');
+    expect(style).toContain('--button-bg-color-active: #0000D0');
   });
 
   it('uses correct logo for light mode', () => {

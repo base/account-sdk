@@ -253,7 +253,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@base-org/account-ui@workspace:packages/account-ui":
+"@base-org/account-ui@workspace:*, @base-org/account-ui@workspace:packages/account-ui":
   version: 0.0.0-use.local
   resolution: "@base-org/account-ui@workspace:packages/account-ui"
   dependencies:
@@ -9766,6 +9766,7 @@ __metadata:
   resolution: "sdk-playground@workspace:examples/testapp"
   dependencies:
     "@base-org/account-sdk": "workspace:*"
+    "@base-org/account-ui": "workspace:*"
     "@chakra-ui/icons": "npm:^2.1.1"
     "@chakra-ui/react": "npm:^2.8.0"
     "@emotion/react": "npm:^11.11.1"
