@@ -1,20 +1,30 @@
 import {
   BLACK,
-  BUTTON_ACTIVE_BORDER_DARK,
-  BUTTON_ACTIVE_BORDER_LIGHT,
-  BUTTON_ACTIVE_DARK_SOLID,
-  BUTTON_ACTIVE_DARK_TRANSPARENT,
-  BUTTON_ACTIVE_LIGHT_SOLID,
-  BUTTON_ACTIVE_LIGHT_TRANSPARENT,
-  BUTTON_HOVER_BORDER_DARK,
-  BUTTON_HOVER_BORDER_LIGHT,
-  BUTTON_HOVER_DARK_SOLID,
-  BUTTON_HOVER_DARK_TRANSPARENT,
-  BUTTON_HOVER_LIGHT_SOLID,
-  BUTTON_HOVER_LIGHT_TRANSPARENT,
+  BUTTON_DARK_SOLID,
+  BUTTON_DARK_SOLID_ACTIVE,
+  BUTTON_DARK_SOLID_ACTIVE_BORDER,
+  BUTTON_DARK_SOLID_BORDER,
+  BUTTON_DARK_SOLID_HOVER,
+  BUTTON_DARK_SOLID_HOVER_BORDER,
+  BUTTON_DARK_TRANSPARENT,
+  BUTTON_DARK_TRANSPARENT_ACTIVE,
+  BUTTON_DARK_TRANSPARENT_ACTIVE_BORDER,
+  BUTTON_DARK_TRANSPARENT_BORDER,
+  BUTTON_DARK_TRANSPARENT_HOVER,
+  BUTTON_DARK_TRANSPARENT_HOVER_BORDER,
+  BUTTON_LIGHT_SOLID,
+  BUTTON_LIGHT_SOLID_ACTIVE,
+  BUTTON_LIGHT_SOLID_ACTIVE_BORDER,
+  BUTTON_LIGHT_SOLID_BORDER,
+  BUTTON_LIGHT_SOLID_HOVER,
+  BUTTON_LIGHT_SOLID_HOVER_BORDER,
+  BUTTON_LIGHT_TRANSPARENT,
+  BUTTON_LIGHT_TRANSPARENT_ACTIVE,
+  BUTTON_LIGHT_TRANSPARENT_ACTIVE_BORDER,
+  BUTTON_LIGHT_TRANSPARENT_BORDER,
+  BUTTON_LIGHT_TRANSPARENT_HOVER,
+  BUTTON_LIGHT_TRANSPARENT_HOVER_BORDER,
   BaseLogo,
-  DARK_MODE_BOARDER,
-  LIGHT_MODE_BOARDER,
   WHITE,
 } from '@base-org/account-sdk/ui-assets';
 import { SignInWithBaseButtonProps } from '../../types.js';
@@ -35,56 +45,52 @@ export const SignInWithBaseButton = ({
     colorScheme === 'dark' ||
     (colorScheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
+  // Updated color logic for solid variant (inverted)
   const foregroundColor =
-    variant === 'transparent' ? (isDarkMode ? WHITE : BLACK) : isDarkMode ? BLACK : WHITE;
+    variant === 'transparent' 
+      ? (isDarkMode ? WHITE : BLACK) 
+      : isDarkMode ? WHITE : BLACK; // Inverted: dark mode = white text, light mode = black text
 
-  const backgroundColor = variant === 'transparent' ? 'transparent' : isDarkMode ? WHITE : BLACK;
+  const backgroundColor = 
+    variant === 'transparent' 
+      ? isDarkMode ? BUTTON_DARK_TRANSPARENT : BUTTON_LIGHT_TRANSPARENT
+      : isDarkMode ? BUTTON_DARK_SOLID : BUTTON_LIGHT_SOLID; // Inverted: dark mode = black bg, light mode = white bg
 
   const borderColor =
     variant === 'transparent'
-      ? `1px solid ${isDarkMode ? DARK_MODE_BOARDER : LIGHT_MODE_BOARDER}`
-      : 'none';
+      ? `1px solid ${isDarkMode ? BUTTON_DARK_TRANSPARENT_BORDER : BUTTON_LIGHT_TRANSPARENT_BORDER}`
+      : `1px solid ${isDarkMode ? BUTTON_DARK_SOLID_BORDER : BUTTON_LIGHT_SOLID_BORDER}`;
 
   const logoFill =
-    variant === 'transparent' ? (isDarkMode ? 'white' : 'blue') : isDarkMode ? 'blue' : 'white';
+    variant === 'transparent' 
+      ? (isDarkMode ? 'white' : 'blue') 
+      : isDarkMode ? 'white' : 'blue'; // Inverted: dark mode = white logo, light mode = blue logo
 
   // Hover states
   const hoverBackgroundColor =
     variant === 'transparent'
-      ? isDarkMode
-        ? BUTTON_HOVER_DARK_TRANSPARENT
-        : BUTTON_HOVER_LIGHT_TRANSPARENT
-      : isDarkMode
-        ? BUTTON_HOVER_DARK_SOLID
-        : BUTTON_HOVER_LIGHT_SOLID;
+      ? isDarkMode ? BUTTON_DARK_TRANSPARENT_HOVER : BUTTON_LIGHT_TRANSPARENT_HOVER
+      : isDarkMode ? BUTTON_DARK_SOLID_HOVER : BUTTON_LIGHT_SOLID_HOVER;
 
   const hoverForegroundColor = variant === 'transparent' ? foregroundColor : foregroundColor;
 
   const hoverBorderColor =
     variant === 'transparent'
-      ? isDarkMode
-        ? BUTTON_HOVER_BORDER_DARK
-        : BUTTON_HOVER_BORDER_LIGHT
-      : 'none';
+      ? `1px solid ${isDarkMode ? BUTTON_DARK_TRANSPARENT_HOVER_BORDER : BUTTON_LIGHT_TRANSPARENT_HOVER_BORDER}`
+      : `1px solid ${isDarkMode ? BUTTON_DARK_SOLID_HOVER_BORDER : BUTTON_LIGHT_SOLID_HOVER_BORDER}`;
 
   // Active states
   const activeBackgroundColor =
     variant === 'transparent'
-      ? isDarkMode
-        ? BUTTON_ACTIVE_DARK_TRANSPARENT
-        : BUTTON_ACTIVE_LIGHT_TRANSPARENT
-      : isDarkMode
-        ? BUTTON_ACTIVE_DARK_SOLID
-        : BUTTON_ACTIVE_LIGHT_SOLID;
+      ? isDarkMode ? BUTTON_DARK_TRANSPARENT_ACTIVE : BUTTON_LIGHT_TRANSPARENT_ACTIVE
+      : isDarkMode ? BUTTON_DARK_SOLID_ACTIVE : BUTTON_LIGHT_SOLID_ACTIVE;
 
   const activeForegroundColor = variant === 'transparent' ? foregroundColor : foregroundColor;
 
   const activeBorderColor =
     variant === 'transparent'
-      ? isDarkMode
-        ? BUTTON_ACTIVE_BORDER_DARK
-        : BUTTON_ACTIVE_BORDER_LIGHT
-      : 'none';
+      ? `1px solid ${isDarkMode ? BUTTON_DARK_TRANSPARENT_ACTIVE_BORDER : BUTTON_LIGHT_TRANSPARENT_ACTIVE_BORDER}`
+      : `1px solid ${isDarkMode ? BUTTON_DARK_SOLID_ACTIVE_BORDER : BUTTON_LIGHT_SOLID_ACTIVE_BORDER}`;
 
   return (
     <div class="-base-ui-sign-in-css-reset">

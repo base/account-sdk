@@ -10,20 +10,48 @@ vi.mock('@base-org/account-sdk/ui-assets', () => ({
   injectFontStyle: vi.fn(),
   WHITE: '#FFF',
   BLACK: '#000',
-  LIGHT_MODE_BOARDER: '#1E2025',
-  DARK_MODE_BOARDER: '#282B31',
-  BUTTON_HOVER_LIGHT_SOLID: '#2A2A2A',
-  BUTTON_HOVER_DARK_SOLID: '#F5F5F5',
-  BUTTON_HOVER_LIGHT_TRANSPARENT: 'rgba(0, 0, 0, 0.02)',
-  BUTTON_HOVER_DARK_TRANSPARENT: 'rgba(255, 255, 255, 0.05)',
-  BUTTON_ACTIVE_LIGHT_SOLID: '#3A3A3A',
-  BUTTON_ACTIVE_DARK_SOLID: '#EEEEEE',
-  BUTTON_ACTIVE_LIGHT_TRANSPARENT: 'rgba(0, 0, 0, 0.04)',
-  BUTTON_ACTIVE_DARK_TRANSPARENT: 'rgba(255, 255, 255, 0.08)',
-  BUTTON_HOVER_BORDER_LIGHT: '#1A1A1A',
-  BUTTON_HOVER_BORDER_DARK: '#FFFFFF',
-  BUTTON_ACTIVE_BORDER_LIGHT: '#2A2A2A',
-  BUTTON_ACTIVE_BORDER_DARK: '#FFFFFF',
+  
+  // SOLID buttons (12 variables) - Sign In with Base
+  BUTTON_LIGHT_SOLID: '#FFFFFF',
+  BUTTON_LIGHT_SOLID_BORDER: '#EEF0F3',
+  BUTTON_LIGHT_SOLID_HOVER: '#F7F8F9',
+  BUTTON_LIGHT_SOLID_HOVER_BORDER: '#EEF0F3',
+  BUTTON_LIGHT_SOLID_ACTIVE: '#EEF0F3',
+  BUTTON_LIGHT_SOLID_ACTIVE_BORDER: '#EEF0F3',
+  
+  BUTTON_DARK_SOLID: '#000000',
+  BUTTON_DARK_SOLID_BORDER: 'transparent',
+  BUTTON_DARK_SOLID_HOVER: 'transparent',
+  BUTTON_DARK_SOLID_HOVER_BORDER: 'transparent',
+  BUTTON_DARK_SOLID_ACTIVE: '#EEEEEE',
+  BUTTON_DARK_SOLID_ACTIVE_BORDER: 'transparent',
+  
+  // TRANSPARENT buttons (12 variables) - Sign In with Base
+  BUTTON_LIGHT_TRANSPARENT: 'transparent',
+  BUTTON_LIGHT_TRANSPARENT_BORDER: '#89909E',
+  BUTTON_LIGHT_TRANSPARENT_HOVER: '#464B55',
+  BUTTON_LIGHT_TRANSPARENT_HOVER_BORDER: '#1A1A1A',
+  BUTTON_LIGHT_TRANSPARENT_ACTIVE: 'rgba(0, 0, 0, 0.04)',
+  BUTTON_LIGHT_TRANSPARENT_ACTIVE_BORDER: '#2A2A2A',
+  
+  BUTTON_DARK_TRANSPARENT: 'transparent',
+  BUTTON_DARK_TRANSPARENT_BORDER: '#FFFFFF',
+  BUTTON_DARK_TRANSPARENT_HOVER: 'rgba(255, 255, 255, 0.05)',
+  BUTTON_DARK_TRANSPARENT_HOVER_BORDER: '#FFFFFF',
+  BUTTON_DARK_TRANSPARENT_ACTIVE: 'rgba(255, 255, 255, 0.08)',
+  BUTTON_DARK_TRANSPARENT_ACTIVE_BORDER: '#FFFFFF',
+  
+  // BASE PAY buttons (8 variables) - Base Pay only
+  BASEPAY_LIGHT: '#0000FF',
+  BASEPAY_LIGHT_HOVER: '#3333FF',
+  BASEPAY_LIGHT_ACTIVE: '#1A1AFF',
+  BASEPAY_LIGHT_BORDER: 'none',
+  
+  BASEPAY_DARK: '#FFFFFF',
+  BASEPAY_DARK_HOVER: '#F5F5F5',
+  BASEPAY_DARK_ACTIVE: '#EEEEEE',
+  BASEPAY_DARK_BORDER: 'none',
+  
   BaseLogo: ({ fill }: { fill: string }) => `<svg fill="${fill}">Mock Logo</svg>`,
 }));
 
@@ -100,7 +128,7 @@ describe('mountSignInWithBaseButton', () => {
     const buttonStyle = button?.getAttribute('style');
     expect(buttonStyle).toContain('--button-bg-color: transparent');
     expect(buttonStyle).toContain('--button-text-color: #FFF');
-    expect(buttonStyle).toContain('--button-border: 1px solid #282B31');
+    expect(buttonStyle).toContain('--button-border: 1px solid #FFFFFF');
   });
 
   it('handles click events on mounted component', () => {
@@ -126,8 +154,8 @@ describe('mountSignInWithBaseButton', () => {
 
     // Default is system theme, and our mock returns light mode
     const buttonStyle = button?.getAttribute('style');
-    expect(buttonStyle).toContain('--button-bg-color: #000');
-    expect(buttonStyle).toContain('--button-text-color: #FFF');
+    expect(buttonStyle).toContain('--button-bg-color: #FFFFFF');
+    expect(buttonStyle).toContain('--button-text-color: #000');
   });
 
   it('mounts with light mode styles', () => {
@@ -139,8 +167,8 @@ describe('mountSignInWithBaseButton', () => {
 
     const button = container.querySelector('button');
     const buttonStyle = button?.getAttribute('style');
-    expect(buttonStyle).toContain('--button-bg-color: #000');
-    expect(buttonStyle).toContain('--button-text-color: #FFF');
+    expect(buttonStyle).toContain('--button-bg-color: #FFFFFF');
+    expect(buttonStyle).toContain('--button-text-color: #000');
   });
 
   it('mounts with dark mode styles', () => {
@@ -152,8 +180,8 @@ describe('mountSignInWithBaseButton', () => {
 
     const button = container.querySelector('button');
     const buttonStyle = button?.getAttribute('style');
-    expect(buttonStyle).toContain('--button-bg-color: #FFF');
-    expect(buttonStyle).toContain('--button-text-color: #000');
+    expect(buttonStyle).toContain('--button-bg-color: #000000');
+    expect(buttonStyle).toContain('--button-text-color: #FFF');
   });
 
   it('mounts with transparent variant', () => {
@@ -168,7 +196,7 @@ describe('mountSignInWithBaseButton', () => {
     const buttonStyle = button?.getAttribute('style');
 
     expect(buttonStyle).toContain('--button-bg-color: transparent');
-    expect(buttonStyle).toContain('--button-border: 1px solid #1E2025');
+    expect(buttonStyle).toContain('--button-border: 1px solid #89909E');
   });
 
   it('mounts with left alignment', () => {

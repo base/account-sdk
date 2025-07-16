@@ -50,7 +50,7 @@ describe('SignInWithBaseButton (Preact)', () => {
     const style = button?.getAttribute('style');
 
     expect(style).toContain('--button-bg-color: transparent');
-    expect(style).toContain('--button-border: 1px solid #1E2025');
+    expect(style).toContain('--button-border: 1px solid #89909E');
   });
 
   it('applies dark mode transparent style when variant="transparent" and colorScheme="dark"', () => {
@@ -59,7 +59,7 @@ describe('SignInWithBaseButton (Preact)', () => {
     const style = button?.getAttribute('style');
 
     expect(style).toContain('--button-bg-color: transparent');
-    expect(style).toContain('--button-border: 1px solid #282B31');
+    expect(style).toContain('--button-border: 1px solid #FFFFFF');
   });
 
   it('applies dark mode styles when colorScheme="dark"', () => {
@@ -67,8 +67,8 @@ describe('SignInWithBaseButton (Preact)', () => {
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
-    expect(style).toContain('--button-bg-color: #FFF');
-    expect(style).toContain('--button-text-color: #000');
+    expect(style).toContain('--button-bg-color: #000000');
+    expect(style).toContain('--button-text-color: #FFF');
   });
 
   it('applies light mode styles when colorScheme="light"', () => {
@@ -76,8 +76,8 @@ describe('SignInWithBaseButton (Preact)', () => {
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
-    expect(style).toContain('--button-bg-color: #000');
-    expect(style).toContain('--button-text-color: #FFF');
+    expect(style).toContain('--button-bg-color: #FFFFFF');
+    expect(style).toContain('--button-text-color: #000');
   });
 
   it('detects system dark mode when colorScheme="system"', () => {
@@ -97,8 +97,8 @@ describe('SignInWithBaseButton (Preact)', () => {
     const button = container.querySelector('button');
     const style = button?.getAttribute('style');
 
-    expect(style).toContain('--button-bg-color: #FFF');
-    expect(style).toContain('--button-text-color: #000');
+    expect(style).toContain('--button-bg-color: #000000');
+    expect(style).toContain('--button-text-color: #FFF');
   });
 
   it('has correct button CSS classes', () => {
@@ -133,14 +133,14 @@ describe('SignInWithBaseButton (Preact)', () => {
     const { container } = render(<SignInWithBaseButton colorScheme="dark" />);
     const path = container.querySelector('path');
 
-    expect(path).toHaveAttribute('fill', '#0000FF');
+    expect(path).toHaveAttribute('fill', '#FFF');
   });
 
   it('renders BaseLogo with white fill in light mode solid variant', () => {
     const { container } = render(<SignInWithBaseButton colorScheme="light" />);
     const path = container.querySelector('path');
 
-    expect(path).toHaveAttribute('fill', '#FFF');
+    expect(path).toHaveAttribute('fill', '#0000FF');
   });
 
   it('renders BaseLogo with blue fill in transparent light mode', () => {
@@ -174,7 +174,7 @@ describe('SignInWithBaseButton (Preact)', () => {
 
     expect(style).toContain('--button-bg-color: transparent');
     expect(style).toContain('--button-text-color: #FFF');
-    expect(style).toContain('--button-border: 1px solid #282B31');
+    expect(style).toContain('--button-border: 1px solid #FFFFFF');
   });
 
   it('combines transparent and light mode styles correctly', () => {
@@ -186,6 +186,6 @@ describe('SignInWithBaseButton (Preact)', () => {
 
     expect(style).toContain('--button-bg-color: transparent');
     expect(style).toContain('--button-text-color: #000');
-    expect(style).toContain('--button-border: 1px solid #1E2025');
+    expect(style).toContain('--button-border: 1px solid #89909E');
   });
 });

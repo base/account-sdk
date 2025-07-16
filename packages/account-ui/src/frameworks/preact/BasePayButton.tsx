@@ -1,10 +1,12 @@
 import {
-  BRAND_BLUE,
-  BUTTON_ACTIVE_DARK_SOLID,
-  BUTTON_HOVER_DARK_SOLID,
+  BASEPAY_DARK,
+  BASEPAY_DARK_ACTIVE,
+  BASEPAY_DARK_HOVER,
+  BASEPAY_LIGHT,
+  BASEPAY_LIGHT_ACTIVE,
+  BASEPAY_LIGHT_HOVER,
   BasePayLogoColored,
   BasePayLogoWhite,
-  WHITE,
 } from '@base-org/account-sdk/ui-assets';
 import { clsx } from 'clsx';
 import { BasePayButtonProps } from '../../types.js';
@@ -15,13 +17,13 @@ export const BasePayButton = ({ colorScheme = 'system', onClick }: BasePayButton
     colorScheme === 'dark' ||
     (colorScheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-  const backgroundColor = isDarkMode ? WHITE : BRAND_BLUE;
+  const backgroundColor = isDarkMode ? BASEPAY_DARK : BASEPAY_LIGHT;
 
   // Hover states
-  const hoverBackgroundColor = isDarkMode ? BUTTON_HOVER_DARK_SOLID : '#3333FF';
+  const hoverBackgroundColor = isDarkMode ? BASEPAY_DARK_HOVER : BASEPAY_LIGHT_HOVER;
 
   // Active states
-  const activeBackgroundColor = isDarkMode ? BUTTON_ACTIVE_DARK_SOLID : '#1A1AFF';
+  const activeBackgroundColor = isDarkMode ? BASEPAY_DARK_ACTIVE : BASEPAY_LIGHT_ACTIVE;
 
   return (
     <div class="-base-ui-pay-css-reset">
