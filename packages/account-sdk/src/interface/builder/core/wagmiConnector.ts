@@ -1,4 +1,4 @@
-import type { ProviderInterface, createBaseAccountSDK } from '@base-org/account-sdk';
+import type { ProviderInterface } from ':core/provider/interface.js';
 import { ChainNotConfiguredError, type Connector, createConnector } from '@wagmi/core';
 import type { Mutable, Omit } from '@wagmi/core/internal';
 import {
@@ -11,6 +11,7 @@ import {
   getAddress,
   numberToHex,
 } from 'viem';
+import type { createBaseAccountSDK } from './createBaseAccountSDK.js';
 
 export type BaseAccountSDKParameters = Mutable<
   Omit<
@@ -133,7 +134,7 @@ export function baseAccountConnector(parameters: BaseAccountSDKParameters) {
           };
         })();
 
-        const { createBaseAccountSDK } = await import('@base-org/account-sdk');
+        const { createBaseAccountSDK } = await import('@base-org/account');
         const sdk = createBaseAccountSDK({
           ...parameters,
           appChainIds: config.chains.map((x) => x.id),
