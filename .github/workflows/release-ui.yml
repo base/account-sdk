@@ -32,7 +32,7 @@ jobs:
         run: yarn workspace @base-org/account-ui version ${{ env.PACKAGE_VERSION }}
 
       - name: Build Packages
-        run: yarn workspace @base-org/account-ui build
+        run: yarn build:packages
 
       # Publish to npm
       - name: Set up npm auth
@@ -44,6 +44,6 @@ jobs:
       - name: Publish to npm
         run: |
           cd packages/account-sdk
-          npm publish --tag latest
+          npm publish --tag latest --access public
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

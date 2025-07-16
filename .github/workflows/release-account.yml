@@ -48,6 +48,6 @@ jobs:
       - name: Publish to npm
         run: |
           cd packages/account-sdk
-          npm publish --tag latest
+          npm publish --tag latest --access public
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

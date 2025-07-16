@@ -48,7 +48,7 @@ jobs:
       - name: Publish to npm
         run: |
           cd packages/account-sdk
-          npm publish --tag canary
+          npm publish --tag canary --access public
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
  
