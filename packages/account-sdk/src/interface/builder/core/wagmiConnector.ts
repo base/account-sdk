@@ -19,7 +19,7 @@ export type BaseAccountSDKParameters = Mutable<
   >
 >;
 
-export function baseAccountSDK(parameters: BaseAccountSDKParameters) {
+export function baseAccountConnector(parameters: BaseAccountSDKParameters) {
   type Provider = ProviderInterface;
   type Properties = {
     connect(parameters?: {
