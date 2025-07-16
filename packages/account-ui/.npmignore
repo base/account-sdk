@@ -1,0 +1,19 @@
+# Source files (exclude from published package)
+src/**
+
+# Development files
+node_modules/
+__tests__/**
+*.test.*
+coverage/**
+
+# Config files
+tsconfig.json
+tsconfig.base.json
+tsconfig.build.json
+vitest.setup.ts
+vitest.config.ts
+compile-assets.cjs
+
+# Keep dist folder (needed for published package)
+!dist/**
