@@ -1,6 +1,6 @@
 # Base Account SDK
 
-[![npm](https://img.shields.io/npm/v/@base-org/account-sdk.svg)](https://www.npmjs.com/package/@base-org/account-sdk)
+[![npm](https://img.shields.io/npm/v/@base-org/account.svg)](https://www.npmjs.com/package/@base-org/account)
 
 ## Base Account SDK allows dapps to connect to Base Account
 
@@ -13,30 +13,30 @@
 
    ```shell
      # yarn
-     yarn info @base-org/account-sdk versions
+     yarn info @base-org/account versions
 
      # npm
-     npm view @base-org/account-sdk versions
+     npm view @base-org/account versions
    ```
 
 2. Install latest version:
 
    ```shell
    # yarn
-   yarn add @base-org/account-sdk
+   yarn add @base-org/account
 
    # npm
-   npm install @base-org/account-sdk
+   npm install @base-org/account
    ```
 
 3. Check installed version:
 
    ```shell
    # yarn
-   yarn list @base-org/account-sdk
+   yarn list @base-org/account
 
    # npm
-   npm list @base-org/account-sdk
+   npm list @base-org/account
    ```
 
 ### Upgrading Base Account SDK
@@ -45,20 +45,20 @@
 
    ```shell
    # yarn
-   yarn outdated @base-org/account-sdk
+   yarn outdated @base-org/account
 
    # npm
-   npm outdated @base-org/account-sdk
+   npm outdated @base-org/account
    ```
 
 2. Update to latest:
 
    ```shell
    # yarn
-   yarn upgrade @base-org/account-sdk --latest
+   yarn upgrade @base-org/account --latest
 
    # npm
-   npm update @base-org/account-sdk
+   npm update @base-org/account
    ```
 
 ### Basic Usage

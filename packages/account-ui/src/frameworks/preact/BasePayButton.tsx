@@ -5,7 +5,7 @@ import {
   BasePayLogoColored,
   BasePayLogoWhite,
   WHITE,
-} from '@base-org/account-sdk/ui-assets';
+} from '@base-org/account/ui-assets';
 import { clsx } from 'clsx';
 import { BasePayButtonProps } from '../../types.js';
 import css from './BasePayButton-css.js';

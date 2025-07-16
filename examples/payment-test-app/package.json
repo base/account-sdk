@@ -11,7 +11,7 @@
     "check": "biome check ."
   },
   "dependencies": {
-    "@base-org/account-sdk": "workspace:*",
+    "@base-org/account": "workspace:*",
     "@coinbase/onchainkit": "^0.35.5",
     "next": "14.2.3",
     "react": "^18",

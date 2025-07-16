@@ -1,5 +1,5 @@
-import type { PaymentResult, PaymentStatus } from '@base-org/account-sdk';
-import { getPaymentStatus, pay } from '@base-org/account-sdk';
+import type { PaymentResult, PaymentStatus } from '@base-org/account';
+import { getPaymentStatus, pay } from '@base-org/account';
 import { useCallback, useState } from 'react';
 import { transformImports } from '../utils/codeTransform';
 import { useConsoleCapture } from './useConsoleCapture';

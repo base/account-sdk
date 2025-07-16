@@ -1,4 +1,4 @@
-import { createBaseAccountSDK as createBaseAccountSDKHEAD } from '@base-org/account-sdk';
+import { createBaseAccountSDK as createBaseAccountSDKHEAD } from '@base-org/account';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -11,7 +11,7 @@ import {
   useEIP1193Provider,
 } from './EIP1193ProviderContextProvider';
 
-vi.mock('@base-org/account-sdk', () => ({
+vi.mock('@base-org/account', () => ({
   createBaseAccountSDK: vi.fn(() => ({
     getProvider: vi.fn(() => mockProvider),
   })),

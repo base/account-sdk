@@ -47,7 +47,7 @@
     "lint": "biome lint ."
   },
   "devDependencies": {
-    "@base-org/account-sdk": "workspace:*",
+    "@base-org/account": "workspace:*",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/preact": "^3.2.4",
     "@testing-library/react": "^16.3.0",
@@ -64,7 +64,7 @@
     "vue": "^3.5.17"
   },
   "peerDependencies": {
-    "@base-org/account-sdk": "*",
+    "@base-org/account": "*",
     "clsx": "*",
     "preact": "*",
     "react": "*",

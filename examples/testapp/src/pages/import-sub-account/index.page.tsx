@@ -1,4 +1,4 @@
-import { createBaseAccountSDK } from '@base-org/account-sdk';
+import { createBaseAccountSDK } from '@base-org/account';
 import { Container, Text, VStack } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { Client, Hex, createPublicClient, http } from 'viem';

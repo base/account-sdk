@@ -1,4 +1,4 @@
-import type { PaymentResult, PaymentStatus } from '@base-org/account-sdk';
+import type { PaymentResult, PaymentStatus } from '@base-org/account';
 import styles from './Output.module.css';
 
 interface OutputProps {
@@ -130,7 +130,9 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                   {result.payerInfoResponses.email && (
                     <div className={styles.userDataRow}>
                       <span className={styles.userDataLabel}>Email</span>
-                      <span className={styles.userDataValue}>{result.payerInfoResponses.email}</span>
+                      <span className={styles.userDataValue}>
+                        {result.payerInfoResponses.email}
+                      </span>
                     </div>
                   )}
                   {result.payerInfoResponses.phoneNumber && (
@@ -186,12 +188,17 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
         )}
 
         {result && isPaymentStatus(result) && (
-          <div className={`${styles.resultCard} ${
-            result.status === 'completed' ? styles.success : 
-            result.status === 'pending' ? styles.pending :
-            result.status === 'failed' ? styles.error :
-            styles.notFound
-          }`}>
+          <div
+            className={`${styles.resultCard} ${
+              result.status === 'completed'
+                ? styles.success
+                : result.status === 'pending'
+                  ? styles.pending
+                  : result.status === 'failed'
+                    ? styles.error
+                    : styles.notFound
+            }`}
+          >
             <div className={styles.resultHeader}>
               {result.status === 'completed' && (
                 <>

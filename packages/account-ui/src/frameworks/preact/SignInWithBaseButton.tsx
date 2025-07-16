@@ -16,7 +16,7 @@ import {
   DARK_MODE_BOARDER,
   LIGHT_MODE_BOARDER,
   WHITE,
-} from '@base-org/account-sdk/ui-assets';
+} from '@base-org/account/ui-assets';
 import { SignInWithBaseButtonProps } from '../../types.js';
 import css from './SignInWithBaseButton-css.js';
 
