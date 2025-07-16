@@ -7,6 +7,19 @@ import { createSubAccountSigner } from './createSubAccountSigner.js';
 
 vi.mock('viem/actions', () => ({
   getCode: vi.fn().mockResolvedValue(undefined),
+  waitForCallsStatus: vi.fn().mockResolvedValue({
+    status: 'success',
+    receipts: [
+      {
+        logs: [],
+        status: 1,
+        blockHash: '0x',
+        blockNumber: 1,
+        gasUsed: 130161,
+        transactionHash: '0x',
+      },
+    ],
+  }),
 }));
 
 vi.mock(':store/store.js', () => ({

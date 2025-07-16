@@ -52,7 +52,16 @@ describe('handleInsufficientBalanceError', () => {
       } as any,
       globalAccountAddress,
       subAccountAddress,
-      globalAccountRequest: vi.fn(),
+      globalAccountRequest: vi.fn().mockImplementation(async (request) => {
+        if (request.method === 'wallet_sendCalls') {
+          return '0x1234ca11';
+        } 
+        
+        if (request.method === 'eth_signTypedData_v4') {
+          return '0xsignature';
+        }
+        throw new Error('Unknown request');
+      }),
       subAccountRequest: vi.fn(),
       request: {
         method: 'eth_sendTransaction',
