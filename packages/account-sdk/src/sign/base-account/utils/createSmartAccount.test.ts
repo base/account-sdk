@@ -156,7 +156,7 @@ describe('decodeCalls', () => {
     await expect(() => account.decodeCalls?.(data)).rejects.toThrowErrorMatchingInlineSnapshot(`
       [BaseError: unable to decode calls for "entryPoint"
 
-Version: viem@2.27.2]
+Version: viem@2.31.7]
     `);
   });
 });
@@ -477,7 +477,7 @@ describe('function: sign', () => {
     ).rejects.toMatchInlineSnapshot(`
       [BaseError: \`owner\` does not support raw sign.
 
-Version: viem@2.27.2]
+Version: viem@2.31.7]
     `);
   });
 });
