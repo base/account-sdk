@@ -25,7 +25,6 @@ export function baseAccountConnector(parameters: BaseAccountSDKParameters) {
   type Properties = {
     connect(parameters?: {
       chainId?: number | undefined;
-      instantOnboarding?: boolean | undefined;
       isReconnecting?: boolean | undefined;
     }): Promise<{
       accounts: readonly Address[];
@@ -44,16 +43,13 @@ export function baseAccountConnector(parameters: BaseAccountSDKParameters) {
     name: 'Base Account',
     rdns: 'app.base.account',
     type: 'baseAccount',
-    async connect({ chainId, ...rest } = {}) {
+    async connect({ chainId } = {}) {
       try {
         const provider = await this.getProvider();
         const accounts = (
           (await provider.request({
             method: 'eth_requestAccounts',
-            params:
-              'instantOnboarding' in rest && rest.instantOnboarding
-                ? [{ onboarding: 'instant' }]
-                : [],
+            params: [],
           })) as string[]
         ).map((x) => getAddress(x));
 
