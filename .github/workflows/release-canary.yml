@@ -1,4 +1,4 @@
-name: Release (Canary)
+name: Release Account (Canary)
 on:
   workflow_dispatch:
     inputs:
