@@ -112,6 +112,9 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
             const result = await fetchRPCRequest(args, CB_WALLET_RPC_URL);
             return result as T;
           }
+          case 'eth_accounts': {
+            return [] as T;
+          }
           case 'net_version': {
             const result = 1 as T; // default value
             return result;
