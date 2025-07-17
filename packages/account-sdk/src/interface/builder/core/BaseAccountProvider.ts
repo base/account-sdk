@@ -134,7 +134,9 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
       return result as T;
     } catch (error) {
       const { code } = error as { code?: number };
-      if (code === standardErrorCodes.provider.unauthorized) this.disconnect();
+      if (code === standardErrorCodes.provider.unauthorized) {
+        await this.disconnect();
+      }
       return Promise.reject(serializeError(error));
     }
   }
