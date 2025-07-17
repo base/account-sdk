@@ -103,7 +103,7 @@ export function baseAccountConnector(parameters: BaseAccountSDKParameters) {
         disconnect = undefined;
       }
 
-      provider.disconnect();
+      await provider.disconnect();
     },
     async getAccounts() {
       const provider = await this.getProvider();
