@@ -24,6 +24,14 @@ vi.mock(':ui/Dialog/index.js', () => ({
 
 const mockOrigin = 'http://localhost';
 
+vi.mock(':store/store.js', () => ({
+  store: {
+    config: {
+      get: vi.fn().mockReturnValue({ metadata: { appName: 'Test App' } }),
+    },
+  },
+}));
+
 describe('PopupManager', () => {
   beforeAll(() => {
     global.window = Object.create(window);
@@ -87,7 +95,7 @@ describe('PopupManager', () => {
     await waitFor(() => {
       expect(mockPresentItem).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: expect.stringContaining('wants to continue in Base Account'),
+          title: 'Test App wants to continue in Base Account',
           message: 'This action requires your permission to open a new window.',
           actionItems: expect.arrayContaining([
             expect.objectContaining({
@@ -117,7 +125,7 @@ describe('PopupManager', () => {
     await waitFor(() => {
       expect(mockPresentItem).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: expect.stringContaining('wants to continue in Base Account'),
+          title: 'Test App wants to continue in Base Account',
           message: 'This action requires your permission to open a new window.',
           actionItems: expect.arrayContaining([
             expect.objectContaining({

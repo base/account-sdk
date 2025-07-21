@@ -70,8 +70,8 @@ function openPopupWithDialog(tryOpenPopup: () => Window | null) {
   return new Promise<Window>((resolve, reject) => {
     logDialogShown({ dialogContext: 'popup_blocked' });
     dialog.presentItem({
-      title: POPUP_BLOCKED_TITLE,
-      message: POPUP_BLOCKED_MESSAGE.replace('{app}', dappName),
+      title: POPUP_BLOCKED_TITLE.replace('{app}', dappName),
+      message: POPUP_BLOCKED_MESSAGE,
       onClose: () => {
         logDialogActionClicked({
           dialogContext: 'popup_blocked',
