@@ -1,6 +1,7 @@
 
 .-base-acc-sdk-css-reset {
   -webkit-font-smoothing: antialiased;
+  pointer-events: auto !important; // important to override the parent pointer-events: none;
   
   .-base-acc-sdk-dialog-container {
     position: fixed;
