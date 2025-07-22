@@ -16,7 +16,7 @@ import {
 } from ':core/telemetry/events/dialog.js';
 import { Address } from ':core/type/index.js';
 import { t } from ':i18n/index.js';
-import { store } from ':store/store.js';
+import { config, store } from ':store/store.js';
 import { initDialog } from ':ui/Dialog/index.js';
 import { get } from ':util/get.js';
 import { waitForCallsStatus } from 'viem/actions';
@@ -392,7 +392,7 @@ export function createWalletSendCallsRequest({
   chainId: number;
   capabilities?: Record<string, unknown>;
 }) {
-  const paymasterUrls = store.config.get().paymasterUrls;
+  const paymasterUrls = config.get().paymasterUrls;
 
   let request: { method: 'wallet_sendCalls'; params: WalletSendCallsParameters } = {
     method: 'wallet_sendCalls',
