@@ -13,7 +13,7 @@
   "dependencies": {
     "@base-org/account": "workspace:*",
     "@coinbase/onchainkit": "^0.35.5",
-    "next": "14.2.3",
+    "next": "14.2.30",
     "react": "^18",
     "react-dom": "^18",
     "viem": "^2.21.54",
