@@ -88,16 +88,13 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
       return provider;
     },
     subAccount: {
-      async create(account: AddSubAccountAccount): Promise<SubAccount> {
-        const state = store.getState();
-        assertPresence(state.subAccount?.address, new Error('subaccount already exists'));
-
+      async create(accountParam: AddSubAccountAccount): Promise<SubAccount> {
         return (await sdk.getProvider()?.request({
           method: 'wallet_addSubAccount',
           params: [
             {
               version: '1',
-              account,
+              account: accountParam,
             },
           ],
         })) as SubAccount;
