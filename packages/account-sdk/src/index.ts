@@ -2,7 +2,6 @@
 export type { AppMetadata, Preference, ProviderInterface } from ':core/provider/interface.js';
 
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
-export { baseAccountConnector } from './interface/builder/core/wagmiConnector.js';
 
 export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js';
 
