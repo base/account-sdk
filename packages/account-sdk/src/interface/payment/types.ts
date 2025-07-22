@@ -65,6 +65,7 @@ export interface PaymentOptions {
   testnet?: boolean;
   /** Optional payer information configuration for data callbacks */
   payerInfo?: PayerInfo;
+  walletUrl?: string;
 }
 
 /**

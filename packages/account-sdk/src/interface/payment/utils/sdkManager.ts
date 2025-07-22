@@ -39,9 +39,10 @@ export interface PaymentExecutionResult {
 /**
  * Creates an ephemeral SDK instance configured for payments
  * @param chainId - The chain ID to use
+ * @param walletUrl - Optional wallet URL to use
  * @returns The configured SDK instance
  */
-export function createEphemeralSDK(chainId: number) {
+export function createEphemeralSDK(chainId: number, walletUrl?: string) {
   const appName = typeof window !== 'undefined' ? window.location.origin : 'Base Pay SDK';
   
   const sdk = createBaseAccountSDK({
@@ -49,6 +50,7 @@ export function createEphemeralSDK(chainId: number) {
     appChainIds: [chainId],
     preference: {
       telemetry: true,
+      walletUrl,
     },
   });
 
@@ -105,13 +107,14 @@ export async function executePayment(
  * Manages the complete payment flow with SDK lifecycle
  * @param requestParams - The wallet_sendCalls request parameters
  * @param testnet - Whether to use testnet
+ * @param walletUrl - Optional wallet URL to use
  * @returns The payment execution result
  */
-export async function executePaymentWithSDK(requestParams: WalletSendCallsRequestParams, testnet: boolean): Promise<PaymentExecutionResult> {
+export async function executePaymentWithSDK(requestParams: WalletSendCallsRequestParams, testnet: boolean, walletUrl?: string): Promise<PaymentExecutionResult> {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
 
-  const sdk = createEphemeralSDK(chainId);
+  const sdk = createEphemeralSDK(chainId, walletUrl);
   const provider = sdk.getProvider();
 
   try {

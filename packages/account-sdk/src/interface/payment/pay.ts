@@ -31,7 +31,7 @@ import { validateAddress, validateStringAmount } from './utils/validation.js';
  * ```
  */
 export async function pay(options: PaymentOptions): Promise<PaymentResult> {
-  const { amount, to, testnet = false, payerInfo } = options;
+  const { amount, to, testnet = false, payerInfo, walletUrl } = options;
   
   // Generate correlation ID for this payment request
   const correlationId = crypto.randomUUID();
@@ -47,7 +47,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
     const requestParams = translatePaymentToSendCalls(to, amount, testnet, payerInfo);
 
     // Step 3: Execute payment with SDK
-    const executionResult = await executePaymentWithSDK(requestParams, testnet);
+    const executionResult = await executePaymentWithSDK(requestParams, testnet, walletUrl);
 
     // Log payment completed
     logPaymentCompleted({ amount, testnet, correlationId });

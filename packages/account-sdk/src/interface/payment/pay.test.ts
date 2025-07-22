@@ -185,7 +185,8 @@ describe('pay', () => {
           paymasterService: expect.any(Object),
         }),
       }),
-      true
+      true,
+      undefined
     );
   });
 
