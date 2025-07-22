@@ -29,6 +29,11 @@
       "types": "./dist/ui/assets/index.d.ts",
       "import": "./dist/ui/assets/index.js",
       "require": "./dist/ui/assets/index.js"
+    },
+    "./i18n": {
+      "types": "./dist/core/i18n/index.d.ts",
+      "import": "./dist/core/i18n/index.js",
+      "require": "./dist/core/i18n/index.js"
     }
   },
   "sideEffects": false,

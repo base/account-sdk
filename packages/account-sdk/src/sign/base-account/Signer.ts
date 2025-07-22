@@ -746,8 +746,12 @@ export class Signer {
     });
 
     try {
-      const result = await subAccountRequest(request);
-      return result;
+      throw {
+        code: -32090,
+        data: {
+          type: 'INSUFFICIENT_FUNDS',
+        },
+      };
     } catch (error) {
       let errorObject: unknown;
 

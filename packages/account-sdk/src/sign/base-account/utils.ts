@@ -1,9 +1,8 @@
 import { PublicClient, WalletSendCallsParameters, hexToBigInt, isAddress } from 'viem';
 
-import { InsufficientBalanceErrorData } from ':core/error/errors.js';
+import { InsufficientBalanceErrorData, standardErrors } from ':core/error/errors.js';
 import { Hex, keccak256, numberToHex, slice, toHex } from 'viem';
 
-import { standardErrors } from ':core/error/errors.js';
 import { Attribution, RequestArguments } from ':core/provider/interface.js';
 import {
   EmptyFetchPermissionsRequest,
@@ -16,7 +15,8 @@ import {
   logDialogShown,
 } from ':core/telemetry/events/dialog.js';
 import { Address } from ':core/type/index.js';
-import { config, store } from ':store/store.js';
+import { t } from ':i18n/index.js';
+import { store } from ':store/store.js';
 import { initDialog } from ':ui/Dialog/index.js';
 import { get } from ':util/get.js';
 import { waitForCallsStatus } from 'viem/actions';
@@ -392,7 +392,7 @@ export function createWalletSendCallsRequest({
   chainId: number;
   capabilities?: Record<string, unknown>;
 }) {
-  const paymasterUrls = config.get().paymasterUrls;
+  const paymasterUrls = store.config.get().paymasterUrls;
 
   let request: { method: 'wallet_sendCalls'; params: WalletSendCallsParameters } = {
     method: 'wallet_sendCalls',
@@ -423,16 +423,15 @@ export async function presentSubAccountFundingDialog() {
     (resolve) => {
       logDialogShown({ dialogContext: 'sub_account_insufficient_balance' });
       dialog.presentItem({
-        title: 'Insufficient spend permission',
-        message:
-          "Your spend permission's remaining balance cannot cover this transaction. Please choose how to proceed:",
+        title: t('dialog.insufficient_balance.title'),
+        message: t('dialog.insufficient_balance.message'),
         onClose: () => {
           logDialogDismissed({ dialogContext: 'sub_account_insufficient_balance' });
           dialog.clear();
         },
         actionItems: [
           {
-            text: 'Edit spend permission',
+            text: t('button.edit_spend_permission'),
             variant: 'primary',
             onClick: () => {
               logDialogActionClicked({
@@ -444,7 +443,7 @@ export async function presentSubAccountFundingDialog() {
             },
           },
           {
-            text: 'Use primary account',
+            text: t('button.use_primary_account'),
             variant: 'secondary',
             onClick: () => {
               logDialogActionClicked({
