@@ -37,10 +37,10 @@ for ENTRY in "${PKG_ENTRIES[@]}"; do
   FORK_NAME="$FORK_SCOPE/$SUFFIX"
 
   echo "────────────────────────────────────────"
-  echo "Processing $DIR ($ORIG_NAME → $FORK_NAME)"
+  echo "Processing $DIR (${ORIG_NAME} -> ${FORK_NAME})"
 
   # Build using the workspace scripts (before renaming)
-  echo "📦 Building $ORIG_NAME…"
+  echo "📦 Building ${ORIG_NAME}…"
   yarn build
 
   # Temporarily rewrite name (and version if provided)
