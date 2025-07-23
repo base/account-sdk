@@ -30,7 +30,7 @@ describe('pay', () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
-      version: '1.0',
+      version: '2.0.0',
       chainId: 8453,
       calls: [
         {
@@ -120,7 +120,7 @@ describe('pay', () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
-      version: '1.0',
+      version: '2.0.0',
       chainId: 8453,
       calls: [],
       capabilities: {},
@@ -146,7 +146,7 @@ describe('pay', () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
-      version: '1.0',
+      version: '2.0.0',
       chainId: 84532,
       calls: [
         {
@@ -214,7 +214,7 @@ describe('pay', () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
-      version: '1.0',
+      version: '2.0.0',
       chainId: 8453,
       calls: [
         {

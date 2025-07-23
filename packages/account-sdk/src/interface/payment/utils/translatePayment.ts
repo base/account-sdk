@@ -54,7 +54,7 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payer
 
   // Build the request parameters
   const requestParams = {
-    version: '1.0',
+    version: '2.0.0',
     chainId: chainId,
     calls: [call],
     capabilities,

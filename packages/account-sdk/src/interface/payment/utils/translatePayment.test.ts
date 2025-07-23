@@ -24,7 +24,7 @@ describe('translatePayment', () => {
       const result = buildSendCallsRequest(transferData, testnet);
 
       expect(result).toEqual({
-        version: '1.0',
+        version: '2.0.0',
         chainId: CHAIN_IDS.base,
         calls: [
           {
@@ -51,7 +51,7 @@ describe('translatePayment', () => {
       const result = buildSendCallsRequest(transferData, testnet, payerInfo);
 
       expect(result).toEqual({
-        version: '1.0',
+        version: '2.0.0',
         chainId: CHAIN_IDS.base,
         calls: [
           {
@@ -79,7 +79,7 @@ describe('translatePayment', () => {
       const result = buildSendCallsRequest(transferData, testnet);
 
       expect(result).toEqual({
-        version: '1.0',
+        version: '2.0.0',
         chainId: CHAIN_IDS.baseSepolia,
         calls: [
           {
@@ -103,7 +103,7 @@ describe('translatePayment', () => {
       const result = buildSendCallsRequest(transferData, testnet, payerInfo);
 
       expect(result).toEqual({
-        version: '1.0',
+        version: '2.0.0',
         chainId: CHAIN_IDS.base,
         calls: [
           {
@@ -150,7 +150,7 @@ describe('translatePayment', () => {
       const result = translatePaymentToSendCalls(recipient, amount, testnet);
 
       expect(result).toEqual({
-        version: '1.0',
+        version: '2.0.0',
         chainId: CHAIN_IDS.base,
         calls: [
           {
@@ -179,7 +179,7 @@ describe('translatePayment', () => {
       const result = translatePaymentToSendCalls(recipient, amount, testnet, payerInfo);
 
       expect(result).toEqual({
-        version: '1.0',
+        version: '2.0.0',
         chainId: CHAIN_IDS.base,
         calls: [
           {
@@ -215,7 +215,7 @@ describe('translatePayment', () => {
       const result = translatePaymentToSendCalls(recipient, amount, testnet, payerInfo);
 
       expect(result).toEqual({
-        version: '1.0',
+        version: '2.0.0',
         chainId: CHAIN_IDS.baseSepolia,
         calls: [
           {

@@ -21,7 +21,7 @@ type WalletSendCallsRequestParams = {
  * Type for wallet_sendCalls response when it returns an object
  */
 type WalletSendCallsObjectResponse = {
-  callsId: string;
+  id: string; // sendCalls 2.0.0+ field
   capabilities?: {
     dataCallback?: PayerInfoResponses;
     [key: string]: unknown;
@@ -82,12 +82,12 @@ export async function executePayment(
     // Standard response format - just a transaction hash
     transactionHash = result.slice(0, 66) as Hex;
   } else if (typeof result === 'object' && result !== null) {
-    // Object response format - contains callsId and capabilities with dataCallback
+    // Object response format - contains id and capabilities with dataCallback (sendCalls 2.0.0+)
     const resultObj = result as WalletSendCallsObjectResponse;
     
-    // Extract transaction hash from callsId
-    if (typeof resultObj.callsId === 'string' && resultObj.callsId.length >= 66) {
-      transactionHash = resultObj.callsId.slice(0, 66) as Hex;
+    // Extract transaction hash from id field
+    if (typeof resultObj.id === 'string' && resultObj.id.length >= 66) {
+      transactionHash = resultObj.id.slice(0, 66) as Hex;
       
       // Extract info responses from capabilities.dataCallback
       if (resultObj.capabilities?.dataCallback) {
@@ -97,7 +97,7 @@ export async function executePayment(
       throw new Error(`Could not extract transaction hash from object response. Available fields: ${Object.keys(resultObj).join(', ')}`);
     }
   } else {
-    throw new Error(`Unexpected response format from wallet_sendCalls: expected string with length > 66 or object with callsId, got ${typeof result}`);
+    throw new Error(`Unexpected response format from wallet_sendCalls: expected string with length > 66 or object with id, got ${typeof result}`);
   }
 
   return { transactionHash, payerInfoResponses };
