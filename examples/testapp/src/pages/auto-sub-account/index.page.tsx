@@ -2,6 +2,7 @@ import { getCryptoKeyAccount } from '@base-org/account';
 import {
   Box,
   Button,
+  Checkbox,
   Container,
   FormControl,
   FormLabel,
@@ -35,6 +36,10 @@ export default function AutoSubAccount() {
   const [lastResult, setLastResult] = useState<string>();
   const [sendingAmounts, setSendingAmounts] = useState<Record<number, boolean>>({});
   const [signerType, setSignerType] = useState<SignerType>('cryptokey');
+  const [walletConnectCapabilities, setWalletConnectCapabilities] = useState({
+    siwe: false,
+    addSubAccount: false,
+  });
   const { subAccountsConfig, setSubAccountsConfig, config, setConfig } = useConfig();
   const { provider } = useEIP1193Provider();
 
@@ -175,28 +180,46 @@ export default function AutoSubAccount() {
     }
   };
 
-  const handleWalletConnectWithSubAccount = async () => {
+  const handleWalletConnect = async () => {
     if (!provider) return;
 
-    const { account: ownerAccount } = await subAccountsConfig.toOwnerAccount();
+    let params: any[] = [];
 
-    const params = [
-      {
-        capabilities: {
-          addSubAccount: {
-            account: {
-              type: 'create',
-              keys: [
-                {
-                  type: ownerAccount.address ? 'address' : 'webauthn-p256',
-                  publicKey: ownerAccount.address ?? ownerAccount.publicKey,
-                },
-              ],
-            },
+    // Build params based on selected capabilities
+    if (walletConnectCapabilities.siwe || walletConnectCapabilities.addSubAccount) {
+      const capabilities: any = {};
+
+      // Add SIWE capability if selected
+      if (walletConnectCapabilities.siwe) {
+        capabilities.signInWithEthereum = {
+          chainId: 84532,
+          nonce: Math.random().toString(36).substring(2, 15),
+        };
+      }
+
+      // Add addSubAccount capability if selected
+      if (walletConnectCapabilities.addSubAccount) {
+        const { account: ownerAccount } = await subAccountsConfig.toOwnerAccount();
+        capabilities.addSubAccount = {
+          account: {
+            type: 'create',
+            keys: [
+              {
+                type: ownerAccount.address ? 'address' : 'webauthn-p256',
+                publicKey: ownerAccount.address ?? ownerAccount.publicKey,
+              },
+            ],
           },
+        };
+      }
+
+      params = [
+        {
+          ...(walletConnectCapabilities.siwe && { version: '1' }),
+          capabilities,
         },
-      },
-    ];
+      ];
+    }
 
     try {
       const response = (await provider.request({
@@ -204,27 +227,18 @@ export default function AutoSubAccount() {
         params,
       })) as WalletConnectResponse;
       setLastResult(JSON.stringify(response, null, 2));
-      const accounts = await provider.request({
-        method: 'eth_requestAccounts',
-        params: [],
-      });
-      setAccounts(accounts as string[]);
-    } catch (e) {
-      console.error('error', e);
-      setLastResult(JSON.stringify(e, null, 2));
-    }
-  };
-
-  const handleWalletConnect = async () => {
-    if (!provider) return;
-
-    try {
-      const response = (await provider.request({
-        method: 'wallet_connect',
-        params: [],
-      })) as WalletConnectResponse;
-      setLastResult(JSON.stringify(response, null, 2));
-      setAccounts(response.accounts.map((acc) => acc.address));
+      
+      // Update accounts based on response
+      if (response.accounts && response.accounts.length > 0) {
+        setAccounts(response.accounts.map((acc) => acc.address));
+      } else {
+        // Fallback to eth_requestAccounts if no accounts in response
+        const accounts = await provider.request({
+          method: 'eth_requestAccounts',
+          params: [],
+        });
+        setAccounts(accounts as string[]);
+      }
     } catch (e) {
       console.error('error', e);
       setLastResult(JSON.stringify(e, null, 2));
@@ -350,6 +364,27 @@ export default function AutoSubAccount() {
             />
           </FormControl>
         )}
+        <FormControl>
+          <FormLabel>wallet_connect Capabilities</FormLabel>
+          <Stack spacing={2}>
+            <Checkbox
+              isChecked={walletConnectCapabilities.siwe}
+              onChange={(e) =>
+                setWalletConnectCapabilities((prev) => ({ ...prev, siwe: e.target.checked }))
+              }
+            >
+              SIWE (Sign In With Ethereum)
+            </Checkbox>
+            <Checkbox
+              isChecked={walletConnectCapabilities.addSubAccount}
+              onChange={(e) =>
+                setWalletConnectCapabilities((prev) => ({ ...prev, addSubAccount: e.target.checked }))
+              }
+            >
+              Add Sub Account
+            </Checkbox>
+          </Stack>
+        </FormControl>
         {accounts.length > 0 && (
           <Box w="full">
             <Box fontSize="lg" fontWeight="bold" mb={2}>
@@ -441,22 +476,6 @@ export default function AutoSubAccount() {
           }}
         >
           eth_signTypedData_v4
-        </Button>
-        <Button
-          w="full"
-          onClick={handleWalletConnectWithSubAccount}
-          bg="blue.500"
-          color="white"
-          border="1px solid"
-          borderColor="blue.500"
-          _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
-          _dark={{
-            bg: 'blue.600',
-            borderColor: 'blue.600',
-            _hover: { bg: 'blue.700', borderColor: 'blue.700' },
-          }}
-        >
-          wallet_connect (addSubAccount)
         </Button>
         <Button
           w="full"
