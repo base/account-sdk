@@ -92,7 +92,10 @@ export function logEvent(
     const pref = store.config.get().preference as { consoleErrors?: boolean } | undefined;
     if (pref?.consoleErrors && (event.action === ActionType.error || event.errorMessage)) {
       // eslint-disable-next-line no-console
-      console.error(`[BaseAccountSDK] ${name}:`, { ...event, importance });
+      console.error(`[BaseAccountSDK] ${name}:`, {
+        method: event.method,
+        errorMessage: event.errorMessage,
+       });
     }
   } catch (_) {
     // Best-effort console logging – do not break original flow.
