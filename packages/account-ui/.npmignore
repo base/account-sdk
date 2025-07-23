@@ -1,4 +1,3 @@
-# Source files (exclude from published package)
 !src/**
 
 # Development files
