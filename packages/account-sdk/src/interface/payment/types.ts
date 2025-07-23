@@ -66,6 +66,8 @@ export interface PaymentOptions {
   /** Optional payer information configuration for data callbacks */
   payerInfo?: PayerInfo;
   walletUrl?: string;
+  /** Whether to enable telemetry logging. Defaults to true */
+  telemetry?: boolean;
 }
 
 /**
@@ -109,6 +111,8 @@ export interface PaymentStatusOptions {
   id: string;
   /** Whether to check on testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
+  /** Whether to enable telemetry logging. Defaults to true */
+  telemetry?: boolean;
 }
 
 /**

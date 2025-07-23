@@ -294,4 +294,136 @@ describe('getPaymentStatus', () => {
     expect(status.amount).toBe('10');
     expect(status.recipient).toBe('0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336');
   });
+
+  describe('telemetry', () => {
+    it('should not log telemetry when telemetry is disabled', async () => {
+      const mockReceipt = {
+        jsonrpc: '2.0',
+        id: 1,
+        result: {
+          success: true,
+          receipt: {
+            transactionHash: '0xabc123',
+            logs: [],
+          },
+          sender: '0xsender',
+        },
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        json: async () => mockReceipt,
+      } as Response);
+
+      await getPaymentStatus({
+        id: '0x123456',
+        testnet: false,
+        telemetry: false,
+      });
+
+      // Verify telemetry events were NOT called
+      const { logPaymentStatusCheckStarted, logPaymentStatusCheckCompleted, logPaymentStatusCheckError } = await import(':core/telemetry/events/payment.js');
+      expect(logPaymentStatusCheckStarted).not.toHaveBeenCalled();
+      expect(logPaymentStatusCheckCompleted).not.toHaveBeenCalled();
+      expect(logPaymentStatusCheckError).not.toHaveBeenCalled();
+    });
+
+    it('should log telemetry by default when telemetry is not specified', async () => {
+      const mockReceipt = {
+        jsonrpc: '2.0',
+        id: 1,
+        result: {
+          success: true,
+          receipt: {
+            transactionHash: '0xabc123',
+            logs: [],
+          },
+          sender: '0xsender',
+        },
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        json: async () => mockReceipt,
+      } as Response);
+
+      await getPaymentStatus({
+        id: '0x123456',
+        testnet: false,
+        // telemetry not specified - should default to true
+      });
+
+      // Verify telemetry events WERE called
+      const { logPaymentStatusCheckStarted, logPaymentStatusCheckCompleted } = await import(':core/telemetry/events/payment.js');
+      expect(logPaymentStatusCheckStarted).toHaveBeenCalledWith({
+        testnet: false,
+        correlationId: 'mock-correlation-id',
+      });
+      expect(logPaymentStatusCheckCompleted).toHaveBeenCalledWith({
+        testnet: false,
+        status: 'completed',
+        correlationId: 'mock-correlation-id',
+      });
+    });
+
+    it('should not log telemetry error when telemetry is disabled and status check fails', async () => {
+      const mockError = {
+        jsonrpc: '2.0',
+        id: 1,
+        error: {
+          code: -32000,
+          message: 'Network error',
+        },
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        json: async () => mockError,
+      } as Response);
+
+      await getPaymentStatus({
+        id: '0x123456',
+        testnet: false,
+        telemetry: false,
+      });
+
+      // Verify telemetry error was NOT called
+      const { logPaymentStatusCheckError } = await import(':core/telemetry/events/payment.js');
+      expect(logPaymentStatusCheckError).not.toHaveBeenCalled();
+    });
+
+    it('should log different telemetry events based on status', async () => {
+      // Test pending status
+      const mockNoReceipt = {
+        jsonrpc: '2.0',
+        id: 1,
+        result: null,
+      };
+      const mockUserOp = {
+        jsonrpc: '2.0',
+        id: 2,
+        result: {
+          sender: '0xsender',
+        },
+      };
+
+      vi.mocked(fetch)
+        .mockResolvedValueOnce({
+          json: async () => mockNoReceipt,
+        } as Response)
+        .mockResolvedValueOnce({
+          json: async () => mockUserOp,
+        } as Response);
+
+      await getPaymentStatus({
+        id: '0x123456',
+        testnet: true,
+        telemetry: true,
+      });
+
+      const { logPaymentStatusCheckCompleted } = await import(':core/telemetry/events/payment.js');
+      expect(logPaymentStatusCheckCompleted).toHaveBeenCalledWith({
+        testnet: true,
+        status: 'pending',
+        correlationId: 'mock-correlation-id',
+      });
+    });
+  });
 }); 

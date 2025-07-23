@@ -90,6 +90,27 @@ By default, all information requests are required (`optional: false`). You can m
 
 The `callbackURL` specifies where the collected user information will be sent after the payment is completed.
 
+## Telemetry
+
+Both `pay()` and `getPaymentStatus()` functions log telemetry events by default to help with monitoring and debugging. You can opt out of telemetry by setting the `telemetry` parameter to `false`:
+
+```typescript
+// Disable telemetry for payment
+const payment = await pay({
+  amount: "10.50",
+  to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
+  testnet: true,
+  telemetry: false  // Opt out of telemetry
+});
+
+// Disable telemetry for status check
+const status = await getPaymentStatus({
+  id: payment.id,
+  testnet: true,
+  telemetry: false  // Opt out of telemetry
+});
+```
+
 ## API Reference
 
 ### `pay(options: PaymentOptions): Promise<PaymentResult>`
@@ -100,6 +121,7 @@ The `callbackURL` specifies where the collected user information will be sent af
 - `to: string` - Ethereum address to send payment to
 - `testnet?: boolean` - Whether to use Base Sepolia testnet (default: false)
 - `payerInfo?: PayerInfo` - Optional payer information configuration for data callbacks
+- `telemetry?: boolean` - Whether to enable telemetry logging (default: true)
 
 #### PayerInfo
 
@@ -132,6 +154,7 @@ Error:
 
 - `id: string` - Transaction ID (userOp hash) to check status for
 - `testnet?: boolean` - Whether to check on testnet (Base Sepolia). Defaults to false (mainnet)
+- `telemetry?: boolean` - Whether to enable telemetry logging (default: true)
 
 #### PaymentStatus
 

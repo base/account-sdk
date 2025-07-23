@@ -142,6 +142,124 @@ describe('pay', () => {
     });
   });
 
+  it('should not log telemetry when telemetry is disabled', async () => {
+    // Setup mocks
+    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
+    vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+      version: '2.0.0',
+      chainId: 8453,
+      calls: [
+        {
+          to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          data: '0xabcdef',
+          value: '0x0',
+        },
+      ],
+      capabilities: {},
+    });
+    vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+      transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    });
+
+    const payment = await pay({
+      amount: '10.50',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      testnet: false,
+      telemetry: false,
+    });
+
+    expect(payment.success).toBe(true);
+
+    // Verify telemetry events were NOT called
+    const { logPaymentStarted, logPaymentCompleted, logPaymentError } = await import(':core/telemetry/events/payment.js');
+    expect(logPaymentStarted).not.toHaveBeenCalled();
+    expect(logPaymentCompleted).not.toHaveBeenCalled();
+    expect(logPaymentError).not.toHaveBeenCalled();
+  });
+
+  it('should log telemetry by default when telemetry is not specified', async () => {
+    // Setup mocks
+    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
+    vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+      version: '2.0.0',
+      chainId: 8453,
+      calls: [
+        {
+          to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          data: '0xabcdef',
+          value: '0x0',
+        },
+      ],
+      capabilities: {},
+    });
+    vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+      transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    });
+
+    const payment = await pay({
+      amount: '10.50',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      testnet: false,
+      // telemetry not specified - should default to true
+    });
+
+    expect(payment.success).toBe(true);
+
+    // Verify telemetry events WERE called
+    const { logPaymentStarted, logPaymentCompleted } = await import(':core/telemetry/events/payment.js');
+    expect(logPaymentStarted).toHaveBeenCalled();
+    expect(logPaymentCompleted).toHaveBeenCalled();
+  });
+
+  it('should not log telemetry error when telemetry is disabled and payment fails', async () => {
+    vi.mocked(validation.validateStringAmount).mockImplementation(() => {
+      throw new Error('Invalid amount: must be greater than 0');
+    });
+
+    const payment = await pay({
+      amount: '0',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      telemetry: false,
+    });
+
+    expect(payment.success).toBe(false);
+
+    // Verify telemetry error was NOT called
+    const { logPaymentError } = await import(':core/telemetry/events/payment.js');
+    expect(logPaymentError).not.toHaveBeenCalled();
+  });
+
+  it('should pass telemetry preference to SDK manager', async () => {
+    // Setup mocks
+    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
+    vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+      version: '2.0.0',
+      chainId: 8453,
+      calls: [],
+      capabilities: {},
+    });
+    vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+      transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    });
+
+    await pay({
+      amount: '10.50',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      telemetry: false,
+    });
+
+    // Verify SDK manager was called with telemetry = false
+    expect(sdkManager.executePaymentWithSDK).toHaveBeenCalledWith(
+      expect.any(Object),
+      false,
+      undefined,
+      false
+    );
+  });
+
   it('should support testnet with paymaster', async () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(validation.validateAddress).mockReturnValue(undefined);
@@ -186,7 +304,8 @@ describe('pay', () => {
         }),
       }),
       true,
-      undefined
+      undefined,
+      true
     );
   });
 
