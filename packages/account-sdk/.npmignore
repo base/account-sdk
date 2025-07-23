@@ -1,5 +1,3 @@
-# Source
-src/**
 ./node_modules/
 __tests__/**
 
