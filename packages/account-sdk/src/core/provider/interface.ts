@@ -83,6 +83,13 @@ export type Preference = {
    * @default true
    */
   telemetry?: boolean;
+  /**
+   * When true, telemetry events flagged as errors will also be printed to the browser console using
+   * `console.error`. This helps surface SDK issues during development where analytics events might
+   * otherwise be swallowed.
+   * @default false
+   */
+  consoleErrors?: boolean;
 } & Record<string, unknown>;
 
 export type SubAccountOptions = {
