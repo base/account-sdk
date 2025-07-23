@@ -1,5 +1,3 @@
-!src/**
-
 # Development files
 node_modules/
 __tests__/**
