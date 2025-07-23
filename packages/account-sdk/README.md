@@ -124,3 +124,34 @@
   1. Fork this repo and clone it
   1. From the root dir run `yarn install`
   1. From the root dir run `yarn dev`
+
+## Script Tag Usage
+
+The Base Pay payment interface can be used directly in HTML pages via a script tag, without any build tools:
+
+```html
+<!-- Via unpkg (recommended) -->
+<script src="https://unpkg.com/@base-org/account/dist/base-pay.min.js"></script>
+
+<!-- Via jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/@base-org/account/dist/base-pay.min.js"></script>
+```
+
+Once loaded, the SDK is available as `window.base`:
+
+```javascript
+// Make a payment
+const result = await base.pay({
+  amount: "10.50",
+  to: "0xYourAddress...",
+  testnet: true
+});
+
+// Check payment status
+const status = await base.getPaymentStatus({
+  id: result.id,
+  testnet: true
+});
+```
+
+For more details, see [SCRIPT_TAG_USAGE.md](./SCRIPT_TAG_USAGE.md) and the [example](./examples/payment-script-tag.html).
