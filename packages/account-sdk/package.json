@@ -35,8 +35,7 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE",
-    "SCRIPT_TAG_USAGE.md"
+    "LICENSE"
   ],
   "sideEffects": false,
   "repository": "https://github.com/base/account-sdk.git",

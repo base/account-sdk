@@ -141,17 +141,15 @@ Once loaded, the SDK is available as `window.base`:
 
 ```javascript
 // Make a payment
-const result = await base.pay({
+const result = await window.base.pay({
   amount: "10.50",
   to: "0xYourAddress...",
   testnet: true
 });
 
 // Check payment status
-const status = await base.getPaymentStatus({
+const status = await window.base.getPaymentStatus({
   id: result.id,
   testnet: true
 });
 ```
-
-For more details, see [SCRIPT_TAG_USAGE.md](./SCRIPT_TAG_USAGE.md) and the [example](./examples/payment-script-tag.html).
