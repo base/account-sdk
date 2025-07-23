@@ -6,17 +6,14 @@ set -euo pipefail
 FORK_SCOPE="@lukasrosario"
 
 # Map workspace directory → publish name suffix
-#   key   : relative path to the package folder
-#   value : suffix to append after the scope (i.e. "$FORK_SCOPE/$value")
-#
-# Feel free to extend this map for more packages.
-declare -A PKGS=(
-  ["packages/account-sdk"]="account"
-  ["packages/account-ui"]="account-ui"
+# Each item is "dir:suffix"
+PKG_ENTRIES=(
+  "packages/account-sdk:account"
+  "packages/account-ui:account-ui"
 )
 # ---------------------------------------------------------------------------
 
-VERSION="${1:-}"
+VERSION="${1-}" # Accept empty string without triggering set -u
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 
 echo "Root dir: $ROOT_DIR"
@@ -30,12 +27,14 @@ git_status_clean() {
 
 git_status_clean
 
-for DIR in "${!PKGS[@]}"; do
+for ENTRY in "${PKG_ENTRIES[@]}"; do
+  DIR="${ENTRY%%:*}"
+  SUFFIX="${ENTRY#*:}"
   FULL_PATH="$ROOT_DIR/$DIR"
   pushd "$FULL_PATH" >/dev/null
 
   ORIG_NAME=$(node -e "console.log(require('./package.json').name)")
-  FORK_NAME="$FORK_SCOPE/${PKGS[$DIR]}"
+  FORK_NAME="$FORK_SCOPE/$SUFFIX"
 
   echo "────────────────────────────────────────"
   echo "Processing $DIR ($ORIG_NAME → $FORK_NAME)"
