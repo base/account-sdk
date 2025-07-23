@@ -47,12 +47,12 @@ for ENTRY in "${PKG_ENTRIES[@]}"; do
   echo "✏️  Setting temporary name to $FORK_NAME"
   npm pkg set name="$FORK_NAME"
   if [[ -n "$VERSION" ]]; then
-    echo "✏️  Bumping version to $VERSION"
-    npm version "$VERSION" --no-git-tag-version
+    echo "✏️  Setting version to $VERSION"
+    npm pkg set version="$VERSION"
   fi
 
   echo "🚀 Publishing $FORK_NAME to npm…"
-  npm publish --access public
+  yarn npm publish --access public --tolerate-republish
 
   echo "↩️  Reverting package.json changes"
   git checkout -- package.json
