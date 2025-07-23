@@ -21,7 +21,7 @@ type WalletSendCallsRequestParams = {
  * Type for wallet_sendCalls response when it returns an object
  */
 type WalletSendCallsObjectResponse = {
-  callsId: string;
+  id: string; // sendCalls 2.0.0+ field
   capabilities?: {
     dataCallback?: PayerInfoResponses;
     [key: string]: unknown;
@@ -39,9 +39,10 @@ export interface PaymentExecutionResult {
 /**
  * Creates an ephemeral SDK instance configured for payments
  * @param chainId - The chain ID to use
+ * @param walletUrl - Optional wallet URL to use
  * @returns The configured SDK instance
  */
-export function createEphemeralSDK(chainId: number) {
+export function createEphemeralSDK(chainId: number, walletUrl?: string) {
   const appName = typeof window !== 'undefined' ? window.location.origin : 'Base Pay SDK';
   
   const sdk = createBaseAccountSDK({
@@ -49,6 +50,7 @@ export function createEphemeralSDK(chainId: number) {
     appChainIds: [chainId],
     preference: {
       telemetry: true,
+      walletUrl,
     },
   });
 
@@ -80,12 +82,12 @@ export async function executePayment(
     // Standard response format - just a transaction hash
     transactionHash = result.slice(0, 66) as Hex;
   } else if (typeof result === 'object' && result !== null) {
-    // Object response format - contains callsId and capabilities with dataCallback
+    // Object response format - contains id and capabilities with dataCallback (sendCalls 2.0.0+)
     const resultObj = result as WalletSendCallsObjectResponse;
     
-    // Extract transaction hash from callsId
-    if (typeof resultObj.callsId === 'string' && resultObj.callsId.length >= 66) {
-      transactionHash = resultObj.callsId.slice(0, 66) as Hex;
+    // Extract transaction hash from id field
+    if (typeof resultObj.id === 'string' && resultObj.id.length >= 66) {
+      transactionHash = resultObj.id.slice(0, 66) as Hex;
       
       // Extract info responses from capabilities.dataCallback
       if (resultObj.capabilities?.dataCallback) {
@@ -95,7 +97,7 @@ export async function executePayment(
       throw new Error(`Could not extract transaction hash from object response. Available fields: ${Object.keys(resultObj).join(', ')}`);
     }
   } else {
-    throw new Error(`Unexpected response format from wallet_sendCalls: expected string with length > 66 or object with callsId, got ${typeof result}`);
+    throw new Error(`Unexpected response format from wallet_sendCalls: expected string with length > 66 or object with id, got ${typeof result}`);
   }
 
   return { transactionHash, payerInfoResponses };
@@ -105,13 +107,14 @@ export async function executePayment(
  * Manages the complete payment flow with SDK lifecycle
  * @param requestParams - The wallet_sendCalls request parameters
  * @param testnet - Whether to use testnet
+ * @param walletUrl - Optional wallet URL to use
  * @returns The payment execution result
  */
-export async function executePaymentWithSDK(requestParams: WalletSendCallsRequestParams, testnet: boolean): Promise<PaymentExecutionResult> {
+export async function executePaymentWithSDK(requestParams: WalletSendCallsRequestParams, testnet: boolean, walletUrl?: string): Promise<PaymentExecutionResult> {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
 
-  const sdk = createEphemeralSDK(chainId);
+  const sdk = createEphemeralSDK(chainId, walletUrl);
   const provider = sdk.getProvider();
 
   try {
