@@ -1,5 +1,5 @@
 # Source files (exclude from published package)
-src/**
+!src/**
 
 # Development files
 node_modules/
