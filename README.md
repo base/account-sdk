@@ -4,8 +4,8 @@
 
 ## Base Account SDK allows apps to connect to Base Account
 
-1. [Base Account](https://account.base.org/)
-   - [Docs](https://www.base.org/builders/smart-wallet)
+1. [Base Account](https://account.base.app)
+   - [Docs](https://docs.base.org/base-account/quickstart/web)
 
 ### Installing Base Account SDK
 
