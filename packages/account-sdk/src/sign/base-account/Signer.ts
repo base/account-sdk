@@ -33,7 +33,7 @@ import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
-import { store } from ':store/store.js';
+import { spendPermissions, store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import {
@@ -64,6 +64,7 @@ import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { findOwnerIndex } from './utils/findOwnerIndex.js';
 import { handleAddSubAccountOwner } from './utils/handleAddSubAccountOwner.js';
 import { handleInsufficientBalanceError } from './utils/handleInsufficientBalance.js';
+import { routeThroughGlobalAccount } from './utils/routeThroughGlobalAccount.js';
 
 type ConstructorOptions = {
   metadata: AppMetadata;
@@ -703,6 +704,22 @@ export class Signer {
       attribution: config.preference?.attribution,
       dappOrigin: window.location.origin,
     });
+
+    if (['eth_sendTransaction', 'wallet_sendCalls'].includes(request.method)) {
+      // If we have never had a spend permission, we need to do this tx through the global account
+      const storedSpendPermissions = spendPermissions.get();
+      if (storedSpendPermissions.length === 0) {
+        const result = await routeThroughGlobalAccount({
+          request,
+          globalAccountAddress,
+          subAccountAddress: subAccount.address,
+          client,
+          globalAccountRequest: this.sendRequestToPopup.bind(this),
+          chainId: this.chain.id,
+        });
+        return result;
+      }
+    }
 
     const publicKey =
       ownerAccount.account.type === 'local'

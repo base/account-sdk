@@ -2,26 +2,14 @@ import { InsufficientBalanceErrorData, standardErrors } from ':core/error/errors
 import { RequestArguments } from ':core/provider/interface.js';
 import { Address } from ':core/type/index.js';
 import { assertPresence } from ':util/assertPresence.js';
-import {
-  Hex,
-  PublicClient,
-  WalletSendCallsParameters,
-  encodeFunctionData,
-  erc20Abi,
-  hexToBigInt,
-  numberToHex,
-} from 'viem';
+import { Hex, PublicClient, encodeFunctionData, erc20Abi, numberToHex } from 'viem';
 import {
   createSpendPermissionBatchMessage,
   createSpendPermissionMessage,
-  createWalletSendCallsRequest,
-  isEthSendTransactionParams,
-  isSendCallsParams,
   parseFundingOptions,
   presentSubAccountFundingDialog,
-  waitForCallsTransactionHash,
 } from '../utils.js';
-import { abi } from './constants.js';
+import { routeThroughGlobalAccount } from './routeThroughGlobalAccount.js';
 
 export async function handleInsufficientBalanceError({
   errorData,
@@ -157,55 +145,15 @@ export async function handleInsufficientBalanceError({
     };
   });
 
-  // Construct call to execute the original calls using executeBatch
-  let originalSendCallsParams: WalletSendCallsParameters[0];
-
-  if (request.method === 'wallet_sendCalls' && isSendCallsParams(request.params)) {
-    originalSendCallsParams = request.params[0];
-  } else if (
-    request.method === 'eth_sendTransaction' &&
-    isEthSendTransactionParams(request.params)
-  ) {
-    const sendCallsRequest = createWalletSendCallsRequest({
-      calls: [request.params[0]],
-      chainId,
-      from: request.params[0].from,
-    });
-
-    originalSendCallsParams = sendCallsRequest.params[0];
-  } else {
-    throw new Error('Could not get original call');
-  }
-
-  const subAccountCallData = encodeFunctionData({
-    abi,
-    functionName: 'executeBatch',
-    args: [
-      originalSendCallsParams.calls.map((call) => ({
-        target: call.to!,
-        value: hexToBigInt(call.value ?? '0x0'),
-        data: call.data ?? '0x',
-      })),
-    ],
+  const result = await routeThroughGlobalAccount({
+    request,
+    globalAccountAddress,
+    subAccountAddress,
+    client,
+    globalAccountRequest,
+    prependCalls: transferCalls,
+    chainId,
   });
-
-  // Send using wallet_sendCalls
-  const calls: { to: Address; data: Hex; value: Hex }[] = [
-    ...transferCalls,
-    { data: subAccountCallData, to: subAccountAddress, value: '0x0' },
-  ];
-
-  const result = await globalAccountRequest({
-    method: 'wallet_sendCalls',
-    params: [{ ...originalSendCallsParams, calls, from: globalAccountAddress }],
-  });
-
-  if (request.method === 'eth_sendTransaction') {
-    return waitForCallsTransactionHash({
-      client,
-      id: result,
-    });
-  }
 
   return result;
 }
