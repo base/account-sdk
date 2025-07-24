@@ -47,7 +47,9 @@
     "postbuild": "cp -r src/frameworks/vue/*.vue dist/frameworks/vue/ && cp -r src/frameworks/svelte/*.svelte dist/frameworks/svelte/",
     "build": "node compile-assets.cjs && rm -rf ./dist && tsc -p ./tsconfig.build.json && tsc-alias && yarn postbuild",
     "typecheck": "tsc --noEmit",
-    "lint": "biome lint ."
+    "lint": "biome lint .",
+    "format": "biome format . --write",
+    "format:check": "biome check . --formatter-enabled=true --linter-enabled=false --organize-imports-enabled=false"
   },
   "devDependencies": {
     "@base-org/account": "workspace:*",

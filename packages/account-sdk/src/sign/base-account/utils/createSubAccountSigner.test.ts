@@ -337,7 +337,7 @@ describe('createSubAccountSigner', () => {
       params: [hexMessage, '0x'],
     });
 
-    expect(mock).toHaveBeenCalledWith({ message});
+    expect(mock).toHaveBeenCalledWith({ message });
   });
 
   it('handle sign typed data', async () => {
@@ -371,7 +371,7 @@ describe('createSubAccountSigner', () => {
     });
 
     const message = 'hello';
-    const hexMessage = toHex(message);  
+    const hexMessage = toHex(message);
 
     await signer.request({
       method: 'personal_sign',

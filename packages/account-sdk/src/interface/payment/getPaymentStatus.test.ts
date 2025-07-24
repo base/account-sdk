@@ -321,7 +321,11 @@ describe('getPaymentStatus', () => {
       });
 
       // Verify telemetry events were NOT called
-      const { logPaymentStatusCheckStarted, logPaymentStatusCheckCompleted, logPaymentStatusCheckError } = await import(':core/telemetry/events/payment.js');
+      const {
+        logPaymentStatusCheckStarted,
+        logPaymentStatusCheckCompleted,
+        logPaymentStatusCheckError,
+      } = await import(':core/telemetry/events/payment.js');
       expect(logPaymentStatusCheckStarted).not.toHaveBeenCalled();
       expect(logPaymentStatusCheckCompleted).not.toHaveBeenCalled();
       expect(logPaymentStatusCheckError).not.toHaveBeenCalled();
@@ -352,7 +356,9 @@ describe('getPaymentStatus', () => {
       });
 
       // Verify telemetry events WERE called
-      const { logPaymentStatusCheckStarted, logPaymentStatusCheckCompleted } = await import(':core/telemetry/events/payment.js');
+      const { logPaymentStatusCheckStarted, logPaymentStatusCheckCompleted } = await import(
+        ':core/telemetry/events/payment.js'
+      );
       expect(logPaymentStatusCheckStarted).toHaveBeenCalledWith({
         testnet: false,
         correlationId: 'mock-correlation-id',
@@ -426,4 +432,4 @@ describe('getPaymentStatus', () => {
       });
     });
   });
-}); 
+});

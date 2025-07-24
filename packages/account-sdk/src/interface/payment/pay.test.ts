@@ -71,7 +71,9 @@ describe('pay', () => {
     );
 
     // Verify telemetry events
-    const { logPaymentStarted, logPaymentCompleted } = await import(':core/telemetry/events/payment.js');
+    const { logPaymentStarted, logPaymentCompleted } = await import(
+      ':core/telemetry/events/payment.js'
+    );
     expect(logPaymentStarted).toHaveBeenCalledWith({
       amount: '10.50',
       testnet: false,
@@ -102,7 +104,9 @@ describe('pay', () => {
     });
 
     // Verify telemetry events
-    const { logPaymentStarted, logPaymentError } = await import(':core/telemetry/events/payment.js');
+    const { logPaymentStarted, logPaymentError } = await import(
+      ':core/telemetry/events/payment.js'
+    );
     expect(logPaymentStarted).toHaveBeenCalledWith({
       amount: '0',
       testnet: false,
@@ -172,7 +176,9 @@ describe('pay', () => {
     expect(payment.success).toBe(true);
 
     // Verify telemetry events were NOT called
-    const { logPaymentStarted, logPaymentCompleted, logPaymentError } = await import(':core/telemetry/events/payment.js');
+    const { logPaymentStarted, logPaymentCompleted, logPaymentError } = await import(
+      ':core/telemetry/events/payment.js'
+    );
     expect(logPaymentStarted).not.toHaveBeenCalled();
     expect(logPaymentCompleted).not.toHaveBeenCalled();
     expect(logPaymentError).not.toHaveBeenCalled();
@@ -208,7 +214,9 @@ describe('pay', () => {
     expect(payment.success).toBe(true);
 
     // Verify telemetry events WERE called
-    const { logPaymentStarted, logPaymentCompleted } = await import(':core/telemetry/events/payment.js');
+    const { logPaymentStarted, logPaymentCompleted } = await import(
+      ':core/telemetry/events/payment.js'
+    );
     expect(logPaymentStarted).toHaveBeenCalled();
     expect(logPaymentCompleted).toHaveBeenCalled();
   });
@@ -311,11 +319,8 @@ describe('pay', () => {
 
   it('should successfully process a payment with payerInfo', async () => {
     const payerInfo = {
-      requests: [
-        { type: 'email' },
-        { type: 'physicalAddress', optional: true },
-      ],
-      callbackURL: 'https://example.com/callback'
+      requests: [{ type: 'email' }, { type: 'physicalAddress', optional: true }],
+      callbackURL: 'https://example.com/callback',
     };
 
     const payerInfoResponses = {
@@ -348,7 +353,7 @@ describe('pay', () => {
             { type: 'email', optional: false },
             { type: 'physicalAddress', optional: true },
           ],
-                      callbackURL: 'https://example.com/callback',
+          callbackURL: 'https://example.com/callback',
         },
       },
     });

@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { CHAIN_IDS, TOKENS } from '../constants.js';
 import type { PayerInfo } from '../types.js';
-import { buildSendCallsRequest, encodeTransferCall, translatePaymentToSendCalls } from './translatePayment.js';
+import {
+  buildSendCallsRequest,
+  encodeTransferCall,
+  translatePaymentToSendCalls,
+} from './translatePayment.js';
 
 describe('translatePayment', () => {
   describe('encodeTransferCall', () => {
@@ -41,11 +45,8 @@ describe('translatePayment', () => {
       const transferData = '0xabcdef';
       const testnet = false;
       const payerInfo: PayerInfo = {
-        requests: [
-          { type: 'email' },
-          { type: 'physicalAddress', optional: true },
-        ],
-        callbackURL: 'https://example.com/callback'
+        requests: [{ type: 'email' }, { type: 'physicalAddress', optional: true }],
+        callbackURL: 'https://example.com/callback',
       };
 
       const result = buildSendCallsRequest(transferData, testnet, payerInfo);
@@ -97,7 +98,7 @@ describe('translatePayment', () => {
       const testnet = false;
       const payerInfo: PayerInfo = {
         requests: [],
-        callbackURL: 'https://example.com/callback'
+        callbackURL: 'https://example.com/callback',
       };
 
       const result = buildSendCallsRequest(transferData, testnet, payerInfo);
@@ -120,11 +121,8 @@ describe('translatePayment', () => {
       const transferData = '0xabcdef';
       const testnet = false;
       const payerInfo: PayerInfo = {
-        requests: [
-          { type: 'email' },
-          { type: 'name', optional: undefined },
-        ],
-        callbackURL: 'https://example.com/callback'
+        requests: [{ type: 'email' }, { type: 'name', optional: undefined }],
+        callbackURL: 'https://example.com/callback',
       };
 
       const result = buildSendCallsRequest(transferData, testnet, payerInfo);
@@ -135,7 +133,7 @@ describe('translatePayment', () => {
             { type: 'email', optional: false },
             { type: 'name', optional: false },
           ],
-                      callbackURL: 'https://example.com/callback',
+          callbackURL: 'https://example.com/callback',
         },
       });
     });
@@ -173,7 +171,7 @@ describe('translatePayment', () => {
           { type: 'physicalAddress', optional: true },
           { type: 'phoneNumber', optional: false },
         ],
-        callbackURL: 'https://example.com/callback'
+        callbackURL: 'https://example.com/callback',
       };
 
       const result = translatePaymentToSendCalls(recipient, amount, testnet, payerInfo);
@@ -206,10 +204,8 @@ describe('translatePayment', () => {
       const amount = '5.00';
       const testnet = true;
       const payerInfo: PayerInfo = {
-        requests: [
-          { type: 'name', optional: true },
-        ],
-        callbackURL: 'https://example.com/callback'
+        requests: [{ type: 'name', optional: true }],
+        callbackURL: 'https://example.com/callback',
       };
 
       const result = translatePaymentToSendCalls(recipient, amount, testnet, payerInfo);
@@ -226,9 +222,7 @@ describe('translatePayment', () => {
         ],
         capabilities: {
           dataCallback: {
-            requests: [
-              { type: 'name', optional: true },
-            ],
+            requests: [{ type: 'name', optional: true }],
             callbackURL: 'https://example.com/callback',
           },
         },

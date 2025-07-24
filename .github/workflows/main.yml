@@ -29,6 +29,29 @@ jobs:
       - name: Lint
         run: yarn lint
 
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout node action
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache-dependency-path: 'yarn.lock'
+
+      - name: 'Setup'
+        uses: ./.github/actions/setup
+
+      - name: Format Check
+        run: yarn format:check
+
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest

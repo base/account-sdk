@@ -45,7 +45,7 @@ export interface PaymentExecutionResult {
  */
 export function createEphemeralSDK(chainId: number, walletUrl?: string, telemetry: boolean = true) {
   const appName = typeof window !== 'undefined' ? window.location.origin : 'Base Pay SDK';
-  
+
   const sdk = createBaseAccountSDK({
     appName: appName,
     appChainIds: [chainId],
@@ -85,20 +85,24 @@ export async function executePayment(
   } else if (typeof result === 'object' && result !== null) {
     // Object response format - contains id and capabilities with dataCallback (sendCalls 2.0.0+)
     const resultObj = result as WalletSendCallsObjectResponse;
-    
+
     // Extract transaction hash from id field
     if (typeof resultObj.id === 'string' && resultObj.id.length >= 66) {
       transactionHash = resultObj.id.slice(0, 66) as Hex;
-      
+
       // Extract info responses from capabilities.dataCallback
       if (resultObj.capabilities?.dataCallback) {
         payerInfoResponses = resultObj.capabilities.dataCallback;
       }
     } else {
-      throw new Error(`Could not extract transaction hash from object response. Available fields: ${Object.keys(resultObj).join(', ')}`);
+      throw new Error(
+        `Could not extract transaction hash from object response. Available fields: ${Object.keys(resultObj).join(', ')}`
+      );
     }
   } else {
-    throw new Error(`Unexpected response format from wallet_sendCalls: expected string with length > 66 or object with id, got ${typeof result}`);
+    throw new Error(
+      `Unexpected response format from wallet_sendCalls: expected string with length > 66 or object with id, got ${typeof result}`
+    );
   }
 
   return { transactionHash, payerInfoResponses };
@@ -112,7 +116,12 @@ export async function executePayment(
  * @param telemetry - Whether to enable telemetry (defaults to true)
  * @returns The payment execution result
  */
-export async function executePaymentWithSDK(requestParams: WalletSendCallsRequestParams, testnet: boolean, walletUrl?: string, telemetry: boolean = true): Promise<PaymentExecutionResult> {
+export async function executePaymentWithSDK(
+  requestParams: WalletSendCallsRequestParams,
+  testnet: boolean,
+  walletUrl?: string,
+  telemetry: boolean = true
+): Promise<PaymentExecutionResult> {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
 

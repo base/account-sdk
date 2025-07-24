@@ -53,7 +53,7 @@ export function isValidCode(code: number): boolean {
 export function getErrorCode(error: unknown): number | undefined {
   if (typeof error === 'number') {
     return error;
-  } 
+  }
   if (isErrorWithCode(error)) {
     return error.code ?? error.errorCode;
   }

@@ -130,7 +130,7 @@ export interface PaymentStatus {
   id: Hex;
   /** Human-readable message about the status */
   message: string;
-  
+
   // Additional fields that may be present depending on status
   /** Sender address (present for pending, completed, and failed) */
   sender?: string;

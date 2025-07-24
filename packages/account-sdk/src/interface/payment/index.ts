@@ -5,16 +5,16 @@ export { base } from './base.js';
 export { getPaymentStatus } from './getPaymentStatus.js';
 export { pay } from './pay.js';
 export type {
-    InfoRequest,
-    PayerInfoResponses,
-    PayerInfo,
-    PaymentError,
-    PaymentOptions,
-    PaymentResult,
-    PaymentStatus,
-    PaymentStatusOptions,
-    PaymentStatusType,
-    PaymentSuccess
+  InfoRequest,
+  PayerInfoResponses,
+  PayerInfo,
+  PaymentError,
+  PaymentOptions,
+  PaymentResult,
+  PaymentStatus,
+  PaymentStatusOptions,
+  PaymentStatusType,
+  PaymentSuccess,
 } from './types.js';
 
 // Export constants

@@ -1,7 +1,12 @@
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import { getPaymentStatus } from './getPaymentStatus.js';
 import { pay } from './pay.js';
-import type { PaymentOptions, PaymentResult, PaymentStatus, PaymentStatusOptions } from './types.js';
+import type {
+  PaymentOptions,
+  PaymentResult,
+  PaymentStatus,
+  PaymentStatusOptions,
+} from './types.js';
 
 /**
  * Base payment interface

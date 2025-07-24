@@ -40,11 +40,11 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payer
 
   // Build the capabilities object
   const capabilities: Record<string, unknown> = {};
-  
+
   // Add dataCallback capability if payerInfo is provided
   if (payerInfo && payerInfo.requests.length > 0) {
     capabilities.dataCallback = {
-      requests: payerInfo.requests.map(request => ({
+      requests: payerInfo.requests.map((request) => ({
         type: request.type,
         optional: request.optional ?? false,
       })),
@@ -71,7 +71,12 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payer
  * @param payerInfo - Optional payer information configuration for data callbacks
  * @returns The complete request parameters
  */
-export function translatePaymentToSendCalls(recipient: string, amount: string, testnet: boolean, payerInfo?: PayerInfo) {
+export function translatePaymentToSendCalls(
+  recipient: string,
+  amount: string,
+  testnet: boolean,
+  payerInfo?: PayerInfo
+) {
   // Encode the transfer call
   const transferData = encodeTransferCall(recipient, amount);
 

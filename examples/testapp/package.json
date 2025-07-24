@@ -7,6 +7,8 @@
     "dev": "next dev --port 3001",
     "export": "yarn build && touch ./out/.nojekyll",
     "lint": "biome lint .",
+    "format": "biome format . --write",
+    "format:check": "biome check . --formatter-enabled=true --linter-enabled=false --organize-imports-enabled=false",
     "start": "next start",
     "test": "vitest",
     "typecheck": "tsc --noEmit"

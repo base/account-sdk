@@ -1,4 +1,8 @@
-import { logPaymentCompleted, logPaymentError, logPaymentStarted } from ':core/telemetry/events/payment.js';
+import {
+  logPaymentCompleted,
+  logPaymentError,
+  logPaymentStarted,
+} from ':core/telemetry/events/payment.js';
 import type { Address } from 'viem';
 import type { PaymentOptions, PaymentResult } from './types.js';
 import { executePaymentWithSDK } from './utils/sdkManager.js';
@@ -32,10 +36,10 @@ import { validateAddress, validateStringAmount } from './utils/validation.js';
  */
 export async function pay(options: PaymentOptions): Promise<PaymentResult> {
   const { amount, to, testnet = false, payerInfo, walletUrl, telemetry = true } = options;
-  
+
   // Generate correlation ID for this payment request
   const correlationId = crypto.randomUUID();
-  
+
   // Log payment started
   if (telemetry) {
     logPaymentStarted({ amount, testnet, correlationId });
@@ -49,7 +53,12 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
     const requestParams = translatePaymentToSendCalls(to, amount, testnet, payerInfo);
 
     // Step 3: Execute payment with SDK
-    const executionResult = await executePaymentWithSDK(requestParams, testnet, walletUrl, telemetry);
+    const executionResult = await executePaymentWithSDK(
+      requestParams,
+      testnet,
+      walletUrl,
+      telemetry
+    );
 
     // Log payment completed
     if (telemetry) {

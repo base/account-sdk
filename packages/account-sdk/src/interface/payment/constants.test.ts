@@ -16,4 +16,4 @@ describe('constants', () => {
       expect(CHAIN_IDS.baseSepolia).toBe(84532);
     });
   });
-}); 
+});

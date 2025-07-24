@@ -48,7 +48,7 @@ describe('handleAddSubAccountOwner', () => {
     (getClient as ReturnType<typeof vi.fn>).mockReturnValue(mockClient);
   });
 
-  it("should throw error when client is not found", async () => {
+  it('should throw error when client is not found', async () => {
     (getClient as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
     await expect(
@@ -56,22 +56,22 @@ describe('handleAddSubAccountOwner', () => {
         ownerAccount: mockOwnerAccount,
         globalAccountRequest: mockGlobalAccountRequest,
       })
-    ).rejects.toThrow(standardErrors.rpc.internal("client not found for chainId 1"));
+    ).rejects.toThrow(standardErrors.rpc.internal('client not found for chainId 1'));
   });
 
-  it("should throw error when calls fail", async () => {
-    (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: "failed" });
+  it('should throw error when calls fail', async () => {
+    (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'failed' });
 
     await expect(
       handleAddSubAccountOwner({
         ownerAccount: mockOwnerAccount,
         globalAccountRequest: mockGlobalAccountRequest,
       })
-    ).rejects.toThrow(standardErrors.rpc.internal("add owner call failed"));
+    ).rejects.toThrow(standardErrors.rpc.internal('add owner call failed'));
   });
 
   it('should successfully add owner when all conditions are met', async () => {
-    (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: "success" });
+    (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'success' });
 
     await handleAddSubAccountOwner({
       ownerAccount: mockOwnerAccount,

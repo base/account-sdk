@@ -74,6 +74,13 @@ Use `yarn dev` to start the example app and build the package with hot reloading
 
 This project uses [Biome](https://github.com/biomejs/biome) for linting and formatting. See the [Biome docs](https://biomejs.dev/guides/editors/first-party-extensions/) for more information on how to configure your editor to use Biome.
 
+Available commands:
+- `yarn lint` - Run linting checks on all workspaces
+- `yarn format` - Format all files in all workspaces
+- `yarn format:check` - Check if all files are properly formatted without making changes
+
+It's recommended to run `yarn format` before committing your changes to ensure consistent code formatting across the project.
+
 ### Signing Commits
 
 All commits need to be signed with a GPG key. This adds a second factor of authentication that proves that it came from

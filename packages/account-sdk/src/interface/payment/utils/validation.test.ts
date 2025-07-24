@@ -13,7 +13,9 @@ describe('validateStringAmount', () => {
     expect(() => validateStringAmount('0', 2)).toThrow('Invalid amount: must be greater than 0');
     expect(() => validateStringAmount('-10', 2)).toThrow('Invalid amount: must be greater than 0');
     expect(() => validateStringAmount('abc', 2)).toThrow('Invalid amount: must be a valid number');
-    expect(() => validateStringAmount('10.123', 2)).toThrow('Invalid amount: pay only supports up to 2 decimal places');
+    expect(() => validateStringAmount('10.123', 2)).toThrow(
+      'Invalid amount: pay only supports up to 2 decimal places'
+    );
   });
 
   it('should reject non-string amounts', () => {

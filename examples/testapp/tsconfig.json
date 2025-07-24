@@ -17,5 +17,5 @@
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"],
   "references": [],
-  "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
+  "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
 }

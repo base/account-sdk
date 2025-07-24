@@ -75,8 +75,6 @@ export const logPaymentCompleted = ({
   );
 };
 
-
-
 export const logPaymentStatusCheckStarted = ({
   testnet,
   correlationId,
@@ -144,4 +142,4 @@ export const logPaymentStatusCheckError = ({
     },
     AnalyticsEventImportance.low
   );
-}; 
+};
