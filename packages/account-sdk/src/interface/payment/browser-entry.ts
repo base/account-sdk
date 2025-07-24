@@ -13,7 +13,7 @@ import type {
   PaymentOptions,
   PaymentResult,
   PaymentStatus,
-  PaymentStatusOptions
+  PaymentStatusOptions,
 } from './types.js';
 
 // Expose to global window object
@@ -25,9 +25,9 @@ if (typeof window !== 'undefined') {
 export { base, CHAIN_IDS, getPaymentStatus, pay, TOKENS };
 export type {
   InfoRequest,
-  PayerInfo, PaymentOptions,
+  PayerInfo,
+  PaymentOptions,
   PaymentResult,
   PaymentStatus,
-  PaymentStatusOptions
+  PaymentStatusOptions,
 };
-

@@ -14,7 +14,7 @@ export default {
       name: 'base',
       sourcemap: true,
       inlineDynamicImports: true,
-      exports: 'named'
+      exports: 'named',
     },
     {
       file: 'dist/base-pay.min.js',
@@ -23,19 +23,19 @@ export default {
       sourcemap: true,
       inlineDynamicImports: true,
       exports: 'named',
-      plugins: [terser()]
-    }
+      plugins: [terser()],
+    },
   ],
   plugins: [
     replace({
       'process.env.NODE_ENV': JSON.stringify('production'),
-      preventAssignment: true
+      preventAssignment: true,
     }),
     json(),
     nodeResolve({
       browser: true,
       preferBuiltins: false,
-      dedupe: ['viem', 'ox']
+      dedupe: ['viem', 'ox'],
     }),
     commonjs(),
     typescript({
@@ -45,9 +45,9 @@ export default {
         moduleResolution: 'bundler',
         declaration: false,
         declarationMap: false,
-        emitDeclarationOnly: false
-      }
-    })
+        emitDeclarationOnly: false,
+      },
+    }),
   ],
   external: [],
   onwarn(warning, warn) {
@@ -56,10 +56,12 @@ export default {
       return;
     }
     // Ignore circular dependency warnings from viem and ox (these are handled internally)
-    if (warning.code === 'CIRCULAR_DEPENDENCY' && 
-        (warning.message.includes('node_modules/viem') || warning.message.includes('node_modules/ox'))) {
+    if (
+      warning.code === 'CIRCULAR_DEPENDENCY' &&
+      (warning.message.includes('node_modules/viem') || warning.message.includes('node_modules/ox'))
+    ) {
       return;
     }
     warn(warning);
-  }
-}; 
+  },
+};
