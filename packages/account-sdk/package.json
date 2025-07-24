@@ -14,7 +14,7 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "browser": "dist/base-pay.min.js",
+  "browser": "dist/base-account.min.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

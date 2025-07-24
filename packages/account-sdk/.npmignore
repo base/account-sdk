@@ -17,6 +17,5 @@ coverage/**
 
 compile-assets.cjs
 
-# Browser bundle and build config
-dist/base-pay.min.js
+# build config
 rollup.config.js

@@ -6,10 +6,10 @@ import typescript from '@rollup/plugin-typescript';
 import { terser } from 'rollup-plugin-terser';
 
 export default {
-  input: 'src/interface/payment/browser-entry.ts',
+  input: 'src/browser-entry.ts',
   output: [
     {
-      file: 'dist/base-pay.js',
+      file: 'dist/base-account.js',
       format: 'umd',
       name: 'base',
       sourcemap: true,
@@ -17,7 +17,7 @@ export default {
       exports: 'named',
     },
     {
-      file: 'dist/base-pay.min.js',
+      file: 'dist/base-account.min.js',
       format: 'umd',
       name: 'base',
       sourcemap: true,

@@ -127,17 +127,17 @@
 
 ## Script Tag Usage
 
-The Base Pay payment interface can be used directly in HTML pages via a script tag, without any build tools:
+Base Accunt can be used directly in HTML pages via a script tag, without any build tools:
 
 ```html
 <!-- Via unpkg -->
-<script src="https://unpkg.com/@base-org/account/dist/base-pay.min.js"></script>
+<script src="https://unpkg.com/@base-org/account/dist/base-account.min.js"></script>
 
 <!-- Via jsDelivr -->
-<script src="https://cdn.jsdelivr.net/npm/@base-org/account/dist/base-pay.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@base-org/account/dist/base-account.min.js"></script>
 ```
 
-Once loaded, the SDK is available as `window.base`:
+Once loaded, the SDK is available as `window.base` and `window.createBaseAccountSDK`:
 
 ```javascript
 // Make a payment
@@ -152,4 +152,7 @@ const status = await window.base.getPaymentStatus({
   id: result.id,
   testnet: true
 });
+
+// Create Base Account Provider
+const provider = createBaseAccountSDK().getProvider()
 ```
