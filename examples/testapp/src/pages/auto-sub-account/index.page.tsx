@@ -15,7 +15,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { createPublicClient, http, numberToHex, parseEther } from 'viem';
+import { createPublicClient, encodeFunctionData, http, numberToHex, parseEther, parseUnits } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { useConfig } from '../../context/ConfigContextProvider';
@@ -35,6 +35,7 @@ export default function AutoSubAccount() {
   const [accounts, setAccounts] = useState<string[]>([]);
   const [lastResult, setLastResult] = useState<string>();
   const [sendingAmounts, setSendingAmounts] = useState<Record<number, boolean>>({});
+  const [sendingUsdcAmounts, setSendingUsdcAmounts] = useState<Record<string, boolean>>({});
   const [signerType, setSignerType] = useState<SignerType>('cryptokey');
   const [walletConnectCapabilities, setWalletConnectCapabilities] = useState({
     siwe: false,
@@ -261,6 +262,52 @@ export default function AutoSubAccount() {
     }
   };
 
+  const handleUsdcSend = async (amount: string) => {
+    if (!provider || accounts.length < 2) return;
+
+    try {
+      setSendingUsdcAmounts((prev) => ({ ...prev, [amount]: true }));
+      const usdcAddress = '0x036cbd53842c5426634e7929541ec2318f3dcf7e';
+      const to = '0x8d25687829d6b85d9e0020b8c89e3ca24de20a89';
+      const value = parseUnits(amount, 6); // USDC has 6 decimals
+
+      // Encode ERC20 transfer function call
+      const data = encodeFunctionData({
+        abi: [
+          {
+            name: 'transfer',
+            type: 'function',
+            inputs: [
+              { name: 'to', type: 'address' },
+              { name: 'amount', type: 'uint256' },
+            ],
+            outputs: [{ name: '', type: 'bool' }],
+          },
+        ],
+        functionName: 'transfer',
+        args: [to, value],
+      });
+
+      const response = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            from: accounts[0], // Use sub account (accounts[1])
+            to: usdcAddress,
+            value: '0x0',
+            data,
+          },
+        ],
+      });
+      setLastResult(JSON.stringify(response, null, 2));
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    } finally {
+      setSendingUsdcAmounts((prev) => ({ ...prev, [amount]: false }));
+    }
+  };
+
   const handleAttributionDataSuffixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value) {
@@ -366,7 +413,10 @@ export default function AutoSubAccount() {
             <Checkbox
               isChecked={walletConnectCapabilities.addSubAccount}
               onChange={(e) =>
-                setWalletConnectCapabilities((prev) => ({ ...prev, addSubAccount: e.target.checked }))
+                setWalletConnectCapabilities((prev) => ({
+                  ...prev,
+                  addSubAccount: e.target.checked,
+                }))
               }
             >
               Add Sub Account
@@ -506,6 +556,34 @@ export default function AutoSubAccount() {
               }}
             >
               {amount} ETH
+            </Button>
+          ))}
+        </HStack>
+        <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
+          Send USDC
+        </Box>
+        <HStack w="full" spacing={4}>
+          {['0.01', '0.1', '1'].map((amount) => (
+            <Button
+              key={amount}
+              flex={1}
+              onClick={() => handleUsdcSend(amount)}
+              isDisabled={accounts.length < 2 || sendingUsdcAmounts[amount]}
+              isLoading={sendingUsdcAmounts[amount]}
+              loadingText="Sending..."
+              size="lg"
+              bg="purple.500"
+              color="white"
+              border="1px solid"
+              borderColor="purple.500"
+              _hover={{ bg: 'purple.600', borderColor: 'purple.600' }}
+              _dark={{
+                bg: 'purple.600',
+                borderColor: 'purple.600',
+                _hover: { bg: 'purple.700', borderColor: 'purple.700' },
+              }}
+            >
+              {amount} USDC
             </Button>
           ))}
         </HStack>
