@@ -21,9 +21,8 @@ if (typeof window !== 'undefined') {
   (window as any).base = base;
 }
 
-// Also export for module usage
-export default base;
-export { CHAIN_IDS, getPaymentStatus, pay, TOKENS };
+// Export for module usage
+export { base, CHAIN_IDS, getPaymentStatus, pay, TOKENS };
 export type {
   InfoRequest,
   PayerInfo, PaymentOptions,

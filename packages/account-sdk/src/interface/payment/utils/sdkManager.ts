@@ -1,5 +1,5 @@
 import type { Hex } from 'viem';
-import { createBaseAccountSDK } from '../../../index.js';
+import { createBaseAccountSDK } from '../../builder/core/createBaseAccountSDK.js';
 import { CHAIN_IDS } from '../constants.js';
 import type { PayerInfoResponses } from '../types.js';
 

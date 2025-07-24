@@ -13,7 +13,8 @@ export default {
       format: 'umd',
       name: 'base',
       sourcemap: true,
-      inlineDynamicImports: true
+      inlineDynamicImports: true,
+      exports: 'named'
     },
     {
       file: 'dist/base-pay.min.js',
@@ -21,6 +22,7 @@ export default {
       name: 'base',
       sourcemap: true,
       inlineDynamicImports: true,
+      exports: 'named',
       plugins: [terser()]
     }
   ],
@@ -39,9 +41,25 @@ export default {
     typescript({
       tsconfig: './tsconfig.build.json',
       compilerOptions: {
-        module: 'esnext'
+        module: 'esnext',
+        moduleResolution: 'bundler',
+        declaration: false,
+        declarationMap: false,
+        emitDeclarationOnly: false
       }
     })
   ],
-  external: []
+  external: [],
+  onwarn(warning, warn) {
+    // Ignore PURE comment warnings from ox and viem
+    if (warning.code === 'INVALID_ANNOTATION' && warning.message.includes('/*#__PURE__*/')) {
+      return;
+    }
+    // Ignore circular dependency warnings from viem and ox (these are handled internally)
+    if (warning.code === 'CIRCULAR_DEPENDENCY' && 
+        (warning.message.includes('node_modules/viem') || warning.message.includes('node_modules/ox'))) {
+      return;
+    }
+    warn(warning);
+  }
 }; 
