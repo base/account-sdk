@@ -227,18 +227,6 @@ export default function AutoSubAccount() {
         params,
       })) as WalletConnectResponse;
       setLastResult(JSON.stringify(response, null, 2));
-      
-      // Update accounts based on response
-      if (response.accounts && response.accounts.length > 0) {
-        setAccounts(response.accounts.map((acc) => acc.address));
-      } else {
-        // Fallback to eth_requestAccounts if no accounts in response
-        const accounts = await provider.request({
-          method: 'eth_requestAccounts',
-          params: [],
-        });
-        setAccounts(accounts as string[]);
-      }
     } catch (e) {
       console.error('error', e);
       setLastResult(JSON.stringify(e, null, 2));
