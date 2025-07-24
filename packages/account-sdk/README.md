@@ -130,7 +130,7 @@
 The Base Pay payment interface can be used directly in HTML pages via a script tag, without any build tools:
 
 ```html
-<!-- Via unpkg (recommended) -->
+<!-- Via unpkg -->
 <script src="https://unpkg.com/@base-org/account/dist/base-pay.min.js"></script>
 
 <!-- Via jsDelivr -->

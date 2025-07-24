@@ -13,10 +13,7 @@ export default {
       format: 'umd',
       name: 'base',
       sourcemap: true,
-      inlineDynamicImports: true,
-      globals: {
-        // Define any external dependencies that shouldn't be bundled
-      }
+      inlineDynamicImports: true
     },
     {
       file: 'dist/base-pay.min.js',
@@ -24,10 +21,7 @@ export default {
       name: 'base',
       sourcemap: true,
       inlineDynamicImports: true,
-      plugins: [terser()],
-      globals: {
-        // Define any external dependencies that shouldn't be bundled
-      }
+      plugins: [terser()]
     }
   ],
   plugins: [
@@ -44,18 +38,10 @@ export default {
     commonjs(),
     typescript({
       tsconfig: './tsconfig.build.json',
-      declaration: false,
-      declarationMap: false,
-      module: 'esnext',
-      moduleResolution: 'node'
+      compilerOptions: {
+        module: 'esnext'
+      }
     })
   ],
-  // Bundle all dependencies for standalone usage
-  external: [],
-  // Suppress circular dependency warnings from viem
-  onwarn(warning, warn) {
-    if (warning.code === 'CIRCULAR_DEPENDENCY') return;
-    if (warning.code === 'THIS_IS_UNDEFINED') return;
-    warn(warning);
-  }
+  external: []
 }; 
