@@ -16,3 +16,7 @@ vitest.config.ts
 coverage/**
 
 compile-assets.cjs
+
+# Browser bundle and build config
+dist/base-pay.min.js
+rollup.config.js
