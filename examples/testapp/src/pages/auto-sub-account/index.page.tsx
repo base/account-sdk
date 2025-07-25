@@ -366,7 +366,10 @@ export default function AutoSubAccount() {
             <Checkbox
               isChecked={walletConnectCapabilities.addSubAccount}
               onChange={(e) =>
-                setWalletConnectCapabilities((prev) => ({ ...prev, addSubAccount: e.target.checked }))
+                setWalletConnectCapabilities((prev) => ({
+                  ...prev,
+                  addSubAccount: e.target.checked,
+                }))
               }
             >
               Add Sub Account
