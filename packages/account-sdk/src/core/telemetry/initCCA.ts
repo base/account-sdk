@@ -26,7 +26,8 @@ export const loadTelemetryScript = (): Promise<void> => {
 
 const initCCA = () => {
   if (typeof window !== 'undefined') {
-    const deviceId = store.config.get().deviceId ?? window.crypto?.randomUUID() ?? '';
+    const deviceId = store.config.get().deviceId ?? 
+      (window.crypto && typeof window.crypto.randomUUID === 'function' ? window.crypto.randomUUID() : '');
 
     if (window.ClientAnalytics) {
       const { init, identify, PlatformName } = window.ClientAnalytics;
