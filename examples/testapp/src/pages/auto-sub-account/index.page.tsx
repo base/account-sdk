@@ -2,6 +2,7 @@ import { getCryptoKeyAccount } from '@base-org/account';
 import {
   Box,
   Button,
+  Checkbox,
   Container,
   FormControl,
   FormLabel,
@@ -14,7 +15,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { createPublicClient, http, numberToHex, parseEther } from 'viem';
+import { createPublicClient, encodeFunctionData, http, numberToHex, parseEther, parseUnits } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { useConfig } from '../../context/ConfigContextProvider';
@@ -34,7 +35,12 @@ export default function AutoSubAccount() {
   const [accounts, setAccounts] = useState<string[]>([]);
   const [lastResult, setLastResult] = useState<string>();
   const [sendingAmounts, setSendingAmounts] = useState<Record<number, boolean>>({});
+  const [sendingUsdcAmounts, setSendingUsdcAmounts] = useState<Record<string, boolean>>({});
   const [signerType, setSignerType] = useState<SignerType>('cryptokey');
+  const [walletConnectCapabilities, setWalletConnectCapabilities] = useState({
+    siwe: false,
+    addSubAccount: false,
+  });
   const { subAccountsConfig, setSubAccountsConfig, config, setConfig } = useConfig();
   const { provider } = useEIP1193Provider();
 
@@ -175,28 +181,46 @@ export default function AutoSubAccount() {
     }
   };
 
-  const handleWalletConnectWithSubAccount = async () => {
+  const handleWalletConnect = async () => {
     if (!provider) return;
 
-    const { account: ownerAccount } = await subAccountsConfig.toOwnerAccount();
+    let params: any[] = [];
 
-    const params = [
-      {
-        capabilities: {
-          addSubAccount: {
-            account: {
-              type: 'create',
-              keys: [
-                {
-                  type: ownerAccount.address ? 'address' : 'webauthn-p256',
-                  publicKey: ownerAccount.address ?? ownerAccount.publicKey,
-                },
-              ],
-            },
+    // Build params based on selected capabilities
+    if (walletConnectCapabilities.siwe || walletConnectCapabilities.addSubAccount) {
+      const capabilities: any = {};
+
+      // Add SIWE capability if selected
+      if (walletConnectCapabilities.siwe) {
+        capabilities.signInWithEthereum = {
+          chainId: 84532,
+          nonce: Math.random().toString(36).substring(2, 15),
+        };
+      }
+
+      // Add addSubAccount capability if selected
+      if (walletConnectCapabilities.addSubAccount) {
+        const { account: ownerAccount } = await subAccountsConfig.toOwnerAccount();
+        capabilities.addSubAccount = {
+          account: {
+            type: 'create',
+            keys: [
+              {
+                type: ownerAccount.address ? 'address' : 'webauthn-p256',
+                publicKey: ownerAccount.address ?? ownerAccount.publicKey,
+              },
+            ],
           },
+        };
+      }
+
+      params = [
+        {
+          ...(walletConnectCapabilities.siwe && { version: '1' }),
+          capabilities,
         },
-      },
-    ];
+      ];
+    }
 
     try {
       const response = (await provider.request({
@@ -204,27 +228,6 @@ export default function AutoSubAccount() {
         params,
       })) as WalletConnectResponse;
       setLastResult(JSON.stringify(response, null, 2));
-      const accounts = await provider.request({
-        method: 'eth_requestAccounts',
-        params: [],
-      });
-      setAccounts(accounts as string[]);
-    } catch (e) {
-      console.error('error', e);
-      setLastResult(JSON.stringify(e, null, 2));
-    }
-  };
-
-  const handleWalletConnect = async () => {
-    if (!provider) return;
-
-    try {
-      const response = (await provider.request({
-        method: 'wallet_connect',
-        params: [],
-      })) as WalletConnectResponse;
-      setLastResult(JSON.stringify(response, null, 2));
-      setAccounts(response.accounts.map((acc) => acc.address));
     } catch (e) {
       console.error('error', e);
       setLastResult(JSON.stringify(e, null, 2));
@@ -256,6 +259,52 @@ export default function AutoSubAccount() {
       setLastResult(JSON.stringify(e, null, 2));
     } finally {
       setSendingAmounts((prev) => ({ ...prev, [amount]: false }));
+    }
+  };
+
+  const handleUsdcSend = async (amount: string) => {
+    if (!provider || accounts.length < 2) return;
+
+    try {
+      setSendingUsdcAmounts((prev) => ({ ...prev, [amount]: true }));
+      const usdcAddress = '0x036cbd53842c5426634e7929541ec2318f3dcf7e';
+      const to = '0x8d25687829d6b85d9e0020b8c89e3ca24de20a89';
+      const value = parseUnits(amount, 6); // USDC has 6 decimals
+
+      // Encode ERC20 transfer function call
+      const data = encodeFunctionData({
+        abi: [
+          {
+            name: 'transfer',
+            type: 'function',
+            inputs: [
+              { name: 'to', type: 'address' },
+              { name: 'amount', type: 'uint256' },
+            ],
+            outputs: [{ name: '', type: 'bool' }],
+          },
+        ],
+        functionName: 'transfer',
+        args: [to, value],
+      });
+
+      const response = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            from: accounts[0], // Use sub account (accounts[1])
+            to: usdcAddress,
+            value: '0x0',
+            data,
+          },
+        ],
+      });
+      setLastResult(JSON.stringify(response, null, 2));
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    } finally {
+      setSendingUsdcAmounts((prev) => ({ ...prev, [amount]: false }));
     }
   };
 
@@ -350,6 +399,30 @@ export default function AutoSubAccount() {
             />
           </FormControl>
         )}
+        <FormControl>
+          <FormLabel>wallet_connect Capabilities</FormLabel>
+          <Stack spacing={2}>
+            <Checkbox
+              isChecked={walletConnectCapabilities.siwe}
+              onChange={(e) =>
+                setWalletConnectCapabilities((prev) => ({ ...prev, siwe: e.target.checked }))
+              }
+            >
+              SIWE (Sign In With Ethereum)
+            </Checkbox>
+            <Checkbox
+              isChecked={walletConnectCapabilities.addSubAccount}
+              onChange={(e) =>
+                setWalletConnectCapabilities((prev) => ({
+                  ...prev,
+                  addSubAccount: e.target.checked,
+                }))
+              }
+            >
+              Add Sub Account
+            </Checkbox>
+          </Stack>
+        </FormControl>
         {accounts.length > 0 && (
           <Box w="full">
             <Box fontSize="lg" fontWeight="bold" mb={2}>
@@ -444,22 +517,6 @@ export default function AutoSubAccount() {
         </Button>
         <Button
           w="full"
-          onClick={handleWalletConnectWithSubAccount}
-          bg="blue.500"
-          color="white"
-          border="1px solid"
-          borderColor="blue.500"
-          _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
-          _dark={{
-            bg: 'blue.600',
-            borderColor: 'blue.600',
-            _hover: { bg: 'blue.700', borderColor: 'blue.700' },
-          }}
-        >
-          wallet_connect (addSubAccount)
-        </Button>
-        <Button
-          w="full"
           onClick={handleWalletConnect}
           bg="blue.500"
           color="white"
@@ -499,6 +556,34 @@ export default function AutoSubAccount() {
               }}
             >
               {amount} ETH
+            </Button>
+          ))}
+        </HStack>
+        <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
+          Send USDC
+        </Box>
+        <HStack w="full" spacing={4}>
+          {['0.01', '0.1', '1'].map((amount) => (
+            <Button
+              key={amount}
+              flex={1}
+              onClick={() => handleUsdcSend(amount)}
+              isDisabled={accounts.length < 2 || sendingUsdcAmounts[amount]}
+              isLoading={sendingUsdcAmounts[amount]}
+              loadingText="Sending..."
+              size="lg"
+              bg="purple.500"
+              color="white"
+              border="1px solid"
+              borderColor="purple.500"
+              _hover={{ bg: 'purple.600', borderColor: 'purple.600' }}
+              _dark={{
+                bg: 'purple.600',
+                borderColor: 'purple.600',
+                _hover: { bg: 'purple.700', borderColor: 'purple.700' },
+              }}
+            >
+              {amount} USDC
             </Button>
           ))}
         </HStack>
