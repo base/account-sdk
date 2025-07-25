@@ -4,6 +4,7 @@ import { clsx } from 'clsx';
 import { FunctionComponent, render } from 'preact';
 
 import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
+import { t } from ':i18n/index.js';
 import { store } from ':store/store.js';
 import { BaseLogo } from ':ui/assets/BaseLogo.js';
 import { useEffect, useMemo, useState } from 'preact/hooks';
@@ -223,7 +224,7 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
   }, []);
 
   const headerTitle = useMemo(() => {
-    return username ? `Signed in as ${username}` : 'Base Account';
+    return username ? t('dialog.signed_in_as', { username }) : t('dialog.base_account');
   }, [username]);
 
   const shouldShowHeaderTitle = !isLoadingUsername;

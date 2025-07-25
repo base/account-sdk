@@ -1,15 +1,13 @@
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { logDialogActionClicked, logDialogShown } from ':core/telemetry/events/dialog.js';
+import { t } from ':i18n/index.js';
 import { store } from ':store/store.js';
 import { initDialog } from '../ui/Dialog/index.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 700;
-
-const POPUP_BLOCKED_TITLE = '{app} wants to continue in Base Account';
-const POPUP_BLOCKED_MESSAGE = 'This action requires your permission to open a new window.';
 
 export function openPopup(url: URL): Promise<Window> {
   const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
@@ -70,8 +68,8 @@ function openPopupWithDialog(tryOpenPopup: () => Window | null) {
   return new Promise<Window>((resolve, reject) => {
     logDialogShown({ dialogContext: 'popup_blocked' });
     dialog.presentItem({
-      title: POPUP_BLOCKED_TITLE.replace('{app}', dappName),
-      message: POPUP_BLOCKED_MESSAGE,
+      title: t('dialog.popup_blocked.title', { app: dappName }),
+      message: t('dialog.popup_blocked.message'),
       onClose: () => {
         logDialogActionClicked({
           dialogContext: 'popup_blocked',
@@ -81,7 +79,7 @@ function openPopupWithDialog(tryOpenPopup: () => Window | null) {
       },
       actionItems: [
         {
-          text: 'Try again',
+          text: t('button.try_again'),
           variant: 'primary',
           onClick: () => {
             logDialogActionClicked({
@@ -98,7 +96,7 @@ function openPopupWithDialog(tryOpenPopup: () => Window | null) {
           },
         },
         {
-          text: 'Cancel',
+          text: t('button.cancel'),
           variant: 'secondary',
           onClick: () => {
             logDialogActionClicked({
