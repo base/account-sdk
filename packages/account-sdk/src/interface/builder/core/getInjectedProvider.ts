@@ -13,7 +13,7 @@ type InjectedProvider = ProviderInterface & {
 };
 
 export function getInjectedProvider(): InjectedProvider | null {
-  const injectedProvider = window.ethereum ?? window.top?.ethereum;
+  const injectedProvider = window.top?.ethereum ?? window.ethereum;
 
   if (injectedProvider?.[TBA_PROVIDER_IDENTIFIER]) {
     return injectedProvider;

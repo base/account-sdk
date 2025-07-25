@@ -104,7 +104,7 @@ describe('getInjectedProvider', () => {
   });
 
   describe('when both window.ethereum and window.top.ethereum exist', () => {
-    it('should prefer window.ethereum over window.top.ethereum', () => {
+    it('should prefer window.top.ethereum', () => {
       const windowProvider = {
         isCoinbaseBrowser: true,
         request: vi.fn(),
@@ -121,23 +121,18 @@ describe('getInjectedProvider', () => {
 
       const result = getInjectedProvider();
 
-      expect(result).toBe(windowProvider);
-      expect(result).not.toBe(topProvider);
+      expect(result).not.toBe(windowProvider);
+      expect(result).toBe(topProvider);
     });
 
-    it('should return null when window.ethereum exists but lacks TBA identifier (does not fallback)', () => {
+    it('should return null when window.top.ethereum exists but lacks TBA identifier (does not fallback)', () => {
       const windowProvider = {
         request: vi.fn(),
         source: 'window',
       };
-      const topProvider = {
-        isCoinbaseBrowser: true,
-        request: vi.fn(),
-        source: 'top',
-      };
 
       mockWindow.ethereum = windowProvider;
-      mockWindow.top.ethereum = topProvider;
+      mockWindow.top.ethereum = windowProvider;
 
       const result = getInjectedProvider();
 
