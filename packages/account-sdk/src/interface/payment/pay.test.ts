@@ -5,7 +5,15 @@ import * as translatePayment from './utils/translatePayment.js';
 import * as validation from './utils/validation.js';
 
 // Mock the utility modules
-vi.mock('./utils/validation.js');
+vi.mock('./utils/validation.js', async () => {
+  const actual =
+    await vi.importActual<typeof import('./utils/validation.js')>('./utils/validation.js');
+  return {
+    ...actual,
+    validateStringAmount: vi.fn(), // Mock validateStringAmount
+    normalizeAddress: vi.fn(actual.normalizeAddress), // Spy on the real implementation
+  };
+});
 vi.mock('./utils/translatePayment.js');
 vi.mock('./utils/sdkManager.js');
 
@@ -28,7 +36,6 @@ describe('pay', () => {
   it('should successfully process a payment', async () => {
     // Setup mocks
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
       chainId: 8453,
@@ -60,7 +67,7 @@ describe('pay', () => {
     });
 
     expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 2);
-    expect(validation.validateAddress).toHaveBeenCalledWith(
+    expect(validation.normalizeAddress).toHaveBeenCalledWith(
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51'
     );
     expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(
@@ -84,6 +91,51 @@ describe('pay', () => {
       testnet: false,
       correlationId: 'mock-correlation-id',
     });
+  });
+
+  it('should accept non-checksummed addresses and normalize them', async () => {
+    // Setup mocks
+    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+    vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+      version: '2.0.0',
+      chainId: 8453,
+      calls: [
+        {
+          to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          data: '0xabcdef',
+          value: '0x0',
+        },
+      ],
+      capabilities: {},
+    });
+    vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+      transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    });
+
+    // Test with lowercase non-checksummed address
+    const payment = await pay({
+      amount: '10.50',
+      to: '0xfe21034794a5a574b94fe4fdfd16e005f1c96e51', // lowercase
+      testnet: false,
+    });
+
+    expect(payment).toEqual({
+      success: true,
+      id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      amount: '10.50',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51', // checksummed
+      payerInfoResponses: undefined,
+    });
+
+    expect(validation.normalizeAddress).toHaveBeenCalledWith(
+      '0xfe21034794a5a574b94fe4fdfd16e005f1c96e51'
+    );
+    expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(
+      '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51', // checksummed address passed to translate
+      '10.50',
+      false,
+      undefined
+    );
   });
 
   it('should handle validation errors', async () => {
@@ -122,7 +174,6 @@ describe('pay', () => {
 
   it('should handle SDK execution errors', async () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
       chainId: 8453,
@@ -149,7 +200,6 @@ describe('pay', () => {
   it('should not log telemetry when telemetry is disabled', async () => {
     // Setup mocks
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
       chainId: 8453,
@@ -187,7 +237,6 @@ describe('pay', () => {
   it('should log telemetry by default when telemetry is not specified', async () => {
     // Setup mocks
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
       chainId: 8453,
@@ -242,7 +291,6 @@ describe('pay', () => {
   it('should pass telemetry preference to SDK manager', async () => {
     // Setup mocks
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
       chainId: 8453,
@@ -270,7 +318,6 @@ describe('pay', () => {
 
   it('should support testnet with paymaster', async () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
       chainId: 84532,
@@ -336,7 +383,6 @@ describe('pay', () => {
 
     // Setup mocks
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
-    vi.mocked(validation.validateAddress).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
       chainId: 8453,
@@ -378,7 +424,7 @@ describe('pay', () => {
     });
 
     expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 2);
-    expect(validation.validateAddress).toHaveBeenCalledWith(
+    expect(validation.normalizeAddress).toHaveBeenCalledWith(
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51'
     );
     expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(

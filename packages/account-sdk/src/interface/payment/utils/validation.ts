@@ -1,4 +1,4 @@
-import { isAddress } from 'viem';
+import { type Address, getAddress } from 'viem';
 
 /**
  * Validates that the amount is a positive string with max decimal places
@@ -35,13 +35,18 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
  * Validates that the address is a valid Ethereum address
  * @param address - The address to validate
  * @throws Error if address is invalid
+ * @returns The checksummed address
  */
-export function validateAddress(address: string): void {
+export function normalizeAddress(address: string): Address {
   if (!address) {
     throw new Error('Invalid address: address is required');
   }
 
-  if (!isAddress(address)) {
+  try {
+    // getAddress will normalize the address to its checksummed version
+    // It will throw if the address is invalid
+    return getAddress(address);
+  } catch (_error) {
     throw new Error('Invalid address: must be a valid Ethereum address');
   }
 }

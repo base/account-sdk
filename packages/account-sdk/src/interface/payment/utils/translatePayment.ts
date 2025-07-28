@@ -8,14 +8,14 @@ import type { PayerInfo } from '../types.js';
  * @param amount - The amount in USDC (will be converted to 6 decimals)
  * @returns The encoded function data
  */
-export function encodeTransferCall(recipient: string, amount: string): Hex {
+export function encodeTransferCall(recipient: Address, amount: string): Hex {
   const amountInUnits = parseUnits(amount, TOKENS.USDC.decimals);
 
   // Encode the transfer function call
   return encodeFunctionData({
     abi: ERC20_TRANSFER_ABI,
     functionName: 'transfer',
-    args: [recipient as Address, amountInUnits],
+    args: [recipient, amountInUnits],
   });
 }
 
@@ -72,7 +72,7 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payer
  * @returns The complete request parameters
  */
 export function translatePaymentToSendCalls(
-  recipient: string,
+  recipient: Address,
   amount: string,
   testnet: boolean,
   payerInfo?: PayerInfo
