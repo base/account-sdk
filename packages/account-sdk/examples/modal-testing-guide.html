@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base Account SDK - Modal Testing Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.8;
+            color: #333;
+        }
+        h1 {
+            color: #0052ff;
+            border-bottom: 2px solid #0052ff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #0041cc;
+            margin-top: 30px;
+        }
+        .modal-type {
+            background: #f8f9fa;
+            border-left: 4px solid #0052ff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .modal-type h3 {
+            margin-top: 0;
+            color: #0052ff;
+        }
+        .trigger-steps {
+            background: #e8f0fe;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .trigger-steps ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .tip {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        button {
+            background: #0052ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0041cc;
+        }
+        .test-area {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        #log {
+            background: #2d2d2d;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Base Account SDK - Modal Testing Guide</h1>
+    
+    <p>This guide explains how to test the various modal/dialog components in the Base Account SDK. The SDK uses internal modals for important user interactions that require attention or decisions.</p>
+
+    <h2>Modal Architecture</h2>
+    <p>The SDK's modal system consists of:</p>
+    <ul>
+        <li><strong>Dialog Component</strong>: A Preact-based UI component</li>
+        <li><strong>CSS Classes</strong>: Prefixed with <code>-base-acc-sdk-</code> to avoid conflicts</li>
+        <li><strong>Z-index</strong>: Set to maximum (2147483647) to ensure visibility</li>
+        <li><strong>Mobile Support</strong>: Bottom sheet on mobile portrait mode with drag-to-dismiss</li>
+    </ul>
+
+    <h2>Modal Types</h2>
+
+    <div class="modal-type">
+        <h3>1. Popup Blocked Modal</h3>
+        <p><strong>When it appears:</strong> When the browser blocks a popup window that the SDK needs to open for wallet interactions.</p>
+        <p><strong>Title format:</strong> "{AppName} wants to continue in Base Account"</p>
+        <p><strong>Message:</strong> "This action requires your permission to open a new window."</p>
+        <p><strong>Actions:</strong></p>
+        <ul>
+            <li>Try again (Primary button)</li>
+            <li>Cancel (Secondary button)</li>
+        </ul>
+        
+        <div class="trigger-steps">
+            <strong>How to trigger:</strong>
+            <ol>
+                <li>Block popups in your browser settings</li>
+                <li>Create an SDK instance</li>
+                <li>Attempt to connect wallet or perform any action requiring a popup</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="modal-type">
+        <h3>2. Insufficient Balance Modal</h3>
+        <p><strong>When it appears:</strong> When a sub-account's spend permission balance cannot cover a transaction.</p>
+        <p><strong>Title:</strong> "Insufficient spend permission"</p>
+        <p><strong>Message:</strong> "Your spend permission's remaining balance cannot cover this transaction. Please choose how to proceed:"</p>
+        <p><strong>Actions:</strong></p>
+        <ul>
+            <li>Edit spend permission (Primary button)</li>
+            <li>Use primary account (Secondary button)</li>
+        </ul>
+        
+        <div class="trigger-steps">
+            <strong>How to trigger:</strong>
+            <ol>
+                <li>Set up a sub-account with limited spend permission</li>
+                <li>Attempt a transaction exceeding the permission limit</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="modal-type">
+        <h3>3. Add Owner Modal</h3>
+        <p><strong>When it appears:</strong> When the app has lost access to a user's account and needs re-authorization.</p>
+        <p><strong>Title format:</strong> "Re-authorize {AppName}"</p>
+        <p><strong>Message format:</strong> "{AppName} has lost access to your account. Please sign at the next step to re-authorize {AppName}"</p>
+        <p><strong>Actions:</strong></p>
+        <ul>
+            <li>Continue (Primary button)</li>
+            <li>Not now (Secondary button)</li>
+        </ul>
+        
+        <div class="trigger-steps">
+            <strong>How to trigger:</strong>
+            <ol>
+                <li>Remove app's access to the account externally</li>
+                <li>Attempt an operation requiring account access</li>
+            </ol>
+        </div>
+    </div>
+
+    <h2>Testing Modals Programmatically</h2>
+
+    <div class="tip">
+        <strong>💡 Tip:</strong> Use MutationObserver to detect when modals appear in the DOM.
+    </div>
+
+    <pre><code>// Monitor for modal appearances
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1 && node.classList?.contains('-base-acc-sdk-css-reset')) {
+                const dialog = node.querySelector('.-base-acc-sdk-dialog-instance');
+                if (dialog) {
+                    console.log('Modal detected!');
+                    const title = dialog.querySelector('.-base-acc-sdk-dialog-instance-content-title')?.textContent;
+                    const message = dialog.querySelector('.-base-acc-sdk-dialog-instance-content-message')?.textContent;
+                    console.log('Title:', title);
+                    console.log('Message:', message);
+                }
+            }
+        });
+    });
+});
+
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});</code></pre>
+
+    <h2>Interactive Test Area</h2>
+    
+    <div class="test-area">
+        <h3>Live Modal Testing</h3>
+        <p>Use these buttons to test modal functionality:</p>
+        
+        <button onclick="setupSDK()">1. Setup SDK</button>
+        <button onclick="startMonitoring()">2. Start Modal Monitoring</button>
+        <button onclick="triggerPopupTest()">3. Trigger Popup (Block to See Modal)</button>
+        <button onclick="clearLog()">Clear Log</button>
+        
+        <div id="log">Ready to test modals...</div>
+    </div>
+
+    <div class="warning">
+        <strong>⚠️ Important:</strong> Modals are internal SDK components and cannot be triggered directly. They appear automatically in response to specific conditions (popup blocked, insufficient balance, etc.).
+    </div>
+
+    <h2>CSS Selectors for Testing</h2>
+    <p>Use these selectors to find modal elements:</p>
+    <ul>
+        <li><code>.-base-acc-sdk-css-reset</code> - Root container</li>
+        <li><code>.-base-acc-sdk-dialog-container</code> - Dialog container</li>
+        <li><code>.-base-acc-sdk-dialog-instance</code> - Individual dialog</li>
+        <li><code>.-base-acc-sdk-dialog-instance-content-title</code> - Dialog title</li>
+        <li><code>.-base-acc-sdk-dialog-instance-content-message</code> - Dialog message</li>
+        <li><code>.-base-acc-sdk-dialog-instance-button</code> - Action buttons</li>
+    </ul>
+
+    <h2>Mobile Testing</h2>
+    <p>On mobile devices in portrait mode:</p>
+    <ul>
+        <li>Modals appear as bottom sheets</li>
+        <li>Support drag-to-dismiss gesture</li>
+        <li>Drag down more than 100px to dismiss</li>
+        <li>Animated transitions for smooth UX</li>
+    </ul>
+
+    <!-- Load the SDK bundle -->
+    <script src="../dist/base-account.min.js"></script>
+    
+    <script>
+        let sdk;
+        let provider;
+        let observer;
+        
+        function log(message) {
+            const logEl = document.getElementById('log');
+            logEl.textContent += `[${new Date().toLocaleTimeString()}] ${message}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').textContent = 'Log cleared. Ready for new tests...\n';
+        }
+        
+        function setupSDK() {
+            try {
+                sdk = window.createBaseAccountSDK({
+                    appName: 'Modal Test App',
+                    appChainIds: [84532], // Base Sepolia
+                    preference: {
+                        telemetry: false
+                    }
+                });
+                provider = sdk.getProvider();
+                log('✅ SDK setup complete');
+            } catch (error) {
+                log(`❌ SDK setup failed: ${error.message}`);
+            }
+        }
+        
+        function startMonitoring() {
+            if (observer) {
+                observer.disconnect();
+            }
+            
+            observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) {
+                            if (node.classList?.contains('-base-acc-sdk-css-reset') ||
+                                node.querySelector?.('.-base-acc-sdk-dialog-container')) {
+                                
+                                const dialog = node.querySelector('.-base-acc-sdk-dialog-instance');
+                                if (dialog) {
+                                    const title = dialog.querySelector('.-base-acc-sdk-dialog-instance-content-title')?.textContent;
+                                    const message = dialog.querySelector('.-base-acc-sdk-dialog-instance-content-message')?.textContent;
+                                    const buttons = Array.from(dialog.querySelectorAll('.-base-acc-sdk-dialog-instance-button'))
+                                        .map(btn => btn.textContent);
+                                    
+                                    log('🔔 MODAL DETECTED!');
+                                    log(`   Title: ${title}`);
+                                    log(`   Message: ${message}`);
+                                    log(`   Buttons: ${buttons.join(', ')}`);
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            log('👁️ Modal monitoring started');
+        }
+        
+        async function triggerPopupTest() {
+            if (!provider) {
+                log('❌ Please setup SDK first');
+                return;
+            }
+            
+            log('🚀 Attempting to connect wallet...');
+            log('   If popups are blocked, you should see the modal');
+            
+            try {
+                const accounts = await provider.request({
+                    method: 'eth_requestAccounts'
+                });
+                log(`✅ Connected! Accounts: ${accounts.join(', ')}`);
+            } catch (error) {
+                log(`❌ Connection failed: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html> 

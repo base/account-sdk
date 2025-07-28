@@ -86,6 +86,52 @@ describe('pay', () => {
     });
   });
 
+  it('should accept non-checksummed addresses and normalize them', async () => {
+    // Setup mocks
+    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+    vi.mocked(validation.validateAddress).mockReturnValue('0xFe21034794A5a574B94fE4fDfD16e005F1C96e51');
+    vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+      version: '2.0.0',
+      chainId: 8453,
+      calls: [
+        {
+          to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          data: '0xabcdef',
+          value: '0x0',
+        },
+      ],
+      capabilities: {},
+    });
+    vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+      transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    });
+
+    // Test with lowercase non-checksummed address
+    const payment = await pay({
+      amount: '10.50',
+      to: '0xfe21034794a5a574b94fe4fdfd16e005f1c96e51', // lowercase
+      testnet: false,
+    });
+
+    expect(payment).toEqual({
+      success: true,
+      id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      amount: '10.50',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51', // checksummed
+      payerInfoResponses: undefined,
+    });
+
+    expect(validation.validateAddress).toHaveBeenCalledWith(
+      '0xfe21034794a5a574b94fe4fdfd16e005f1c96e51'
+    );
+    expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(
+      '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51', // checksummed address passed to translate
+      '10.50',
+      false,
+      undefined
+    );
+  });
+
   it('should handle validation errors', async () => {
     vi.mocked(validation.validateStringAmount).mockImplementation(() => {
       throw new Error('Invalid amount: must be greater than 0');

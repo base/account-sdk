@@ -1,7 +1,7 @@
 import {
-  logPaymentCompleted,
-  logPaymentError,
-  logPaymentStarted,
+    logPaymentCompleted,
+    logPaymentError,
+    logPaymentStarted,
 } from ':core/telemetry/events/payment.js';
 import type { Address } from 'viem';
 import type { PaymentOptions, PaymentResult } from './types.js';
@@ -47,10 +47,10 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
 
   try {
     validateStringAmount(amount, 2);
-    validateAddress(to);
+    const normalizedAddress = validateAddress(to);
 
     // Step 2: Translate payment to sendCalls format
-    const requestParams = translatePaymentToSendCalls(to, amount, testnet, payerInfo);
+    const requestParams = translatePaymentToSendCalls(normalizedAddress, amount, testnet, payerInfo);
 
     // Step 3: Execute payment with SDK
     const executionResult = await executePaymentWithSDK(
@@ -70,7 +70,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
       success: true,
       id: executionResult.transactionHash,
       amount: amount,
-      to: to as Address,
+      to: normalizedAddress as Address,
       payerInfoResponses: executionResult.payerInfoResponses,
     };
   } catch (error) {

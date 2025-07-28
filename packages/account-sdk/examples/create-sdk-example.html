@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreateBaseAccountSDK Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .example {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        code {
+            background: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background: #0052ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0041cc;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CreateBaseAccountSDK Example</h1>
+    <p>This example demonstrates how to use <code>createBaseAccountSDK</code> to build a custom Web3 integration.</p>
+
+    <div class="example">
+        <h2>1. Basic SDK Setup</h2>
+        <pre><code>const sdk = createBaseAccountSDK({
+    appName: 'My DApp',
+    appLogoUrl: 'https://mydapp.com/logo.png',
+    appChainIds: [8453, 84532], // Base mainnet & testnet
+    preference: {
+        telemetry: true
+    }
+});</code></pre>
+        <button onclick="createBasicSDK()">Create Basic SDK</button>
+        <div id="basic-output" class="output" style="display:none;"></div>
+    </div>
+
+    <div class="example">
+        <h2>2. Connect Wallet</h2>
+        <p>Use the provider to connect to a wallet:</p>
+        <button onclick="connectWallet()">Connect Wallet</button>
+        <div id="connect-output" class="output" style="display:none;"></div>
+    </div>
+
+    <div class="example">
+        <h2>3. Get Account Info</h2>
+        <p>Retrieve connected account information:</p>
+        <button onclick="getAccountInfo()">Get Account Info</button>
+        <div id="account-output" class="output" style="display:none;"></div>
+    </div>
+
+    <div class="example">
+        <h2>4. Sub-Account Operations</h2>
+        <p>Work with sub-accounts for enhanced security:</p>
+        <button onclick="checkSubAccount()">Check Sub-Account</button>
+        <button onclick="createSubAccount()">Create Sub-Account</button>
+        <div id="subaccount-output" class="output" style="display:none;"></div>
+    </div>
+
+    <!-- Load the SDK bundle -->
+    <script src="../dist/base-account.min.js"></script>
+
+    <script>
+        let sdk;
+        let provider;
+
+        function showOutput(elementId, content, isError = false) {
+            const output = document.getElementById(elementId);
+            output.style.display = 'block';
+            output.innerHTML = content;
+            output.style.color = isError ? '#d32f2f' : '#333';
+        }
+
+        function createBasicSDK() {
+            try {
+                sdk = window.createBaseAccountSDK({
+                    appName: 'My Example DApp',
+                    appLogoUrl: 'https://example.com/logo.png',
+                    appChainIds: [8453, 84532], // Base mainnet and testnet
+                    preference: {
+                        telemetry: false // Disable telemetry for demo
+                    }
+                });
+
+                provider = sdk.getProvider();
+
+                showOutput('basic-output', 
+                    '✅ SDK created successfully!\n\n' +
+                    'Provider methods available:\n' +
+                    '• request()\n' +
+                    '• on()\n' +
+                    '• removeListener()\n' +
+                    '• disconnect()\n' +
+                    '• isConnected()'
+                );
+            } catch (error) {
+                showOutput('basic-output', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function connectWallet() {
+            if (!provider) {
+                showOutput('connect-output', '❌ Please create SDK first', true);
+                return;
+            }
+
+            try {
+                showOutput('connect-output', '⏳ Connecting to wallet...');
+
+                const accounts = await provider.request({
+                    method: 'eth_requestAccounts'
+                });
+
+                showOutput('connect-output', 
+                    `✅ Connected successfully!\n\n` +
+                    `Accounts: ${JSON.stringify(accounts, null, 2)}`
+                );
+            } catch (error) {
+                showOutput('connect-output', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function getAccountInfo() {
+            if (!provider) {
+                showOutput('account-output', '❌ Please create SDK first', true);
+                return;
+            }
+
+            try {
+                const accounts = await provider.request({ method: 'eth_accounts' });
+                const chainId = await provider.request({ method: 'eth_chainId' });
+                const balance = accounts[0] ? await provider.request({
+                    method: 'eth_getBalance',
+                    params: [accounts[0], 'latest']
+                }) : null;
+
+                showOutput('account-output', 
+                    `Account Info:\n\n` +
+                    `Connected: ${accounts.length > 0 ? 'Yes' : 'No'}\n` +
+                    `Address: ${accounts[0] || 'Not connected'}\n` +
+                    `Chain ID: ${chainId}\n` +
+                    `Balance: ${balance ? parseInt(balance, 16) / 1e18 + ' ETH' : 'N/A'}`
+                );
+            } catch (error) {
+                showOutput('account-output', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function checkSubAccount() {
+            if (!sdk) {
+                showOutput('subaccount-output', '❌ Please create SDK first', true);
+                return;
+            }
+
+            try {
+                const subAccount = await sdk.subAccount.get();
+                
+                showOutput('subaccount-output', 
+                    subAccount 
+                        ? `✅ Sub-account found:\n\n${JSON.stringify(subAccount, null, 2)}`
+                        : '❌ No sub-account found. You may need to connect wallet first or create a sub-account.'
+                );
+            } catch (error) {
+                showOutput('subaccount-output', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function createSubAccount() {
+            if (!sdk) {
+                showOutput('subaccount-output', '❌ Please create SDK first', true);
+                return;
+            }
+
+            try {
+                showOutput('subaccount-output', '⏳ Creating sub-account...');
+
+                const subAccount = await sdk.subAccount.create({
+                    type: 'create',
+                    keys: [] // Will use default owner configuration
+                });
+
+                showOutput('subaccount-output', 
+                    `✅ Sub-account created:\n\n${JSON.stringify(subAccount, null, 2)}`
+                );
+            } catch (error) {
+                showOutput('subaccount-output', 
+                    `❌ Error: ${error.message}\n\n` +
+                    `Note: Sub-account creation requires wallet connection and may need user approval.`,
+                    true
+                );
+            }
+        }
+
+        // Auto-create SDK on load for convenience
+        window.addEventListener('load', () => {
+            setTimeout(createBasicSDK, 500);
+        });
+    </script>
+</body>
+</html> 

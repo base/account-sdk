@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base Pay SDK Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .info {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #0052ff;
+        }
+        button {
+            background: #0052ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0041cc;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .output {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .error {
+            color: #d32f2f;
+        }
+        .success {
+            color: #388e3c;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Base Pay SDK Browser Bundle Test</h1>
+        <p class="info">Testing the UMD bundle at <code>dist/base-pay.min.js</code></p>
+
+        <div class="test-section">
+            <h3>1. Bundle Loading Test</h3>
+            <button onclick="testBundleLoading()">Test Bundle</button>
+            <div id="bundle-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Payment Test (Testnet)</h3>
+            <div>
+                <input type="text" id="payment-amount" placeholder="Amount (e.g., 0.01)" value="0.01">
+                <input type="text" id="payment-to" placeholder="Recipient address" value="0x0000000000000000000000000000000000000001">
+            </div>
+            <button onclick="testPayment()">Test Payment</button>
+            <div id="payment-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Payment Status Test</h3>
+            <input type="text" id="tx-hash" placeholder="Transaction hash">
+            <button onclick="testPaymentStatus()">Check Status</button>
+            <div id="status-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Constants Test</h3>
+            <button onclick="testConstants()">Test Constants</button>
+            <div id="constants-output" class="output"></div>
+        </div>
+    </div>
+
+    <!-- Load the bundle -->
+    <script src="dist/base-pay.min.js"></script>
+
+    <script>
+        function log(elementId, message, isError = false) {
+            const output = document.getElementById(elementId);
+            output.innerHTML = message;
+            output.className = `output ${isError ? 'error' : ''}`;
+        }
+
+        function testBundleLoading() {
+            try {
+                if (typeof window.base === 'undefined') {
+                    throw new Error('Bundle not loaded: window.base is undefined');
+                }
+
+                const methods = [];
+                for (const key in window.base) {
+                    methods.push(`${key}: ${typeof window.base[key]}`);
+                }
+
+                log('bundle-output', 
+                    `✅ Bundle loaded successfully!\n\nAvailable methods:\n${methods.join('\n')}\n\nBundle object:\n${JSON.stringify(window.base, null, 2)}`
+                );
+            } catch (error) {
+                log('bundle-output', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function testPayment() {
+            const amount = document.getElementById('payment-amount').value;
+            const to = document.getElementById('payment-to').value;
+
+            if (!amount || !to) {
+                log('payment-output', '❌ Please enter amount and recipient address', true);
+                return;
+            }
+
+            try {
+                log('payment-output', '⏳ Initiating payment...');
+                
+                const result = await window.base.pay({
+                    amount: amount,
+                    to: to,
+                    testnet: true,
+                    telemetry: false
+                });
+
+                if (result.success) {
+                    log('payment-output', 
+                        `✅ Payment successful!\n\nTransaction ID: ${result.id}\nAmount: ${result.amount}\nTo: ${result.to}`
+                    );
+                    
+                    // Auto-fill the transaction hash for status check
+                    document.getElementById('tx-hash').value = result.id;
+                } else {
+                    log('payment-output', `❌ Payment failed: ${result.error}`, true);
+                }
+            } catch (error) {
+                log('payment-output', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function testPaymentStatus() {
+            const txHash = document.getElementById('tx-hash').value;
+
+            if (!txHash) {
+                log('status-output', '❌ Please enter a transaction hash', true);
+                return;
+            }
+
+            try {
+                log('status-output', '⏳ Checking payment status...');
+                
+                const status = await window.base.getPaymentStatus({
+                    id: txHash,
+                    testnet: true,
+                    telemetry: false
+                });
+
+                let statusEmoji = '';
+                switch (status.status) {
+                    case 'completed': statusEmoji = '✅'; break;
+                    case 'pending': statusEmoji = '⏳'; break;
+                    case 'failed': statusEmoji = '❌'; break;
+                    case 'not_found': statusEmoji = '❓'; break;
+                }
+
+                log('status-output', 
+                    `${statusEmoji} Status: ${status.status}\n\n${JSON.stringify(status, null, 2)}`
+                );
+            } catch (error) {
+                log('status-output', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        function testConstants() {
+            try {
+                const constants = window.base.constants;
+                
+                log('constants-output', 
+                    `✅ Constants loaded!\n\n${JSON.stringify(constants, null, 2)}`
+                );
+            } catch (error) {
+                log('constants-output', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        // Test bundle loading on page load
+        window.addEventListener('load', () => {
+            setTimeout(testBundleLoading, 100);
+        });
+    </script>
+</body>
+</html> 
