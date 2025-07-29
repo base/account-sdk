@@ -143,17 +143,12 @@ describe('pay', () => {
       throw new Error('Invalid amount: must be greater than 0');
     });
 
-    const payment = await pay({
-      amount: '0',
-      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
-    });
-
-    expect(payment).toEqual({
-      success: false,
-      error: 'Invalid amount: must be greater than 0',
-      amount: '0',
-      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
-    });
+    await expect(
+      pay({
+        amount: '0',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      })
+    ).rejects.toThrow('Invalid amount: must be greater than 0');
 
     // Verify telemetry events
     const { logPaymentStarted, logPaymentError } = await import(
@@ -184,17 +179,12 @@ describe('pay', () => {
       new Error('User rejected the request')
     );
 
-    const payment = await pay({
-      amount: '10.50',
-      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
-    });
-
-    expect(payment).toEqual({
-      success: false,
-      error: 'User rejected the request',
-      amount: '10.50',
-      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
-    });
+    await expect(
+      pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      })
+    ).rejects.toThrow('User rejected the request');
   });
 
   it('should not log telemetry when telemetry is disabled', async () => {
@@ -275,13 +265,13 @@ describe('pay', () => {
       throw new Error('Invalid amount: must be greater than 0');
     });
 
-    const payment = await pay({
-      amount: '0',
-      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
-      telemetry: false,
-    });
-
-    expect(payment.success).toBe(false);
+    await expect(
+      pay({
+        amount: '0',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+        telemetry: false,
+      })
+    ).rejects.toThrow('Invalid amount: must be greater than 0');
 
     // Verify telemetry error was NOT called
     const { logPaymentError } = await import(':core/telemetry/events/payment.js');
@@ -433,5 +423,94 @@ describe('pay', () => {
       false,
       payerInfo
     );
+  });
+
+  it('should handle different error types and normalize them', async () => {
+    // Test with string error
+    vi.mocked(validation.validateStringAmount).mockImplementation(() => {
+      throw 'String error message';
+    });
+
+    await expect(
+      pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      })
+    ).rejects.toThrowError();
+
+    // Verify the telemetry was called with the correct error message
+    const { logPaymentError } = await import(':core/telemetry/events/payment.js');
+    expect(logPaymentError).toHaveBeenCalledWith({
+      amount: '10.50',
+      testnet: false,
+      correlationId: 'mock-correlation-id',
+      errorMessage: 'String error message',
+    });
+
+    // Clear mocks for next test
+    vi.clearAllMocks();
+
+    // Test with error object with nested error message
+    vi.mocked(validation.validateStringAmount).mockImplementation(() => {
+      throw { error: { message: 'Nested error message' } };
+    });
+
+    await expect(
+      pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      })
+    ).rejects.toThrowError();
+
+    expect(logPaymentError).toHaveBeenCalledWith({
+      amount: '10.50',
+      testnet: false,
+      correlationId: 'mock-correlation-id',
+      errorMessage: 'Nested error message',
+    });
+
+    // Clear mocks for next test
+    vi.clearAllMocks();
+
+    // Test with error object with reason
+    vi.mocked(validation.validateStringAmount).mockImplementation(() => {
+      throw { reason: 'Error reason' };
+    });
+
+    await expect(
+      pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      })
+    ).rejects.toThrowError();
+
+    expect(logPaymentError).toHaveBeenCalledWith({
+      amount: '10.50',
+      testnet: false,
+      correlationId: 'mock-correlation-id',
+      errorMessage: 'Error reason',
+    });
+
+    // Clear mocks for next test
+    vi.clearAllMocks();
+
+    // Test with unknown error type
+    vi.mocked(validation.validateStringAmount).mockImplementation(() => {
+      throw { unknownField: 'some value' };
+    });
+
+    await expect(
+      pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      })
+    ).rejects.toThrowError();
+
+    expect(logPaymentError).toHaveBeenCalledWith({
+      amount: '10.50',
+      testnet: false,
+      correlationId: 'mock-correlation-id',
+      errorMessage: 'Unknown error occurred',
+    });
   });
 });

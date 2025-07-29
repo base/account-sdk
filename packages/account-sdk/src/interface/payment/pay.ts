@@ -3,7 +3,6 @@ import {
   logPaymentError,
   logPaymentStarted,
 } from ':core/telemetry/events/payment.js';
-import type { Address } from 'viem';
 import type { PaymentOptions, PaymentResult } from './types.js';
 import { executePaymentWithSDK } from './utils/sdkManager.js';
 import { translatePaymentToSendCalls } from './utils/translatePayment.js';
@@ -103,12 +102,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
       logPaymentError({ amount, testnet, correlationId, errorMessage });
     }
 
-    // Return error result
-    return {
-      success: false,
-      error: errorMessage,
-      amount: amount,
-      to: to as Address,
-    };
+    // Re-throw the original error
+    throw error;
   }
 }
