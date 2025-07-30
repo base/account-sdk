@@ -17,19 +17,20 @@ import { normalizeAddress, validateStringAmount } from './utils/validation.js';
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.payerInfo - Optional payer information configuration for data callbacks
  * @returns Promise<PaymentResult> - Result of the payment transaction
+ * @throws Error if the payment fails
  *
  * @example
  * ```typescript
- * const payment = await pay({
- *   amount: "10.50",
- *   to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
- *   testnet: true
- * });
+ * try {
+ *   const payment = await pay({
+ *     amount: "10.50",
+ *     to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
+ *     testnet: true
+ *   });
  *
- * if (payment.success) {
  *   console.log(`Payment sent! Transaction ID: ${payment.id}`);
- * } else {
- *   console.error(`Payment failed: ${payment.error}`);
+ * } catch (error) {
+ *   console.error(`Payment failed: ${error.message}`);
  * }
  * ```
  */

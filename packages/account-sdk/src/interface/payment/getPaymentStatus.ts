@@ -14,12 +14,23 @@ import type { PaymentStatus, PaymentStatusOptions } from './types.js';
  *
  * @param options - Payment status check options
  * @returns Promise<PaymentStatus> - Status information about the payment
+ * @throws Error if unable to connect to the RPC endpoint or if the RPC request fails
  *
  * @example
- * const status = await getPaymentStatus({
- *   id: "0x1234...5678",
- *   testnet: true
- * })
+ * ```typescript
+ * try {
+ *   const status = await getPaymentStatus({
+ *     id: "0x1234...5678",
+ *     testnet: true
+ *   })
+ *
+ *   if (status.status === 'failed') {
+ *     console.log(`Payment failed: ${status.reason}`)
+ *   }
+ * } catch (error) {
+ *   console.error('Unable to check payment status:', error.message)
+ * }
+ * ```
  *
  * @note The id is the userOp hash returned from the pay function
  */
@@ -61,12 +72,8 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       if (telemetry) {
         logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
       }
-      return {
-        status: 'failed',
-        id: id as Hex,
-        message: 'Unable to check payment status. Please try again later.',
-        error: errorMessage,
-      };
+      // Re-throw error for RPC failures
+      throw new Error(`RPC error: ${errorMessage}`);
     }
 
     // If no result, payment is still pending or not found
@@ -165,15 +172,13 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       return result;
     } else {
       // Parse a user-friendly reason for failure
-      let userFriendlyError = 'Payment could not be completed';
+      let userFriendlyReason = 'Payment could not be completed';
 
       if (reason) {
         if (reason.toLowerCase().includes('insufficient')) {
-          userFriendlyError = 'Insufficient USDC balance';
-        } else if (reason.toLowerCase().includes('revert')) {
-          userFriendlyError = 'Payment was rejected';
+          userFriendlyReason = 'Insufficient USDC balance';
         } else {
-          userFriendlyError = reason;
+          userFriendlyReason = reason;
         }
       }
 
@@ -185,7 +190,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         id: id as Hex,
         message: 'Payment failed',
         sender: receipt.result.sender,
-        error: userFriendlyError,
+        reason: userFriendlyReason,
       };
       return result;
     }
@@ -197,12 +202,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
     }
 
-    const result = {
-      status: 'failed' as const,
-      id: id as Hex,
-      message: 'Unable to check payment status',
-      error: errorMessage,
-    };
-    return result;
+    // Re-throw the error
+    throw error;
   }
 }

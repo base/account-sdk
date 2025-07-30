@@ -138,8 +138,8 @@ export interface PaymentStatus {
   amount?: string;
   /** Recipient address (present for completed transactions, parsed from logs) */
   recipient?: string;
-  /** Error message (present for failed status - includes both on-chain failure reasons and off-chain errors) */
-  error?: string;
+  /** Reason for transaction failure (present for failed status - describes why the transaction failed on-chain) */
+  reason?: string;
 }
 
 /**

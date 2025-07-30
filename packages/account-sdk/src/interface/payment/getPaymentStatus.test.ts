@@ -109,7 +109,7 @@ describe('getPaymentStatus', () => {
       id: '0x789abc',
       message: 'Payment failed',
       sender: '0xsender',
-      error: 'Insufficient USDC balance',
+      reason: 'Insufficient USDC balance',
     });
   });
 
@@ -180,33 +180,23 @@ describe('getPaymentStatus', () => {
       }),
     } as Response);
 
-    const status = await getPaymentStatus({
-      id: '0xinvalid',
-      testnet: false,
-    });
-
-    expect(status).toEqual<PaymentStatus>({
-      status: 'failed',
-      id: '0xinvalid',
-      message: 'Unable to check payment status. Please try again later.',
-      error: 'Invalid params',
-    });
+    await expect(
+      getPaymentStatus({
+        id: '0xinvalid',
+        testnet: false,
+      })
+    ).rejects.toThrow('RPC error: Invalid params');
   });
 
   it('should handle network errors gracefully', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'));
 
-    const status = await getPaymentStatus({
-      id: '0xnetworkerror',
-      testnet: false,
-    });
-
-    expect(status).toEqual<PaymentStatus>({
-      status: 'failed',
-      id: '0xnetworkerror',
-      message: 'Unable to check payment status',
-      error: 'Network error',
-    });
+    await expect(
+      getPaymentStatus({
+        id: '0xnetworkerror',
+        testnet: false,
+      })
+    ).rejects.toThrow('Network error');
   });
 
   it('should use testnet bundler URL when testnet is true', async () => {
@@ -231,7 +221,7 @@ describe('getPaymentStatus', () => {
   it('should parse user-friendly failure reasons', async () => {
     const testCases = [
       { reason: 'execution reverted: insufficient balance', expected: 'Insufficient USDC balance' },
-      { reason: 'transaction reverted', expected: 'Payment was rejected' },
+      { reason: 'transaction reverted', expected: 'transaction reverted' },
       { reason: 'custom error message', expected: 'custom error message' },
     ];
 
@@ -254,7 +244,7 @@ describe('getPaymentStatus', () => {
         testnet: false,
       });
 
-      expect(status.error).toBe(expected);
+      expect(status.reason).toBe(expected);
     }
   });
 
@@ -384,11 +374,13 @@ describe('getPaymentStatus', () => {
         json: async () => mockError,
       } as Response);
 
-      await getPaymentStatus({
-        id: '0x123456',
-        testnet: false,
-        telemetry: false,
-      });
+      await expect(
+        getPaymentStatus({
+          id: '0x123456',
+          testnet: false,
+          telemetry: false,
+        })
+      ).rejects.toThrow('RPC error: Network error');
 
       // Verify telemetry error was NOT called
       const { logPaymentStatusCheckError } = await import(':core/telemetry/events/payment.js');
