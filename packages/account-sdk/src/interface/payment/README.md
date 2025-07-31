@@ -135,18 +135,12 @@ const status = await getPaymentStatus({
 
 #### PaymentResult
 
-Success:
+The payment result is always a successful payment (errors are thrown as exceptions):
 - `success: true` - Indicates successful payment
 - `id: string` - Transaction hash
 - `amount: string` - Amount sent in USDC
 - `to: Address` - Recipient address
 - `payerInfoResponses?: PayerInfoResponses` - Responses from information requests (if any)
-
-Error:
-- `success: false`
-- `error: string` - Error message describing what went wrong
-- `amount: string` - The amount that was attempted
-- `to: string` - The address that would have received the payment
 
 ### `getPaymentStatus(options: PaymentStatusOptions): Promise<PaymentStatus>`
 

@@ -6,9 +6,8 @@ export { getPaymentStatus } from './getPaymentStatus.js';
 export { pay } from './pay.js';
 export type {
   InfoRequest,
-  PayerInfoResponses,
   PayerInfo,
-  PaymentError,
+  PayerInfoResponses,
   PaymentOptions,
   PaymentResult,
   PaymentStatus,

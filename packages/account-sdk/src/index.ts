@@ -11,7 +11,6 @@ export type {
   InfoRequest,
   PayerInfo,
   PayerInfoResponses,
-  PaymentError,
   PaymentOptions,
   PaymentResult,
   PaymentStatus,

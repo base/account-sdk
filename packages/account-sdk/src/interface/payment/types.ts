@@ -86,22 +86,9 @@ export interface PaymentSuccess {
 }
 
 /**
- * Failed payment result
- */
-export interface PaymentError {
-  success: false;
-  /** Error message describing what went wrong */
-  error: string;
-  /** The amount that was attempted */
-  amount: string;
-  /** The address that would have received the payment */
-  to: Address;
-}
-
-/**
  * Result of a payment transaction
  */
-export type PaymentResult = PaymentSuccess | PaymentError;
+export type PaymentResult = PaymentSuccess;
 
 /**
  * Options for checking payment status
