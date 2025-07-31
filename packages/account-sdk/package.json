@@ -26,6 +26,11 @@
       "import": "./dist/interface/payment/index.js",
       "require": "./dist/interface/payment/index.js"
     },
+    "./spend-permission": {
+      "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
+      "import": "./dist/interface/public-utilities/spend-permission/index.js",
+      "require": "./dist/interface/public-utilities/spend-permission/index.js"
+    },
     "./ui-assets": {
       "types": "./dist/ui/assets/index.d.ts",
       "import": "./dist/ui/assets/index.js",
