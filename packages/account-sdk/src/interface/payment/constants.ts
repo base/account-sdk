@@ -15,8 +15,8 @@ export const TOKENS = {
  * Chain IDs for supported networks
  */
 export const CHAIN_IDS = {
-  base: 8453,
-  baseSepolia: 84532,
+  base: 0x2105, // 8453 in hex
+  baseSepolia: 0x14a34, // 84532 in hex
 } as const;
 
 /**

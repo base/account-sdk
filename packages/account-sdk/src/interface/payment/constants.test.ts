@@ -12,8 +12,8 @@ describe('constants', () => {
 
   describe('CHAIN_IDS', () => {
     it('should have correct chain IDs', () => {
-      expect(CHAIN_IDS.base).toBe(8453);
-      expect(CHAIN_IDS.baseSepolia).toBe(84532);
+      expect(CHAIN_IDS.base).toBe(0x2105);
+      expect(CHAIN_IDS.baseSepolia).toBe(0x14a34);
     });
   });
 });

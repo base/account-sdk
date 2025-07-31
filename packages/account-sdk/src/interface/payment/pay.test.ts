@@ -38,7 +38,7 @@ describe('pay', () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
-      chainId: 8453,
+      chainId: 0x2105,
       calls: [
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
@@ -171,7 +171,7 @@ describe('pay', () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
-      chainId: 8453,
+      chainId: 0x2105,
       calls: [],
       capabilities: {},
     });
@@ -192,7 +192,7 @@ describe('pay', () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
-      chainId: 8453,
+      chainId: 0x2105,
       calls: [
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
@@ -229,7 +229,7 @@ describe('pay', () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
-      chainId: 8453,
+      chainId: 0x2105,
       calls: [
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
@@ -283,7 +283,7 @@ describe('pay', () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
-      chainId: 8453,
+      chainId: 0x2105,
       calls: [],
       capabilities: {},
     });
@@ -343,7 +343,7 @@ describe('pay', () => {
     );
     expect(sdkManager.executePaymentWithSDK).toHaveBeenCalledWith(
       expect.objectContaining({
-        chainId: 84532,
+        chainId: 0x14a34,
         capabilities: expect.objectContaining({
           paymasterService: expect.any(Object),
         }),
@@ -375,7 +375,7 @@ describe('pay', () => {
     vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
     vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
       version: '2.0.0',
-      chainId: 8453,
+      chainId: 0x2105,
       calls: [
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
