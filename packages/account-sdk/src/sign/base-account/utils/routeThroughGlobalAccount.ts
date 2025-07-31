@@ -89,27 +89,22 @@ export async function routeThroughGlobalAccount({
   const requestToParent = injectRequestCapabilities(
     {
       method: 'wallet_sendCalls',
-      params: [{ ...originalSendCallsParams, calls, from: globalAccountAddress }],
+      params: [{ ...originalSendCallsParams, calls, from: globalAccountAddress, version: '2.0.0', atomicRequired: true }],
     },
     {
       spendPermissions: {
         request: true,
+        spender: subAccountAddress
       },
     }
   );
 
-  const result = (await globalAccountRequest(requestToParent)) as SendCallsReturnType | 'string';
+  const result = (await globalAccountRequest(requestToParent)) as SendCallsReturnType;
 
-  let callsId: string;
-  if (typeof result === 'string') {
-    // Backwards compatibility with old wallet_sendCalls response
-    callsId = result;
-  } else {
-    callsId = result.id;
-  }
+  let callsId = result.id;
 
   // Cache returned spend permissions
-  if (typeof result === 'object' && result.capabilities?.spendPermissions) {
+  if (result.capabilities?.spendPermissions) {
     spendPermissions.set(result.capabilities.spendPermissions.permissions);
   }
 
