@@ -39,13 +39,14 @@ export type RequestSpendPermissionType = {
  *
  * // Request approval for a spend permission
  * const permission = await requestSpendPermission({
+ *   provider, // Base Account Provider
  *   account: '0x1234...',
  *   spender: '0x5678...',
  *   token: '0xabcd...', // USDC address
  *   chainId: 8453, // Base mainnet
  *   allowance: parseUnits('100', 6), // 100 USDC
  *   periodInDays: 30, // Monthly allowance
- * }, provider);
+ * });
  *
  * console.log('Permission created:', permission.signature);
  * ```
