@@ -12,7 +12,8 @@
       ":core/*": ["src/core/*"],
       ":store/*": ["src/store/*"],
       ":sign/*": ["src/sign/*"],
-      ":ui/*": ["src/ui/*"]
+      ":ui/*": ["src/ui/*"],
+      ":i18n/*": ["src/i18n/*"]
     },
     "target": "es2017",
     "jsx": "react-jsx",
