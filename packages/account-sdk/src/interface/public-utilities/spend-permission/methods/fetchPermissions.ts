@@ -31,10 +31,11 @@ type FetchPermissionsType = {
  *
  * // Fetch all permissions for an account-spender pair
  * const permissions = await fetchPermissions({
+ *   provider, // Base Account Provider
  *   account: '0x1234...',
  *   spender: '0x5678...',
  *   chainId: 8453 // Base mainnet
- * }, provider);
+ * });
  *
  * console.log(`Found ${permissions.length} permissions`);
  * permissions.forEach(permission => {
@@ -42,12 +43,12 @@ type FetchPermissionsType = {
  * });
  * ```
  */
-export const fetchPermissions = async (
-  request: FetchPermissionsType,
-  provider: ProviderInterface
-): Promise<SpendPermission[]> => {
-  const { account, chainId, spender } = request;
-
+export const fetchPermissions = async ({
+  provider,
+  account,
+  chainId,
+  spender,
+}: FetchPermissionsType & { provider: ProviderInterface }): Promise<SpendPermission[]> => {
   const response = (await provider.request({
     method: 'coinbase_fetchPermissions',
     params: [

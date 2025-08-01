@@ -79,14 +79,12 @@ describe('fetchPermissions', () => {
 
       mockRequest.mockResolvedValue(mockResponse);
 
-      const result = await fetchPermissions(
-        {
-          account: '0x1234567890abcdef1234567890abcdef12345678',
-          chainId: 8453,
-          spender: '0x5678901234567890abcdef1234567890abcdef12',
-        },
-        mockProvider
-      );
+      const result = await fetchPermissions({
+        account: '0x1234567890abcdef1234567890abcdef12345678',
+        chainId: 8453,
+        spender: '0x5678901234567890abcdef1234567890abcdef12',
+        provider: mockProvider,
+      });
 
       expect(result).toEqual(mockPermissions);
       expect(result).toHaveLength(2);
@@ -101,14 +99,12 @@ describe('fetchPermissions', () => {
 
       mockRequest.mockResolvedValue(mockResponse);
 
-      const result = await fetchPermissions(
-        {
-          account: '0x1234567890abcdef1234567890abcdef12345678',
-          chainId: 8453,
-          spender: '0x5678901234567890abcdef1234567890abcdef12',
-        },
-        mockProvider
-      );
+      const result = await fetchPermissions({
+        account: '0x1234567890abcdef1234567890abcdef12345678',
+        chainId: 8453,
+        spender: '0x5678901234567890abcdef1234567890abcdef12',
+        provider: mockProvider,
+      });
 
       expect(result).toEqual([]);
       expect(result).toHaveLength(0);
@@ -134,14 +130,12 @@ describe('fetchPermissions', () => {
       for (const testCase of testCases) {
         mockRequest.mockClear();
 
-        await fetchPermissions(
-          {
-            account: '0x1234567890abcdef1234567890abcdef12345678',
-            chainId: testCase.input,
-            spender: '0x5678901234567890abcdef1234567890abcdef12',
-          },
-          mockProvider
-        );
+        await fetchPermissions({
+          account: '0x1234567890abcdef1234567890abcdef12345678',
+          chainId: testCase.input,
+          spender: '0x5678901234567890abcdef1234567890abcdef12',
+          provider: mockProvider,
+        });
 
         expect(mockRequest).toHaveBeenCalledWith({
           method: 'coinbase_fetchPermissions',
@@ -163,14 +157,12 @@ describe('fetchPermissions', () => {
       mockRequest.mockRejectedValue(new Error(errorMessage));
 
       await expect(
-        fetchPermissions(
-          {
-            account: '0x1234567890abcdef1234567890abcdef12345678',
-            chainId: 8453,
-            spender: '0x5678901234567890abcdef1234567890abcdef12',
-          },
-          mockProvider
-        )
+        fetchPermissions({
+          account: '0x1234567890abcdef1234567890abcdef12345678',
+          chainId: 8453,
+          spender: '0x5678901234567890abcdef1234567890abcdef12',
+          provider: mockProvider,
+        })
       ).rejects.toThrow(errorMessage);
     });
 
@@ -181,14 +173,12 @@ describe('fetchPermissions', () => {
       });
 
       await expect(
-        fetchPermissions(
-          {
-            account: '0x1234567890abcdef1234567890abcdef12345678',
-            chainId: 8453,
-            spender: '0x5678901234567890abcdef1234567890abcdef12',
-          },
-          mockProvider
-        )
+        fetchPermissions({
+          account: '0x1234567890abcdef1234567890abcdef12345678',
+          chainId: 8453,
+          spender: '0x5678901234567890abcdef1234567890abcdef12',
+          provider: mockProvider,
+        })
       ).rejects.toEqual({
         code: -32603,
         message: 'Internal error',
