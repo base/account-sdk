@@ -299,7 +299,7 @@ export default function AutoSubAccount() {
         method: 'eth_sendTransaction',
         params: [
           {
-            from: accounts[0], // Use sub account (accounts[1])
+            from: accounts[0],
             to: usdcAddress,
             value: '0x0',
             data,
