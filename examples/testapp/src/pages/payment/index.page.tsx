@@ -57,7 +57,7 @@ export default function Payment() {
     name: { enabled: false, optional: false },
     onchainAddress: { enabled: false, optional: false },
   });
-  const [callbackUrl, setCallbackUrl] = useState('https://example.com/callback');
+  const [callbackUrl, setCallbackUrl] = useState('');
 
   // Status check state
   const [statusId, setStatusId] = useState('');
@@ -96,7 +96,7 @@ export default function Payment() {
         if (requests.length > 0) {
           payerInfo = {
             requests,
-            callbackURL: callbackUrl,
+            ...(callbackUrl && { callbackURL: callbackUrl }),
           };
         }
       }
@@ -419,7 +419,7 @@ export default function Payment() {
       requests: Object.entries(payerInfoRequests)
         .filter(([_, config]) => config.enabled)
         .map(([type, config]) => ({ type, optional: config.optional })),
-      callbackURL: callbackUrl,
+      ...(callbackUrl && { callbackURL: callbackUrl }),
     },
     null,
     2
