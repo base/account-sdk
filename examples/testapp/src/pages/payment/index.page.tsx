@@ -21,7 +21,7 @@ import {
   Text,
   useColorModeValue,
   useToast,
-  VStack
+  VStack,
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { useConfig } from '../../context/ConfigContextProvider';
@@ -29,26 +29,25 @@ import { useConfig } from '../../context/ConfigContextProvider';
 export default function Payment() {
   const { scwUrl } = useConfig();
   const toast = useToast();
-  
+
   // Color mode values for better dark theme support
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const codeBgColor = useColorModeValue('gray.50', 'gray.900');
   const optionalBgColor = useColorModeValue('gray.50', 'gray.700');
-  const noteBgColor = useColorModeValue('yellow.50', 'gray.700');
   const noteTextColor = useColorModeValue('gray.700', 'gray.200');
-  
+
   // Pay form state with defaults
   const [payAmount, setPayAmount] = useState('0.01');
   const [payTo, setPayTo] = useState('0x0000000000000000000000000000000000000000');
   const [payLoading, setPayLoading] = useState(false);
-  const [payResult, setPayResult] = useState<any>(null);
-  
+  const [payResult, setPayResult] = useState<Record<string, unknown> | null>(null);
+
   // Optional parameters state
   const [customWalletUrl, setCustomWalletUrl] = useState('');
   const [useTestnet, setUseTestnet] = useState(true);
   const [enableTelemetry, setEnableTelemetry] = useState(true);
-  
+
   // Payer info state
   const [collectPayerInfo, setCollectPayerInfo] = useState(false);
   const [payerInfoRequests, setPayerInfoRequests] = useState({
@@ -59,11 +58,11 @@ export default function Payment() {
     onchainAddress: { enabled: false, optional: false },
   });
   const [callbackUrl, setCallbackUrl] = useState('https://example.com/callback');
-  
+
   // Status check state
   const [statusId, setStatusId] = useState('');
   const [statusLoading, setStatusLoading] = useState(false);
-  const [statusResult, setStatusResult] = useState<any>(null);
+  const [statusResult, setStatusResult] = useState<Record<string, unknown> | null>(null);
   const [statusTestnet, setStatusTestnet] = useState(true); // Separate testnet state for status check
 
   const handlePay = async () => {
@@ -82,7 +81,7 @@ export default function Payment() {
 
     try {
       // Build payerInfo if enabled
-      let payerInfo = undefined;
+      let payerInfo;
       if (collectPayerInfo) {
         const requests = [];
         Object.entries(payerInfoRequests).forEach(([type, config]) => {
@@ -93,7 +92,7 @@ export default function Payment() {
             });
           }
         });
-        
+
         if (requests.length > 0) {
           payerInfo = {
             requests,
@@ -106,13 +105,13 @@ export default function Payment() {
         amount: payAmount,
         to: payTo,
         testnet: useTestnet,
-        walletUrl: customWalletUrl || scwUrl,  // Use custom URL if provided, otherwise default
+        walletUrl: customWalletUrl || scwUrl, // Use custom URL if provided, otherwise default
         telemetry: enableTelemetry,
         ...(payerInfo && { payerInfo }),
       });
-      
+
       setPayResult(result);
-      
+
       if (result.success) {
         toast({
           title: 'Payment sent!',
@@ -125,7 +124,7 @@ export default function Payment() {
       } else {
         toast({
           title: 'Payment failed',
-          description: (result as any).error || 'Unknown error',
+          description: (result as Record<string, unknown>).error || 'Unknown error',
           status: 'error',
           duration: 5000,
         });
@@ -141,8 +140,8 @@ export default function Payment() {
           name: error instanceof Error ? error.name : undefined,
           stack: error instanceof Error ? error.stack : undefined,
           // Include any additional properties the error might have
-          ...error
-        }
+          ...error,
+        },
       });
       toast({
         title: 'Error',
@@ -172,11 +171,11 @@ export default function Payment() {
     try {
       const result = await getPaymentStatus({
         id: statusId,
-        testnet: statusTestnet,  // Use the separate status check testnet setting
+        testnet: statusTestnet, // Use the separate status check testnet setting
       });
-      
+
       setStatusResult(result);
-      
+
       toast({
         title: 'Status checked',
         description: `Payment is ${result.status}`,
@@ -194,8 +193,8 @@ export default function Payment() {
           name: error instanceof Error ? error.name : undefined,
           stack: error instanceof Error ? error.stack : undefined,
           // Include any additional properties the error might have
-          ...error
-        }
+          ...error,
+        },
       });
       toast({
         title: 'Error',
@@ -212,18 +211,12 @@ export default function Payment() {
     <Container maxW="container.lg" py={8}>
       <VStack spacing={8} align="stretch">
         <Heading>Payment Module Testing</Heading>
-        
+
         {/* Pay Section */}
-        <Box 
-          borderWidth="1px" 
-          borderRadius="lg" 
-          p={6} 
-          bg={bgColor}
-          borderColor={borderColor}
-        >
+        <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
           <VStack spacing={6} align="stretch">
             <Heading size="md">Send Payment</Heading>
-            
+
             <HStack spacing={4} align="start">
               <FormControl flex={1}>
                 <FormLabel>Amount (USDC)</FormLabel>
@@ -234,7 +227,7 @@ export default function Payment() {
                   size="lg"
                 />
               </FormControl>
-              
+
               <FormControl flex={2}>
                 <FormLabel>Recipient Address</FormLabel>
                 <Input
@@ -246,9 +239,9 @@ export default function Payment() {
                 />
               </FormControl>
             </HStack>
-            
+
             <Divider />
-            
+
             {/* Advanced Options Accordion */}
             <Accordion allowToggle>
               {/* Network and Core Parameters */}
@@ -273,7 +266,7 @@ export default function Payment() {
                         <option value="mainnet">Base (Mainnet)</option>
                       </Select>
                     </FormControl>
-                    
+
                     <FormControl>
                       <FormLabel>Custom Wallet URL</FormLabel>
                       <Input
@@ -282,11 +275,9 @@ export default function Payment() {
                         onChange={(e) => setCustomWalletUrl(e.target.value)}
                       />
                     </FormControl>
-                    
+
                     <FormControl display="flex" alignItems="center">
-                      <FormLabel mb="0">
-                        Enable Telemetry
-                      </FormLabel>
+                      <FormLabel mb="0">Enable Telemetry</FormLabel>
                       <Switch
                         isChecked={enableTelemetry}
                         onChange={(e) => setEnableTelemetry(e.target.checked)}
@@ -295,7 +286,7 @@ export default function Payment() {
                   </VStack>
                 </AccordionPanel>
               </AccordionItem>
-              
+
               {/* Payer Info Collection */}
               <AccordionItem border="none">
                 <h2>
@@ -309,40 +300,45 @@ export default function Payment() {
                 <AccordionPanel pb={4}>
                   <VStack spacing={4} align="stretch">
                     <FormControl display="flex" alignItems="center">
-                      <FormLabel mb="0">
-                        Collect Payer Information
-                      </FormLabel>
+                      <FormLabel mb="0">Collect Payer Information</FormLabel>
                       <Switch
                         isChecked={collectPayerInfo}
                         onChange={(e) => setCollectPayerInfo(e.target.checked)}
                       />
                     </FormControl>
-                    
+
                     {collectPayerInfo && (
                       <>
                         <Box borderWidth="1px" borderRadius="md" p={4} bg={optionalBgColor}>
                           <VStack spacing={3} align="stretch">
-                            <Text fontWeight="bold" fontSize="sm">Information to Request</Text>
-                            
+                            <Text fontWeight="bold" fontSize="sm">
+                              Information to Request
+                            </Text>
+
                             {Object.entries(payerInfoRequests).map(([type, config]) => (
                               <HStack key={type} spacing={4}>
                                 <Checkbox
                                   isChecked={config.enabled}
-                                  onChange={(e) => setPayerInfoRequests(prev => ({
-                                    ...prev,
-                                    [type]: { ...prev[type], enabled: e.target.checked }
-                                  }))}
+                                  onChange={(e) =>
+                                    setPayerInfoRequests((prev) => ({
+                                      ...prev,
+                                      [type]: { ...prev[type], enabled: e.target.checked },
+                                    }))
+                                  }
                                 >
-                                  {type.charAt(0).toUpperCase() + type.slice(1).replace(/([A-Z])/g, ' $1')}
+                                  {type.charAt(0).toUpperCase() +
+                                    type.slice(1).replace(/([A-Z])/g, ' $1')}
                                 </Checkbox>
                                 {config.enabled && (
                                   <Checkbox
                                     size="sm"
                                     isChecked={config.optional}
-                                    onChange={(e) => setPayerInfoRequests(prev => ({
-                                      ...prev,
-                                      [type]: { ...prev[type], optional: e.target.checked }
-                                    }))}
+                                    onChange={(e) =>
+                                      setPayerInfoRequests((prev) => ({
+                                        ...prev,
+                                        [type]: { ...prev[type], optional: e.target.checked },
+                                      }))
+                                    }
                                   >
                                     Optional
                                   </Checkbox>
@@ -351,7 +347,7 @@ export default function Payment() {
                             ))}
                           </VStack>
                         </Box>
-                        
+
                         <FormControl>
                           <FormLabel>Callback URL</FormLabel>
                           <Input
@@ -366,7 +362,7 @@ export default function Payment() {
                 </AccordionPanel>
               </AccordionItem>
             </Accordion>
-            
+
             <Button
               colorScheme="blue"
               onClick={handlePay}
@@ -377,10 +373,12 @@ export default function Payment() {
             >
               Send Payment
             </Button>
-            
+
             {payResult && (
               <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
-                <Text fontWeight="bold" mb={2}>Result:</Text>
+                <Text fontWeight="bold" mb={2}>
+                  Result:
+                </Text>
                 <Code display="block" whiteSpace="pre" fontSize="sm">
                   {JSON.stringify(payResult, null, 2)}
                 </Code>
@@ -388,53 +386,62 @@ export default function Payment() {
             )}
           </VStack>
         </Box>
-        
+
         {/* Raw Parameters Display */}
-        <Box 
-          borderWidth="1px" 
-          borderRadius="lg" 
-          p={6}
-          bg={bgColor}
-          borderColor={borderColor}
-        >
+        <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
           <VStack spacing={4} align="stretch">
             <Heading size="md">Current Parameters (Raw)</Heading>
-            
+
             <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
               <Code display="block" whiteSpace="pre" fontSize="sm">
-{`pay({
+                {`pay({
   amount: "${payAmount}",
-  to: "${payTo}"${!useTestnet ? `,
-  testnet: false` : ''}${customWalletUrl ? `,
-  walletUrl: "${customWalletUrl}"` : ''}${!enableTelemetry ? `,
-  telemetry: false` : ''}${collectPayerInfo && payerInfoRequests && Object.values(payerInfoRequests).some(r => r.enabled) ? `,
-  payerInfo: ${JSON.stringify({
-    requests: Object.entries(payerInfoRequests)
-      .filter(([_, config]) => config.enabled)
-      .map(([type, config]) => ({ type, optional: config.optional })),
-    callbackURL: callbackUrl
-  }, null, 2).split('\n').map((line, i) => i === 0 ? line : '  ' + line).join('\n')}` : ''}
+  to: "${payTo}"${
+    !useTestnet
+      ? `,
+  testnet: false`
+      : ''
+  }${
+    customWalletUrl
+      ? `,
+  walletUrl: "${customWalletUrl}"`
+      : ''
+  }${
+    !enableTelemetry
+      ? `,
+  telemetry: false`
+      : ''
+  }${
+    collectPayerInfo && payerInfoRequests && Object.values(payerInfoRequests).some((r) => r.enabled)
+      ? `,
+  payerInfo: ${JSON.stringify(
+    {
+      requests: Object.entries(payerInfoRequests)
+        .filter(([_, config]) => config.enabled)
+        .map(([type, config]) => ({ type, optional: config.optional })),
+      callbackURL: callbackUrl,
+    },
+    null,
+    2
+  )
+    .split('\n')
+    .map((line, i) => (i === 0 ? line : `  ${line}`))
+    .join('\n')}`
+      : ''
+  }
 });`}
               </Code>
             </Box>
           </VStack>
         </Box>
-        
+
         {/* Status Check Section */}
-        <Box 
-          borderWidth="1px" 
-          borderRadius="lg" 
-          p={6}
-          bg={bgColor}
-          borderColor={borderColor}
-        >
+        <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
           <VStack spacing={4} align="stretch">
             <Heading size="md">Check Payment Status</Heading>
-            
+
             <FormControl display="flex" alignItems="center" mb={4}>
-              <FormLabel mb="0">
-                Use Testnet
-              </FormLabel>
+              <FormLabel mb="0">Use Testnet</FormLabel>
               <Switch
                 isChecked={statusTestnet}
                 onChange={(e) => setStatusTestnet(e.target.checked)}
@@ -443,7 +450,7 @@ export default function Payment() {
                 {statusTestnet ? 'Base Sepolia' : 'Base Mainnet'}
               </Text>
             </FormControl>
-            
+
             <FormControl>
               <FormLabel>Transaction ID</FormLabel>
               <Input
@@ -454,7 +461,7 @@ export default function Payment() {
                 size="lg"
               />
             </FormControl>
-            
+
             <Button
               colorScheme="green"
               onClick={handleCheckStatus}
@@ -465,10 +472,12 @@ export default function Payment() {
             >
               Check Status
             </Button>
-            
+
             {statusResult && (
               <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
-                <Text fontWeight="bold" mb={2}>Status:</Text>
+                <Text fontWeight="bold" mb={2}>
+                  Status:
+                </Text>
                 <Code display="block" whiteSpace="pre" fontSize="sm">
                   {JSON.stringify(statusResult, null, 2)}
                 </Code>
@@ -479,4 +488,4 @@ export default function Payment() {
       </VStack>
     </Container>
   );
-} 
+}
