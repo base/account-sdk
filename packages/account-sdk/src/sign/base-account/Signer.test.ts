@@ -112,6 +112,46 @@ const mockSuccessResponse: RPCResponseMessage = {
 const subAccountAddress = '0x7838d2724FC686813CAf81d4429beff1110c739a';
 const globalAccountAddress = '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54';
 
+// Mock spend permission factory
+const createMockSpendPermission = ({
+  chainId = 84532,
+  account = globalAccountAddress,
+  spender = subAccountAddress,
+  token = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+  allowance = '1000000000000000000',
+  period = 86400,
+  start = 0,
+  end = 281474976710655,
+  salt = '0',
+  extraData = '0x',
+}: {
+  chainId?: number;
+  account?: string;
+  spender?: string;
+  token?: string;
+  allowance?: string;
+  period?: number;
+  start?: number;
+  end?: number;
+  salt?: string;
+  extraData?: string;
+} = {}) => ({
+  permissionHash: '0xPermissionHash',
+  signature: '0xSignature',
+  chainId,
+  permission: {
+    account,
+    spender,
+    token,
+    allowance,
+    period,
+    start,
+    end,
+    salt,
+    extraData,
+  },
+});
+
 describe('Signer', () => {
   let signer: Signer;
   let mockMetadata: AppMetadata;
@@ -162,6 +202,18 @@ describe('Signer', () => {
     store.subAccounts.clear();
     store.subAccountsConfig.clear();
     store.setState({});
+  });
+
+  beforeEach(async () => {
+    // Restore getCryptoKeyAccount mock after clearAllMocks
+    const { getCryptoKeyAccount } = (await vi.importMock('../../kms/crypto-key/index.js')) as any;
+    getCryptoKeyAccount.mockResolvedValue({
+      account: {
+        type: 'local',
+        address: '0x1234567890123456789012345678901234567890',
+        publicKey: '0x04' + '1'.repeat(128),
+      },
+    });
   });
 
   describe('handshake', () => {
@@ -731,17 +783,7 @@ describe('Signer', () => {
         params: [],
       };
 
-      const mockSpendPermissions = [
-        {
-          permissionHash: '0xPermissionHash',
-          signature: '0xSignature',
-          chainId: 1,
-          permission: {
-            account: globalAccountAddress,
-            spender: subAccountAddress,
-          },
-        },
-      ];
+      const mockSpendPermissions = [createMockSpendPermission({ chainId: 1 })];
 
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
@@ -1258,6 +1300,10 @@ describe('Signer', () => {
         address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
       });
 
+      // Mock that spend permissions exist so we don't route through global account
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
       (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
       (handleAddSubAccountOwner as Mock).mockResolvedValueOnce(0);
 
@@ -1337,6 +1383,28 @@ describe('Signer', () => {
         };
       });
 
+      // Mock decryptContent for wallet_connect to set up accounts
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
       await signer.request({
         method: 'wallet_connect',
         params: [],
@@ -1365,6 +1433,10 @@ describe('Signer', () => {
         communicator: mockCommunicator,
         callback: mockCallback,
       });
+
+      // Mock that spend permissions exist so we use sub account signer
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
 
       await expect(signer.request(mockRequest)).rejects.toThrow();
 
@@ -1409,6 +1481,28 @@ describe('Signer', () => {
         };
       });
 
+      // Mock decryptContent for wallet_connect to set up accounts
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
       await signer.request({
         method: 'wallet_connect',
         params: [],
@@ -1437,6 +1531,10 @@ describe('Signer', () => {
         communicator: mockCommunicator,
         callback: mockCallback,
       });
+
+      // Mock that spend permissions exist so we use sub account signer
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
 
       await signer.request(mockRequest);
 
@@ -1665,15 +1763,11 @@ describe('Signer', () => {
 
   describe('coinbase_fetchPermissions', () => {
     const mockSpendPermissions = [
-      {
-        permissionHash: '0xPermissionHash',
-        signature: '0xSignature',
-        permission: {
-          account: '0xAddress',
-          spender: '0xSubAccount',
-        },
+      createMockSpendPermission({
         chainId: 10,
-      },
+        account: '0xAddress',
+        spender: '0xSubAccount',
+      }),
     ] as [SpendPermission];
 
     beforeEach(() => {
@@ -1881,24 +1975,7 @@ describe('Signer', () => {
 
     it('should not route through global account when spend permissions exist', async () => {
       // Mock that spend permissions exist
-      const mockSpendPermissions = [
-        {
-          permissionHash: '0xPermissionHash',
-          signature: '0xSignature',
-          permission: {
-            account: globalAccountAddress,
-            spender: subAccountAddress,
-            token: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-            allowance: '1000000000000000000',
-            period: 86400,
-            start: 0,
-            end: 281474976710655,
-            salt: '0',
-            extraData: '0x',
-          },
-          chainId: 84532,
-        },
-      ];
+      const mockSpendPermissions = [createMockSpendPermission()];
       vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
 
       const mockRequest: RequestArguments = {

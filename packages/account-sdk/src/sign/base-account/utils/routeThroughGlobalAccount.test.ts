@@ -193,12 +193,15 @@ describe('routeThroughGlobalAccount', () => {
                 }),
               ],
               from: globalAccountAddress,
+              atomicRequired: true,
+              version: '2.0.0',
             }),
           ],
         }),
         {
           spendPermissions: {
             request: true,
+            spender: subAccountAddress,
           },
         }
       );
@@ -309,7 +312,7 @@ describe('routeThroughGlobalAccount', () => {
       const mockCallsId = '0x1234ca11';
       const mockTxHash = '0xabcdef...';
 
-      mockGlobalAccountRequest.mockResolvedValue(mockCallsId);
+      mockGlobalAccountRequest.mockResolvedValue({ id: mockCallsId });
       vi.mocked(waitForCallsTransactionHash).mockResolvedValue(mockTxHash);
 
       const result = await routeThroughGlobalAccount(args);
