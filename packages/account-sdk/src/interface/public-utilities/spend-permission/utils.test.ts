@@ -1,6 +1,12 @@
+import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RequestSpendPermissionType } from './methods/requestSpendPermission.js';
-import { createSpendPermissionTypedData, toTimestampInSeconds } from './utils.js';
+import {
+  createSpendPermissionTypedData,
+  fromTimestampInSeconds,
+  toSpendPermissionArgs,
+  toTimestampInSeconds,
+} from './utils.js';
 
 const ETERNITY_TIMESTAMP = 281474976710655; // 2^48 - 1
 
@@ -258,5 +264,188 @@ describe('toTimestampInSeconds', () => {
     const date = new Date('2022-01-01T00:00:00.999Z'); // 999ms
     const result = toTimestampInSeconds(date);
     expect(result).toBe(1640995200); // Should be floored to seconds
+  });
+});
+
+describe('toSpendPermissionArgs', () => {
+  const mockSpendPermission: SpendPermission = {
+    createdAt: 1234567890,
+    permissionHash: '0xabcdef123456',
+    signature: '0x987654321fedcba',
+    chainId: 8453,
+    permission: {
+      account: '0x1234567890abcdef1234567890abcdef12345678',
+      spender: '0x5678901234567890abcdef1234567890abcdef12',
+      token: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+      allowance: '1000000000000000000',
+      period: 86400,
+      start: 1234567890,
+      end: 1234654290,
+      salt: '123456789',
+      extraData: '0x',
+    },
+  };
+
+  it('should convert SpendPermission to contract args with proper types', () => {
+    const result = toSpendPermissionArgs(mockSpendPermission);
+
+    expect(result).toEqual({
+      account: '0x1234567890AbcdEF1234567890aBcdef12345678', // checksummed by viem
+      spender: '0x5678901234567890abCDEf1234567890ABcDef12', // checksummed by viem
+      token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // checksummed by viem
+      allowance: BigInt('1000000000000000000'),
+      period: 86400,
+      start: 1234567890,
+      end: 1234654290,
+      salt: BigInt('123456789'),
+      extraData: '0x',
+    });
+  });
+
+  it('should handle different address formats and checksum them', () => {
+    const permission: SpendPermission = {
+      ...mockSpendPermission,
+      permission: {
+        ...mockSpendPermission.permission,
+        account: '0xabc123abc123abc123abc123abc123abc123abc1', // lowercase
+        spender: '0xDEF456DEF456DEF456DEF456DEF456DEF456DEF4', // uppercase
+        token: '0x1234567890123456789012345678901234567890', // valid mixed case
+      },
+    };
+
+    const result = toSpendPermissionArgs(permission);
+
+    // Should be checksummed by viem's getAddress - verify they're proper addresses
+    expect(result.account).toMatch(/^0x[a-fA-F0-9]{40}$/);
+    expect(result.spender).toMatch(/^0x[a-fA-F0-9]{40}$/);
+    expect(result.token).toMatch(/^0x[a-fA-F0-9]{40}$/);
+
+    // Verify the addresses are properly checksummed (not all lowercase/uppercase)
+    expect(result.account).not.toBe(permission.permission.account.toLowerCase());
+    expect(result.spender).not.toBe(permission.permission.spender.toLowerCase());
+
+    // Check specific values that viem produces
+    expect(result.account).toBe('0xAbc123AbC123Abc123aBc123abC123ABC123ABc1');
+    expect(result.spender).toBe('0xDEF456Def456deF456dEF456DEF456DeF456Def4');
+    expect(result.token).toBe('0x1234567890123456789012345678901234567890');
+  });
+
+  it('should convert large number strings to BigInt correctly', () => {
+    const permission: SpendPermission = {
+      ...mockSpendPermission,
+      permission: {
+        ...mockSpendPermission.permission,
+        allowance: '999999999999999999999999999999', // Very large number
+        salt: '18446744073709551615', // Max uint64
+      },
+    };
+
+    const result = toSpendPermissionArgs(permission);
+
+    expect(result.allowance).toBe(BigInt('999999999999999999999999999999'));
+    expect(result.salt).toBe(BigInt('18446744073709551615'));
+  });
+
+  it('should handle zero values correctly', () => {
+    const permission: SpendPermission = {
+      ...mockSpendPermission,
+      permission: {
+        ...mockSpendPermission.permission,
+        allowance: '0',
+        salt: '0',
+        period: 0,
+        start: 0,
+        end: 0,
+      },
+    };
+
+    const result = toSpendPermissionArgs(permission);
+
+    expect(result.allowance).toBe(BigInt(0));
+    expect(result.salt).toBe(BigInt(0));
+    expect(result.period).toBe(0);
+    expect(result.start).toBe(0);
+    expect(result.end).toBe(0);
+  });
+
+  it('should handle hex extraData correctly', () => {
+    const permission: SpendPermission = {
+      ...mockSpendPermission,
+      permission: {
+        ...mockSpendPermission.permission,
+        extraData: '0x1234abcd',
+      },
+    };
+
+    const result = toSpendPermissionArgs(permission);
+
+    expect(result.extraData).toBe('0x1234abcd');
+  });
+
+  it('should preserve all fields from the original permission', () => {
+    const result = toSpendPermissionArgs(mockSpendPermission);
+
+    // Should have all the fields from the original permission
+    expect(Object.keys(result)).toEqual([
+      'account',
+      'spender',
+      'token',
+      'allowance',
+      'period',
+      'start',
+      'end',
+      'salt',
+      'extraData',
+    ]);
+  });
+});
+
+describe('fromTimestampInSeconds', () => {
+  it('should convert Unix timestamp in seconds to Date object', () => {
+    const timestamp = 1640995200; // 2022-01-01 00:00:00 UTC
+    const result = fromTimestampInSeconds(timestamp);
+    expect(result).toEqual(new Date('2022-01-01T00:00:00.000Z'));
+  });
+
+  it('should handle different timestamps correctly', () => {
+    const testCases = [
+      { timestamp: 1577836800, expected: new Date('2020-01-01T00:00:00.000Z') },
+      { timestamp: 1640995199, expected: new Date('2021-12-31T23:59:59.000Z') },
+      { timestamp: 0, expected: new Date('1970-01-01T00:00:00.000Z') },
+      { timestamp: 2147483647, expected: new Date('2038-01-19T03:14:07.000Z') }, // Max 32-bit timestamp
+    ];
+
+    testCases.forEach(({ timestamp, expected }) => {
+      const result = fromTimestampInSeconds(timestamp);
+      expect(result).toEqual(expected);
+    });
+  });
+
+  it('should handle negative timestamps for dates before Unix epoch', () => {
+    const timestamp = -86400; // One day before Unix epoch
+    const result = fromTimestampInSeconds(timestamp);
+    expect(result).toEqual(new Date('1969-12-31T00:00:00.000Z'));
+  });
+
+  it('should handle very large timestamps correctly', () => {
+    const timestamp = 4102444800; // 2100-01-01 00:00:00 UTC
+    const result = fromTimestampInSeconds(timestamp);
+    expect(result).toEqual(new Date('2100-01-01T00:00:00.000Z'));
+  });
+
+  it('should be the inverse of toTimestampInSeconds', () => {
+    const originalDate = new Date('2022-06-15T12:30:45.123Z');
+    const timestamp = toTimestampInSeconds(originalDate);
+    const resultDate = fromTimestampInSeconds(timestamp);
+
+    // Note: We lose millisecond precision in the conversion
+    const expectedDate = new Date('2022-06-15T12:30:45.000Z');
+    expect(resultDate).toEqual(expectedDate);
+  });
+
+  it('should handle decimal timestamps by truncating to integer', () => {
+    const timestamp = 1640995200.999; // Decimal timestamp
+    const result = fromTimestampInSeconds(timestamp);
+    expect(result).toEqual(new Date('2022-01-01T00:00:00.999Z'));
   });
 });

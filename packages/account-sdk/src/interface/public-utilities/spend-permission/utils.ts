@@ -1,3 +1,4 @@
+import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { spendPermissionManagerAddress } from ':sign/base-account/utils/constants.js';
 import { Address, Hex, getAddress } from 'viem';
 import { RequestSpendPermissionType } from './methods/requestSpendPermission.js';
@@ -115,4 +116,57 @@ function getRandomHexString(byteLength: number): `0x${string}` {
  */
 export function toTimestampInSeconds(date: Date): number {
   return Math.floor(date.getTime() / 1000);
+}
+
+/**
+
+ * Converts a Unix timestamp in seconds to a Date object.
+ *
+ * @param timestamp - The Unix timestamp in seconds.
+ * @returns A Date object.
+ */
+export function fromTimestampInSeconds(timestamp: number): Date {
+  return new Date(timestamp * 1000);
+}
+
+/**
+ * Converts a SpendPermission object to the arguments expected by the SpendPermissionManager contract.
+ *
+ * The order of the parameters does not matter because the contract will sort them.
+ *
+ * @param permission - The SpendPermission object to convert.
+ * @returns The arguments expected by the SpendPermissionManager contract.
+ *
+ * @example
+ * ```typescript
+ * import { toSpendPermissionArgs } from '@base-org/account/spend-permission';
+ *
+ * const args = toSpendPermissionArgs(permission);
+ * const currentPeriod = await readContract(client, {
+ *   address: spendPermissionManagerAddress,
+ *   abi: spendPermissionManagerAbi,
+ *   functionName: 'getCurrentPeriod',
+ *   args: [args]
+ * });
+ * ```
+ */
+export function toSpendPermissionArgs(permission: SpendPermission) {
+  const {
+    account,
+    spender,
+    token,
+    allowance: allowanceStr,
+    salt,
+    extraData,
+  } = permission.permission;
+
+  return {
+    ...permission.permission,
+    account: getAddress(account),
+    spender: getAddress(spender),
+    token: getAddress(token),
+    allowance: BigInt(allowanceStr),
+    salt: BigInt(salt),
+    extraData: extraData as Hex,
+  };
 }
