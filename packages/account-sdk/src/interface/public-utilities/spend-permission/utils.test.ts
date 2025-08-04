@@ -398,6 +398,21 @@ describe('toSpendPermissionArgs', () => {
       'extraData',
     ]);
   });
+
+  it('should preserve the order of the fields', () => {
+    const result = toSpendPermissionArgs(mockSpendPermission);
+    expect(Object.keys(result)).toEqual([
+      'account',
+      'spender',
+      'token',
+      'allowance',
+      'period',
+      'start',
+      'end',
+      'salt',
+      'extraData',
+    ]);
+  });
 });
 
 describe('timestampInSecondsToDate', () => {

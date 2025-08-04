@@ -132,7 +132,7 @@ export function timestampInSecondsToDate(timestamp: number): Date {
 /**
  * Converts a SpendPermission object to the arguments expected by the SpendPermissionManager contract.
  *
- * The order of the parameters does not matter because the contract will sort them.
+ * This function creates the standard args in the correct order.
  *
  * @param permission - The SpendPermission object to convert.
  * @returns The arguments expected by the SpendPermissionManager contract.
@@ -156,16 +156,21 @@ export function toSpendPermissionArgs(permission: SpendPermission) {
     spender,
     token,
     allowance: allowanceStr,
+    period,
+    start,
+    end,
     salt,
     extraData,
   } = permission.permission;
 
   return {
-    ...permission.permission,
     account: getAddress(account),
     spender: getAddress(spender),
     token: getAddress(token),
     allowance: BigInt(allowanceStr),
+    period,
+    start,
+    end,
     salt: BigInt(salt),
     extraData: extraData as Hex,
   };
