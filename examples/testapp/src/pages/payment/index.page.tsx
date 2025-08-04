@@ -1,4 +1,4 @@
-import { getPaymentStatus, pay } from '@base-org/account';
+import { getPaymentStatus, pay, type PaymentResult, type PaymentStatus } from '@base-org/account';
 import {
   Accordion,
   AccordionButton,
@@ -41,7 +41,8 @@ export default function Payment() {
   const [payAmount, setPayAmount] = useState('0.01');
   const [payTo, setPayTo] = useState('0x0000000000000000000000000000000000000000');
   const [payLoading, setPayLoading] = useState(false);
-  const [payResult, setPayResult] = useState<Record<string, unknown> | null>(null);
+  const [payResult, setPayResult] = useState<PaymentResult | null>(null);
+  const [payError, setPayError] = useState<any>(null);
 
   // Optional parameters state
   const [customWalletUrl, setCustomWalletUrl] = useState('');
@@ -62,7 +63,8 @@ export default function Payment() {
   // Status check state
   const [statusId, setStatusId] = useState('');
   const [statusLoading, setStatusLoading] = useState(false);
-  const [statusResult, setStatusResult] = useState<Record<string, unknown> | null>(null);
+  const [statusResult, setStatusResult] = useState<PaymentStatus | null>(null);
+  const [statusError, setStatusError] = useState<any>(null);
   const [statusTestnet, setStatusTestnet] = useState(true); // Separate testnet state for status check
 
   const handlePay = async () => {
@@ -78,6 +80,7 @@ export default function Payment() {
 
     setPayLoading(true);
     setPayResult(null);
+    setPayError(null);
 
     try {
       // Build payerInfo if enabled
@@ -124,23 +127,27 @@ export default function Payment() {
       } else {
         toast({
           title: 'Payment failed',
-          description: (result as Record<string, unknown>).error || 'Unknown error',
+          description: 'error' in result ? result.error : 'Unknown error',
           status: 'error',
           duration: 5000,
         });
       }
     } catch (error) {
       console.error('Payment error:', error);
-      // Capture the entire error object
-      setPayResult({
-        success: false,
-        error: error,
+      // Store the detailed error information
+      setPayError({
+        error: error instanceof Error ? error.message : 'Unknown error',
         errorDetails: {
           message: error instanceof Error ? error.message : 'Unknown error',
           name: error instanceof Error ? error.name : undefined,
           stack: error instanceof Error ? error.stack : undefined,
-          // Include any additional properties the error might have
-          ...error,
+          raw: error,
+        },
+        // Include payment details for context
+        attemptedPayment: {
+          amount: payAmount,
+          to: payTo,
+          testnet: useTestnet,
         },
       });
       toast({
@@ -167,6 +174,7 @@ export default function Payment() {
 
     setStatusLoading(true);
     setStatusResult(null);
+    setStatusError(null);
 
     try {
       const result = await getPaymentStatus({
@@ -184,16 +192,14 @@ export default function Payment() {
       });
     } catch (error) {
       console.error('Status check error:', error);
-      // Capture the entire error object
-      setStatusResult({
-        success: false,
-        error: error,
+      // Store the error details
+      setStatusError({
+        error: error instanceof Error ? error.message : 'Unknown error',
         errorDetails: {
           message: error instanceof Error ? error.message : 'Unknown error',
           name: error instanceof Error ? error.name : undefined,
           stack: error instanceof Error ? error.stack : undefined,
-          // Include any additional properties the error might have
-          ...error,
+          raw: error,
         },
       });
       toast({
@@ -374,13 +380,13 @@ export default function Payment() {
               Send Payment
             </Button>
 
-            {payResult && (
+            {(payResult || payError) && (
               <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
                 <Text fontWeight="bold" mb={2}>
-                  Result:
+                  {payError ? 'Error:' : 'Result:'}
                 </Text>
                 <Code display="block" whiteSpace="pre" fontSize="sm">
-                  {JSON.stringify(payResult, null, 2)}
+                  {JSON.stringify(payError || payResult, null, 2)}
                 </Code>
               </Box>
             )}
@@ -473,13 +479,13 @@ export default function Payment() {
               Check Status
             </Button>
 
-            {statusResult && (
+            {(statusResult || statusError) && (
               <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
                 <Text fontWeight="bold" mb={2}>
-                  Status:
+                  {statusError ? 'Error:' : 'Status:'}
                 </Text>
                 <Code display="block" whiteSpace="pre" fontSize="sm">
-                  {JSON.stringify(statusResult, null, 2)}
+                  {JSON.stringify(statusError || statusResult, null, 2)}
                 </Code>
               </Box>
             )}
