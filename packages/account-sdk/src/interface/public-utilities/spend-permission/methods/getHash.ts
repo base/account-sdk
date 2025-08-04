@@ -13,9 +13,10 @@ import { SpendPermissionTypedData } from '../utils.js';
  * to compute the unique hash for a given spend permission. This hash can be used
  * to identify the permission on-chain.
  *
- * @param permission - The spend permission message object from the typed data that
+ * @param params - The parameters for the getHash method.
+ * @param params.permission - The spend permission message object from the typed data that
  * contains all permission details.
- * @param chainId - The chain ID to use for the contract call
+ * @param params.chainId - The chain ID to use for the contract call
  *
  * @returns A promise that resolves to the permission hash as a hex string
  *

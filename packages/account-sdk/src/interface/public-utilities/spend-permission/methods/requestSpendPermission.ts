@@ -27,8 +27,18 @@ export type RequestSpendPermissionType = {
  * permission that can be verified on-chain. The resulting permission object contains
  * the signature and all necessary data for later use.
  *
- * @param request - Configuration object containing all permission parameters.
- * @param provider - The provider interface used to make the eth_signTypedData_v4 request.
+ * @param params - The parameters for the requestSpendPermission method.
+ * @param params.provider - Base Account Provider
+ * @param params.account - The account to request a spend permission for.
+ * @param params.spender - The spender to request a spend permission for.
+ * @param params.token - The token to request a spend permission for.
+ * @param params.chainId - The chain ID to request a spend permission for.
+ * @param params.allowance - The allowance to request a spend permission for.
+ * @param params.periodInDays - The peroid in days for the allowance to be valid for.
+ * @param params.start - The start date for the allowance to be valid from.
+ * @param params.end - The end date for the allowance to be valid until next period starts.
+ * @param params.salt - Salt
+ * @param params.extraData - The extra data to use for the allowance.
  *
  * @returns A promise that resolves to a SpendPermission object containing the signature and permission details.
  *

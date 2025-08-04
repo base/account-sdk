@@ -20,8 +20,11 @@ type FetchPermissionsType = {
  * The method uses the coinbase_fetchPermissions RPC method to query the permissions
  * from the backend service.
  *
- * @param request - Configuration object containing account, chainId, and spender to query.
- * @param provider - The provider interface used to make the coinbase_fetchPermissions request.
+ * @param params - The parameters for the fetchPermissions method.
+ * @param params.provider - The provider interface used to make the coinbase_fetchPermissions request.
+ * @param params.account - The account to fetch permissions for.
+ * @param params.chainId - The chain ID to fetch permissions for.
+ * @param params.spender - The spender to fetch permissions for.
  *
  * @returns A promise that resolves to an array of SpendPermission objects.
  *
