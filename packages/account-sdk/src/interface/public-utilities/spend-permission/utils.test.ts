@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RequestSpendPermissionType } from './methods/requestSpendPermission.js';
 import {
   createSpendPermissionTypedData,
-  fromTimestampInSeconds,
+  dateToTimestampInSeconds,
+  timestampInSecondsToDate,
   toSpendPermissionArgs,
-  toTimestampInSeconds,
 } from './utils.js';
 
 const ETERNITY_TIMESTAMP = 281474976710655; // 2^48 - 1
@@ -88,7 +88,7 @@ describe('createSpendPermissionTypedData', () => {
         token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
         allowance: '1000000000000000000',
         period: 86400 * 30, // 30 days in seconds
-        start: mockCurrentTimestamp, // toTimestampInSeconds(new Date())
+        start: mockCurrentTimestamp, // dateToTimestampInSeconds(new Date())
         end: ETERNITY_TIMESTAMP, // ETERNITY_TIMESTAMP when end is not specified
         salt: '0xabababababababababababababababababababababababababababababababab',
         extraData: '0x',
@@ -240,10 +240,10 @@ describe('createSpendPermissionTypedData', () => {
   });
 });
 
-describe('toTimestampInSeconds', () => {
+describe('dateToTimestampInSeconds', () => {
   it('should convert Date to Unix timestamp in seconds', () => {
     const date = new Date('2022-01-01T00:00:00.000Z');
-    const result = toTimestampInSeconds(date);
+    const result = dateToTimestampInSeconds(date);
     expect(result).toBe(1640995200); // 2022-01-01 00:00:00 UTC in seconds
   });
 
@@ -255,14 +255,14 @@ describe('toTimestampInSeconds', () => {
     ];
 
     testCases.forEach(({ date, expected }) => {
-      const result = toTimestampInSeconds(date);
+      const result = dateToTimestampInSeconds(date);
       expect(result).toBe(expected);
     });
   });
 
   it('should floor the result to remove milliseconds', () => {
     const date = new Date('2022-01-01T00:00:00.999Z'); // 999ms
-    const result = toTimestampInSeconds(date);
+    const result = dateToTimestampInSeconds(date);
     expect(result).toBe(1640995200); // Should be floored to seconds
   });
 });
@@ -400,10 +400,10 @@ describe('toSpendPermissionArgs', () => {
   });
 });
 
-describe('fromTimestampInSeconds', () => {
+describe('timestampInSecondsToDate', () => {
   it('should convert Unix timestamp in seconds to Date object', () => {
     const timestamp = 1640995200; // 2022-01-01 00:00:00 UTC
-    const result = fromTimestampInSeconds(timestamp);
+    const result = timestampInSecondsToDate(timestamp);
     expect(result).toEqual(new Date('2022-01-01T00:00:00.000Z'));
   });
 
@@ -416,27 +416,27 @@ describe('fromTimestampInSeconds', () => {
     ];
 
     testCases.forEach(({ timestamp, expected }) => {
-      const result = fromTimestampInSeconds(timestamp);
+      const result = timestampInSecondsToDate(timestamp);
       expect(result).toEqual(expected);
     });
   });
 
   it('should handle negative timestamps for dates before Unix epoch', () => {
     const timestamp = -86400; // One day before Unix epoch
-    const result = fromTimestampInSeconds(timestamp);
+    const result = timestampInSecondsToDate(timestamp);
     expect(result).toEqual(new Date('1969-12-31T00:00:00.000Z'));
   });
 
   it('should handle very large timestamps correctly', () => {
     const timestamp = 4102444800; // 2100-01-01 00:00:00 UTC
-    const result = fromTimestampInSeconds(timestamp);
+    const result = timestampInSecondsToDate(timestamp);
     expect(result).toEqual(new Date('2100-01-01T00:00:00.000Z'));
   });
 
-  it('should be the inverse of toTimestampInSeconds', () => {
+  it('should be the inverse of dateToTimestampInSeconds', () => {
     const originalDate = new Date('2022-06-15T12:30:45.123Z');
-    const timestamp = toTimestampInSeconds(originalDate);
-    const resultDate = fromTimestampInSeconds(timestamp);
+    const timestamp = dateToTimestampInSeconds(originalDate);
+    const resultDate = timestampInSecondsToDate(timestamp);
 
     // Note: We lose millisecond precision in the conversion
     const expectedDate = new Date('2022-06-15T12:30:45.000Z');
@@ -445,7 +445,7 @@ describe('fromTimestampInSeconds', () => {
 
   it('should handle decimal timestamps by truncating to integer', () => {
     const timestamp = 1640995200.999; // Decimal timestamp
-    const result = fromTimestampInSeconds(timestamp);
+    const result = timestampInSecondsToDate(timestamp);
     expect(result).toEqual(new Date('2022-01-01T00:00:00.999Z'));
   });
 });

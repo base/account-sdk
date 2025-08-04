@@ -5,7 +5,7 @@ import {
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { readContract } from 'viem/actions';
-import { fromTimestampInSeconds, toSpendPermissionArgs } from '../utils.js';
+import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 
 export type GetPermissionStatusResponseType = {
   remainingSpend: bigint;
@@ -99,7 +99,7 @@ export const getPermissionStatus = async (
 
   return {
     remainingSpend,
-    nextPeriodStart: fromTimestampInSeconds(Number(nextPeriodStart)),
+    nextPeriodStart: timestampInSecondsToDate(Number(nextPeriodStart)),
     isActive,
   };
 };

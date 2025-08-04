@@ -1,7 +1,7 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 
 import { ProviderInterface } from ':core/provider/interface.js';
-import { createSpendPermissionTypedData, toTimestampInSeconds } from '../utils.js';
+import { createSpendPermissionTypedData, dateToTimestampInSeconds } from '../utils.js';
 import { getHash } from './getHash.js';
 
 export type RequestSpendPermissionType = {
@@ -66,7 +66,7 @@ export const requestSpendPermission = async (
   ]);
 
   const permission: SpendPermission = {
-    createdAt: toTimestampInSeconds(new Date()),
+    createdAt: dateToTimestampInSeconds(new Date()),
     permissionHash,
     signature,
     chainId,

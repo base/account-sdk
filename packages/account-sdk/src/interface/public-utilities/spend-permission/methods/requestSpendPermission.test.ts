@@ -4,14 +4,14 @@ import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   SpendPermissionTypedData,
   createSpendPermissionTypedData,
-  toTimestampInSeconds,
+  dateToTimestampInSeconds,
 } from '../utils.js';
 import { getHash } from './getHash.js';
 import { RequestSpendPermissionType, requestSpendPermission } from './requestSpendPermission.js';
 
 vi.mock('../utils.js', () => ({
   createSpendPermissionTypedData: vi.fn(),
-  toTimestampInSeconds: vi.fn(),
+  dateToTimestampInSeconds: vi.fn(),
 }));
 
 vi.mock('./getHash.js', () => ({
@@ -31,7 +31,7 @@ describe('requestSpendPermission', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (toTimestampInSeconds as Mock).mockReturnValue(mockTimestamp);
+    (dateToTimestampInSeconds as Mock).mockReturnValue(mockTimestamp);
 
     mockProviderRequest = vi.fn();
     mockProvider = {
@@ -129,7 +129,7 @@ describe('requestSpendPermission', () => {
         permission: mockTypedData.message,
         chainId: mockRequestData.chainId,
       });
-      expect(toTimestampInSeconds).toHaveBeenCalledWith(expect.any(Date));
+      expect(dateToTimestampInSeconds).toHaveBeenCalledWith(expect.any(Date));
     });
 
     it('should handle different chain IDs correctly', async () => {
@@ -137,7 +137,7 @@ describe('requestSpendPermission', () => {
 
       for (const chainId of testChainIds) {
         vi.clearAllMocks();
-        (toTimestampInSeconds as Mock).mockReturnValue(mockTimestamp);
+        (dateToTimestampInSeconds as Mock).mockReturnValue(mockTimestamp);
         (createSpendPermissionTypedData as Mock).mockReturnValue({
           ...mockTypedData,
           domain: { ...mockTypedData.domain, chainId },

@@ -7,7 +7,7 @@ import { getClient } from ':store/chain-clients/utils.js';
 import { createPublicClient, http } from 'viem';
 import { readContract } from 'viem/actions';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fromTimestampInSeconds, toSpendPermissionArgs } from '../utils.js';
+import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { GetPermissionStatusResponseType, getPermissionStatus } from './getPermissionStatus.js';
 
 vi.mock(':store/chain-clients/utils.js', () => ({
@@ -20,7 +20,7 @@ vi.mock('viem/actions', () => ({
 
 vi.mock('../utils.js', () => ({
   toSpendPermissionArgs: vi.fn(),
-  fromTimestampInSeconds: vi.fn(),
+  timestampInSecondsToDate: vi.fn(),
 }));
 
 describe('getPermissionStatus', () => {
@@ -66,7 +66,7 @@ describe('getPermissionStatus', () => {
     };
 
     (toSpendPermissionArgs as Mock).mockReturnValue(mockSpendPermissionArgs);
-    (fromTimestampInSeconds as Mock).mockImplementation(
+    (timestampInSecondsToDate as Mock).mockImplementation(
       (timestamp: number) => new Date(timestamp * 1000)
     );
   });

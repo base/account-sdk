@@ -89,8 +89,8 @@ export function createSpendPermissionTypedData(
       token: getAddress(token),
       allowance: allowance.toString(),
       period: 86400 * periodInDays,
-      start: toTimestampInSeconds(start ?? new Date()),
-      end: end ? toTimestampInSeconds(end) : ETERNITY_TIMESTAMP,
+      start: dateToTimestampInSeconds(start ?? new Date()),
+      end: end ? dateToTimestampInSeconds(end) : ETERNITY_TIMESTAMP,
       salt: salt ?? getRandomHexString(32),
       extraData: extraData ? (extraData as Hex) : '0x',
     },
@@ -114,7 +114,7 @@ function getRandomHexString(byteLength: number): `0x${string}` {
  * @param date - The Date object to convert.
  * @returns The Unix timestamp in seconds.
  */
-export function toTimestampInSeconds(date: Date): number {
+export function dateToTimestampInSeconds(date: Date): number {
   return Math.floor(date.getTime() / 1000);
 }
 
@@ -125,7 +125,7 @@ export function toTimestampInSeconds(date: Date): number {
  * @param timestamp - The Unix timestamp in seconds.
  * @returns A Date object.
  */
-export function fromTimestampInSeconds(timestamp: number): Date {
+export function timestampInSecondsToDate(timestamp: number): Date {
   return new Date(timestamp * 1000);
 }
 
