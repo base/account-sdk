@@ -2,12 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RequestSpendPermissionType } from './methods/requestSpendPermission.js';
 import { createSpendPermissionTypedData, toTimestampInSeconds } from './utils.js';
 
+const ETERNITY_TIMESTAMP = 281474976710655; // 2^48 - 1
+
 describe('createSpendPermissionTypedData', () => {
   const mockCurrentDate = new Date('2022-01-01T00:00:00.000Z');
   const mockCurrentTimestamp = 1640995200; // 2022-01-01 00:00:00 UTC in seconds
-  const mock100YearsLaterTimestamp = Math.floor(
-    new Date('2122-01-01T00:00:00.000Z').getTime() / 1000
-  );
   let OriginalDate: DateConstructor;
 
   beforeEach(() => {
@@ -84,7 +83,7 @@ describe('createSpendPermissionTypedData', () => {
         allowance: '1000000000000000000',
         period: 86400 * 30, // 30 days in seconds
         start: mockCurrentTimestamp, // toTimestampInSeconds(new Date())
-        end: mock100YearsLaterTimestamp, // toTimestampInSeconds(add100Years(new Date()))
+        end: ETERNITY_TIMESTAMP, // ETERNITY_TIMESTAMP when end is not specified
         salt: '0xabababababababababababababababababababababababababababababababab',
         extraData: '0x',
       },
@@ -168,9 +167,9 @@ describe('createSpendPermissionTypedData', () => {
     expect(result.message.start).toBe(mockCurrentTimestamp);
   });
 
-  it('should calculate end time correctly (100 years from now) when not provided', () => {
+  it('should use ETERNITY_TIMESTAMP for end when not provided', () => {
     const result = createSpendPermissionTypedData(baseRequest);
-    expect(result.message.end).toBe(mock100YearsLaterTimestamp);
+    expect(result.message.end).toBe(ETERNITY_TIMESTAMP);
   });
 
   it('should use empty hex string for extraData when not provided', () => {

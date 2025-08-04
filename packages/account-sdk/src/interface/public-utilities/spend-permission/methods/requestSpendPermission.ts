@@ -12,7 +12,7 @@ export type RequestSpendPermissionType = {
   allowance: bigint; // in wei
   periodInDays: number;
   start?: Date; // default to now
-  end?: Date; // default to never (start + 100 years)
+  end?: Date; // default to never
   salt?: string; // default to a random value by crypto.getRandomValues
   extraData?: string; // default to '0x'
 };
@@ -20,9 +20,8 @@ export type RequestSpendPermissionType = {
 /**
  * Requests user approval to create a new spend permission.
  *
- * This helper method opens a popup to ask the user to sign a spend permission,
- * which allows a specified spender to spend tokens from the user's account up to
- * a certain allowance within defined time periods.
+ * This helper method opens a prompt to ask the user to sign a spend permission.
+ * To learn more about spend permissions, see the [Spend Permission documentation](https://docs.base.org/base-account/improve-ux/spend-permissions).
  *
  * The method uses EIP-712 typed data signing to create a cryptographically secure
  * permission that can be verified on-chain. The resulting permission object contains

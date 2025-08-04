@@ -11,8 +11,7 @@ import { SpendPermissionTypedData } from '../utils.js';
  *
  * This function calls the getHash method on the SpendPermissionManager contract
  * to compute the unique hash for a given spend permission. This hash can be used
- * to identify the permission on-chain and is required for operations like approval,
- * revocation, and spending.
+ * to identify the permission on-chain.
  *
  * @param permission - The spend permission message object from the typed data that
  * contains all permission details.

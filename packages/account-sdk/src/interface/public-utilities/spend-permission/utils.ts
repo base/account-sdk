@@ -2,6 +2,8 @@ import { spendPermissionManagerAddress } from ':sign/base-account/utils/constant
 import { Address, Hex, getAddress } from 'viem';
 import { RequestSpendPermissionType } from './methods/requestSpendPermission.js';
 
+const ETERNITY_TIMESTAMP = 281474976710655; // 2^48 - 1
+
 const SPEND_PERMISSION_TYPED_DATA_TYPES = {
   SpendPermission: [
     {
@@ -87,7 +89,7 @@ export function createSpendPermissionTypedData(
       allowance: allowance.toString(),
       period: 86400 * periodInDays,
       start: toTimestampInSeconds(start ?? new Date()),
-      end: toTimestampInSeconds(end ?? add100Years(new Date())),
+      end: end ? toTimestampInSeconds(end) : ETERNITY_TIMESTAMP,
       salt: salt ?? getRandomHexString(32),
       extraData: extraData ? (extraData as Hex) : '0x',
     },
@@ -113,16 +115,4 @@ function getRandomHexString(byteLength: number): `0x${string}` {
  */
 export function toTimestampInSeconds(date: Date): number {
   return Math.floor(date.getTime() / 1000);
-}
-
-/**
- * Returns a new Date object that is 100 years after the provided date.
- *
- * @param baseDate - The starting Date.
- * @returns A Date 100 years in the future.
- */
-function add100Years(baseDate: Date): Date {
-  const result = new Date(baseDate);
-  result.setFullYear(result.getFullYear() + 100);
-  return result;
 }
