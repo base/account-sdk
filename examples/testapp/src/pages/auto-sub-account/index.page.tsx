@@ -15,7 +15,14 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { createPublicClient, encodeFunctionData, http, numberToHex, parseEther, parseUnits } from 'viem';
+import {
+  createPublicClient,
+  encodeFunctionData,
+  http,
+  numberToHex,
+  parseEther,
+  parseUnits,
+} from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { useConfig } from '../../context/ConfigContextProvider';

@@ -89,12 +89,20 @@ export async function routeThroughGlobalAccount({
   const requestToParent = injectRequestCapabilities(
     {
       method: 'wallet_sendCalls',
-      params: [{ ...originalSendCallsParams, calls, from: globalAccountAddress, version: '2.0.0', atomicRequired: true }],
+      params: [
+        {
+          ...originalSendCallsParams,
+          calls,
+          from: globalAccountAddress,
+          version: '2.0.0',
+          atomicRequired: true,
+        },
+      ],
     },
     {
       spendPermissions: {
         request: true,
-        spender: subAccountAddress
+        spender: subAccountAddress,
       },
     }
   );
