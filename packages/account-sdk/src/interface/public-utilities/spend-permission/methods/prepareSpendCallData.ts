@@ -26,7 +26,7 @@ export type PrepareSpendCallDataResponseType = [
  * and `spend` functions. The former is a no-op when the permission is already approved,
  * but we always include it for simplicity and safety.
  *
- * When the spend amount is undefined, the function automatically uses the all remaining
+ * When 'max-available-balance' is provided as the amount, the function automatically uses all remaining
  * spend permission allowance.
  *
  * The resulting call data must be sent using the spender account, not the
@@ -34,7 +34,7 @@ export type PrepareSpendCallDataResponseType = [
  * and spend operations.
  *
  * @param permission - The spend permission object containing the permission details and signature.
- * @param amount - Optional: The amount to spend in wei (default: full permission allowance).
+ * @param amount - The amount to spend in wei. If 'max-available-balance' is provided, the full remaining allowance will be spent.
  *
  * @returns A promise that resolves to an array containing the approve and spend call objects.
  *
@@ -42,16 +42,17 @@ export type PrepareSpendCallDataResponseType = [
  * ```typescript
  * import { prepareSpendCallData } from '@base-org/account/spend-permission';
  *
- * // Prepare calls to approve and spend from a permission
- * const calls = await prepareSpendCallData({
+ * // Prepare calls to approve and spend a specific amount from a permission
+ * const calls = await prepareSpendCallData(
  *   permission, // from requestSpendPermission or fetchPermissions
- *   amount: 50n * 10n ** 6n, // Optional: spend 50 USDC (6 decimals) instead of all remaining allowance
- * });
+ *   50n * 10n ** 6n // spend 50 USDC (6 decimals)
+ * );
  *
- * // If amount is omitted, all remaining allowance will be spent automatically
- * const callsFullAmount = await prepareSpendCallData({
- *   permission, // Will spend the complete permission.allowance
- * });
+ * // To spend all remaining allowance, use 'max-available-balance'
+ * const callsFullAmount = await prepareSpendCallData(
+ *   permission,
+ *   'max-available-balance'
+ * );
  *
  * // Send the calls using the spender account (example: using wallet_sendCalls)
  * await provider.request({
@@ -68,13 +69,17 @@ export type PrepareSpendCallDataResponseType = [
  */
 export const prepareSpendCallData = async (
   permission: SpendPermission,
-  amount?: bigint
+  amount: bigint | 'max-available-balance'
 ): Promise<PrepareSpendCallDataResponseType> => {
   const { remainingSpend } = await getPermissionStatus(permission);
-  const spendAmount = amount ?? remainingSpend;
+  const spendAmount = amount === 'max-available-balance' ? remainingSpend : amount;
 
   if (spendAmount === BigInt(0)) {
     throw new Error('Spend amount cannot be 0');
+  }
+
+  if (spendAmount > remainingSpend) {
+    throw new Error('Remaining spend amount is insufficient');
   }
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
