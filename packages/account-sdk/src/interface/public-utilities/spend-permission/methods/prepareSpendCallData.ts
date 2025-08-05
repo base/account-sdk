@@ -14,7 +14,7 @@ type Call = {
   value: '0x0'; // explicitly set to 0x0
 };
 
-export type PrepareSpendCallDataResponseType = [ApproveCall: Call, SpendCall: Call];
+export type PrepareSpendCallDataResponseType = Call[];
 
 /**
  * Prepares call data for both approving and spending a spend permission.
@@ -33,14 +33,14 @@ export type PrepareSpendCallDataResponseType = [ApproveCall: Call, SpendCall: Ca
  * @param permission - The spend permission object containing the permission details and signature.
  * @param amount - The amount to spend in wei. If 'max-remaining-allowance' is provided, the full remaining allowance will be spent.
  *
- * @returns A promise that resolves to an array containing the approveCall and spendCall objects.
+ * @returns A promise that resolves to an array containing all the necessary calls.
  *
  * @example
  * ```typescript
  * import { prepareSpendCallData } from '@base-org/account/spend-permission';
  *
  * // Prepare calls to approve and spend a specific amount from a permission
- * const [approveCall, spendCall] = await prepareSpendCallData(
+ * const spendCalls = await prepareSpendCallData(
  *   permission, // from requestSpendPermission or fetchPermissions
  *   50n * 10n ** 6n // spend 50 USDC (6 decimals)
  * );
@@ -60,37 +60,29 @@ export type PrepareSpendCallDataResponseType = [ApproveCall: Call, SpendCall: Ca
  *     atomicRequired: true,
  *     from: permission.permission.spender, // Must be the spender!
  *     chainId: `0x${permission.chainId?.toString(16)}`,
- *     calls: [approveCall, spendCall],
+ *     calls: spendCalls,
  *   }],
  * });
  *
  * // Or send the calls using eth_sendTransaction to submit both calls in exact order
- * await provider.request({
- *   method: 'eth_sendTransaction',
- *   params: [
- *     {
- *       ...approveCall,
- *       from: permission.permission.spender, // Must be the spender!
- *     },
- *   ],
- * });
- *
- * await provider.request({
- *   method: 'eth_sendTransaction',
- *   params: [
- *     {
- *       ...spendCall,
- *       from: permission.permission.spender, // Must be the spender!
- *     },
- *   ],
- * });
+const promises = spendCalls.map((call) => provider.request({
+  method: 'eth_sendTransaction',
+  params: [
+    {
+      ...call,
+      from: permission.permission.spender, // Must be the spender!
+    }
+  ]
+}))
+
+await Promise.all(promises);
  * ```
  */
 export const prepareSpendCallData = async (
   permission: SpendPermission,
   amount: bigint | 'max-remaining-allowance'
 ): Promise<PrepareSpendCallDataResponseType> => {
-  const { remainingSpend } = await getPermissionStatus(permission);
+  const { remainingSpend, isActive } = await getPermissionStatus(permission);
   const spendAmount = amount === 'max-remaining-allowance' ? remainingSpend : amount;
 
   if (spendAmount === BigInt(0)) {
@@ -101,30 +93,33 @@ export const prepareSpendCallData = async (
     throw new Error('Remaining spend amount is insufficient');
   }
 
+  let approveCall: Call | null = null;
+
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
-  const approveData = encodeFunctionData({
-    abi: spendPermissionManagerAbi,
-    functionName: 'approveWithSignature',
-    args: [spendPermissionArgs, permission.signature as `0x${string}`],
-  });
+  if (!isActive) {
+    const approveData = encodeFunctionData({
+      abi: spendPermissionManagerAbi,
+      functionName: 'approveWithSignature',
+      args: [spendPermissionArgs, permission.signature as `0x${string}`],
+    });
+    approveCall = {
+      to: spendPermissionManagerAddress,
+      data: approveData,
+      value: '0x0', // explicitly set to 0x0
+    };
+  }
 
   const spendData = encodeFunctionData({
     abi: spendPermissionManagerAbi,
     functionName: 'spend',
     args: [spendPermissionArgs, spendAmount],
   });
+  const spendCall: Call = {
+    to: spendPermissionManagerAddress,
+    data: spendData,
+    value: '0x0', // explicitly set to 0x0
+  };
 
-  return [
-    {
-      to: spendPermissionManagerAddress,
-      data: approveData,
-      value: '0x0', // explicitly set to 0x0
-    },
-    {
-      to: spendPermissionManagerAddress,
-      data: spendData,
-      value: '0x0', // explicitly set to 0x0
-    },
-  ];
+  return [approveCall, spendCall].filter((item) => item !== null);
 };
