@@ -1,4 +1,4 @@
-import { getPaymentStatus, pay, type PaymentResult, type PaymentStatus } from '@base-org/account';
+import { type PaymentResult, type PaymentStatus, getPaymentStatus, pay } from '@base-org/account';
 import {
   Accordion,
   AccordionButton,
@@ -13,15 +13,15 @@ import {
   Divider,
   FormControl,
   FormLabel,
-  Heading,
   HStack,
+  Heading,
   Input,
   Select,
   Switch,
   Text,
+  VStack,
   useColorModeValue,
   useToast,
-  VStack,
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { useConfig } from '../../context/ConfigContextProvider';
@@ -115,7 +115,7 @@ export default function Payment() {
 
       setPayResult(result);
 
-      if (result.success) {
+      if (result.success === true) {
         toast({
           title: 'Payment sent!',
           description: `Transaction ID: ${result.id}`,
@@ -127,7 +127,7 @@ export default function Payment() {
       } else {
         toast({
           title: 'Payment failed',
-          description: 'error' in result ? result.error : 'Unknown error',
+          description: result.error,
           status: 'error',
           duration: 5000,
         });
