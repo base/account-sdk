@@ -26,7 +26,7 @@ export type PrepareSpendCallDataResponseType = [
  * and `spend` functions. The former is a no-op when the permission is already approved,
  * but we always include it for simplicity and safety.
  *
- * When 'max-available-balance' is provided as the amount, the function automatically uses all remaining
+ * When 'max-remaining-allowance' is provided as the amount, the function automatically uses all remaining
  * spend permission allowance.
  *
  * The resulting call data must be sent using the spender account, not the
@@ -34,7 +34,7 @@ export type PrepareSpendCallDataResponseType = [
  * and spend operations.
  *
  * @param permission - The spend permission object containing the permission details and signature.
- * @param amount - The amount to spend in wei. If 'max-available-balance' is provided, the full remaining allowance will be spent.
+ * @param amount - The amount to spend in wei. If 'max-remaining-allowance' is provided, the full remaining allowance will be spent.
  *
  * @returns A promise that resolves to an array containing the approve and spend call objects.
  *
@@ -48,10 +48,10 @@ export type PrepareSpendCallDataResponseType = [
  *   50n * 10n ** 6n // spend 50 USDC (6 decimals)
  * );
  *
- * // To spend all remaining allowance, use 'max-available-balance'
+ * // To spend all remaining allowance, use 'max-remaining-allowance'
  * const callsFullAmount = await prepareSpendCallData(
  *   permission,
- *   'max-available-balance'
+ *   'max-remaining-allowance'
  * );
  *
  * // Send the calls using the spender account (example: using wallet_sendCalls)
@@ -69,10 +69,10 @@ export type PrepareSpendCallDataResponseType = [
  */
 export const prepareSpendCallData = async (
   permission: SpendPermission,
-  amount: bigint | 'max-available-balance'
+  amount: bigint | 'max-remaining-allowance'
 ): Promise<PrepareSpendCallDataResponseType> => {
   const { remainingSpend } = await getPermissionStatus(permission);
-  const spendAmount = amount === 'max-available-balance' ? remainingSpend : amount;
+  const spendAmount = amount === 'max-remaining-allowance' ? remainingSpend : amount;
 
   if (spendAmount === BigInt(0)) {
     throw new Error('Spend amount cannot be 0');

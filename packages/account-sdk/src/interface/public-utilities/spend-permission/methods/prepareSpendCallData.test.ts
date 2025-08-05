@@ -78,7 +78,7 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should prepare call data for approve and spend operations', async () => {
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-available-balance');
+    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
@@ -93,7 +93,7 @@ describe('prepareSpendCallData', () => {
     });
   });
 
-  it('should use remaining spend amount when max-available-balance is specified', async () => {
+  it('should use remaining spend amount when max-remaining-allowance is specified', async () => {
     const remainingSpend = BigInt('750000000000000000');
     mockGetPermissionStatus.mockResolvedValue({
       remainingSpend,
@@ -101,7 +101,7 @@ describe('prepareSpendCallData', () => {
       isActive: true,
     });
 
-    await prepareSpendCallData(mockSpendPermission, 'max-available-balance');
+    await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     expect(mockEncodeFunctionData).toHaveBeenCalledWith({
       abi: spendPermissionManagerAbi,
@@ -123,19 +123,19 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should call getPermissionStatus with the correct permission', async () => {
-    await prepareSpendCallData(mockSpendPermission, 'max-available-balance');
+    await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     expect(mockGetPermissionStatus).toHaveBeenCalledWith(mockSpendPermission);
   });
 
   it('should call toSpendPermissionArgs with the correct permission', async () => {
-    await prepareSpendCallData(mockSpendPermission, 'max-available-balance');
+    await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     expect(mockToSpendPermissionArgs).toHaveBeenCalledWith(mockSpendPermission);
   });
 
   it('should encode approveWithSignature function data correctly', async () => {
-    await prepareSpendCallData(mockSpendPermission, 'max-available-balance');
+    await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     expect(mockEncodeFunctionData).toHaveBeenCalledWith({
       abi: spendPermissionManagerAbi,
@@ -157,7 +157,7 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should return calls with correct structure', async () => {
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-available-balance');
+    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     // Check that result matches the expected type
     const typedResult: PrepareSpendCallDataResponseType = result;
@@ -219,14 +219,14 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should use the same spendPermissionManagerAddress for both calls', async () => {
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-available-balance');
+    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     expect(result[0].to).toBe(spendPermissionManagerAddress);
     expect(result[1].to).toBe(spendPermissionManagerAddress);
   });
 
   it('should set value to 0x0 for both calls', async () => {
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-available-balance');
+    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     expect(result[0].value).toBe('0x0');
     expect(result[1].value).toBe('0x0');
@@ -240,7 +240,7 @@ describe('prepareSpendCallData', () => {
     });
 
     await expect(
-      prepareSpendCallData(mockSpendPermission, 'max-available-balance')
+      prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance')
     ).rejects.toThrow('Spend amount cannot be 0');
   });
 
@@ -251,7 +251,7 @@ describe('prepareSpendCallData', () => {
       isActive: false,
     });
 
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-available-balance');
+    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     // Should still prepare both calls regardless of approval status
     expect(result).toHaveLength(2);
@@ -267,7 +267,7 @@ describe('prepareSpendCallData', () => {
     mockGetPermissionStatus.mockRejectedValue(error);
 
     await expect(
-      prepareSpendCallData(mockSpendPermission, 'max-available-balance')
+      prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance')
     ).rejects.toThrow('Permission status error');
   });
 
@@ -278,7 +278,7 @@ describe('prepareSpendCallData', () => {
     });
 
     await expect(
-      prepareSpendCallData(mockSpendPermission, 'max-available-balance')
+      prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance')
     ).rejects.toThrow('Invalid permission args');
   });
 
@@ -289,7 +289,7 @@ describe('prepareSpendCallData', () => {
     });
 
     await expect(
-      prepareSpendCallData(mockSpendPermission, 'max-available-balance')
+      prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance')
     ).rejects.toThrow('Encoding error');
   });
 });
