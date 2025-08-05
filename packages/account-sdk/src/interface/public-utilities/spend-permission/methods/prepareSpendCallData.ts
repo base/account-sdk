@@ -17,11 +17,11 @@ type Call = {
 export type PrepareSpendCallDataResponseType = Call[];
 
 /**
- * Prepares call data for both approving and spending a spend permission.
+ * Prepares call data for approving and spending a spend permission.
  *
- * This helper method constructs the call data for both `approveWithSignature`
- * and `spend` functions. The former is a no-op when the permission is already approved,
- * but we always include it for simplicity and safety.
+ * This helper method constructs the call data for `approveWithSignature`
+ * and `spend` functions. The approve call is only included when the permission
+ * is not yet active. If the permission is already approved, only the spend call is returned.
  *
  * When 'max-remaining-allowance' is provided as the amount, the function automatically uses all remaining
  * spend permission allowance.
@@ -65,17 +65,17 @@ export type PrepareSpendCallDataResponseType = Call[];
  * });
  *
  * // Or send the calls using eth_sendTransaction to submit both calls in exact order
-const promises = spendCalls.map((call) => provider.request({
-  method: 'eth_sendTransaction',
-  params: [
-    {
-      ...call,
-      from: permission.permission.spender, // Must be the spender!
-    }
-  ]
-}))
-
-await Promise.all(promises);
+ * const promises = spendCalls.map((call) => provider.request({
+ *   method: 'eth_sendTransaction',
+ *   params: [
+ *     {
+ *       ...call,
+ *       from: permission.permission.spender, // Must be the spender!
+ *     }
+ *   ]
+ * }))
+ *
+ * await Promise.all(promises);
  * ```
  */
 export const prepareSpendCallData = async (
