@@ -14,10 +14,7 @@ type Call = {
   value: '0x0'; // explicitly set to 0x0
 };
 
-export type PrepareSpendCallDataResponseType = [
-  Call, // approveWithSignature call
-  Call, // spend call
-];
+export type PrepareSpendCallDataResponseType = [ApproveCall: Call, SpendCall: Call];
 
 /**
  * Prepares call data for both approving and spending a spend permission.
@@ -36,14 +33,14 @@ export type PrepareSpendCallDataResponseType = [
  * @param permission - The spend permission object containing the permission details and signature.
  * @param amount - The amount to spend in wei. If 'max-remaining-allowance' is provided, the full remaining allowance will be spent.
  *
- * @returns A promise that resolves to an array containing the approve and spend call objects.
+ * @returns A promise that resolves to an array containing the approveCall and spendCall objects.
  *
  * @example
  * ```typescript
  * import { prepareSpendCallData } from '@base-org/account/spend-permission';
  *
  * // Prepare calls to approve and spend a specific amount from a permission
- * const calls = await prepareSpendCallData(
+ * const [approveCall, spendCall] = await prepareSpendCallData(
  *   permission, // from requestSpendPermission or fetchPermissions
  *   50n * 10n ** 6n // spend 50 USDC (6 decimals)
  * );
@@ -54,7 +51,8 @@ export type PrepareSpendCallDataResponseType = [
  *   'max-remaining-allowance'
  * );
  *
- * // Send the calls using the spender account (example: using wallet_sendCalls)
+ * // Send the calls using your app's spender account
+ * // this is an example of how to send the calls using the wallet_sendCalls method
  * await provider.request({
  *   method: 'wallet_sendCalls',
  *   params: [{
@@ -62,8 +60,29 @@ export type PrepareSpendCallDataResponseType = [
  *     atomicRequired: true,
  *     from: permission.permission.spender, // Must be the spender!
  *     chainId: `0x${permission.chainId?.toString(16)}`,
- *     calls,
+ *     calls: [approveCall, spendCall],
  *   }],
+ * });
+ *
+ * // Or send the calls using eth_sendTransaction to submit both calls in exact order
+ * await provider.request({
+ *   method: 'eth_sendTransaction',
+ *   params: [
+ *     {
+ *       ...approveCall,
+ *       from: permission.permission.spender, // Must be the spender!
+ *     },
+ *   ],
+ * });
+ *
+ * await provider.request({
+ *   method: 'eth_sendTransaction',
+ *   params: [
+ *     {
+ *       ...spendCall,
+ *       from: permission.permission.spender, // Must be the spender!
+ *     },
+ *   ],
  * });
  * ```
  */
