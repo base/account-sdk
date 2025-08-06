@@ -6,6 +6,7 @@ import {
 import { getClient } from ':store/chain-clients/utils.js';
 import { readContract } from 'viem/actions';
 import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
+import { withTelemetry } from '../withTelemetry.js';
 
 export type GetPermissionStatusResponseType = {
   remainingSpend: bigint;
@@ -46,7 +47,7 @@ export type GetPermissionStatusResponseType = {
  * }
  * ```
  */
-export const getPermissionStatus = async (
+const getPermissionStatusFn = async (
   permission: SpendPermission
 ): Promise<GetPermissionStatusResponseType> => {
   const { chainId } = permission;
@@ -103,3 +104,5 @@ export const getPermissionStatus = async (
     isActive,
   };
 };
+
+export const getPermissionStatus = withTelemetry(getPermissionStatusFn);

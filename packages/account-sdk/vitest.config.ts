@@ -9,6 +9,7 @@ export default defineConfig({
       ':sign': path.resolve(__dirname, 'src/sign'),
       ':util': path.resolve(__dirname, 'src/util'),
       ':ui': path.resolve(__dirname, 'src/ui'),
+      ':interface': path.resolve(__dirname, 'src/interface'),
     },
     environment: 'jsdom',
     globals: true,

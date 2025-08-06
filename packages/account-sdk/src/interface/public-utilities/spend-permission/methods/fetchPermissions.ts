@@ -3,6 +3,7 @@ import {
   FetchPermissionsResponse,
   SpendPermission,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import { withTelemetry } from '../withTelemetry.js';
 
 type FetchPermissionsType = {
   account: string;
@@ -46,7 +47,7 @@ type FetchPermissionsType = {
  * });
  * ```
  */
-export const fetchPermissions = async ({
+const fetchPermissionsFn = async ({
   provider,
   account,
   chainId,
@@ -65,3 +66,5 @@ export const fetchPermissions = async ({
 
   return response.permissions;
 };
+
+export const fetchPermissions = withTelemetry(fetchPermissionsFn);

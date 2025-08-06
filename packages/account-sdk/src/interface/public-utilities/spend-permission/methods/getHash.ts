@@ -5,6 +5,7 @@ import {
 import { getClient } from ':store/chain-clients/utils.js';
 import { readContract } from 'viem/actions';
 import { SpendPermissionTypedData } from '../utils.js';
+import { withTelemetry } from '../withTelemetry.js';
 
 /**
  * Gets the hash of a spend permission from the SpendPermissionManager contract.
@@ -40,7 +41,7 @@ import { SpendPermissionTypedData } from '../utils.js';
  * console.log('Permission hash:', hash);
  * ```
  */
-export const getHash = async ({
+const getHashFn = async ({
   permission,
   chainId,
 }: {
@@ -70,3 +71,5 @@ export const getHash = async ({
 
   return hash;
 };
+
+export const getHash = withTelemetry(getHashFn);

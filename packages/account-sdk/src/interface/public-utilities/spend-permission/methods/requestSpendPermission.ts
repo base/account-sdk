@@ -2,6 +2,7 @@ import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 
 import { ProviderInterface } from ':core/provider/interface.js';
 import { createSpendPermissionTypedData, dateToTimestampInSeconds } from '../utils.js';
+import { withTelemetry } from '../withTelemetry.js';
 import { getHash } from './getHash.js';
 
 export type RequestSpendPermissionType = {
@@ -60,7 +61,7 @@ export type RequestSpendPermissionType = {
  * console.log('Permission created:', permission.signature);
  * ```
  */
-export const requestSpendPermission = async (
+const requestSpendPermissionFn = async (
   request: RequestSpendPermissionType & { provider: ProviderInterface }
 ): Promise<SpendPermission> => {
   const { provider, account, chainId } = request;
@@ -85,3 +86,5 @@ export const requestSpendPermission = async (
 
   return permission;
 };
+
+export const requestSpendPermission = withTelemetry(requestSpendPermissionFn);

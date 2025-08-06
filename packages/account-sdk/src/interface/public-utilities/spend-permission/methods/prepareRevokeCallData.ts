@@ -5,6 +5,7 @@ import {
 } from ':sign/base-account/utils/constants.js';
 import { Address, Hex, encodeFunctionData } from 'viem';
 import { toSpendPermissionArgs } from '../utils.js';
+import { withTelemetry } from '../withTelemetry.js';
 
 type RevokeSpendPermissionResponse = {
   to: Address;
@@ -43,7 +44,7 @@ type RevokeSpendPermissionResponse = {
  * };
  * ```
  */
-export const prepareRevokeCallData = async (
+const prepareRevokeCallDataFn = async (
   permission: SpendPermission
 ): Promise<RevokeSpendPermissionResponse> => {
   const spendPermissionArgs = toSpendPermissionArgs(permission);
@@ -61,3 +62,5 @@ export const prepareRevokeCallData = async (
 
   return response;
 };
+
+export const prepareRevokeCallData = withTelemetry(prepareRevokeCallDataFn);

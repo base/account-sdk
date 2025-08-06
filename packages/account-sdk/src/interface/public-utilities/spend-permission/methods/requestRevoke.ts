@@ -6,6 +6,7 @@ import {
 } from ':sign/base-account/utils/constants.js';
 import { Hex, encodeFunctionData, numberToHex } from 'viem';
 import { toSpendPermissionArgs } from '../utils.js';
+import { withTelemetry } from '../withTelemetry.js';
 
 /**
  * Requests user approval to revoke a spend permission.
@@ -36,7 +37,7 @@ import { toSpendPermissionArgs } from '../utils.js';
  * }
  * ```
  */
-export const requestRevoke = async ({
+const requestRevokeFn = async ({
   provider,
   permission,
 }: {
@@ -76,3 +77,5 @@ export const requestRevoke = async ({
 
   return result;
 };
+
+export const requestRevoke = withTelemetry(requestRevokeFn);

@@ -6,6 +6,7 @@ import {
 import { Address, Hex, encodeFunctionData } from 'viem';
 
 import { toSpendPermissionArgs } from '../utils.js';
+import { withTelemetry } from '../withTelemetry.js';
 import { getPermissionStatus } from './getPermissionStatus.js';
 
 type Call = {
@@ -78,7 +79,7 @@ export type PrepareSpendCallDataResponseType = Call[];
  * await Promise.all(promises);
  * ```
  */
-export const prepareSpendCallData = async (
+const prepareSpendCallDataFn = async (
   permission: SpendPermission,
   amount: bigint | 'max-remaining-allowance'
 ): Promise<PrepareSpendCallDataResponseType> => {
@@ -123,3 +124,5 @@ export const prepareSpendCallData = async (
 
   return [approveCall, spendCall].filter((item) => item !== null);
 };
+
+export const prepareSpendCallData = withTelemetry(prepareSpendCallDataFn);
