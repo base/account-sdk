@@ -387,6 +387,23 @@ export default function AutoSubAccount() {
           </RadioGroup>
         </FormControl>
         <FormControl>
+          <FormLabel>Disable Auto Spend Permissions (Unstable)</FormLabel>
+          <RadioGroup
+            value={(subAccountsConfig?.unstable_disableAutoSpendPermissions || false).toString()}
+            onChange={(value) =>
+              setSubAccountsConfig((prev) => ({
+                ...prev,
+                unstable_disableAutoSpendPermissions: value === 'true',
+              }))
+            }
+          >
+            <Stack direction="row">
+              <Radio value="true">Enabled</Radio>
+              <Radio value="false">Disabled</Radio>
+            </Stack>
+          </RadioGroup>
+        </FormControl>
+        <FormControl>
           <FormLabel>Attribution</FormLabel>
           <RadioGroup value={getAttributionMode()} onChange={handleAttributionModeChange}>
             <Stack direction="row">

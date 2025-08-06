@@ -707,17 +707,21 @@ export class Signer {
 
     if (['eth_sendTransaction', 'wallet_sendCalls'].includes(request.method)) {
       // If we have never had a spend permission, we need to do this tx through the global account
-      const storedSpendPermissions = spendPermissions.get();
-      if (storedSpendPermissions.length === 0) {
-        const result = await routeThroughGlobalAccount({
-          request,
-          globalAccountAddress,
-          subAccountAddress: subAccount.address,
-          client,
-          globalAccountRequest: this.sendRequestToPopup.bind(this),
-          chainId: this.chain.id,
-        });
-        return result;
+      // Skip this check if unstable_disableAutoSpendPermissions is enabled
+      const subAccountsConfig = store.subAccountsConfig.get();
+      if (!subAccountsConfig?.unstable_disableAutoSpendPermissions) {
+        const storedSpendPermissions = spendPermissions.get();
+        if (storedSpendPermissions.length === 0) {
+          const result = await routeThroughGlobalAccount({
+            request,
+            globalAccountAddress,
+            subAccountAddress: subAccount.address,
+            client,
+            globalAccountRequest: this.sendRequestToPopup.bind(this),
+            chainId: this.chain.id,
+          });
+          return result;
+        }
       }
     }
 
@@ -771,6 +775,12 @@ export class Signer {
       const result = await subAccountRequest(request);
       return result;
     } catch (error) {
+      // Skip insufficient balance error handling if unstable_disableAutoSpendPermissions is enabled
+      const subAccountsConfig = store.subAccountsConfig.get();
+      if (subAccountsConfig?.unstable_disableAutoSpendPermissions) {
+        throw error;
+      }
+
       let errorObject: unknown;
 
       if (isViemError(error)) {
