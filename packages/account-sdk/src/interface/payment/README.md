@@ -126,7 +126,7 @@ const status = await getPaymentStatus({
 #### PayerInfo
 
 - `requests: InfoRequest[]` - Array of information requests
-- `callbackURL: string` - URL where the collected information will be sent
+- `callbackURL?: string` - Optional URL where the collected information will be sent
 
 #### InfoRequest
 

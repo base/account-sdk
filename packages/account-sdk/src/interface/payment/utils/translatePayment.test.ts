@@ -93,6 +93,33 @@ describe('translatePayment', () => {
       });
     });
 
+    it('should handle payerInfo without callbackURL', () => {
+      const transferData = '0xabcdef';
+      const testnet = false;
+      const payerInfo: PayerInfo = {
+        requests: [{ type: 'email' }],
+      };
+
+      const result = buildSendCallsRequest(transferData, testnet, payerInfo);
+
+      expect(result).toEqual({
+        version: '2.0.0',
+        chainId: CHAIN_IDS.base,
+        calls: [
+          {
+            to: TOKENS.USDC.addresses.base,
+            data: transferData,
+            value: '0x0',
+          },
+        ],
+        capabilities: {
+          dataCallback: {
+            requests: [{ type: 'email', optional: false }],
+          },
+        },
+      });
+    });
+
     it('should handle empty payerInfo array', () => {
       const transferData = '0xabcdef';
       const testnet = false;
