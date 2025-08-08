@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { CHAIN_IDS, TOKENS } from '../constants.js';
 import type { PayerInfo } from '../types.js';
 import {
-  buildSendCallsRequest,
-  encodeTransferCall,
-  translatePaymentToSendCalls,
+    buildSendCallsRequest,
+    encodeTransferCall,
+    translatePaymentToSendCalls,
 } from './translatePayment.js';
 
 describe('translatePayment', () => {
@@ -90,6 +90,33 @@ describe('translatePayment', () => {
           },
         ],
         capabilities: {},
+      });
+    });
+
+    it('should handle payerInfo without callbackURL', () => {
+      const transferData = '0xabcdef';
+      const testnet = false;
+      const payerInfo: PayerInfo = {
+        requests: [{ type: 'email' }],
+      };
+
+      const result = buildSendCallsRequest(transferData, testnet, payerInfo);
+
+      expect(result).toEqual({
+        version: '2.0.0',
+        chainId: CHAIN_IDS.base,
+        calls: [
+          {
+            to: TOKENS.USDC.addresses.base,
+            data: transferData,
+            value: '0x0',
+          },
+        ],
+        capabilities: {
+          dataCallback: {
+            requests: [{ type: 'email', optional: false }],
+          },
+        },
       });
     });
 
