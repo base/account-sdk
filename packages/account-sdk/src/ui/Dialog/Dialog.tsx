@@ -2,48 +2,19 @@
 
 import { clsx } from 'clsx';
 import { FunctionComponent, render } from 'preact';
+import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 
-import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
-import { store } from ':store/store.js';
 import { BaseLogo } from ':ui/assets/BaseLogo.js';
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useDragToDismiss, usePhonePortrait, useUsername } from '../hooks/index.js';
 import css from './Dialog-css.js';
 
 const closeIcon = `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEzIDFMMSAxM20wLTEyTDEzIDEzIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+`;
 
-// Helper function to detect phone portrait mode
-function isPhonePortrait(): boolean {
-  return window.innerWidth <= 600 && window.innerHeight > window.innerWidth;
-}
-
 // Handle bar component for mobile bottom sheet
 const DialogHandleBar: FunctionComponent = () => {
-  const [showHandleBar, setShowHandleBar] = useState(false);
-
-  useEffect(() => {
-    // Only show handle bar on phone portrait mode
-    const checkOrientation = () => {
-      setShowHandleBar(isPhonePortrait());
-    };
-
-    // Initial check
-    checkOrientation();
-
-    // Listen for orientation/resize changes
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
-
-    return () => {
-      window.removeEventListener('resize', checkOrientation);
-      window.removeEventListener('orientationchange', checkOrientation);
-    };
-  }, []);
-
-  if (!showHandleBar) {
-    return null;
-  }
-
-  return <div class="-base-acc-sdk-dialog-handle-bar" />;
+  const isPhonePortrait = usePhonePortrait();
+  
+  return isPhonePortrait ? <div class="-base-acc-sdk-dialog-handle-bar" /> : null;
 };
 
 export type DialogProps = {
@@ -86,7 +57,18 @@ export class Dialog {
     this.render();
   }
 
+  public dismissItem(key: number): void {
+    const item = this.items.get(key);
+    this.items.delete(key);
+    this.render();
+    item?.onClose?.();
+  }
+
   public clear(): void {
+    // Call onClose for all items before clearing
+    for (const [, item] of this.items) {
+      item.onClose?.();
+    }
     this.items.clear();
     if (this.root) {
       render(null, this.root);
@@ -94,84 +76,48 @@ export class Dialog {
   }
 
   private render(): void {
-    if (this.root) {
-      render(
-        <div>
-          <DialogContainer>
-            {Array.from(this.items.entries()).map(([key, itemProps]) => (
-              <DialogInstance
-                {...itemProps}
-                key={key}
-                handleClose={() => {
-                  this.clear();
-                  itemProps.onClose?.();
-                }}
-              />
-            ))}
-          </DialogContainer>
-        </div>,
-        this.root
-      );
-    }
+    if (!this.root) return;
+
+    render(
+      <div>
+        <DialogContainer>
+          {Array.from(this.items.entries()).map(([key, itemProps]) => (
+            <DialogInstance
+              {...itemProps}
+              key={key}
+              handleClose={() => {
+                this.dismissItem(key);
+              }}
+            />
+          ))}
+        </DialogContainer>
+      </div>,
+      this.root
+    );
   }
 }
 
-export const DialogContainer: FunctionComponent = (props) => {
-  const [dragY, setDragY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startY, setStartY] = useState(0);
-
-  // Touch event handlers for drag-to-dismiss (entire dialog area)
-  const handleTouchStart = (e: any) => {
-    // Only enable drag on mobile portrait mode
-    if (!isPhonePortrait()) return;
-
-    const touch = e.touches[0];
-    setStartY(touch.clientY);
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e: any) => {
-    if (!isDragging) return;
-
-    const touch = e.touches[0];
-    const deltaY = touch.clientY - startY;
-
-    // Only allow dragging down (positive deltaY)
-    if (deltaY > 0) {
-      setDragY(deltaY);
-      e.preventDefault(); // Prevent scrolling
+export const DialogContainer: FunctionComponent = ({ children }) => {
+  const handleDismiss = useCallback(() => {
+    // Find the dialog instance and trigger its close handler
+    const closeButton = document.querySelector(
+      '.-base-acc-sdk-dialog-instance-header-close'
+    ) as HTMLElement;
+    if (closeButton) {
+      closeButton.click();
     }
-  };
+  }, []);
 
-  const handleTouchEnd = () => {
-    if (!isDragging) return;
-
-    setIsDragging(false);
-
-    // Dismiss if dragged down more than 100px
-    if (dragY > 100) {
-      // Find the dialog instance and trigger its close handler
-      const closeButton = document.querySelector(
-        '.-base-acc-sdk-dialog-instance-header-close'
-      ) as HTMLElement;
-      if (closeButton) {
-        closeButton.click();
-      }
-    } else {
-      // Animate back to original position
-      setDragY(0);
-    }
-  };
+  const { dragY, isDragging, handlers } = useDragToDismiss(handleDismiss);
 
   return (
     <div class={clsx('-base-acc-sdk-dialog-container')}>
       <style>{css}</style>
       <div
         class="-base-acc-sdk-dialog-backdrop"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onTouchStart={handlers.onTouchStart}
+        onTouchMove={handlers.onTouchMove}
+        onTouchEnd={handlers.onTouchEnd}
       >
         <div
           class="-base-acc-sdk-dialog"
@@ -181,7 +127,7 @@ export const DialogContainer: FunctionComponent = (props) => {
           }}
         >
           <DialogHandleBar />
-          {props.children}
+          {children}
         </div>
       </div>
     </div>
@@ -195,8 +141,7 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
   handleClose,
 }) => {
   const [hidden, setHidden] = useState(true);
-  const [isLoadingUsername, setIsLoadingUsername] = useState(true);
-  const [username, setUsername] = useState<string | null>(null);
+  const { isLoading: isLoadingUsername, username } = useUsername();
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -208,25 +153,35 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    const fetchEnsName = async () => {
-      const address = store.account.get().accounts?.[0];
-
-      if (address) {
-        const username = await getDisplayableUsername(address);
-        setUsername(username);
-      }
-
-      setIsLoadingUsername(false);
-    };
-    fetchEnsName();
-  }, []);
-
   const headerTitle = useMemo(() => {
     return username ? `Signed in as ${username}` : 'Base Account';
   }, [username]);
 
   const shouldShowHeaderTitle = !isLoadingUsername;
+
+  // Memoize action buttons
+  const actionButtons = useMemo(() => {
+    if (!actionItems?.length) return null;
+
+    return (
+      <div class="-base-acc-sdk-dialog-instance-actions">
+        {actionItems.map((action, i) => (
+          <button
+            class={clsx(
+              '-base-acc-sdk-dialog-instance-button',
+              action.variant === 'primary' && '-base-acc-sdk-dialog-instance-button-primary',
+              action.variant === 'secondary' && '-base-acc-sdk-dialog-instance-button-secondary'
+            )}
+            onClick={action.onClick}
+            key={i}
+            type="button"
+          >
+            {action.text}
+          </button>
+        ))}
+      </div>
+    );
+  }, [actionItems]);
 
   return (
     <div
@@ -244,31 +199,26 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
             </div>
           )}
         </div>
-        <div class="-base-acc-sdk-dialog-instance-header-close" onClick={handleClose}>
-          <img src={closeIcon} class="-base-acc-sdk-dialog-instance-header-close-icon" />
-        </div>
+        <button
+          class="-base-acc-sdk-dialog-instance-header-close"
+          onClick={handleClose}
+          type="button"
+          aria-label="Close dialog"
+        >
+          <img 
+            src={closeIcon} 
+            class="-base-acc-sdk-dialog-instance-header-close-icon"
+            alt="Close"
+          />
+        </button>
       </div>
+      
       <div class="-base-acc-sdk-dialog-instance-content">
         <div class="-base-acc-sdk-dialog-instance-content-title">{title}</div>
         <div class="-base-acc-sdk-dialog-instance-content-message">{message}</div>
       </div>
-      {actionItems && actionItems.length > 0 && (
-        <div class="-base-acc-sdk-dialog-instance-actions">
-          {actionItems.map((action, i) => (
-            <button
-              class={clsx(
-                '-base-acc-sdk-dialog-instance-button',
-                action.variant === 'primary' && '-base-acc-sdk-dialog-instance-button-primary',
-                action.variant === 'secondary' && '-base-acc-sdk-dialog-instance-button-secondary'
-              )}
-              onClick={action.onClick}
-              key={i}
-            >
-              {action.text}
-            </button>
-          ))}
-        </div>
-      )}
+      
+      {actionButtons}
     </div>
   );
 };
