@@ -490,7 +490,15 @@ export function parseFundingOptions({
   return spendPermissionRequests;
 }
 export function isSendCallsParams(params: unknown): params is WalletSendCallsParameters {
-  return typeof params === 'object' && params !== null && 'calls' in params;
+  return (
+    typeof params === 'object' &&
+    params !== null &&
+    Array.isArray(params) &&
+    params.length > 0 &&
+    typeof params[0] === 'object' &&
+    params[0] !== null &&
+    'calls' in params[0]
+  );
 }
 export function isEthSendTransactionParams(params: unknown): params is [
   {
