@@ -46,7 +46,12 @@ function PayPlayground() {
 
   // Watch for successful payment results and update getPaymentStatus code with the transaction ID
   useEffect(() => {
-    if (payExecution.result && payExecution.result.success && payExecution.result.id) {
+    if (
+      payExecution.result &&
+      'success' in payExecution.result &&
+      payExecution.result.success &&
+      payExecution.result.id
+    ) {
       const transactionId = payExecution.result.id;
       const updatedCode = `import { base } from '@base-org/account'
 

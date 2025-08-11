@@ -157,10 +157,11 @@ export class CodeSanitizer {
 
       // Extract the function body for validation
       // The AST structure will be: Program -> FunctionDeclaration -> BlockStatement
-      const functionNode = (ast as ASTNode).body?.[0] as ASTNode;
+      const program = ast as acorn.Program;
+      const functionNode = program.body[0] as unknown as ASTNode;
       if (functionNode && functionNode.body) {
         // Validate the function body
-        this.validateNode(functionNode.body);
+        this.validateNode(functionNode.body as unknown as ASTNode);
       }
 
       // If validation passes, return the sanitized code
@@ -256,11 +257,11 @@ export class CodeSanitizer {
       if (Array.isArray(child)) {
         child.forEach((item) => {
           if (typeof item === 'object' && item !== null) {
-            this.validateNode(item);
+            this.validateNode(item as ASTNode);
           }
         });
       } else if (typeof child === 'object' && child !== null) {
-        this.validateNode(child);
+        this.validateNode(child as ASTNode);
       }
     }
   }
