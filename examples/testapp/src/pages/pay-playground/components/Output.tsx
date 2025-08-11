@@ -9,13 +9,13 @@ interface OutputProps {
 }
 
 // Type guard to check if result is PaymentResult
-const isPaymentResult = (result: any): result is PaymentResult => {
-  return result && 'success' in result;
+const isPaymentResult = (result: unknown): result is PaymentResult => {
+  return result !== null && typeof result === 'object' && 'success' in result;
 };
 
 // Type guard to check if result is PaymentStatus
-const isPaymentStatus = (result: any): result is PaymentStatus => {
-  return result && 'status' in result && 'id' in result;
+const isPaymentStatus = (result: unknown): result is PaymentStatus => {
+  return result !== null && typeof result === 'object' && 'status' in result && 'id' in result;
 };
 
 export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps) => {
@@ -89,10 +89,12 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                   <code className={styles.resultValue}>{result.id}</code>
                 </div>
               )}
-              {!result.success && 'error' in result && (result as any).error && (
+              {!result.success && 'error' in result && (result as { error?: string }).error && (
                 <div className={styles.resultRow}>
                   <span className={styles.resultLabel}>Error</span>
-                  <span className={styles.errorMessage}>{(result as any).error}</span>
+                  <span className={styles.errorMessage}>
+                    {(result as { error?: string }).error}
+                  </span>
                 </div>
               )}
             </div>
@@ -295,10 +297,12 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                   <code className={styles.resultValue}>{result.recipient}</code>
                 </div>
               )}
-              {'error' in result && (result as any).error && (
+              {'error' in result && (result as { error?: string }).error && (
                 <div className={styles.resultRow}>
                   <span className={styles.resultLabel}>Error</span>
-                  <span className={styles.errorMessage}>{(result as any).error}</span>
+                  <span className={styles.errorMessage}>
+                    {(result as { error?: string }).error}
+                  </span>
                 </div>
               )}
             </div>
@@ -378,7 +382,7 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                       )}
                     </>
                   );
-                } catch (parseError) {
+                } catch (_parseError) {
                   // If parsing fails, display as plain text (backward compatibility)
                   return <div className={styles.errorMessage}>{error}</div>;
                 }

@@ -73,7 +73,16 @@ export const useCodeExecution = () => {
         console.error('Execution error:', error);
 
         // Create a more detailed error object/message
-        let errorDetails: any = {
+        interface ErrorDetails {
+          message: string;
+          type: string;
+          details?: unknown;
+          code?: string | number;
+          response?: unknown;
+          statusCode?: number;
+          stack?: string;
+        }
+        let errorDetails: ErrorDetails = {
           message: 'Unknown error occurred',
           type: 'unknown',
           details: null,
@@ -84,17 +93,23 @@ export const useCodeExecution = () => {
           errorDetails.type = error.name || 'Error';
 
           // Check if the error has additional properties (common in SDK errors)
-          if ((error as any).code) {
-            errorDetails.code = (error as any).code;
+          const errorObj = error as {
+            code?: string | number;
+            details?: unknown;
+            response?: unknown;
+            statusCode?: number;
+          };
+          if (errorObj.code) {
+            errorDetails.code = errorObj.code;
           }
-          if ((error as any).details) {
-            errorDetails.details = (error as any).details;
+          if (errorObj.details) {
+            errorDetails.details = errorObj.details;
           }
-          if ((error as any).response) {
-            errorDetails.response = (error as any).response;
+          if (errorObj.response) {
+            errorDetails.response = errorObj.response;
           }
-          if ((error as any).statusCode) {
-            errorDetails.statusCode = (error as any).statusCode;
+          if (errorObj.statusCode) {
+            errorDetails.statusCode = errorObj.statusCode;
           }
 
           // For stack traces in development
@@ -109,7 +124,7 @@ export const useCodeExecution = () => {
           errorDetails = {
             ...errorDetails,
             ...error,
-            message: (error as any).message || JSON.stringify(error),
+            message: (error as { message?: string }).message || JSON.stringify(error),
           };
         }
 

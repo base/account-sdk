@@ -114,6 +114,19 @@ interface ValidationError {
   column?: number;
 }
 
+interface ASTNode {
+  body?: ASTNode[];
+  type?: string;
+  loc?: { start: { line: number; column: number } };
+  callee?: ASTNode;
+  object?: ASTNode;
+  property?: ASTNode;
+  name?: string;
+  value?: unknown;
+  computed?: boolean;
+  [key: string]: unknown;
+}
+
 export class CodeSanitizer {
   private errors: ValidationError[] = [];
 
@@ -144,7 +157,7 @@ export class CodeSanitizer {
 
       // Extract the function body for validation
       // The AST structure will be: Program -> FunctionDeclaration -> BlockStatement
-      const functionNode = (ast as any).body[0];
+      const functionNode = (ast as ASTNode).body?.[0] as ASTNode;
       if (functionNode && functionNode.body) {
         // Validate the function body
         this.validateNode(functionNode.body);
@@ -168,13 +181,13 @@ export class CodeSanitizer {
       // Parse error - try to extract meaningful line number
       if (error instanceof SyntaxError) {
         const match = error.message.match(/\((\d+):(\d+)\)/);
-        let line ;
-        let column ;
+        let line;
+        let column;
 
         if (match) {
           // Adjust line number since we wrapped the code
-          line = parseInt(match[1]) - 1;
-          column = parseInt(match[2]);
+          line = Number.parseInt(match[1]) - 1;
+          column = Number.parseInt(match[2]);
         }
 
         this.errors.push({
@@ -199,7 +212,7 @@ export class CodeSanitizer {
   /**
    * Recursively validate AST nodes
    */
-  private validateNode(node: any): void {
+  private validateNode(node: ASTNode): void {
     if (!node) return;
 
     // Check if the node type is allowed
@@ -255,7 +268,7 @@ export class CodeSanitizer {
   /**
    * Validate function calls
    */
-  private validateCallExpression(node: any): void {
+  private validateCallExpression(node: ASTNode): void {
     // Check if it's a direct function call
     if (node.callee.type === 'Identifier') {
       const funcName = node.callee.name;
@@ -282,7 +295,7 @@ export class CodeSanitizer {
   /**
    * Validate member expressions (object.property)
    */
-  private validateMemberExpression(node: any): void {
+  private validateMemberExpression(node: ASTNode): void {
     // Get the object name
     let objectName = '';
     if (node.object.type === 'Identifier') {
@@ -324,7 +337,7 @@ export class CodeSanitizer {
   /**
    * Validate identifiers
    */
-  private validateIdentifier(node: any): void {
+  private validateIdentifier(node: ASTNode): void {
     // Skip validation for allowed functions and objects
     if (WHITELIST.allowedFunctions.includes(node.name)) return;
     if (node.name in WHITELIST.allowedObjects) return;

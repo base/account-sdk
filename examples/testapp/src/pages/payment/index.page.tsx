@@ -42,7 +42,11 @@ export default function Payment() {
   const [payTo, setPayTo] = useState('0x0000000000000000000000000000000000000000');
   const [payLoading, setPayLoading] = useState(false);
   const [payResult, setPayResult] = useState<PaymentResult | null>(null);
-  const [payError, setPayError] = useState<any>(null);
+  const [payError, setPayError] = useState<{
+    error: string;
+    errorDetails?: unknown;
+    attemptedPayment?: unknown;
+  } | null>(null);
 
   // Optional parameters state
   const [customWalletUrl, setCustomWalletUrl] = useState('');
@@ -64,7 +68,9 @@ export default function Payment() {
   const [statusId, setStatusId] = useState('');
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusResult, setStatusResult] = useState<PaymentStatus | null>(null);
-  const [statusError, setStatusError] = useState<any>(null);
+  const [statusError, setStatusError] = useState<{ error: string; errorDetails?: unknown } | null>(
+    null
+  );
   const [statusTestnet, setStatusTestnet] = useState(true); // Separate testnet state for status check
 
   const handlePay = async () => {
