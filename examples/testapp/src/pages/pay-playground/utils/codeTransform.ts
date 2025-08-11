@@ -1,14 +1,16 @@
 import { sanitizeCode } from './codeSanitizer';
 
 // Transform and sanitize code with whitelist validation
-export const transformAndSanitizeCode = (code: string): {
+export const transformAndSanitizeCode = (
+  code: string
+): {
   isValid: boolean;
   code: string;
   errors: Array<{ message: string; line?: number; column?: number }>;
 } => {
   // First, sanitize the code using whitelist validation
   const sanitizationResult = sanitizeCode(code);
-  
+
   if (!sanitizationResult.isValid) {
     return {
       isValid: false,
@@ -16,7 +18,7 @@ export const transformAndSanitizeCode = (code: string): {
       errors: sanitizationResult.errors,
     };
   }
-  
+
   return {
     isValid: true,
     code: sanitizationResult.sanitizedCode,
@@ -47,4 +49,3 @@ export const safeStringify = (obj: unknown, indent = 2): string => {
     indent
   );
 };
-

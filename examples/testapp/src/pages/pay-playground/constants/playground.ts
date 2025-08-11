@@ -52,8 +52,6 @@ try {
   throw error;
 }`;
 
-
-
 export const PAY_QUICK_TIPS = [
   'Get testnet ETH at <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">https://faucet.circle.com/</a> - select "Base Sepolia" as the network',
   'testnet (`true`) toggles base sepolia testnet',
@@ -71,4 +69,3 @@ export const GET_PAYMENT_STATUS_QUICK_TIPS = [
 ];
 
 export const QUICK_TIPS = PAY_QUICK_TIPS;
-

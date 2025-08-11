@@ -354,8 +354,8 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                         <div className={styles.resultRow}>
                           <span className={styles.resultLabel}>Details</span>
                           <span className={styles.resultValue}>
-                            {typeof errorDetails.details === 'string' 
-                              ? errorDetails.details 
+                            {typeof errorDetails.details === 'string'
+                              ? errorDetails.details
                               : JSON.stringify(errorDetails.details, null, 2)}
                           </span>
                         </div>
@@ -425,4 +425,3 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
     </div>
   );
 };
-

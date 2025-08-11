@@ -24,18 +24,18 @@ export const useCodeExecution = () => {
       try {
         // Sanitize and validate the code first
         const sanitizationResult = transformAndSanitizeCode(code);
-        
+
         if (!sanitizationResult.isValid) {
           // Format validation errors for display
           const errorMessages = sanitizationResult.errors
-            .map(err => {
+            .map((err) => {
               if (err.line) {
                 return `Line ${err.line}: ${err.message}`;
               }
               return err.message;
             })
             .join('\n');
-          
+
           setError(`Code validation failed:\n${errorMessages}`);
           setConsoleOutput(logs);
           return;
@@ -76,13 +76,13 @@ export const useCodeExecution = () => {
         let errorDetails: any = {
           message: 'Unknown error occurred',
           type: 'unknown',
-          details: null
+          details: null,
         };
 
         if (error instanceof Error) {
           errorDetails.message = error.message;
           errorDetails.type = error.name || 'Error';
-          
+
           // Check if the error has additional properties (common in SDK errors)
           if ((error as any).code) {
             errorDetails.code = (error as any).code;
@@ -96,7 +96,7 @@ export const useCodeExecution = () => {
           if ((error as any).statusCode) {
             errorDetails.statusCode = (error as any).statusCode;
           }
-          
+
           // For stack traces in development
           if (process.env.NODE_ENV === 'development' && error.stack) {
             errorDetails.stack = error.stack;
@@ -109,7 +109,7 @@ export const useCodeExecution = () => {
           errorDetails = {
             ...errorDetails,
             ...error,
-            message: (error as any).message || JSON.stringify(error)
+            message: (error as any).message || JSON.stringify(error),
           };
         }
 
@@ -139,4 +139,3 @@ export const useCodeExecution = () => {
     reset,
   };
 };
-

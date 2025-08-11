@@ -3,11 +3,8 @@ import * as acorn from 'acorn';
 // Define the whitelist of allowed operations
 export const WHITELIST = {
   // Allowed SDK functions
-  allowedFunctions: [
-    'pay',
-    'getPaymentStatus',
-  ],
-  
+  allowedFunctions: ['pay', 'getPaymentStatus'],
+
   // Allowed object properties and methods
   allowedObjects: {
     base: ['pay', 'getPaymentStatus'],
@@ -18,11 +15,11 @@ export const WHITELIST = {
     JSON: ['stringify', 'parse'],
     Math: ['floor', 'ceil', 'round', 'min', 'max', 'abs'],
   } as Record<string, string[]>,
-  
+
   // Allowed keywords and statements
   allowedStatements: [
     'VariableDeclaration',
-    'VariableDeclarator',  // Added: Part of variable declarations
+    'VariableDeclarator', // Added: Part of variable declarations
     'FunctionDeclaration',
     'FunctionExpression',
     'ArrowFunctionExpression',
@@ -39,7 +36,7 @@ export const WHITELIST = {
     'Identifier',
     'Literal',
     'TemplateLiteral',
-    'TemplateElement',  // Added: Part of template literals
+    'TemplateElement', // Added: Part of template literals
     'ObjectExpression',
     'ArrayExpression',
     'Property',
@@ -50,26 +47,26 @@ export const WHITELIST = {
     'LogicalExpression',
     'UpdateExpression',
     'SpreadElement',
-    'ForStatement',  // Added: For loops
-    'ForInStatement',  // Added: For-in loops
-    'ForOfStatement',  // Added: For-of loops
-    'WhileStatement',  // Added: While loops
-    'DoWhileStatement',  // Added: Do-while loops
-    'BreakStatement',  // Added: Break statements
-    'ContinueStatement',  // Added: Continue statements
-    'SwitchStatement',  // Added: Switch statements
-    'SwitchCase',  // Added: Switch cases
-    'AssignmentPattern',  // Added: Destructuring assignments
-    'ObjectPattern',  // Added: Object destructuring
-    'ArrayPattern',  // Added: Array destructuring
-    'RestElement',  // Added: Rest parameters
-    'ThisExpression',  // Added: 'this' keyword
-    'ChainExpression',  // Added: Optional chaining
-    'OptionalMemberExpression',  // Added: Optional member access
-    'OptionalCallExpression',  // Added: Optional function calls
-    'SequenceExpression',  // Added: Comma operator
+    'ForStatement', // Added: For loops
+    'ForInStatement', // Added: For-in loops
+    'ForOfStatement', // Added: For-of loops
+    'WhileStatement', // Added: While loops
+    'DoWhileStatement', // Added: Do-while loops
+    'BreakStatement', // Added: Break statements
+    'ContinueStatement', // Added: Continue statements
+    'SwitchStatement', // Added: Switch statements
+    'SwitchCase', // Added: Switch cases
+    'AssignmentPattern', // Added: Destructuring assignments
+    'ObjectPattern', // Added: Object destructuring
+    'ArrayPattern', // Added: Array destructuring
+    'RestElement', // Added: Rest parameters
+    'ThisExpression', // Added: 'this' keyword
+    'ChainExpression', // Added: Optional chaining
+    'OptionalMemberExpression', // Added: Optional member access
+    'OptionalCallExpression', // Added: Optional function calls
+    'SequenceExpression', // Added: Comma operator
   ],
-  
+
   // Disallowed global objects and functions
   disallowedGlobals: [
     'eval',
@@ -119,32 +116,32 @@ interface ValidationError {
 
 export class CodeSanitizer {
   private errors: ValidationError[] = [];
-  
+
   /**
    * Sanitize and validate the code based on whitelist
    */
-  sanitize(code: string): { 
-    isValid: boolean; 
-    sanitizedCode: string; 
-    errors: ValidationError[] 
+  sanitize(code: string): {
+    isValid: boolean;
+    sanitizedCode: string;
+    errors: ValidationError[];
   } {
     this.errors = [];
-    
+
     try {
       // First, apply basic sanitization (remove imports, etc.)
       const preSanitized = this.applySanitization(code);
-      
+
       // Wrap the code in an async function for parsing
       // This allows return statements and await expressions at the top level
       const wrappedCode = `async function __userCode__() {\n${preSanitized}\n}`;
-      
+
       // Parse the wrapped code into an AST
       const ast = acorn.parse(wrappedCode, {
         ecmaVersion: 2020,
         sourceType: 'module',
         locations: true,
       });
-      
+
       // Extract the function body for validation
       // The AST structure will be: Program -> FunctionDeclaration -> BlockStatement
       const functionNode = (ast as any).body[0];
@@ -152,7 +149,7 @@ export class CodeSanitizer {
         // Validate the function body
         this.validateNode(functionNode.body);
       }
-      
+
       // If validation passes, return the sanitized code
       if (this.errors.length === 0) {
         return {
@@ -161,7 +158,7 @@ export class CodeSanitizer {
           errors: [],
         };
       }
-      
+
       return {
         isValid: false,
         sanitizedCode: '',
@@ -171,15 +168,15 @@ export class CodeSanitizer {
       // Parse error - try to extract meaningful line number
       if (error instanceof SyntaxError) {
         const match = error.message.match(/\((\d+):(\d+)\)/);
-        let line = undefined;
-        let column = undefined;
-        
+        let line ;
+        let column ;
+
         if (match) {
           // Adjust line number since we wrapped the code
           line = parseInt(match[1]) - 1;
           column = parseInt(match[2]);
         }
-        
+
         this.errors.push({
           message: error.message.replace(/\(\d+:\d+\)/, line ? `(${line}:${column})` : ''),
           line,
@@ -190,7 +187,7 @@ export class CodeSanitizer {
           message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
         });
       }
-      
+
       return {
         isValid: false,
         sanitizedCode: '',
@@ -198,13 +195,13 @@ export class CodeSanitizer {
       };
     }
   }
-  
+
   /**
    * Recursively validate AST nodes
    */
   private validateNode(node: any): void {
     if (!node) return;
-    
+
     // Check if the node type is allowed
     if (!WHITELIST.allowedStatements.includes(node.type)) {
       this.errors.push({
@@ -214,21 +211,21 @@ export class CodeSanitizer {
       });
       return;
     }
-    
+
     // Special validation for specific node types
     switch (node.type) {
       case 'CallExpression':
         this.validateCallExpression(node);
         break;
-      
+
       case 'MemberExpression':
         this.validateMemberExpression(node);
         break;
-      
+
       case 'Identifier':
         this.validateIdentifier(node);
         break;
-      
+
       case 'NewExpression':
         this.errors.push({
           message: `Constructor calls are not allowed`,
@@ -237,14 +234,14 @@ export class CodeSanitizer {
         });
         return;
     }
-    
+
     // Recursively validate child nodes
     for (const key in node) {
       if (key === 'loc' || key === 'range' || key === 'type') continue;
-      
+
       const child = node[key];
       if (Array.isArray(child)) {
-        child.forEach(item => {
+        child.forEach((item) => {
           if (typeof item === 'object' && item !== null) {
             this.validateNode(item);
           }
@@ -254,7 +251,7 @@ export class CodeSanitizer {
       }
     }
   }
-  
+
   /**
    * Validate function calls
    */
@@ -262,7 +259,7 @@ export class CodeSanitizer {
     // Check if it's a direct function call
     if (node.callee.type === 'Identifier') {
       const funcName = node.callee.name;
-      
+
       // Check if it's an allowed SDK function
       if (!WHITELIST.allowedFunctions.includes(funcName)) {
         // Check if it's a disallowed global
@@ -275,13 +272,13 @@ export class CodeSanitizer {
         }
       }
     }
-    
+
     // Check if it's a method call
     if (node.callee.type === 'MemberExpression') {
       this.validateMemberExpression(node.callee);
     }
   }
-  
+
   /**
    * Validate member expressions (object.property)
    */
@@ -290,10 +287,13 @@ export class CodeSanitizer {
     let objectName = '';
     if (node.object.type === 'Identifier') {
       objectName = node.object.name;
-    } else if (node.object.type === 'MemberExpression' && node.object.object.type === 'Identifier') {
+    } else if (
+      node.object.type === 'MemberExpression' &&
+      node.object.object.type === 'Identifier'
+    ) {
       objectName = node.object.object.name;
     }
-    
+
     // Get the property name
     let propertyName = '';
     if (node.property.type === 'Identifier') {
@@ -301,7 +301,7 @@ export class CodeSanitizer {
     } else if (node.property.type === 'Literal') {
       propertyName = String(node.property.value);
     }
-    
+
     // Validate against whitelist
     if (objectName && objectName in WHITELIST.allowedObjects) {
       const allowedProps = WHITELIST.allowedObjects[objectName];
@@ -320,7 +320,7 @@ export class CodeSanitizer {
       });
     }
   }
-  
+
   /**
    * Validate identifiers
    */
@@ -328,7 +328,7 @@ export class CodeSanitizer {
     // Skip validation for allowed functions and objects
     if (WHITELIST.allowedFunctions.includes(node.name)) return;
     if (node.name in WHITELIST.allowedObjects) return;
-    
+
     // Check for disallowed globals
     if (WHITELIST.disallowedGlobals.includes(node.name)) {
       this.errors.push({
@@ -338,34 +338,25 @@ export class CodeSanitizer {
       });
     }
   }
-  
+
   /**
    * Apply sanitization transformations to the code
    */
   private applySanitization(code: string): string {
     let sanitized = code;
-    
+
     // Remove import statements
-    sanitized = sanitized.replace(
-      /^\s*import\s+.*?(?:from\s+['"][^'"]+['"])?[;\s]*$/gm,
-      ''
-    );
-    
+    sanitized = sanitized.replace(/^\s*import\s+.*?(?:from\s+['"][^'"]+['"])?[;\s]*$/gm, '');
+
     // Remove multiline imports
-    sanitized = sanitized.replace(
-      /^\s*import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?\s*$/gm,
-      ''
-    );
-    
+    sanitized = sanitized.replace(/^\s*import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?\s*$/gm, '');
+
     // Remove export statements
-    sanitized = sanitized.replace(
-      /^\s*export\s+.*?[;\s]*$/gm,
-      ''
-    );
-    
+    sanitized = sanitized.replace(/^\s*export\s+.*?[;\s]*$/gm, '');
+
     // Clean up extra newlines
     sanitized = sanitized.replace(/^\s*\n/gm, '');
-    
+
     return sanitized;
   }
 }
@@ -381,4 +372,3 @@ export function sanitizeCode(code: string): {
   const sanitizer = new CodeSanitizer();
   return sanitizer.sanitize(code);
 }
-

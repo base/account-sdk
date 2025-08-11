@@ -8,11 +8,11 @@ interface QuickTipsProps {
 const renderTip = (tip: string) => {
   // Check if the tip contains an HTML link
   const linkMatch = tip.match(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/);
-  
+
   if (linkMatch) {
     const [fullMatch, href, text] = linkMatch;
     const parts = tip.split(fullMatch);
-    
+
     return (
       <>
         {parts[0]}
@@ -23,7 +23,7 @@ const renderTip = (tip: string) => {
       </>
     );
   }
-  
+
   return tip;
 };
 
@@ -54,4 +54,3 @@ export const QuickTips = ({ tips }: QuickTipsProps) => {
     </div>
   );
 };
-

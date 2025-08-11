@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { CodeEditor, Header, Output, QuickTips } from './components';
-import { DEFAULT_GET_PAYMENT_STATUS_CODE, DEFAULT_PAY_CODE, GET_PAYMENT_STATUS_QUICK_TIPS, PAY_CODE_WITH_PAYER_INFO, PAY_QUICK_TIPS } from './constants';
+import {
+  DEFAULT_GET_PAYMENT_STATUS_CODE,
+  DEFAULT_PAY_CODE,
+  GET_PAYMENT_STATUS_QUICK_TIPS,
+  PAY_CODE_WITH_PAYER_INFO,
+  PAY_QUICK_TIPS,
+} from './constants';
 import { useCodeExecution } from './hooks';
 import styles from './styles/Home.module.css';
 
@@ -137,4 +143,3 @@ PayPlayground.getLayout = function getLayout(page) {
 };
 
 export default PayPlayground;
-

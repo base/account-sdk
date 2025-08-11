@@ -53,7 +53,7 @@
   .playground {
     grid-template-columns: 1fr;
   }
-  
+
   .leftColumn {
     margin-bottom: 2rem;
   }
@@ -80,4 +80,3 @@
     font-size: 1rem;
   }
 }
-
