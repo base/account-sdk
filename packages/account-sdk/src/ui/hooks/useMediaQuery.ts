@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useState } from 'preact/hooks';
 
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(() => {
@@ -9,15 +9,14 @@ export function useMediaQuery(query: string): boolean {
   });
 
   useEffect(() => {
-    if (typeof window === 'undefined') return; 
-    
+    if (typeof window === 'undefined') return;
+
     const mediaQuery = window.matchMedia(query);
     const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
-    
+
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
   }, [query]);
 
   return matches;
 }
-

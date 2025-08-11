@@ -15,25 +15,25 @@ vi.mock('../hooks/index.js', () => ({
       onTouchStart: vi.fn(),
       onTouchMove: vi.fn(),
       onTouchEnd: vi.fn(),
-    }
+    },
   })),
   useUsername: vi.fn(() => ({
     isLoading: false,
-    username: 'testuser.eth'
-  }))
+    username: 'testuser.eth',
+  })),
 }));
 
 // Mock du store et getDisplayableUsername
 vi.mock(':store/store.js', () => ({
   store: {
     account: {
-      get: vi.fn(() => ({ accounts: ['0x123'] }))
-    }
-  }
+      get: vi.fn(() => ({ accounts: ['0x123'] })),
+    },
+  },
 }));
 
 vi.mock(':core/username/getDisplayableUsername.js', () => ({
-  getDisplayableUsername: vi.fn(() => Promise.resolve('testuser.eth'))
+  getDisplayableUsername: vi.fn(() => Promise.resolve('testuser.eth')),
 }));
 
 const renderDialogContainer = (props?: Partial<DialogInstanceProps>) =>
@@ -119,10 +119,10 @@ describe('DialogContainer', () => {
     const closeButton = document.getElementsByClassName(
       '-base-acc-sdk-dialog-instance-header-close'
     )[0];
-    
+
     expect(closeButton.tagName).toBe('BUTTON'); // Vérifie que c'est un bouton
     expect(closeButton).toHaveAttribute('aria-label', 'Close dialog'); // Accessibilité
-    
+
     fireEvent.click(closeButton);
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
@@ -152,7 +152,7 @@ describe('DialogContainer', () => {
 
   test('displays username when loaded', () => {
     renderDialogContainer();
-    
+
     // Le mock retourne 'testuser.eth'
     expect(screen.getByText('Signed in as testuser.eth')).toBeInTheDocument();
   });
@@ -162,11 +162,11 @@ describe('DialogContainer', () => {
     const { useUsername } = vi.mocked(await import('../hooks/index.js'));
     useUsername.mockReturnValue({
       isLoading: false,
-      username: null
+      username: null,
     });
 
     renderDialogContainer();
-    
+
     expect(screen.getByText('Base Account')).toBeInTheDocument();
   });
 
@@ -181,13 +181,13 @@ describe('DialogContainer', () => {
     useDragToDismiss.mockReturnValue({
       dragY: 50,
       isDragging: true,
-      handlers: mockHandlers
+      handlers: mockHandlers,
     });
 
     renderDialogContainer();
 
     const backdrop = document.getElementsByClassName('-base-acc-sdk-dialog-backdrop')[0];
-    
+
     // Vérifie que les handlers sont attachés
     fireEvent.touchStart(backdrop);
     fireEvent.touchMove(backdrop);
@@ -207,7 +207,7 @@ describe('DialogContainer', () => {
         onTouchStart: vi.fn(),
         onTouchMove: vi.fn(),
         onTouchEnd: vi.fn(),
-      }
+      },
     });
 
     renderDialogContainer();

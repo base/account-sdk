@@ -13,7 +13,7 @@ const closeIcon = `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQ
 // Handle bar component for mobile bottom sheet
 const DialogHandleBar: FunctionComponent = () => {
   const isPhonePortrait = usePhonePortrait();
-  
+
   return isPhonePortrait ? <div class="-base-acc-sdk-dialog-handle-bar" /> : null;
 };
 
@@ -205,19 +205,19 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
           type="button"
           aria-label="Close dialog"
         >
-          <img 
-            src={closeIcon} 
+          <img
+            src={closeIcon}
             class="-base-acc-sdk-dialog-instance-header-close-icon"
             alt="Close"
           />
         </button>
       </div>
-      
+
       <div class="-base-acc-sdk-dialog-instance-content">
         <div class="-base-acc-sdk-dialog-instance-content-title">{title}</div>
         <div class="-base-acc-sdk-dialog-instance-content-message">{message}</div>
       </div>
-      
+
       {actionButtons}
     </div>
   );
