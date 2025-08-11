@@ -46,7 +46,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
   }
 
   try {
-    validateStringAmount(amount, 2);
+    validateStringAmount(amount, 6);
     const normalizedAddress = normalizeAddress(to);
 
     // Step 2: Translate payment to sendCalls format

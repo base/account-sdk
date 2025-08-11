@@ -66,7 +66,7 @@ describe('pay', () => {
       payerInfoResponses: undefined,
     });
 
-    expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 2);
+    expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 6);
     expect(validation.normalizeAddress).toHaveBeenCalledWith(
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51'
     );
@@ -136,6 +136,43 @@ describe('pay', () => {
       false,
       undefined
     );
+  });
+
+  it('should accept amounts with up to 6 decimal places', async () => {
+    // Setup mocks
+    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+    vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+      version: '2.0.0',
+      chainId: 8453,
+      calls: [
+        {
+          to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          data: '0xabcdef',
+          value: '0x0',
+        },
+      ],
+      capabilities: {},
+    });
+    vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+      transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    });
+
+    // Test with 6 decimal places
+    const payment = await pay({
+      amount: '10.123456',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      testnet: false,
+    });
+
+    expect(payment).toEqual({
+      success: true,
+      id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      amount: '10.123456',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      payerInfoResponses: undefined,
+    });
+
+    expect(validation.validateStringAmount).toHaveBeenCalledWith('10.123456', 6);
   });
 
   it('should handle validation errors', async () => {
@@ -413,7 +450,7 @@ describe('pay', () => {
       payerInfoResponses: payerInfoResponses,
     });
 
-    expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 2);
+    expect(validation.validateStringAmount).toHaveBeenCalledWith('10.50', 6);
     expect(validation.normalizeAddress).toHaveBeenCalledWith(
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51'
     );
