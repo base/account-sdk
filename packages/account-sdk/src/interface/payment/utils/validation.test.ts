@@ -3,23 +3,39 @@ import { normalizeAddress, validateStringAmount } from './validation.js';
 
 describe('validateStringAmount', () => {
   it('should validate valid amounts', () => {
-    expect(() => validateStringAmount('10.50', 2)).not.toThrow();
-    expect(() => validateStringAmount('0.01', 2)).not.toThrow();
-    expect(() => validateStringAmount('1000', 2)).not.toThrow();
-    expect(() => validateStringAmount('1.2', 2)).not.toThrow();
+    expect(() => validateStringAmount('10.50', 6)).not.toThrow();
+    expect(() => validateStringAmount('0.01', 6)).not.toThrow();
+    expect(() => validateStringAmount('1000', 6)).not.toThrow();
+    expect(() => validateStringAmount('1.2', 6)).not.toThrow();
+    expect(() => validateStringAmount('10.123456', 6)).not.toThrow();
+    expect(() => validateStringAmount('0.000001', 6)).not.toThrow();
   });
 
   it('should reject invalid amounts', () => {
-    expect(() => validateStringAmount('0', 2)).toThrow('Invalid amount: must be greater than 0');
-    expect(() => validateStringAmount('-10', 2)).toThrow('Invalid amount: must be greater than 0');
-    expect(() => validateStringAmount('abc', 2)).toThrow('Invalid amount: must be a valid number');
-    expect(() => validateStringAmount('10.123', 2)).toThrow(
-      'Invalid amount: pay only supports up to 2 decimal places'
+    expect(() => validateStringAmount('0', 6)).toThrow('Invalid amount: must be greater than 0');
+    expect(() => validateStringAmount('-10', 6)).toThrow('Invalid amount: must be greater than 0');
+    expect(() => validateStringAmount('abc', 6)).toThrow('Invalid amount: must be a valid number');
+    expect(() => validateStringAmount('10.1234567', 6)).toThrow(
+      'Invalid amount: pay only supports up to 6 decimal places'
     );
   });
 
   it('should reject non-string amounts', () => {
-    expect(() => validateStringAmount(10 as any, 2)).toThrow('Invalid amount: must be a string');
+    expect(() => validateStringAmount(10 as any, 6)).toThrow('Invalid amount: must be a string');
+  });
+
+  it('should validate amounts with exactly 6 decimal places', () => {
+    expect(() => validateStringAmount('1.123456', 6)).not.toThrow();
+    expect(() => validateStringAmount('999.999999', 6)).not.toThrow();
+    expect(() => validateStringAmount('0.100000', 6)).not.toThrow();
+  });
+
+  it('should validate amounts with fewer than 6 decimal places', () => {
+    expect(() => validateStringAmount('1.1', 6)).not.toThrow();
+    expect(() => validateStringAmount('1.12', 6)).not.toThrow();
+    expect(() => validateStringAmount('1.123', 6)).not.toThrow();
+    expect(() => validateStringAmount('1.1234', 6)).not.toThrow();
+    expect(() => validateStringAmount('1.12345', 6)).not.toThrow();
   });
 });
 
