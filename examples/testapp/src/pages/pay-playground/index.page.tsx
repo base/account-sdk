@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CodeEditor, Header, Output, QuickTips } from './components';
 import { DEFAULT_GET_PAYMENT_STATUS_CODE, DEFAULT_PAY_CODE, GET_PAYMENT_STATUS_QUICK_TIPS, PAY_CODE_WITH_PAYER_INFO, PAY_QUICK_TIPS } from './constants';
 import { useCodeExecution } from './hooks';
@@ -37,6 +37,28 @@ function PayPlayground() {
     setGetPaymentStatusCode(DEFAULT_GET_PAYMENT_STATUS_CODE);
     getPaymentStatusExecution.reset();
   };
+
+  // Watch for successful payment results and update getPaymentStatus code with the transaction ID
+  useEffect(() => {
+    if (payExecution.result && payExecution.result.success && payExecution.result.id) {
+      const transactionId = payExecution.result.id;
+      const updatedCode = `import { base } from '@base-org/account'
+
+try {
+  const result = await base.getPaymentStatus({
+    id: '${transactionId}', // Automatically filled with your recent transaction
+    testnet: true
+  })
+  
+  return result;
+} catch (error) {
+  // This will catch network errors if any occur
+  console.error('Failed to check payment status:', error.message);
+  throw error;
+}`;
+      setGetPaymentStatusCode(updatedCode);
+    }
+  }, [payExecution.result]);
 
   return (
     <div className={styles.container}>

@@ -41,7 +41,7 @@ export const DEFAULT_GET_PAYMENT_STATUS_CODE = `import { base } from '@base-org/
 
 try {
   const result = await base.getPaymentStatus({
-    id: '0x...', // Replace with an ID from a previous payment
+    id: '0x...', // Automatically filled with your recent transaction
     testnet: true
   })
   
