@@ -3246,6 +3246,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/acorn@npm:^4.0.6":
+  version: 4.0.6
+  resolution: "@types/acorn@npm:4.0.6"
+  dependencies:
+    "@types/estree": "npm:*"
+  checksum: 10/e00671d5055d06b07feccb8c2841467a4bdd1ab95a29e191d51cacc08c496e1ba1f54edeefab274bb2ba51cb45b0aaaa662a63897650e9d02e9997ad82124ae4
+  languageName: node
+  linkType: hard
+
 "@types/aria-query@npm:^5.0.1":
   version: 5.0.4
   resolution: "@types/aria-query@npm:5.0.4"
@@ -3905,7 +3914,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.14.0":
+"acorn@npm:^8.14.0, acorn@npm:^8.15.0":
   version: 8.15.0
   resolution: "acorn@npm:8.15.0"
   bin:
@@ -8061,7 +8070,9 @@ __metadata:
     "@emotion/styled": "npm:^11.11.0"
     "@metamask/eth-sig-util": "npm:^7.0.0"
     "@testing-library/react": "npm:^16.2.0"
+    "@types/acorn": "npm:^4.0.6"
     "@types/react": "npm:18.2.15"
+    acorn: "npm:^8.15.0"
     framer-motion: "npm:^10.13.1"
     next: "npm:^14.2.10"
     react: "npm:^18.2.0"

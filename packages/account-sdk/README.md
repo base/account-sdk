@@ -154,5 +154,5 @@ const status = await window.base.getPaymentStatus({
 });
 
 // Create Base Account Provider
-const provider = createBaseAccountSDK().getProvider()
+const provider = window.createBaseAccountSDK().getProvider()
 ```

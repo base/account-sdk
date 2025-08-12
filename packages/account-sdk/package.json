@@ -1,6 +1,6 @@
 {
   "name": "@base-org/account",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "Base Account SDK",
   "keywords": [
     "base",
@@ -25,6 +25,11 @@
       "types": "./dist/interface/payment/index.d.ts",
       "import": "./dist/interface/payment/index.js",
       "require": "./dist/interface/payment/index.js"
+    },
+    "./spend-permission": {
+      "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
+      "import": "./dist/interface/public-utilities/spend-permission/index.js",
+      "require": "./dist/interface/public-utilities/spend-permission/index.js"
     },
     "./ui-assets": {
       "types": "./dist/ui/assets/index.d.ts",

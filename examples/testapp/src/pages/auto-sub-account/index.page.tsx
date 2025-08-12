@@ -183,11 +183,11 @@ export default function AutoSubAccount() {
   const handleWalletConnect = async () => {
     if (!provider) return;
 
-    let params: any[] = [];
+    let params: unknown[] = [];
 
     // Build params based on selected capabilities
     if (walletConnectCapabilities.siwe || walletConnectCapabilities.addSubAccount) {
-      const capabilities: any = {};
+      const capabilities: Record<string, unknown> = {};
 
       // Add SIWE capability if selected
       if (walletConnectCapabilities.siwe) {

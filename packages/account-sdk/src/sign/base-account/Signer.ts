@@ -720,6 +720,7 @@ export class Signer {
         ownerIndex = await handleAddSubAccountOwner({
           ownerAccount: ownerAccount.account,
           globalAccountRequest: this.sendRequestToPopup.bind(this),
+          chainId: this.chain.id,
         });
         logAddOwnerCompleted({ method: request.method, correlationId });
       } catch (error) {

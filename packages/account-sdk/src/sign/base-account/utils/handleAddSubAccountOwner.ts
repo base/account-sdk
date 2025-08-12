@@ -13,9 +13,11 @@ import { presentAddOwnerDialog } from './presentAddOwnerDialog.js';
 export async function handleAddSubAccountOwner({
   ownerAccount,
   globalAccountRequest,
+  chainId,
 }: {
   ownerAccount: OwnerAccount;
   globalAccountRequest: (request: RequestArguments) => Promise<unknown>;
+  chainId: number;
 }) {
   const account = store.account.get();
   const subAccount = store.subAccounts.get();
@@ -62,7 +64,7 @@ export async function handleAddSubAccountOwner({
       {
         version: '1',
         calls,
-        chainId: numberToHex(84532),
+        chainId: numberToHex(chainId),
         from: globalAccount,
       },
     ],

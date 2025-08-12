@@ -3,7 +3,6 @@ import {
   logPaymentError,
   logPaymentStarted,
 } from ':core/telemetry/events/payment.js';
-import type { Address } from 'viem';
 import type { PaymentOptions, PaymentResult } from './types.js';
 import { executePaymentWithSDK } from './utils/sdkManager.js';
 import { translatePaymentToSendCalls } from './utils/translatePayment.js';
@@ -18,19 +17,20 @@ import { normalizeAddress, validateStringAmount } from './utils/validation.js';
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.payerInfo - Optional payer information configuration for data callbacks
  * @returns Promise<PaymentResult> - Result of the payment transaction
+ * @throws Error if the payment fails
  *
  * @example
  * ```typescript
- * const payment = await pay({
- *   amount: "10.50",
- *   to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
- *   testnet: true
- * });
+ * try {
+ *   const payment = await pay({
+ *     amount: "10.50",
+ *     to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
+ *     testnet: true
+ *   });
  *
- * if (payment.success) {
  *   console.log(`Payment sent! Transaction ID: ${payment.id}`);
- * } else {
- *   console.error(`Payment failed: ${payment.error}`);
+ * } catch (error) {
+ *   console.error(`Payment failed: ${error.message}`);
  * }
  * ```
  */
@@ -46,7 +46,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
   }
 
   try {
-    validateStringAmount(amount, 2);
+    validateStringAmount(amount, 6);
     const normalizedAddress = normalizeAddress(to);
 
     // Step 2: Translate payment to sendCalls format
@@ -103,12 +103,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
       logPaymentError({ amount, testnet, correlationId, errorMessage });
     }
 
-    // Return error result
-    return {
-      success: false,
-      error: errorMessage,
-      amount: amount,
-      to: to as Address,
-    };
+    // Re-throw the original error
+    throw error;
   }
 }

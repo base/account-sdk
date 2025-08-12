@@ -14,6 +14,7 @@ import {
   logRequestResponded,
   logRequestStarted,
 } from ':core/telemetry/events/provider.js';
+import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { Signer } from ':sign/base-account/Signer.js';
 import { initSubAccountConfig } from ':sign/base-account/utils.js';
@@ -59,7 +60,7 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
       logRequestError({
         method: args.method,
         correlationId,
-        errorMessage: error instanceof Error ? error.message : '',
+        errorMessage: parseErrorMessageFromAny(error),
       });
       throw error;
     } finally {

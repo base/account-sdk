@@ -50,7 +50,7 @@ export interface PayerInfo {
   /** Information requests from the payer */
   requests: InfoRequest[];
   /** Callback URL for sending the payer information */
-  callbackURL: string;
+  callbackURL?: string;
 }
 
 /**
@@ -86,22 +86,9 @@ export interface PaymentSuccess {
 }
 
 /**
- * Failed payment result
- */
-export interface PaymentError {
-  success: false;
-  /** Error message describing what went wrong */
-  error: string;
-  /** The amount that was attempted */
-  amount: string;
-  /** The address that would have received the payment */
-  to: Address;
-}
-
-/**
  * Result of a payment transaction
  */
-export type PaymentResult = PaymentSuccess | PaymentError;
+export type PaymentResult = PaymentSuccess;
 
 /**
  * Options for checking payment status
@@ -138,8 +125,8 @@ export interface PaymentStatus {
   amount?: string;
   /** Recipient address (present for completed transactions, parsed from logs) */
   recipient?: string;
-  /** Error message (present for failed status - includes both on-chain failure reasons and off-chain errors) */
-  error?: string;
+  /** Reason for transaction failure (present for failed status - describes why the transaction failed on-chain) */
+  reason?: string;
 }
 
 /**
