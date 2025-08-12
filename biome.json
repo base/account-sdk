@@ -185,6 +185,11 @@
 			"expect"
 		]
 	},
+	"css": {
+		"parser": {
+			"cssModules": true
+		}
+	},
 	"overrides": [
 		{
 			"include": [
