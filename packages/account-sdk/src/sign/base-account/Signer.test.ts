@@ -780,6 +780,112 @@ describe('Signer', () => {
       });
     });
 
+    it('should not use cached response for wallet_connect calls with signInWithEthereum capability', async () => {
+      // First wallet_connect call without SIWE
+      const initialRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      const mockSpendPermissions = [
+        {
+          permissionHash: '0xPermissionHash',
+          signature: '0xSignature',
+          chainId: 1,
+          permission: {
+            account: globalAccountAddress,
+            spender: subAccountAddress,
+          },
+        },
+      ];
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                  spendPermissions: {
+                    permissions: mockSpendPermissions,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      // First call to establish cache
+      await signer.request(initialRequest);
+
+      // Reset mock call count to track only SIWE calls
+      (decryptContent as Mock).mockClear();
+
+      // Now make a wallet_connect call with signInWithEthereum capability
+      const siweRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [
+          {
+            version: '1',
+            capabilities: {
+              signInWithEthereum: {
+                chainId: '0x14a34', // Base Sepolia
+                nonce: 'test-nonce-123',
+              },
+            },
+          },
+        ],
+      };
+
+      // Mock the response for SIWE request
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  signInWithEthereum: {
+                    message: 'example.com wants you to sign in with your Ethereum account',
+                    signature: '0xsiwesignature',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      // Make the SIWE request
+      const siweResponse = await signer.request(siweRequest);
+
+      // Verify decryptContent was called for the SIWE request (not cached)
+      expect(decryptContent).toHaveBeenCalledTimes(1); // Only for SIWE request since we cleared the count
+
+      // Verify SIWE response includes the signInWithEthereum capability
+      expect(siweResponse).toEqual({
+        accounts: [
+          {
+            address: globalAccountAddress,
+            capabilities: {
+              signInWithEthereum: {
+                message: 'example.com wants you to sign in with your Ethereum account',
+                signature: '0xsiwesignature',
+              },
+            },
+          },
+        ],
+      });
+    });
+
     it('should always return sub account first when enableAutoSubAccounts is true', async () => {
       expect(signer['accounts']).toEqual([]);
 
