@@ -808,7 +808,6 @@ export class Signer {
           subAccountAddress: subAccount.address,
           client,
           request,
-          subAccountRequest,
           globalAccountRequest: this.request.bind(this),
         });
         logInsufficientBalanceErrorHandlingCompleted({ method: request.method, correlationId });

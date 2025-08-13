@@ -62,7 +62,6 @@ describe('handleInsufficientBalanceError', () => {
         }
         throw new Error('Unknown request');
       }),
-      subAccountRequest: vi.fn(),
       request: {
         method: 'eth_sendTransaction',
         params: [
@@ -80,64 +79,31 @@ describe('handleInsufficientBalanceError', () => {
     vi.resetAllMocks();
   });
 
-  it('should allow the user to update their spend limits', async () => {
-    (presentSubAccountFundingDialog as Mock).mockResolvedValueOnce('update_permission');
-
-    await handleInsufficientBalanceError(args);
-
-    (args.globalAccountRequest as Mock).mockResolvedValueOnce('0x123');
-
-    expect(args.globalAccountRequest).toHaveBeenCalledWith({
-      method: 'eth_signTypedData_v4',
-      params: [
-        globalAccountAddress,
-        expect.objectContaining({
-          types: expect.any(Object),
-          domain: expect.any(Object),
-          message: expect.any(Object),
-        }),
-      ],
-    });
-
-    expect(args.subAccountRequest).toHaveBeenCalledWith(args.request);
-  });
-
-  it('should allow the user to cancel', async () => {
-    (presentSubAccountFundingDialog as Mock).mockResolvedValueOnce('cancel');
-
-    await expect(handleInsufficientBalanceError(args)).rejects.toThrow();
-
-    expect(args.globalAccountRequest).not.toHaveBeenCalled();
-    expect(args.subAccountRequest).not.toHaveBeenCalled();
-  });
-
-  it('should allow the user to continue with their global account', async () => {
+  it('should present a continue with primary account option', async () => {
     (presentSubAccountFundingDialog as Mock).mockResolvedValueOnce('continue_popup');
 
     await handleInsufficientBalanceError(args);
 
-    // Expect 2 calls to global account and none to sub account
+    // Expect one executeBatch call to sub account
     expect(args.globalAccountRequest).toHaveBeenCalledWith({
       method: 'wallet_sendCalls',
       params: [
         expect.objectContaining({
           calls: [
-            // 1. Transfer funds from global account to sub account
             expect.objectContaining({
               to: subAccountAddress,
-              value: '0x38d7ea4c68000',
-              data: '0x',
-            }),
-            // 2. Batch execute original calls on sub account
-            expect.objectContaining({
-              to: subAccountAddress,
-              data: expect.stringContaining('0x34fcd5be'), // executeBatch
               value: '0x0',
+              data: expect.stringContaining('0x34fcd5be'),
             }),
           ],
         }),
       ],
     });
-    expect(args.subAccountRequest).toHaveBeenCalledTimes(0);
+  });
+
+  it('should always continue via primary account path', async () => {
+    (presentSubAccountFundingDialog as Mock).mockResolvedValueOnce('continue_popup');
+    await handleInsufficientBalanceError(args);
+    expect(args.globalAccountRequest).toHaveBeenCalled();
   });
 });
