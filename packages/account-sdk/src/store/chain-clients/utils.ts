@@ -1,8 +1,18 @@
 import { createPublicClient, defineChain, http, PublicClient } from 'viem';
 import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
 
-import { ChainClients } from './store.js';
 import { RPCResponseNativeCurrency } from ':core/message/RPCResponse.js';
+import { ChainClients } from './store.js';
+
+// Chain IDs for Base networks
+const BASE_CHAIN_ID = 8453;
+const BASE_SEPOLIA_CHAIN_ID = 84532;
+
+// Fallback RPC URLs for Base networks
+const FALLBACK_RPC_URLS: Record<number, string> = {
+  [BASE_CHAIN_ID]: 'https://mainnet.base.org',
+  [BASE_SEPOLIA_CHAIN_ID]: 'https://sepolia.base.org',
+};
 
 export type SDKChain = {
   id: number;
@@ -12,14 +22,22 @@ export type SDKChain = {
 
 export function createClients(chains: SDKChain[]) {
   chains.forEach((c) => {
-    if (!c.rpcUrl) {
+    // Use fallback RPC URL for Base networks if wallet hasn't provided one
+    let rpcUrl = c.rpcUrl;
+    if (!rpcUrl && FALLBACK_RPC_URLS[c.id]) {
+      rpcUrl = FALLBACK_RPC_URLS[c.id];
+    }
+
+    // Skip if still no RPC URL available
+    if (!rpcUrl) {
       return;
     }
+
     const viemchain = defineChain({
       id: c.id,
       rpcUrls: {
         default: {
-          http: [c.rpcUrl],
+          http: [rpcUrl],
         },
       },
       name: c.nativeCurrency?.name ?? '',
@@ -32,19 +50,20 @@ export function createClients(chains: SDKChain[]) {
 
     const client = createPublicClient({
       chain: viemchain,
-      transport: http(c.rpcUrl),
+      transport: http(rpcUrl),
     });
     const bundlerClient = createBundlerClient({
       client,
-      transport: http(c.rpcUrl),
+      transport: http(rpcUrl),
     });
 
-    ChainClients.setState({
+    ChainClients.setState((state) => ({
+      ...state,
       [c.id]: {
         client,
         bundlerClient,
       },
-    });
+    }));
   });
 }
 
