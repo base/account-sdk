@@ -130,5 +130,56 @@ export interface PaymentStatus {
 }
 
 /**
+ * Options for creating a subscription
+ */
+export interface SubscriptionOptions {
+  /** Amount of USDC to spend per period as a string (e.g., "10.50") */
+  amount: string;
+  /** Ethereum address that will be the spender (your application's address) */
+  to: string;
+  /** The period in days for the subscription (e.g., 30 for monthly) */
+  periodInDays?: number;
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+  /** Optional wallet URL to use */
+  walletUrl?: string;
+  /** Whether to enable telemetry logging. Defaults to true */
+  telemetry?: boolean;
+}
+
+/**
+ * Successful subscription result
+ */
+export interface SubscriptionResult {
+  success: true;
+  /** The permission hash for tracking */
+  permissionHash: `0x${string}`;
+  /** The signature from the wallet */
+  signature: `0x${string}`;
+  /** The spender address */
+  spender: Address;
+  /** The account address that signed the permission */
+  account: Address;
+  /** The token address (USDC) */
+  token: Address;
+  /** The allowance amount in wei */
+  allowance: string;
+  /** The period in days */
+  periodInDays: number;
+  /** The period in seconds */
+  periodInSeconds: number;
+  /** The start timestamp */
+  startTimestamp: number;
+  /** The end timestamp */
+  endTimestamp: number;
+  /** The salt used */
+  salt: `0x${string}`;
+  /** The chain ID */
+  chainId: number;
+  /** The actual signed typed data */
+  signedData: any;
+}
+
+/**
  * Internal type for payment execution result
  */

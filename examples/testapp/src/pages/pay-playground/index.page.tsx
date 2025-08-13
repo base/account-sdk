@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { CodeEditor, Header, Output, QuickTips } from './components';
 import {
-  DEFAULT_GET_PAYMENT_STATUS_CODE,
-  DEFAULT_PAY_CODE,
-  GET_PAYMENT_STATUS_QUICK_TIPS,
-  PAY_CODE_WITH_PAYER_INFO,
-  PAY_QUICK_TIPS,
+    DEFAULT_GET_PAYMENT_STATUS_CODE,
+    DEFAULT_PAY_CODE,
+    DEFAULT_SUBSCRIBE_CODE,
+    GET_PAYMENT_STATUS_QUICK_TIPS,
+    PAY_CODE_WITH_PAYER_INFO,
+    PAY_QUICK_TIPS,
+    SUBSCRIBE_QUICK_TIPS,
 } from './constants';
 import { useCodeExecution } from './hooks';
 import styles from './styles/Home.module.css';
@@ -14,9 +16,11 @@ function PayPlayground() {
   const [includePayerInfo, setIncludePayerInfo] = useState(false);
   const [payCode, setPayCode] = useState(DEFAULT_PAY_CODE);
   const [getPaymentStatusCode, setGetPaymentStatusCode] = useState(DEFAULT_GET_PAYMENT_STATUS_CODE);
+  const [subscribeCode, setSubscribeCode] = useState(DEFAULT_SUBSCRIBE_CODE);
 
   const payExecution = useCodeExecution();
   const getPaymentStatusExecution = useCodeExecution();
+  const subscribeExecution = useCodeExecution();
 
   const handlePayExecute = () => {
     payExecution.executeCode(payCode);
@@ -42,6 +46,15 @@ function PayPlayground() {
   const handleGetPaymentStatusReset = () => {
     setGetPaymentStatusCode(DEFAULT_GET_PAYMENT_STATUS_CODE);
     getPaymentStatusExecution.reset();
+  };
+
+  const handleSubscribeExecute = () => {
+    subscribeExecution.executeCode(subscribeCode);
+  };
+
+  const handleSubscribeReset = () => {
+    setSubscribeCode(DEFAULT_SUBSCRIBE_CODE);
+    subscribeExecution.reset();
   };
 
   // Watch for successful payment results and update getPaymentStatus code with the transaction ID
@@ -102,6 +115,37 @@ try {
                 error={payExecution.error}
                 consoleOutput={payExecution.consoleOutput}
                 isLoading={payExecution.isLoading}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* subscribe Section */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>subscribe Function</h2>
+          <p className={styles.sectionDescription}>Create spend permissions for recurring USDC payments</p>
+
+          <div className={styles.playground}>
+            <div className={styles.leftColumn}>
+              <CodeEditor
+                code={subscribeCode}
+                onChange={setSubscribeCode}
+                onExecute={handleSubscribeExecute}
+                onReset={handleSubscribeReset}
+                isLoading={subscribeExecution.isLoading}
+                includePayerInfo={false}
+                onPayerInfoToggle={() => {}}
+                showPayerInfoToggle={false}
+              />
+              <QuickTips tips={SUBSCRIBE_QUICK_TIPS} />
+            </div>
+
+            <div className={styles.rightColumn}>
+              <Output
+                result={subscribeExecution.result}
+                error={subscribeExecution.error}
+                consoleOutput={subscribeExecution.consoleOutput}
+                isLoading={subscribeExecution.isLoading}
               />
             </div>
           </div>
