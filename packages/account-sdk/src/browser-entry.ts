@@ -8,35 +8,47 @@ import { base } from './interface/payment/base.js';
 import { CHAIN_IDS, TOKENS } from './interface/payment/constants.js';
 import { getPaymentStatus } from './interface/payment/getPaymentStatus.js';
 import { pay } from './interface/payment/pay.js';
+import { subscribe } from './interface/payment/subscribe.js';
 import type {
-  InfoRequest,
-  PayerInfo,
-  PaymentOptions,
-  PaymentResult,
-  PaymentStatus,
-  PaymentStatusOptions,
+    InfoRequest,
+    PayerInfo,
+    PaymentOptions,
+    PaymentResult,
+    PaymentStatus,
+    PaymentStatusOptions,
+    SubscriptionOptions,
+    SubscriptionResult,
 } from './interface/payment/types.js';
 
 // Expose to global window object
 if (typeof window !== 'undefined') {
-  (window as any).base = base;
-  (window as any).createBaseAccountSDK = createBaseAccountSDK;
+  // Extend window interface for global exports
+  interface WindowWithBase {
+    base: typeof base;
+    createBaseAccountSDK: typeof createBaseAccountSDK;
+  }
+  const globalWindow = window as unknown as WindowWithBase;
+  globalWindow.base = base;
+  globalWindow.createBaseAccountSDK = createBaseAccountSDK;
 }
 
 // Export for module usage
 export type {
-  AppMetadata,
-  Preference,
-  ProviderInterface,
+    AppMetadata,
+    Preference,
+    ProviderInterface
 } from ':core/provider/interface.js';
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
 export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js';
-export { base, CHAIN_IDS, getPaymentStatus, pay, TOKENS };
+export { base, CHAIN_IDS, getPaymentStatus, pay, subscribe, TOKENS };
 export type {
-  InfoRequest,
-  PayerInfo,
-  PaymentOptions,
-  PaymentResult,
-  PaymentStatus,
-  PaymentStatusOptions,
+    InfoRequest,
+    PayerInfo,
+    PaymentOptions,
+    PaymentResult,
+    PaymentStatus,
+    PaymentStatusOptions,
+    SubscriptionOptions,
+    SubscriptionResult
 };
+

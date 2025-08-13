@@ -37,8 +37,8 @@ export async function handleInsufficientBalanceError({
   subAccountAddress: Address;
   request: RequestArguments;
   client: PublicClient;
-  subAccountRequest: (request: RequestArguments) => Promise<any>;
-  globalAccountRequest: (request: RequestArguments) => Promise<any>;
+  subAccountRequest: (request: RequestArguments) => Promise<unknown>;
+  globalAccountRequest: (request: RequestArguments) => Promise<unknown>;
 }) {
   const chainId = client.chain?.id;
   assertPresence(chainId, standardErrors.rpc.internal(`invalid chainId`));
@@ -203,7 +203,7 @@ export async function handleInsufficientBalanceError({
   if (request.method === 'eth_sendTransaction') {
     return waitForCallsTransactionHash({
       client,
-      id: result,
+      id: result as string,
     });
   }
 

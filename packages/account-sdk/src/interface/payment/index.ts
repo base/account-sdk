@@ -4,16 +4,19 @@
 export { base } from './base.js';
 export { getPaymentStatus } from './getPaymentStatus.js';
 export { pay } from './pay.js';
+export { subscribe } from './subscribe.js';
 export type {
-  InfoRequest,
-  PayerInfo,
-  PayerInfoResponses,
-  PaymentOptions,
-  PaymentResult,
-  PaymentStatus,
-  PaymentStatusOptions,
-  PaymentStatusType,
-  PaymentSuccess,
+    InfoRequest,
+    PayerInfo,
+    PayerInfoResponses,
+    PaymentOptions,
+    PaymentResult,
+    PaymentStatus,
+    PaymentStatusOptions,
+    PaymentStatusType,
+    PaymentSuccess,
+    SubscriptionOptions,
+    SubscriptionResult
 } from './types.js';
 
 // Export constants

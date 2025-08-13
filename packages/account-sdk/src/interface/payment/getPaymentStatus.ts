@@ -170,30 +170,29 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         recipient,
       };
       return result;
-    } else {
-      // Parse a user-friendly reason for failure
-      let userFriendlyReason = 'Payment could not be completed';
-
-      if (reason) {
-        if (reason.toLowerCase().includes('insufficient')) {
-          userFriendlyReason = 'Insufficient USDC balance';
-        } else {
-          userFriendlyReason = reason;
-        }
-      }
-
-      if (telemetry) {
-        logPaymentStatusCheckCompleted({ testnet, status: 'failed', correlationId });
-      }
-      const result = {
-        status: 'failed' as const,
-        id: id as Hex,
-        message: 'Payment failed',
-        sender: receipt.result.sender,
-        reason: userFriendlyReason,
-      };
-      return result;
     }
+    // Parse a user-friendly reason for failure
+    let userFriendlyReason = 'Payment could not be completed';
+
+    if (reason) {
+      if (reason.toLowerCase().includes('insufficient')) {
+        userFriendlyReason = 'Insufficient USDC balance';
+      } else {
+        userFriendlyReason = reason;
+      }
+    }
+
+    if (telemetry) {
+      logPaymentStatusCheckCompleted({ testnet, status: 'failed', correlationId });
+    }
+    const result = {
+      status: 'failed' as const,
+      id: id as Hex,
+      message: 'Payment failed',
+      sender: receipt.result.sender,
+      reason: userFriendlyReason,
+    };
+    return result;
   } catch (error) {
     console.error('[getPaymentStatus] Error checking status:', error);
 
