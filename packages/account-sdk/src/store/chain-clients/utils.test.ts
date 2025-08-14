@@ -1,4 +1,4 @@
-import { optimismSepolia, sepolia } from 'viem/chains';
+import { base, baseSepolia, optimismSepolia, sepolia } from 'viem/chains';
 
 import { ChainClients } from './store.js';
 import { createClients } from './utils.js';
@@ -57,40 +57,40 @@ describe('chain-clients/utils', () => {
     it('should use fallback RPC URL for Base mainnet when wallet does not provide one', () => {
       createClients([
         {
-          id: 8453, // Base mainnet
+          id: base.id, // Base mainnet
           // No rpcUrl provided
         },
       ]);
 
-      expect(ChainClients.getState()[8453]).toBeDefined();
-      expect(ChainClients.getState()[8453].client).toBeDefined();
-      expect(ChainClients.getState()[8453].bundlerClient).toBeDefined();
+      expect(ChainClients.getState()[base.id]).toBeDefined();
+      expect(ChainClients.getState()[base.id].client).toBeDefined();
+      expect(ChainClients.getState()[base.id].bundlerClient).toBeDefined();
     });
 
     it('should use fallback RPC URL for Base Sepolia when wallet does not provide one', () => {
       createClients([
         {
-          id: 84532, // Base Sepolia
+          id: baseSepolia.id, // Base Sepolia
           // No rpcUrl provided
         },
       ]);
 
-      expect(ChainClients.getState()[84532]).toBeDefined();
-      expect(ChainClients.getState()[84532].client).toBeDefined();
-      expect(ChainClients.getState()[84532].bundlerClient).toBeDefined();
+      expect(ChainClients.getState()[baseSepolia.id]).toBeDefined();
+      expect(ChainClients.getState()[baseSepolia.id].client).toBeDefined();
+      expect(ChainClients.getState()[baseSepolia.id].bundlerClient).toBeDefined();
     });
 
     it('should prefer wallet-provided RPC URL over fallback for Base mainnet', () => {
       const customRpcUrl = 'https://custom.base.rpc.url';
       createClients([
         {
-          id: 8453, // Base mainnet
+          id: base.id, // Base mainnet
           rpcUrl: customRpcUrl,
         },
       ]);
 
-      expect(ChainClients.getState()[8453]).toBeDefined();
-      expect(ChainClients.getState()[8453].client).toBeDefined();
+      expect(ChainClients.getState()[base.id]).toBeDefined();
+      expect(ChainClients.getState()[base.id].client).toBeDefined();
       // We can't directly test the RPC URL used, but we can verify the client was created
     });
 
@@ -108,7 +108,7 @@ describe('chain-clients/utils', () => {
     it('should handle mixed chains with and without RPC URLs', () => {
       createClients([
         {
-          id: 8453, // Base mainnet - will use fallback
+          id: base.id, // Base mainnet - will use fallback
         },
         {
           id: sepolia.id,
@@ -118,14 +118,14 @@ describe('chain-clients/utils', () => {
           id: 999999, // Unsupported chain - will be skipped
         },
         {
-          id: 84532, // Base Sepolia - will use fallback
+          id: baseSepolia.id, // Base Sepolia - will use fallback
         },
       ]);
 
       expect(Object.keys(ChainClients.getState()).length).toBe(3);
-      expect(ChainClients.getState()[8453]).toBeDefined();
+      expect(ChainClients.getState()[base.id]).toBeDefined();
       expect(ChainClients.getState()[sepolia.id]).toBeDefined();
-      expect(ChainClients.getState()[84532]).toBeDefined();
+      expect(ChainClients.getState()[baseSepolia.id]).toBeDefined();
       expect(ChainClients.getState()[999999]).toBeUndefined();
     });
   });

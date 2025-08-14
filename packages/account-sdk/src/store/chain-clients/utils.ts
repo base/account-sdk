@@ -1,17 +1,14 @@
 import { createPublicClient, defineChain, http, PublicClient } from 'viem';
 import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
+import { base, baseSepolia } from 'viem/chains';
 
 import { RPCResponseNativeCurrency } from ':core/message/RPCResponse.js';
 import { ChainClients } from './store.js';
 
-// Chain IDs for Base networks
-const BASE_CHAIN_ID = 8453;
-const BASE_SEPOLIA_CHAIN_ID = 84532;
-
 // Fallback RPC URLs for Base networks
 const FALLBACK_RPC_URLS: Record<number, string> = {
-  [BASE_CHAIN_ID]: 'https://mainnet.base.org',
-  [BASE_SEPOLIA_CHAIN_ID]: 'https://sepolia.base.org',
+  [base.id]: base.rpcUrls.default.http[0],
+  [baseSepolia.id]: baseSepolia.rpcUrls.default.http[0],
 };
 
 export type SDKChain = {
