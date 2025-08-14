@@ -2,7 +2,6 @@
   "include": ["./src", "**/*.test.*"],
   "exclude": ["dist"],
   "compilerOptions": {
-    // Language & Module Configuration - Define target environment and module system
     "target": "ES2023",
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -10,7 +9,6 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
 
-    // Path Resolution & Build Structure - Configure how imports are resolved and output structure
     "baseUrl": ".",
     "rootDir": "./src",
     "outDir": "./dist",
@@ -23,15 +21,12 @@
       ":interface/*": ["src/interface/*"]
     },
 
-    // Output Generation - Control what files are generated during compilation
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
 
-    // Modern TypeScript Features - Enable advanced type checking and modern JS features
     "useDefineForClassFields": true,
 
-    // Interoperability & Compatibility - Enable seamless integration with different module systems and formats
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -39,13 +34,11 @@
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
 
-    // Code Quality & Safety - Enforce strict coding standards and catch potential errors
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
 
-    // Testing & Environment Types - Include type definitions for testing and runtime environments
     "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
   }
 }
