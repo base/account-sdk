@@ -1,12 +1,12 @@
-import type { PaymentResult, PaymentStatus } from '@base-org/account';
-import { getPaymentStatus, pay } from '@base-org/account';
+import type { PaymentResult, PaymentStatus, SubscriptionResult } from '@base-org/account';
+import { getPaymentStatus, pay, subscribe } from '@base-org/account';
 import { useCallback, useState } from 'react';
 import { transformAndSanitizeCode } from '../utils/codeTransform';
 import { useConsoleCapture } from './useConsoleCapture';
 
 export const useCodeExecution = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<PaymentResult | PaymentStatus | null>(null);
+  const [result, setResult] = useState<PaymentResult | PaymentStatus | SubscriptionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
   const { captureConsole } = useConsoleCapture();
@@ -49,10 +49,12 @@ export const useCodeExecution = () => {
           // Individual functions for direct access
           pay,
           getPaymentStatus,
+          subscribe,
           // Namespaced access via base object
           base: {
             pay,
             getPaymentStatus,
+            subscribe,
           },
         };
 
