@@ -24,7 +24,7 @@ describe('getPaymentStatus', () => {
     });
   });
 
-  it('should return completed status for successful payment', async () => {
+  it('should return completed status for successful payment from sender wallet', async () => {
     const mockReceipt = {
       jsonrpc: '2.0',
       id: 1,
@@ -38,13 +38,13 @@ describe('getPaymentStatus', () => {
               data: '0x0000000000000000000000000000000000000000000000000000000000989680', // 10 USDC (10 * 10^6)
               topics: [
                 '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', // Transfer event topic
-                '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce', // from address (padded)
+                '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce', // from address (padded) - matches sender
                 '0x000000000000000000000000f1ddf1fc0310cb11f0ca87508207012f4a9cb336', // to address (padded)
               ],
             },
           ],
         },
-        sender: '0xsender',
+        sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
       },
     };
 
@@ -61,7 +61,7 @@ describe('getPaymentStatus', () => {
       status: 'completed',
       id: '0x123456',
       message: 'Payment completed successfully',
-      sender: '0xsender',
+      sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
       amount: '10',
       recipient: '0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336',
     });
@@ -90,7 +90,7 @@ describe('getPaymentStatus', () => {
         receipt: {
           transactionHash: '0xdef456',
         },
-        sender: '0xsender',
+        sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
         reason: 'Insufficient USDC balance',
       },
     };
@@ -108,7 +108,7 @@ describe('getPaymentStatus', () => {
       status: 'failed',
       id: '0x789abc',
       message: 'Payment failed',
-      sender: '0xsender',
+      sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
       reason: 'Insufficient USDC balance',
     });
   });
@@ -233,7 +233,7 @@ describe('getPaymentStatus', () => {
           result: {
             success: false,
             receipt: { transactionHash: '0xfailed' },
-            sender: '0xsender',
+            sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
             reason,
           },
         }),
@@ -262,13 +262,13 @@ describe('getPaymentStatus', () => {
               data: '0x0000000000000000000000000000000000000000000000000000000000989680', // 10 USDC
               topics: [
                 '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
-                '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce', // from address (padded)
+                '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce', // from address (padded) - matches sender
                 '0x000000000000000000000000f1ddf1fc0310cb11f0ca87508207012f4a9cb336', // to address (padded)
               ],
             },
           ],
         },
-        sender: '0xsender',
+        sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
       },
     };
 
@@ -285,6 +285,146 @@ describe('getPaymentStatus', () => {
     expect(status.recipient).toBe('0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336');
   });
 
+  it('should throw error when no USDC transfer from sender wallet is found', async () => {
+    const mockReceipt = {
+      jsonrpc: '2.0',
+      id: 1,
+      result: {
+        success: true,
+        receipt: {
+          transactionHash: '0xabc123',
+          logs: [
+            {
+              // USDC transfer but not from sender
+              address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+              data: '0x0000000000000000000000000000000000000000000000000000000000989680',
+              topics: [
+                '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                '0x000000000000000000000000bbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb', // from different address
+                '0x000000000000000000000000f1ddf1fc0310cb11f0ca87508207012f4a9cb336',
+              ],
+            },
+          ],
+        },
+        sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
+      },
+    };
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => mockReceipt,
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0x123456',
+        testnet: false,
+      })
+    ).rejects.toThrow(
+      'Unable to find USDC transfer from sender wallet 0x4A7c6899cdcB379e284fBFd045462e751da4C7ce'
+    );
+  });
+
+  it('should throw error when multiple USDC transfers from sender wallet are found', async () => {
+    const mockReceipt = {
+      jsonrpc: '2.0',
+      id: 1,
+      result: {
+        success: true,
+        receipt: {
+          transactionHash: '0xabc123',
+          logs: [
+            {
+              address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+              data: '0x0000000000000000000000000000000000000000000000000000000000989680', // 10 USDC
+              topics: [
+                '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce', // from sender
+                '0x000000000000000000000000f1ddf1fc0310cb11f0ca87508207012f4a9cb336',
+              ],
+            },
+            {
+              address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+              data: '0x00000000000000000000000000000000000000000000000000000000000f4240', // 1 USDC
+              topics: [
+                '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce', // from sender
+                '0x000000000000000000000000aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+              ],
+            },
+          ],
+        },
+        sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
+      },
+    };
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => mockReceipt,
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0x123456',
+        testnet: false,
+      })
+    ).rejects.toThrow(
+      /Found multiple USDC transfers from sender wallet.*Expected exactly one transfer/
+    );
+  });
+
+  it('should correctly identify transfer from sender in complex transaction with multiple USDC transfers', async () => {
+    const mockReceipt = {
+      jsonrpc: '2.0',
+      id: 1,
+      result: {
+        success: true,
+        receipt: {
+          transactionHash: '0xabc123',
+          logs: [
+            {
+              // Gas payment transfer (not from sender)
+              address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+              data: '0x00000000000000000000000000000000000000000000000000000010c388d00', // 4500 USDC
+              topics: [
+                '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                '0x000000000000000000000000bbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb',
+                '0x000000000000000000000000cccccccccccccccccccccccccccccccccccccccc',
+              ],
+            },
+            {
+              // Actual user payment (from sender)
+              address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+              data: '0x00000000000000000000000000000000000000000000000000000000000f4240', // 1 USDC
+              topics: [
+                '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce',
+                '0x000000000000000000000000f1ddf1fc0310cb11f0ca87508207012f4a9cb336',
+              ],
+            },
+          ],
+        },
+        sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
+      },
+    };
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => mockReceipt,
+    } as Response);
+
+    const status = await getPaymentStatus({
+      id: '0x123456',
+      testnet: false,
+    });
+
+    expect(status).toEqual<PaymentStatus>({
+      status: 'completed',
+      id: '0x123456',
+      message: 'Payment completed successfully',
+      sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
+      amount: '1', // Should pick the 1 USDC from sender, not the 4500 USDC gas payment
+      recipient: '0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336',
+    });
+  });
+
   describe('telemetry', () => {
     it('should not log telemetry when telemetry is disabled', async () => {
       const mockReceipt = {
@@ -296,7 +436,7 @@ describe('getPaymentStatus', () => {
             transactionHash: '0xabc123',
             logs: [],
           },
-          sender: '0xsender',
+          sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
         },
       };
 
@@ -331,7 +471,7 @@ describe('getPaymentStatus', () => {
             transactionHash: '0xabc123',
             logs: [],
           },
-          sender: '0xsender',
+          sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
         },
       };
 
@@ -398,7 +538,7 @@ describe('getPaymentStatus', () => {
         jsonrpc: '2.0',
         id: 2,
         result: {
-          sender: '0xsender',
+          sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
         },
       };
 
