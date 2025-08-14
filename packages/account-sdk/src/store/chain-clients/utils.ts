@@ -5,24 +5,43 @@ import { base, baseSepolia } from 'viem/chains';
 import { RPCResponseNativeCurrency } from ':core/message/RPCResponse.js';
 import { ChainClients } from './store.js';
 
-// Fallback RPC URLs for Base networks
-const FALLBACK_RPC_URLS: Record<number, string> = {
-  [base.id]: base.rpcUrls.default.http[0],
-  [baseSepolia.id]: baseSepolia.rpcUrls.default.http[0],
-};
-
 export type SDKChain = {
   id: number;
   rpcUrl?: string;
   nativeCurrency?: RPCResponseNativeCurrency;
 };
 
+// Fallback chains using viem's chain definitions directly
+export const FALLBACK_CHAINS: SDKChain[] = [
+  {
+    id: base.id,
+    rpcUrl: base.rpcUrls.default.http[0],
+    nativeCurrency: {
+      name: base.nativeCurrency.name,
+      symbol: base.nativeCurrency.symbol,
+      decimal: base.nativeCurrency.decimals,
+    },
+  },
+  {
+    id: baseSepolia.id,
+    rpcUrl: baseSepolia.rpcUrls.default.http[0],
+    nativeCurrency: {
+      name: baseSepolia.nativeCurrency.name,
+      symbol: baseSepolia.nativeCurrency.symbol,
+      decimal: baseSepolia.nativeCurrency.decimals,
+    },
+  },
+];
+
 export function createClients(chains: SDKChain[]) {
   chains.forEach((c) => {
     // Use fallback RPC URL for Base networks if wallet hasn't provided one
     let rpcUrl = c.rpcUrl;
-    if (!rpcUrl && FALLBACK_RPC_URLS[c.id]) {
-      rpcUrl = FALLBACK_RPC_URLS[c.id];
+    if (!rpcUrl) {
+      const fallbackChain = FALLBACK_CHAINS.find((fc) => fc.id === c.id);
+      if (fallbackChain) {
+        rpcUrl = fallbackChain.rpcUrl;
+      }
     }
 
     // Skip if still no RPC URL available
