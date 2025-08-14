@@ -1,5 +1,5 @@
-import type { Hex } from 'viem';
-import { decodeEventLog, formatUnits, getAddress } from 'viem';
+import type { Address, Hex } from 'viem';
+import { decodeEventLog, formatUnits, getAddress, isAddressEqual } from 'viem';
 
 import {
   logPaymentStatusCheckCompleted,
@@ -131,7 +131,9 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         const network = testnet ? 'baseSepolia' : 'base';
         const usdcAddress = TOKENS.USDC.addresses[network].toLowerCase();
         // Normalize sender address for comparison
-        const senderAddress = receipt.result.sender ? getAddress(receipt.result.sender) : undefined;
+        const senderAddress: Address | undefined = receipt.result.sender
+          ? getAddress(receipt.result.sender)
+          : undefined;
 
         // Collect all USDC transfers
         const usdcTransfers: Array<{
@@ -173,7 +175,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
                 }
               }
             } catch (_e) {
-              // Silently skip logs that can't be decoded
+              // Do not fail here - fail when we can't find a single valid transfer
             }
           }
         }
@@ -185,7 +187,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
           // Compare checksummed addresses for consistency
           const senderTransfers = usdcTransfers.filter((t) => {
             try {
-              return getAddress(t.from) === senderAddress;
+              return isAddressEqual(t.from as Address, senderAddress!);
             } catch {
               return false;
             }
