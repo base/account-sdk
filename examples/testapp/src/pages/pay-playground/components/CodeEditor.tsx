@@ -95,8 +95,8 @@ export const CodeEditor = ({
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
         <div className={styles.disclaimerText}>
-          <strong>Warning:</strong> Intended for testing purposes only. Never paste code from
-          untrusted sources. Can lose real funds if you are not using testnet.
+          Intended for testing purposes only. Never paste code from untrusted sources. Coinbase is
+          not responsible for any loss of funds that you incur. Testnet funds hold no real value.
         </div>
       </div>
 
