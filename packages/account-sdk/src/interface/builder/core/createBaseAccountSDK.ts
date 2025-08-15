@@ -51,6 +51,8 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
     toOwnerAccount: params.subAccounts?.toOwnerAccount,
     // @ts-expect-error - enableSubAccounts is not officially supported yet
     enableAutoSubAccounts: params.subAccounts?.enableAutoSubAccounts,
+    unstable_disableAutoSpendPermissions:
+      params.subAccounts?.unstable_disableAutoSpendPermissions ?? false,
   });
 
   //  ====================================================================
