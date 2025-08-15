@@ -1,4 +1,5 @@
 import { Preference } from '@base-org/account';
+// @ts-ignore - this internal type is not exported, only used by this playground
 import { SubAccountOptions } from '@base-org/account/dist/core/provider/interface';
 import {
   Dispatch,

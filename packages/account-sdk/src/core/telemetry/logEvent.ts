@@ -87,7 +87,8 @@ export function logEvent(
   event: CCAEventData,
   importance: AnalyticsEventImportance | undefined
 ) {
-  if (window.ClientAnalytics) {
+  // ClientAnalytics only works in the browser environment
+  if (typeof window !== 'undefined' && window.ClientAnalytics) {
     window.ClientAnalytics?.logEvent(
       name,
       {

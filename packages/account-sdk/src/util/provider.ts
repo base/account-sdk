@@ -8,7 +8,7 @@ export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string)
     jsonrpc: '2.0',
     id: crypto.randomUUID(),
   };
-  const res = await window.fetch(rpcUrl, {
+  const res = await fetch(rpcUrl, {
     method: 'POST',
     body: JSON.stringify(requestBody),
     mode: 'cors',
