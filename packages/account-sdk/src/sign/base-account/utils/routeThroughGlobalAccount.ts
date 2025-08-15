@@ -65,7 +65,7 @@ export async function routeThroughGlobalAccount({
 
     originalSendCallsParams = sendCallsRequest.params[0];
   } else {
-    throw new Error('Could not get original call');
+    throw new Error(`Could not get original call from ${request.method} request`);
   }
 
   const subAccountCallData = encodeFunctionData({
