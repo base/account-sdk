@@ -47,6 +47,15 @@ export default function AutoSubAccount() {
   const [walletConnectCapabilities, setWalletConnectCapabilities] = useState({
     siwe: false,
     addSubAccount: false,
+    dataCallback: false,
+  });
+  const [dataCallbackConfig, setDataCallbackConfig] = useState({
+    email: true,
+    physicalAddress: true,
+    name: true,
+    phoneNumber: false,
+    onchainAddress: false,
+    callbackURL: 'https://example.com/validate',
   });
   const { subAccountsConfig, setSubAccountsConfig, config, setConfig } = useConfig();
   const { provider } = useEIP1193Provider();
@@ -194,7 +203,11 @@ export default function AutoSubAccount() {
     let params: unknown[] = [];
 
     // Build params based on selected capabilities
-    if (walletConnectCapabilities.siwe || walletConnectCapabilities.addSubAccount) {
+    if (
+      walletConnectCapabilities.siwe ||
+      walletConnectCapabilities.addSubAccount ||
+      walletConnectCapabilities.dataCallback
+    ) {
       const capabilities: Record<string, unknown> = {};
 
       // Add SIWE capability if selected
@@ -221,9 +234,32 @@ export default function AutoSubAccount() {
         };
       }
 
+      // Add dataCallback capability if selected
+      if (walletConnectCapabilities.dataCallback) {
+        const requests: Array<{ type: string; optional: boolean }> = [];
+        if (dataCallbackConfig.email) requests.push({ type: 'email', optional: false });
+        if (dataCallbackConfig.physicalAddress)
+          requests.push({ type: 'physicalAddress', optional: false });
+        if (dataCallbackConfig.name) requests.push({ type: 'name', optional: false });
+        if (dataCallbackConfig.phoneNumber)
+          requests.push({ type: 'phoneNumber', optional: false });
+        if (dataCallbackConfig.onchainAddress)
+          requests.push({ type: 'onchainAddress', optional: false });
+
+        if (requests.length > 0) {
+          capabilities.dataCallback = {
+            requests,
+            // Note: callbackURL is ignored during wallet_connect and only used with wallet_sendCalls
+            ...(dataCallbackConfig.callbackURL?.trim()
+              ? { callbackURL: dataCallbackConfig.callbackURL.trim() }
+              : {}),
+          };
+        }
+      }
+
       params = [
         {
-          ...(walletConnectCapabilities.siwe && { version: '1' }),
+          version: '1.0.0',
           capabilities,
         },
       ];
@@ -445,6 +481,86 @@ export default function AutoSubAccount() {
             >
               Add Sub Account
             </Checkbox>
+            <Checkbox
+              isChecked={walletConnectCapabilities.dataCallback}
+              onChange={(e) =>
+                setWalletConnectCapabilities((prev) => ({
+                  ...prev,
+                  dataCallback: e.target.checked,
+                }))
+              }
+            >
+              Data Callback
+            </Checkbox>
+
+            {walletConnectCapabilities.dataCallback && (
+              <VStack align="start" pl={2} spacing={2}>
+                <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.300' }}>
+                  Select data to request (best-effort at connect time)
+                </Text>
+                <HStack wrap="wrap">
+                  <Checkbox
+                    isChecked={dataCallbackConfig.email}
+                    onChange={(e) =>
+                      setDataCallbackConfig((prev) => ({ ...prev, email: e.target.checked }))
+                    }
+                  >
+                    email
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={dataCallbackConfig.name}
+                    onChange={(e) =>
+                      setDataCallbackConfig((prev) => ({ ...prev, name: e.target.checked }))
+                    }
+                  >
+                    name
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={dataCallbackConfig.phoneNumber}
+                    onChange={(e) =>
+                      setDataCallbackConfig((prev) => ({
+                        ...prev,
+                        phoneNumber: e.target.checked,
+                      }))
+                    }
+                  >
+                    phoneNumber
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={dataCallbackConfig.physicalAddress}
+                    onChange={(e) =>
+                      setDataCallbackConfig((prev) => ({
+                        ...prev,
+                        physicalAddress: e.target.checked,
+                      }))
+                    }
+                  >
+                    physicalAddress
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={dataCallbackConfig.onchainAddress}
+                    onChange={(e) =>
+                      setDataCallbackConfig((prev) => ({
+                        ...prev,
+                        onchainAddress: e.target.checked,
+                      }))
+                    }
+                  >
+                    onchainAddress
+                  </Checkbox>
+                </HStack>
+                <FormControl>
+                  <FormLabel fontSize="sm">Callback URL (optional)</FormLabel>
+                  <Input
+                    placeholder="https://your-api.com/validate"
+                    value={dataCallbackConfig.callbackURL}
+                    onChange={(e) =>
+                      setDataCallbackConfig((prev) => ({ ...prev, callbackURL: e.target.value }))
+                    }
+                  />
+                </FormControl>
+              </VStack>
+            )}
           </Stack>
         </FormControl>
         {accounts.length > 0 && (
