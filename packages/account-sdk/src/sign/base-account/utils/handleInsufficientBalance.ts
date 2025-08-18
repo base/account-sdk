@@ -26,7 +26,9 @@ export async function handleInsufficientBalanceError({
   try {
     await presentSubAccountFundingDialog();
   } catch {
-    throw new Error('User cancelled funding');
+    throw standardErrors.provider.userRejectedRequest({
+      message: 'User cancelled funding',
+    });
   }
 
   const result = await routeThroughGlobalAccount({
