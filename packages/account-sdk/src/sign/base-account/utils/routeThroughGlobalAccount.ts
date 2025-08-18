@@ -101,8 +101,9 @@ export async function routeThroughGlobalAccount({
     },
     {
       spendPermissions: {
-        request: true,
-        spender: subAccountAddress,
+        request: {
+          spender: subAccountAddress,
+        },
       },
     }
   );
