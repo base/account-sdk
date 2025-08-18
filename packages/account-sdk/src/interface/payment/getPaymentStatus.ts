@@ -1,5 +1,5 @@
-import type { Hex } from 'viem';
-import { decodeEventLog, formatUnits } from 'viem';
+import type { Address, Hex } from 'viem';
+import { decodeEventLog, formatUnits, getAddress, isAddressEqual } from 'viem';
 
 import {
   logPaymentStatusCheckCompleted,
@@ -67,7 +67,6 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
     // Handle RPC errors
     if (receipt.error) {
-      console.error('[getPaymentStatus] RPC error:', receipt.error);
       const errorMessage = receipt.error.message || 'Network error';
       if (telemetry) {
         logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
@@ -130,9 +129,28 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       if (txReceipt?.logs) {
         const network = testnet ? 'baseSepolia' : 'base';
         const usdcAddress = TOKENS.USDC.addresses[network].toLowerCase();
+        // Normalize sender address for comparison
+        const senderAddress: Address | undefined = receipt.result.sender
+          ? getAddress(receipt.result.sender)
+          : undefined;
 
-        for (const log of txReceipt.logs) {
-          if (log.address?.toLowerCase() === usdcAddress) {
+        // Collect all USDC transfers
+        const usdcTransfers: Array<{
+          from: string;
+          to: string;
+          value: bigint;
+          formattedAmount: string;
+          logIndex: number;
+        }> = [];
+
+        for (let i = 0; i < txReceipt.logs.length; i++) {
+          const log = txReceipt.logs[i];
+
+          // Check if this is a USDC log
+          const logAddressLower = log.address?.toLowerCase();
+          const isUsdcLog = logAddressLower === usdcAddress;
+
+          if (isUsdcLog) {
             try {
               const decoded = decodeEventLog({
                 abi: ERC20_TRANSFER_ABI,
@@ -141,20 +159,58 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
               });
 
               if (decoded.eventName === 'Transfer' && decoded.args) {
-                // The Transfer event has indexed 'from' and 'to', and non-indexed 'value'
-                // viem's decodeEventLog returns indexed args in the args object
                 const args = decoded.args as { from: string; to: string; value: bigint };
 
-                if (args.value && args.to) {
-                  amount = formatUnits(args.value, 6);
-                  recipient = args.to;
-                  break;
+                if (args.value && args.to && args.from) {
+                  const formattedAmount = formatUnits(args.value, 6);
+
+                  usdcTransfers.push({
+                    from: args.from,
+                    to: args.to,
+                    value: args.value,
+                    formattedAmount,
+                    logIndex: i,
+                  });
                 }
               }
-            } catch (e) {
-              console.error('[getPaymentStatus] Error parsing log:', e);
+            } catch (_e) {
+              // Do not fail here - fail when we can't find a single valid transfer
             }
           }
+        }
+
+        // Now select the correct transfer
+        // Strategy: Find the transfer from the sender (smart wallet) address
+        if (usdcTransfers.length > 0 && senderAddress) {
+          // Look for transfers from the sender address (smart wallet)
+          // Compare checksummed addresses for consistency
+          const senderTransfers = usdcTransfers.filter((t) => {
+            try {
+              return isAddressEqual(t.from as Address, senderAddress!);
+            } catch {
+              return false;
+            }
+          });
+
+          if (senderTransfers.length === 0) {
+            // No transfer from the sender wallet was found
+            throw new Error(
+              `Unable to find USDC transfer from sender wallet ${receipt.result.sender}. ` +
+                `Found ${usdcTransfers.length} USDC transfer(s) but none originated from the sender wallet.`
+            );
+          }
+          if (senderTransfers.length > 1) {
+            // Multiple transfers from the sender wallet found
+            const transferDetails = senderTransfers
+              .map((t) => `${t.formattedAmount} USDC to ${t.to}`)
+              .join(', ');
+            throw new Error(
+              `Found multiple USDC transfers from sender wallet ${receipt.result.sender}: ${transferDetails}. Expected exactly one transfer.`
+            );
+          }
+          // Exactly one transfer from sender found
+          amount = senderTransfers[0].formattedAmount;
+          recipient = senderTransfers[0].to;
         }
       }
 
@@ -194,8 +250,6 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
     };
     return result;
   } catch (error) {
-    console.error('[getPaymentStatus] Error checking status:', error);
-
     const errorMessage = error instanceof Error ? error.message : 'Connection error';
     if (telemetry) {
       logPaymentStatusCheckError({ testnet, correlationId, errorMessage });

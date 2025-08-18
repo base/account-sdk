@@ -92,6 +92,12 @@ export type SubAccountOptions = {
    * @returns The owner account that will be used to sign the subaccount transactions.
    */
   toOwnerAccount?: ToOwnerAccountFn;
+  /**
+   * This is an unstable feature that may change or be removed in future versions.
+   * When true, enables automatic spend permission requests and insufficient balance error handling for sub accounts.
+   * @default true
+   */
+  unstable_enableAutoSpendPermissions?: boolean;
 };
 
 export interface ConstructorOptions {

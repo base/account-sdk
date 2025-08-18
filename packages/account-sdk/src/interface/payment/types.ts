@@ -151,55 +151,16 @@ export interface SubscriptionOptions {
  * Successful subscription result
  */
 export interface SubscriptionResult {
-  success: true;
   /** The subscription ID (permission hash) */
-  id: `0x${string}`;
-  /** The permission hash for tracking */
-  permissionHash: `0x${string}`;
-  /** The signature from the wallet */
-  signature: `0x${string}`;
-  /** The spender address */
-  spender: Address;
-  /** The account address that signed the permission */
-  account: Address;
-  /** The token address (USDC) */
-  token: Address;
-  /** The allowance amount in wei */
-  allowance: string;
-  /** The period in days */
+  id: string;
+  /** The address that owns/controls the subscription (your application) */
+  subscriptionOwnerAddress: Address;
+  /** The address that will be charged (the user's wallet) */
+  subscriptionPayerAddress: Address;
+  /** The recurring charge amount in USD */
+  recurringCharge: string;
+  /** The period in days for the subscription */
   periodInDays: number;
-  /** The period in seconds */
-  periodInSeconds: number;
-  /** The start timestamp */
-  startTimestamp: number;
-  /** The end timestamp */
-  endTimestamp: number;
-  /** The salt used */
-  salt: `0x${string}`;
-  /** The chain ID */
-  chainId: number;
-  /** The actual signed typed data */
-  signedData: {
-    domain: {
-      name: string;
-      version: string;
-      chainId: number;
-      verifyingContract: Address;
-    };
-    types: Record<string, Array<{ name: string; type: string }>>;
-    primaryType: string;
-    message: {
-      account: Address;
-      spender: Address;
-      token: Address;
-      allowance: string;
-      period: number;
-      start: number;
-      end: number;
-      salt: string;
-      extraData: `0x${string}`;
-    };
-  };
 }
 
 /**

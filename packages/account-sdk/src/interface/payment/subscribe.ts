@@ -28,7 +28,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.walletUrl - Optional wallet URL to use
  * @param options.telemetry - Whether to enable telemetry logging (default: true)
- * @returns Promise<SubscriptionResult> - Result of the subscription creation
+ * @returns Promise<SubscriptionResult> - Simplified result with subscription details
  * @throws Error if the subscription fails
  *
  * @example
@@ -41,7 +41,11 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  *     testnet: true
  *   });
  *
- *   console.log(`Subscription created! Subscription ID: ${subscription.id}`);
+ *   console.log(`Subscription created!`);
+ *   console.log(`ID: ${subscription.id}`);
+ *   console.log(`Payer: ${subscription.subscriptionPayerAddress}`);
+ *   console.log(`Owner: ${subscription.subscriptionOwnerAddress}`);
+ *   console.log(`Charge: $${subscription.recurringCharge} every ${subscription.periodInDays} days`);
  * } catch (error) {
  *   console.error(`Subscription failed: ${error.message}`);
  * }
@@ -129,7 +133,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       };
 
       // Extract the signed permission data
-      const { signedData, signature } = signResult;
+      const { signedData } = signResult;
       const { message } = signedData;
 
       // Calculate the real permission hash using the contract's getHash method
@@ -149,23 +153,13 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         });
       }
 
-      // Return success result with data extracted from signedData
+      // Return simplified result
       return {
-        success: true,
-        id: permissionHash, // Use permissionHash as the ID for consistency with pay API
-        permissionHash,
-        signature,
-        spender: message.spender,
-        account: message.account,
-        token: message.token,
-        allowance: message.allowance,
+        id: permissionHash,
+        subscriptionOwnerAddress: message.spender,
+        subscriptionPayerAddress: message.account,
+        recurringCharge: amount, // The amount in USD as provided by the user
         periodInDays,
-        periodInSeconds: message.period,
-        startTimestamp: message.start,
-        endTimestamp: message.end,
-        salt: message.salt as `0x${string}`,
-        chainId,
-        signedData,
       };
     } finally {
       // Clean up provider state

@@ -1,6 +1,6 @@
 import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
+    spendPermissionManagerAbi,
+    spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { readContract } from 'viem/actions';
@@ -52,7 +52,7 @@ const getHashFn = async ({
 
   if (!client) {
     throw new Error(
-      `No client found for chain ID ${chainId}. Please ensure SDK is in connected state`
+      `No client found for chain ID ${chainId}. Chain not supported or RPC URL not available`
     );
   }
 

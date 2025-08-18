@@ -1,8 +1,9 @@
 import { createPublicClient, defineChain, http, PublicClient } from 'viem';
 import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
+import { base, baseSepolia } from 'viem/chains';
 
-import { ChainClients } from './store.js';
 import { RPCResponseNativeCurrency } from ':core/message/RPCResponse.js';
+import { ChainClients } from './store.js';
 
 export type SDKChain = {
   id: number;
@@ -10,16 +11,49 @@ export type SDKChain = {
   nativeCurrency?: RPCResponseNativeCurrency;
 };
 
+// Fallback chains using viem's chain definitions directly
+export const FALLBACK_CHAINS: SDKChain[] = [
+  {
+    id: base.id,
+    rpcUrl: base.rpcUrls.default.http[0],
+    nativeCurrency: {
+      name: base.nativeCurrency.name,
+      symbol: base.nativeCurrency.symbol,
+      decimal: base.nativeCurrency.decimals,
+    },
+  },
+  {
+    id: baseSepolia.id,
+    rpcUrl: baseSepolia.rpcUrls.default.http[0],
+    nativeCurrency: {
+      name: baseSepolia.nativeCurrency.name,
+      symbol: baseSepolia.nativeCurrency.symbol,
+      decimal: baseSepolia.nativeCurrency.decimals,
+    },
+  },
+];
+
 export function createClients(chains: SDKChain[]) {
   chains.forEach((c) => {
-    if (!c.rpcUrl) {
+    // Use fallback RPC URL for Base networks if wallet hasn't provided one
+    let rpcUrl = c.rpcUrl;
+    if (!rpcUrl) {
+      const fallbackChain = FALLBACK_CHAINS.find((fc) => fc.id === c.id);
+      if (fallbackChain) {
+        rpcUrl = fallbackChain.rpcUrl;
+      }
+    }
+
+    // Skip if still no RPC URL available
+    if (!rpcUrl) {
       return;
     }
+
     const viemchain = defineChain({
       id: c.id,
       rpcUrls: {
         default: {
-          http: [c.rpcUrl],
+          http: [rpcUrl],
         },
       },
       name: c.nativeCurrency?.name ?? '',
@@ -32,26 +66,51 @@ export function createClients(chains: SDKChain[]) {
 
     const client = createPublicClient({
       chain: viemchain,
-      transport: http(c.rpcUrl),
+      transport: http(rpcUrl),
     });
     const bundlerClient = createBundlerClient({
       client,
-      transport: http(c.rpcUrl),
+      transport: http(rpcUrl),
     });
 
-    ChainClients.setState({
+    ChainClients.setState((state) => ({
+      ...state,
       [c.id]: {
         client,
         bundlerClient,
       },
-    });
+    }));
   });
 }
 
 export function getClient(chainId: number): PublicClient | undefined {
-  return ChainClients.getState()[chainId]?.client;
+  let client = ChainClients.getState()[chainId]?.client;
+  
+  // If no client exists, try to create one using fallback chains
+  if (!client) {
+    const fallbackChain = FALLBACK_CHAINS.find(chain => chain.id === chainId);
+    if (fallbackChain) {
+      // Initialize the client with the fallback chain
+      createClients([fallbackChain]);
+      client = ChainClients.getState()[chainId]?.client;
+    }
+  }
+  
+  return client;
 }
 
 export function getBundlerClient(chainId: number): BundlerClient | undefined {
-  return ChainClients.getState()[chainId]?.bundlerClient;
+  let bundlerClient = ChainClients.getState()[chainId]?.bundlerClient;
+  
+  // If no bundler client exists, try to create one using fallback chains
+  if (!bundlerClient) {
+    const fallbackChain = FALLBACK_CHAINS.find(chain => chain.id === chainId);
+    if (fallbackChain) {
+      // Initialize the client with the fallback chain
+      createClients([fallbackChain]);
+      bundlerClient = ChainClients.getState()[chainId]?.bundlerClient;
+    }
+  }
+  
+  return bundlerClient;
 }

@@ -23,17 +23,23 @@ import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { findOwnerIndex } from './utils/findOwnerIndex.js';
 import { handleAddSubAccountOwner } from './utils/handleAddSubAccountOwner.js';
 import { handleInsufficientBalanceError } from './utils/handleInsufficientBalance.js';
+import { routeThroughGlobalAccount } from './utils/routeThroughGlobalAccount.js';
 
 vi.mock(':store/chain-clients/utils.js', () => ({
   getBundlerClient: vi.fn().mockReturnValue({}),
-  getClient: vi.fn().mockReturnValue({
-    request: vi.fn(),
-    chain: {
-      id: 84532,
-    },
-    waitForTransaction: vi.fn().mockResolvedValue({
-      status: 'success',
-    }),
+  getClient: vi.fn().mockImplementation((chainId) => {
+    if (chainId === 84532 || chainId === 1) {
+      return {
+        request: vi.fn(),
+        chain: {
+          id: chainId,
+        },
+        waitForTransaction: vi.fn().mockResolvedValue({
+          status: 'success',
+        }),
+      };
+    }
+    return null;
   }),
   createClients: vi.fn(),
 }));
@@ -41,6 +47,21 @@ vi.mock(':store/chain-clients/utils.js', () => ({
 vi.mock('./utils/handleInsufficientBalance.js', () => ({
   handleInsufficientBalanceError: vi.fn(),
 }));
+
+vi.mock('./utils/routeThroughGlobalAccount.js', () => ({
+  routeThroughGlobalAccount: vi.fn(),
+}));
+
+vi.mock('../../kms/crypto-key/index.js', () => ({
+  getCryptoKeyAccount: vi.fn().mockResolvedValue({
+    account: {
+      type: 'local',
+      address: '0x1234567890123456789012345678901234567890',
+      publicKey: `0x04${'1'.repeat(128)}`,
+    },
+  }),
+}));
+
 vi.mock(':util/provider');
 vi.mock(':store/chain-clients/utils');
 vi.mock('./SCWKeyManager');
@@ -90,6 +111,46 @@ const mockSuccessResponse: RPCResponseMessage = {
 };
 const subAccountAddress = '0x7838d2724FC686813CAf81d4429beff1110c739a';
 const globalAccountAddress = '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54';
+
+// Mock spend permission factory
+const createMockSpendPermission = ({
+  chainId = 84532,
+  account = globalAccountAddress,
+  spender = subAccountAddress,
+  token = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+  allowance = '1000000000000000000',
+  period = 86400,
+  start = 0,
+  end = 281474976710655,
+  salt = '0',
+  extraData = '0x',
+}: {
+  chainId?: number;
+  account?: string;
+  spender?: string;
+  token?: string;
+  allowance?: string;
+  period?: number;
+  start?: number;
+  end?: number;
+  salt?: string;
+  extraData?: string;
+} = {}) => ({
+  permissionHash: '0xPermissionHash',
+  signature: '0xSignature',
+  chainId,
+  permission: {
+    account,
+    spender,
+    token,
+    allowance,
+    period,
+    start,
+    end,
+    salt,
+    extraData,
+  },
+});
 
 describe('Signer', () => {
   let signer: Signer;
@@ -141,6 +202,18 @@ describe('Signer', () => {
     store.subAccounts.clear();
     store.subAccountsConfig.clear();
     store.setState({});
+  });
+
+  beforeEach(async () => {
+    // Restore getCryptoKeyAccount mock after clearAllMocks
+    const { getCryptoKeyAccount } = (await vi.importMock('../../kms/crypto-key/index.js')) as any;
+    getCryptoKeyAccount.mockResolvedValue({
+      account: {
+        type: 'local',
+        address: '0x1234567890123456789012345678901234567890',
+        publicKey: `0x04${'1'.repeat(128)}`,
+      },
+    });
   });
 
   describe('handshake', () => {
@@ -710,17 +783,7 @@ describe('Signer', () => {
         params: [],
       };
 
-      const mockSpendPermissions = [
-        {
-          permissionHash: '0xPermissionHash',
-          signature: '0xSignature',
-          chainId: 1,
-          permission: {
-            account: globalAccountAddress,
-            spender: subAccountAddress,
-          },
-        },
-      ];
+      const mockSpendPermissions = [createMockSpendPermission({ chainId: 1 })];
 
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
@@ -773,6 +836,112 @@ describe('Signer', () => {
               ],
               spendPermissions: {
                 permissions: mockSpendPermissions,
+              },
+            },
+          },
+        ],
+      });
+    });
+
+    it('should not use cached response for wallet_connect calls with signInWithEthereum capability', async () => {
+      // First wallet_connect call without SIWE
+      const initialRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      const mockSpendPermissions = [
+        {
+          permissionHash: '0xPermissionHash',
+          signature: '0xSignature',
+          chainId: 1,
+          permission: {
+            account: globalAccountAddress,
+            spender: subAccountAddress,
+          },
+        },
+      ];
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                  spendPermissions: {
+                    permissions: mockSpendPermissions,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      // First call to establish cache
+      await signer.request(initialRequest);
+
+      // Reset mock call count to track only SIWE calls
+      (decryptContent as Mock).mockClear();
+
+      // Now make a wallet_connect call with signInWithEthereum capability
+      const siweRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [
+          {
+            version: '1',
+            capabilities: {
+              signInWithEthereum: {
+                chainId: '0x14a34', // Base Sepolia
+                nonce: 'test-nonce-123',
+              },
+            },
+          },
+        ],
+      };
+
+      // Mock the response for SIWE request
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  signInWithEthereum: {
+                    message: 'example.com wants you to sign in with your Ethereum account',
+                    signature: '0xsiwesignature',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      // Make the SIWE request
+      const siweResponse = await signer.request(siweRequest);
+
+      // Verify decryptContent was called for the SIWE request (not cached)
+      expect(decryptContent).toHaveBeenCalledTimes(1); // Only for SIWE request since we cleared the count
+
+      // Verify SIWE response includes the signInWithEthereum capability
+      expect(siweResponse).toEqual({
+        accounts: [
+          {
+            address: globalAccountAddress,
+            capabilities: {
+              signInWithEthereum: {
+                message: 'example.com wants you to sign in with your Ethereum account',
+                signature: '0xsiwesignature',
               },
             },
           },
@@ -1131,6 +1300,10 @@ describe('Signer', () => {
         address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
       });
 
+      // Mock that spend permissions exist so we don't route through global account
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
       (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
       (handleAddSubAccountOwner as Mock).mockResolvedValueOnce(0);
 
@@ -1210,6 +1383,28 @@ describe('Signer', () => {
         };
       });
 
+      // Mock decryptContent for wallet_connect to set up accounts
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
       await signer.request({
         method: 'wallet_connect',
         params: [],
@@ -1238,6 +1433,10 @@ describe('Signer', () => {
         communicator: mockCommunicator,
         callback: mockCallback,
       });
+
+      // Mock that spend permissions exist so we use sub account signer
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
 
       await expect(signer.request(mockRequest)).rejects.toThrow();
 
@@ -1282,6 +1481,28 @@ describe('Signer', () => {
         };
       });
 
+      // Mock decryptContent for wallet_connect to set up accounts
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
       await signer.request({
         method: 'wallet_connect',
         params: [],
@@ -1310,6 +1531,10 @@ describe('Signer', () => {
         communicator: mockCommunicator,
         callback: mockCallback,
       });
+
+      // Mock that spend permissions exist so we use sub account signer
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
 
       await signer.request(mockRequest);
 
@@ -1538,15 +1763,11 @@ describe('Signer', () => {
 
   describe('coinbase_fetchPermissions', () => {
     const mockSpendPermissions = [
-      {
-        permissionHash: '0xPermissionHash',
-        signature: '0xSignature',
-        permission: {
-          account: '0xAddress',
-          spender: '0xSubAccount',
-        },
+      createMockSpendPermission({
         chainId: 10,
-      },
+        account: '0xAddress',
+        spender: '0xSubAccount',
+      }),
     ] as [SpendPermission];
 
     beforeEach(() => {
@@ -1587,6 +1808,621 @@ describe('Signer', () => {
       await signer.request(mockRequest);
 
       expect(mockSetSpendPermissions).toHaveBeenCalledWith(mockSpendPermissions);
+    });
+  });
+
+  describe('routing through global account when no spend permissions', () => {
+    beforeEach(async () => {
+      await signer.cleanup();
+
+      // Ensure getClient returns proper client for chain 84532
+      (getClient as Mock).mockImplementation((chainId) => {
+        if (chainId === 84532) {
+          return {
+            request: vi.fn(),
+            chain: {
+              id: 84532,
+            },
+            waitForTransaction: vi.fn().mockResolvedValue({
+              status: 'success',
+            }),
+          };
+        }
+        return null;
+      });
+
+      // Set the chain to match the mocked client
+      signer['chain'] = { id: 84532, rpcUrl: 'https://eth-rpc.example.com/84532' };
+      signer['accounts'] = [globalAccountAddress];
+
+      // Setup basic handshake
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: null,
+        },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      // Setup wallet_connect with sub account
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      await signer.request({
+        method: 'wallet_connect',
+        params: [],
+      });
+
+      // Mock that no spend permissions exist
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue([]);
+
+      // Mock store state for sub account operations
+      vi.spyOn(store.subAccounts, 'get').mockReturnValue({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+        toOwnerAccount: async () => ({
+          account: {
+            type: 'local' as const,
+            address: '0x1234567890123456789012345678901234567890' as `0x${string}`,
+            publicKey: `0x04${'1'.repeat(128)}` as `0x${string}`,
+            source: 'local',
+            signMessage: vi.fn().mockResolvedValue('0xsignature'),
+            signTransaction: vi.fn().mockResolvedValue('0xsignedtx'),
+            signTypedData: vi.fn().mockResolvedValue('0xsigneddata'),
+          },
+        }),
+      });
+
+      // Mock getCryptoKeyAccount to return a valid account
+      vi.spyOn(store.config, 'get').mockReturnValue({
+        metadata: mockMetadata,
+        preference: { walletUrl: CB_KEYS_URL, options: 'all' },
+        version: '1.0.0',
+      });
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.mocked(routeThroughGlobalAccount).mockReset();
+    });
+
+    it('should route wallet_sendCalls through global account when no spend permissions exist', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x1',
+              },
+            ],
+            from: subAccountAddress,
+            chainId: numberToHex(84532),
+            version: '1.0',
+          },
+        ],
+      };
+
+      const mockRouteResult = '0x1234ca11';
+      vi.mocked(routeThroughGlobalAccount).mockResolvedValue(mockRouteResult);
+
+      const result = await signer.request(mockRequest);
+
+      expect(routeThroughGlobalAccount).toHaveBeenCalledWith({
+        request: mockRequest,
+        globalAccountAddress,
+        subAccountAddress,
+        client: expect.any(Object),
+        globalAccountRequest: expect.any(Function),
+        chainId: 84532,
+      });
+
+      expect(result).toBe(mockRouteResult);
+    });
+
+    it('should route eth_sendTransaction through global account when no spend permissions exist', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            from: subAccountAddress,
+            to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+            value: '0x1',
+            data: '0x',
+          },
+        ],
+      };
+
+      const mockRouteResult = '0xabcdef123456';
+      vi.mocked(routeThroughGlobalAccount).mockResolvedValue(mockRouteResult);
+
+      const result = await signer.request(mockRequest);
+
+      expect(routeThroughGlobalAccount).toHaveBeenCalledWith({
+        request: mockRequest,
+        globalAccountAddress,
+        subAccountAddress,
+        client: expect.any(Object),
+        globalAccountRequest: expect.any(Function),
+        chainId: 84532,
+      });
+
+      expect(result).toBe(mockRouteResult);
+    });
+
+    it('should not route through global account when spend permissions exist', async () => {
+      // Mock that spend permissions exist
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x1',
+              },
+            ],
+            from: subAccountAddress,
+            chainId: numberToHex(84532),
+            version: '1.0',
+          },
+        ],
+      };
+
+      // Mock successful sub account request
+      vi.mocked(createSubAccountSigner).mockResolvedValue({
+        request: vi.fn().mockResolvedValue('0xSubAccountResult'),
+      });
+
+      const result = await signer.request(mockRequest);
+
+      // Should not call routeThroughGlobalAccount
+      expect(routeThroughGlobalAccount).not.toHaveBeenCalled();
+
+      // Should use normal sub account flow
+      expect(createSubAccountSigner).toHaveBeenCalled();
+      expect(result).toBe('0xSubAccountResult');
+    });
+
+    it('should not route non-transaction methods through global account', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'personal_sign',
+        params: ['0xMessage', subAccountAddress],
+      };
+
+      // Mock successful sub account request
+      vi.mocked(createSubAccountSigner).mockResolvedValue({
+        request: vi.fn().mockResolvedValue('0xSignature'),
+      });
+
+      const result = await signer.request(mockRequest);
+
+      // Should not call routeThroughGlobalAccount for non-transaction methods
+      expect(routeThroughGlobalAccount).not.toHaveBeenCalled();
+
+      // Should use normal sub account flow
+      expect(createSubAccountSigner).toHaveBeenCalled();
+      expect(result).toBe('0xSignature');
+    });
+
+    it('should pass correct globalAccountRequest function to routeThroughGlobalAccount', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x1',
+              },
+            ],
+            from: subAccountAddress,
+            chainId: numberToHex(84532),
+            version: '1.0',
+          },
+        ],
+      };
+
+      vi.mocked(routeThroughGlobalAccount).mockResolvedValue('0x1234ca11');
+
+      await signer.request(mockRequest);
+
+      expect(routeThroughGlobalAccount).toHaveBeenCalledTimes(1);
+      const callArgs = vi.mocked(routeThroughGlobalAccount).mock.calls[0][0];
+
+      // Verify that globalAccountRequest is bound to sendRequestToPopup
+      expect(callArgs.globalAccountRequest).toBeInstanceOf(Function);
+
+      // We can't easily test the exact binding, but we can verify the other parameters
+      expect(callArgs.request).toBe(mockRequest);
+      expect(callArgs.globalAccountAddress).toBe(globalAccountAddress);
+      expect(callArgs.subAccountAddress).toBe(subAccountAddress);
+      expect(callArgs.client).toBeDefined();
+      expect(callArgs.chainId).toBe(84532);
+    });
+
+    it('should handle routing errors appropriately', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x1',
+              },
+            ],
+            from: subAccountAddress,
+            chainId: numberToHex(84532),
+            version: '1.0',
+          },
+        ],
+      };
+
+      const mockError = new Error('Routing failed');
+      vi.mocked(routeThroughGlobalAccount).mockRejectedValue(mockError);
+
+      await expect(signer.request(mockRequest)).rejects.toThrow('Routing failed');
+
+      expect(routeThroughGlobalAccount).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('unstable_enableAutoSpendPermissions', () => {
+    beforeEach(async () => {
+      await signer.cleanup();
+
+      // Ensure getClient returns proper client for the test chain
+      (getClient as Mock).mockImplementation((chainId) => {
+        if (chainId === 84532) {
+          return {
+            request: vi.fn(),
+            chain: {
+              id: 84532,
+            },
+            waitForTransaction: vi.fn().mockResolvedValue({
+              status: 'success',
+            }),
+          };
+        }
+        return null;
+      });
+
+      // Set the chain to match the mocked client
+      signer['chain'] = { id: 84532, rpcUrl: 'https://eth-rpc.example.com/84532' };
+      signer['accounts'] = [globalAccountAddress];
+
+      // Mock decryptContent for wallet_connect to set up accounts
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      await signer.request({
+        method: 'wallet_connect',
+        params: [],
+      });
+
+      // Mock that no spend permissions exist
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue([]);
+
+      // Mock store state for sub account operations
+      vi.spyOn(store.subAccounts, 'get').mockReturnValue({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      // Mock getCryptoKeyAccount to return a valid account
+      vi.spyOn(store.config, 'get').mockReturnValue({
+        metadata: mockMetadata,
+        preference: { walletUrl: CB_KEYS_URL, options: 'all' },
+        version: '1.0.0',
+      });
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.mocked(routeThroughGlobalAccount).mockReset();
+    });
+
+    it('should skip spend permission check when unstable_enableAutoSpendPermissions is false', async () => {
+      // Mock the config with unstable_enableAutoSpendPermissions disabled
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+        unstable_enableAutoSpendPermissions: false,
+        toOwnerAccount: async () => ({
+          account: {
+            type: 'local' as const,
+            address: '0x1234567890123456789012345678901234567890' as `0x${string}`,
+            publicKey: `0x04${'1'.repeat(128)}` as `0x${string}`,
+            source: 'local',
+            signMessage: vi.fn().mockResolvedValue('0xsignature'),
+            signTransaction: vi.fn().mockResolvedValue('0xsignedtx'),
+            signTypedData: vi.fn().mockResolvedValue('0xsigneddata'),
+          },
+        }),
+      });
+
+      // Mock successful sub account request
+      vi.mocked(createSubAccountSigner).mockResolvedValue({
+        request: vi.fn().mockResolvedValue('0xSubAccountResult'),
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x1',
+              },
+            ],
+            from: subAccountAddress,
+            chainId: numberToHex(84532),
+            version: '1.0',
+          },
+        ],
+      };
+
+      const result = await signer.request(mockRequest);
+
+      // Should not call routeThroughGlobalAccount even though no spend permissions exist
+      expect(routeThroughGlobalAccount).not.toHaveBeenCalled();
+
+      // Should use normal sub account flow
+      expect(createSubAccountSigner).toHaveBeenCalled();
+      expect(result).toBe('0xSubAccountResult');
+    });
+
+    it('should skip insufficient balance error handling when unstable_enableAutoSpendPermissions is false', async () => {
+      // Mock the config with unstable_enableAutoSpendPermissions disabled
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+        unstable_enableAutoSpendPermissions: false,
+        toOwnerAccount: async () => ({
+          account: {
+            type: 'local' as const,
+            address: '0x1234567890123456789012345678901234567890' as `0x${string}`,
+            publicKey: `0x04${'1'.repeat(128)}` as `0x${string}`,
+            source: 'local',
+            signMessage: vi.fn().mockResolvedValue('0xsignature'),
+            signTransaction: vi.fn().mockResolvedValue('0xsignedtx'),
+            signTypedData: vi.fn().mockResolvedValue('0xsigneddata'),
+          },
+        }),
+      });
+
+      // Mock that spend permissions exist so we use sub account signer
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
+      // Mock sub account signer that throws insufficient balance error
+      vi.mocked(createSubAccountSigner).mockResolvedValue({
+        request: vi.fn().mockRejectedValue(
+          new HttpRequestError({
+            body: {},
+            url: 'https://eth-rpc.example.com/1',
+            details: JSON.stringify({
+              code: -32090,
+              message: 'transfer amount exceeds balance',
+              data: {
+                type: 'INSUFFICIENT_FUNDS',
+                reason: 'NO_SUITABLE_SPEND_PERMISSION_FOUND',
+                account: {
+                  address: subAccountAddress,
+                },
+                required: {
+                  '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee': {
+                    amount: '0x38d7ea4c68000',
+                    sources: [
+                      {
+                        address: globalAccountAddress,
+                        balance: '0x1d73b609302000',
+                      },
+                    ],
+                  },
+                },
+              },
+            }),
+          })
+        ),
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x1',
+              },
+            ],
+            from: subAccountAddress,
+            chainId: numberToHex(84532),
+            version: '1.0',
+          },
+        ],
+      };
+
+      // Should throw the original error without handling it
+      await expect(signer.request(mockRequest)).rejects.toThrow(HttpRequestError);
+
+      // Should not call handleInsufficientBalanceError
+      expect(handleInsufficientBalanceError).not.toHaveBeenCalled();
+    });
+
+    it('should still route through global account and handle insufficient balance errors when unstable_enableAutoSpendPermissions is true', async () => {
+      // Mock the config with unstable_enableAutoSpendPermissions enabled (default)
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+        unstable_enableAutoSpendPermissions: true,
+        toOwnerAccount: async () => ({
+          account: {
+            type: 'local' as const,
+            address: '0x1234567890123456789012345678901234567890' as `0x${string}`,
+            publicKey: `0x04${'1'.repeat(128)}` as `0x${string}`,
+            source: 'local',
+            signMessage: vi.fn().mockResolvedValue('0xsignature'),
+            signTransaction: vi.fn().mockResolvedValue('0xsignedtx'),
+            signTypedData: vi.fn().mockResolvedValue('0xsigneddata'),
+          },
+        }),
+      });
+
+      const mockRouteResult = '0x1234ca11';
+      vi.mocked(routeThroughGlobalAccount).mockResolvedValue(mockRouteResult);
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x1',
+              },
+            ],
+            from: subAccountAddress,
+            chainId: numberToHex(84532),
+            version: '1.0',
+          },
+        ],
+      };
+
+      const result = await signer.request(mockRequest);
+
+      // Should route through global account when no spend permissions exist
+      expect(routeThroughGlobalAccount).toHaveBeenCalled();
+      expect(result).toBe(mockRouteResult);
+    });
+
+    it('should handle insufficient balance errors when unstable_enableAutoSpendPermissions is undefined (default behavior)', async () => {
+      // Mock the config without unstable_enableAutoSpendPermissions (undefined)
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+        toOwnerAccount: async () => ({
+          account: {
+            type: 'local' as const,
+            address: '0x1234567890123456789012345678901234567890' as `0x${string}`,
+            publicKey: `0x04${'1'.repeat(128)}` as `0x${string}`,
+            source: 'local',
+            signMessage: vi.fn().mockResolvedValue('0xsignature'),
+            signTransaction: vi.fn().mockResolvedValue('0xsignedtx'),
+            signTypedData: vi.fn().mockResolvedValue('0xsigneddata'),
+          },
+        }),
+      });
+
+      // Mock that spend permissions exist so we use sub account signer
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
+      // Mock sub account signer that throws insufficient balance error
+      vi.mocked(createSubAccountSigner).mockResolvedValue({
+        request: vi.fn().mockRejectedValue(
+          new HttpRequestError({
+            body: {},
+            url: 'https://eth-rpc.example.com/1',
+            details: JSON.stringify({
+              code: -32090,
+              message: 'transfer amount exceeds balance',
+              data: {
+                type: 'INSUFFICIENT_FUNDS',
+                reason: 'NO_SUITABLE_SPEND_PERMISSION_FOUND',
+                account: {
+                  address: subAccountAddress,
+                },
+                required: {
+                  '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee': {
+                    amount: '0x38d7ea4c68000',
+                    sources: [
+                      {
+                        address: globalAccountAddress,
+                        balance: '0x1d73b609302000',
+                      },
+                    ],
+                  },
+                },
+              },
+            }),
+          })
+        ),
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x1',
+              },
+            ],
+            from: subAccountAddress,
+            chainId: numberToHex(84532),
+            version: '1.0',
+          },
+        ],
+      };
+
+      await signer.request(mockRequest);
+
+      // Should call handleInsufficientBalanceError (default behavior)
+      expect(handleInsufficientBalanceError).toHaveBeenCalled();
     });
   });
 });
