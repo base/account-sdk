@@ -40,6 +40,7 @@ export default function AutoSubAccount() {
     siwe: false,
     addSubAccount: false,
   });
+  const [walletConnectChainIds, setWalletConnectChainIds] = useState<string>('');
   const { subAccountsConfig, setSubAccountsConfig, config, setConfig } = useConfig();
   const { provider } = useEIP1193Provider();
 
@@ -185,8 +186,24 @@ export default function AutoSubAccount() {
 
     let params: unknown[] = [];
 
-    // Build params based on selected capabilities
-    if (walletConnectCapabilities.siwe || walletConnectCapabilities.addSubAccount) {
+    // Build params based on selected capabilities and chainIds input
+    const chainIds = walletConnectChainIds
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => v.length > 0)
+      .flatMap((v) => {
+        try {
+          return [numberToHex(BigInt(v))];
+        } catch (_) {
+          return [] as string[];
+        }
+      });
+
+    if (
+      walletConnectCapabilities.siwe ||
+      walletConnectCapabilities.addSubAccount ||
+      chainIds.length > 0
+    ) {
       const capabilities: Record<string, unknown> = {};
 
       // Add SIWE capability if selected
@@ -215,8 +232,9 @@ export default function AutoSubAccount() {
 
       params = [
         {
-          ...(walletConnectCapabilities.siwe && { version: '1' }),
-          capabilities,
+          version: '1',
+          ...(chainIds.length > 0 && { chainIds }),
+          ...(Object.keys(capabilities).length > 0 && { capabilities }),
         },
       ];
     }
@@ -374,6 +392,14 @@ export default function AutoSubAccount() {
             >
               Add Sub Account
             </Checkbox>
+            <Box>
+              <FormLabel>Chain IDs (comma separated integers)</FormLabel>
+              <Input
+                placeholder="e.g. 1, 8453"
+                value={walletConnectChainIds}
+                onChange={(e) => setWalletConnectChainIds(e.target.value)}
+              />
+            </Box>
           </Stack>
         </FormControl>
         {accounts.length > 0 && (
