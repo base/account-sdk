@@ -419,46 +419,45 @@ export function createWalletSendCallsRequest({
 
 export async function presentSubAccountFundingDialog() {
   const dialog = initDialog();
-  const userChoice = await new Promise<'update_permission' | 'continue_popup' | 'cancel'>(
-    (resolve) => {
-      logDialogShown({ dialogContext: 'sub_account_insufficient_balance' });
-      dialog.presentItem({
-        title: 'Insufficient spend permission',
-        message:
-          "Your spend permission's remaining balance cannot cover this transaction. Please choose how to proceed:",
-        onClose: () => {
-          logDialogDismissed({ dialogContext: 'sub_account_insufficient_balance' });
-          dialog.clear();
+  const userChoice = await new Promise<'continue_popup'>((resolve, reject) => {
+    logDialogShown({ dialogContext: 'sub_account_insufficient_balance' });
+    dialog.presentItem({
+      title: 'Insufficient spend permission',
+      message:
+        "Your spend permission's remaining balance cannot cover this transaction. Please use your primary account to complete this transaction.",
+      onClose: () => {
+        logDialogDismissed({ dialogContext: 'sub_account_insufficient_balance' });
+        dialog.clear();
+        reject(new Error('User cancelled funding'));
+      },
+      actionItems: [
+        {
+          text: 'Use primary account',
+          variant: 'primary',
+          onClick: () => {
+            logDialogActionClicked({
+              dialogContext: 'sub_account_insufficient_balance',
+              dialogAction: 'continue_in_popup',
+            });
+            dialog.clear();
+            resolve('continue_popup');
+          },
         },
-        actionItems: [
-          {
-            text: 'Edit spend permission',
-            variant: 'primary',
-            onClick: () => {
-              logDialogActionClicked({
-                dialogContext: 'sub_account_insufficient_balance',
-                dialogAction: 'create_permission',
-              });
-              dialog.clear();
-              resolve('update_permission');
-            },
+        {
+          text: 'Cancel',
+          variant: 'secondary',
+          onClick: () => {
+            logDialogActionClicked({
+              dialogContext: 'sub_account_insufficient_balance',
+              dialogAction: 'cancel',
+            });
+            dialog.clear();
+            reject(new Error('User cancelled funding'));
           },
-          {
-            text: 'Use primary account',
-            variant: 'secondary',
-            onClick: () => {
-              logDialogActionClicked({
-                dialogContext: 'sub_account_insufficient_balance',
-                dialogAction: 'continue_in_popup',
-              });
-              dialog.clear();
-              resolve('continue_popup');
-            },
-          },
-        ],
-      });
-    }
-  );
+        },
+      ],
+    });
+  });
 
   return userChoice;
 }
@@ -490,7 +489,15 @@ export function parseFundingOptions({
   return spendPermissionRequests;
 }
 export function isSendCallsParams(params: unknown): params is WalletSendCallsParameters {
-  return typeof params === 'object' && params !== null && 'calls' in params;
+  return (
+    typeof params === 'object' &&
+    params !== null &&
+    Array.isArray(params) &&
+    params.length > 0 &&
+    typeof params[0] === 'object' &&
+    params[0] !== null &&
+    'calls' in params[0]
+  );
 }
 export function isEthSendTransactionParams(params: unknown): params is [
   {
