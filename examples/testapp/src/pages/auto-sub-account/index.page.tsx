@@ -387,13 +387,13 @@ export default function AutoSubAccount() {
           </RadioGroup>
         </FormControl>
         <FormControl>
-          <FormLabel>Disable Auto Spend Permissions (Unstable)</FormLabel>
+          <FormLabel>Enable Auto Spend Permissions (Unstable)</FormLabel>
           <RadioGroup
-            value={(subAccountsConfig?.unstable_disableAutoSpendPermissions || false).toString()}
+            value={(subAccountsConfig?.unstable_enableAutoSpendPermissions ?? true).toString()}
             onChange={(value) =>
               setSubAccountsConfig((prev) => ({
                 ...prev,
-                unstable_disableAutoSpendPermissions: value === 'true',
+                unstable_enableAutoSpendPermissions: value === 'true',
               }))
             }
           >

@@ -2098,7 +2098,7 @@ describe('Signer', () => {
     });
   });
 
-  describe('unstable_disableAutoSpendPermissions', () => {
+  describe('unstable_enableAutoSpendPermissions', () => {
     beforeEach(async () => {
       await signer.cleanup();
 
@@ -2172,11 +2172,11 @@ describe('Signer', () => {
       vi.mocked(routeThroughGlobalAccount).mockReset();
     });
 
-    it('should skip spend permission check when unstable_disableAutoSpendPermissions is true', async () => {
-      // Mock the config with unstable_disableAutoSpendPermissions enabled
+    it('should skip spend permission check when unstable_enableAutoSpendPermissions is false', async () => {
+      // Mock the config with unstable_enableAutoSpendPermissions disabled
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
         enableAutoSubAccounts: true,
-        unstable_disableAutoSpendPermissions: true,
+        unstable_enableAutoSpendPermissions: false,
         toOwnerAccount: async () => ({
           account: {
             type: 'local' as const,
@@ -2223,11 +2223,11 @@ describe('Signer', () => {
       expect(result).toBe('0xSubAccountResult');
     });
 
-    it('should skip insufficient balance error handling when unstable_disableAutoSpendPermissions is true', async () => {
-      // Mock the config with unstable_disableAutoSpendPermissions enabled
+    it('should skip insufficient balance error handling when unstable_enableAutoSpendPermissions is false', async () => {
+      // Mock the config with unstable_enableAutoSpendPermissions disabled
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
         enableAutoSubAccounts: true,
-        unstable_disableAutoSpendPermissions: true,
+        unstable_enableAutoSpendPermissions: false,
         toOwnerAccount: async () => ({
           account: {
             type: 'local' as const,
@@ -2302,11 +2302,11 @@ describe('Signer', () => {
       expect(handleInsufficientBalanceError).not.toHaveBeenCalled();
     });
 
-    it('should still route through global account and handle insufficient balance errors when unstable_disableAutoSpendPermissions is false', async () => {
-      // Mock the config with unstable_disableAutoSpendPermissions disabled (default)
+    it('should still route through global account and handle insufficient balance errors when unstable_enableAutoSpendPermissions is true', async () => {
+      // Mock the config with unstable_enableAutoSpendPermissions enabled (default)
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
         enableAutoSubAccounts: true,
-        unstable_disableAutoSpendPermissions: false,
+        unstable_enableAutoSpendPermissions: true,
         toOwnerAccount: async () => ({
           account: {
             type: 'local' as const,
@@ -2348,8 +2348,8 @@ describe('Signer', () => {
       expect(result).toBe(mockRouteResult);
     });
 
-    it('should handle insufficient balance errors when unstable_disableAutoSpendPermissions is undefined (default behavior)', async () => {
-      // Mock the config without unstable_disableAutoSpendPermissions (undefined)
+    it('should handle insufficient balance errors when unstable_enableAutoSpendPermissions is undefined (default behavior)', async () => {
+      // Mock the config without unstable_enableAutoSpendPermissions (undefined)
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
         enableAutoSubAccounts: true,
         toOwnerAccount: async () => ({

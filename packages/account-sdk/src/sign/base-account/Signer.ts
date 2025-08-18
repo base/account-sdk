@@ -707,9 +707,9 @@ export class Signer {
 
     if (['eth_sendTransaction', 'wallet_sendCalls'].includes(request.method)) {
       // If we have never had a spend permission, we need to do this tx through the global account
-      // Skip this check if unstable_disableAutoSpendPermissions is enabled
+      // Only perform this check if unstable_enableAutoSpendPermissions is enabled
       const subAccountsConfig = store.subAccountsConfig.get();
-      if (!subAccountsConfig?.unstable_disableAutoSpendPermissions) {
+      if (subAccountsConfig?.unstable_enableAutoSpendPermissions !== false) {
         const storedSpendPermissions = spendPermissions.get();
         if (storedSpendPermissions.length === 0) {
           const result = await routeThroughGlobalAccount({
@@ -775,9 +775,9 @@ export class Signer {
       const result = await subAccountRequest(request);
       return result;
     } catch (error) {
-      // Skip insufficient balance error handling if unstable_disableAutoSpendPermissions is enabled
+      // Skip insufficient balance error handling if unstable_enableAutoSpendPermissions is disabled
       const subAccountsConfig = store.subAccountsConfig.get();
-      if (subAccountsConfig?.unstable_disableAutoSpendPermissions) {
+      if (subAccountsConfig?.unstable_enableAutoSpendPermissions === false) {
         throw error;
       }
 

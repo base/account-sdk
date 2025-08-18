@@ -93,11 +93,11 @@ export type SubAccountOptions = {
    */
   toOwnerAccount?: ToOwnerAccountFn;
   /**
-   * @deprecated This is an unstable feature that may change or be removed in future versions.
-   * When true, disables automatic spend permission requests and insufficient balance error handling for sub accounts.
-   * @default false
+   * This is an unstable feature that may change or be removed in future versions.
+   * When true, enables automatic spend permission requests and insufficient balance error handling for sub accounts.
+   * @default true
    */
-  unstable_disableAutoSpendPermissions?: boolean;
+  unstable_enableAutoSpendPermissions?: boolean;
 };
 
 export interface ConstructorOptions {

@@ -158,7 +158,7 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: mockToOwnerAccount,
         enableAutoSubAccounts: true,
-        unstable_disableAutoSpendPermissions: false,
+        unstable_enableAutoSpendPermissions: true,
       });
     });
 
@@ -176,7 +176,7 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: undefined,
         enableAutoSubAccounts: true,
-        unstable_disableAutoSpendPermissions: false,
+        unstable_enableAutoSpendPermissions: true,
       });
     });
 
@@ -190,18 +190,18 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: undefined,
         enableAutoSubAccounts: undefined,
-        unstable_disableAutoSpendPermissions: false,
+        unstable_enableAutoSpendPermissions: true,
       });
     });
 
-    it('should set unstable_disableAutoSpendPermissions when provided', () => {
+    it('should set unstable_enableAutoSpendPermissions when provided', () => {
       const mockToOwnerAccount = vi.fn();
       const params: CreateProviderOptions = {
         subAccounts: {
           toOwnerAccount: mockToOwnerAccount,
           // @ts-expect-error - enableAutoSubAccounts is not officially supported yet
           enableAutoSubAccounts: true,
-          unstable_disableAutoSpendPermissions: true,
+          unstable_enableAutoSpendPermissions: true,
         },
       };
 
@@ -211,11 +211,11 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: mockToOwnerAccount,
         enableAutoSubAccounts: true,
-        unstable_disableAutoSpendPermissions: true,
+        unstable_enableAutoSpendPermissions: true,
       });
     });
 
-    it('should default unstable_disableAutoSpendPermissions to false when not provided', () => {
+    it('should default unstable_enableAutoSpendPermissions to true when not provided', () => {
       const mockToOwnerAccount = vi.fn();
       const params: CreateProviderOptions = {
         subAccounts: {
@@ -228,16 +228,16 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: mockToOwnerAccount,
         enableAutoSubAccounts: undefined,
-        unstable_disableAutoSpendPermissions: false,
+        unstable_enableAutoSpendPermissions: true,
       });
     });
 
-    it('should default unstable_disableAutoSpendPermissions to false when explicitly set to undefined', () => {
+    it('should default unstable_enableAutoSpendPermissions to true when explicitly set to undefined', () => {
       const mockToOwnerAccount = vi.fn();
       const params: CreateProviderOptions = {
         subAccounts: {
           toOwnerAccount: mockToOwnerAccount,
-          unstable_disableAutoSpendPermissions: undefined,
+          unstable_enableAutoSpendPermissions: undefined,
         },
       };
 
@@ -246,7 +246,7 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: mockToOwnerAccount,
         enableAutoSubAccounts: undefined,
-        unstable_disableAutoSpendPermissions: false,
+        unstable_enableAutoSpendPermissions: true,
       });
     });
   });
@@ -405,7 +405,7 @@ describe('createProvider', () => {
       expect(mockStore.subAccountsConfig.set).toHaveBeenCalledWith({
         toOwnerAccount: mockToOwnerAccount,
         enableAutoSubAccounts: true,
-        unstable_disableAutoSpendPermissions: false,
+        unstable_enableAutoSpendPermissions: true,
       });
 
       // Check store configuration
