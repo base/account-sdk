@@ -379,7 +379,7 @@ describe('prepareSpendCallData', () => {
         isActive: false,
       });
 
-      const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      const result = await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
       expect(result[0].to).toBe(spendPermissionManagerAddress);
       expect(result[1].to).toBe(spendPermissionManagerAddress);
