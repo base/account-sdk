@@ -2,6 +2,7 @@ import { waitFor } from '@testing-library/preact';
 import { Mock, vi } from 'vitest';
 
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
+import { store } from ':store/store.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 import { closePopup, openPopup } from './web.js';
 
@@ -83,6 +84,25 @@ describe('PopupManager', () => {
 
     const paramCount = url.searchParams.toString().split('&').length;
     expect(paramCount).toBe(4);
+  });
+
+  it('should include paymentLinkId in URL when present in store config', async () => {
+    const paymentLinkId = 'payment_link_12345';
+    (store.config.get as Mock).mockReturnValue({ 
+      metadata: { appName: 'Test App' },
+      paymentLinkId 
+    });
+
+    const url = new URL('https://example.com');
+    (window.open as Mock).mockReturnValue({ focus: vi.fn() });
+
+    await openPopup(url);
+
+    expect(url.searchParams.get('paymentLinkId')).toBe(paymentLinkId);
+    expect(url.searchParams.get('sdkName')).toBe(PACKAGE_NAME);
+    expect(url.searchParams.get('sdkVersion')).toBe(PACKAGE_VERSION);
+    expect(url.searchParams.get('origin')).toBe(mockOrigin);
+    expect(url.searchParams.get('coop')).toBe('null');
   });
 
   it('should show snackbar with retry button when popup is blocked and retry successfully', async () => {

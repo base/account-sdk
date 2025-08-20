@@ -113,6 +113,26 @@ describe('Ephemeral methods', () => {
       expect(mockCleanup).toHaveBeenCalled();
     }
   );
+
+  it.each(['wallet_sendCalls', 'wallet_sign'])(
+    'should extract and store paymentLinkId when present in params',
+    async (method) => {
+      const paymentLinkId = 'payment_link_12345';
+      const args = { 
+        method, 
+        params: [{ paymentLinkId, otherParam: 'value' }] 
+      };
+      
+      store.config.set({ paymentLinkId: undefined });
+      
+      await provider.request(args);
+      
+      expect(store.config.get().paymentLinkId).toBe(paymentLinkId);
+      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+      expect(mockRequest).toHaveBeenCalledWith(args);
+      expect(mockCleanup).toHaveBeenCalled();
+    }
+  );
 });
 
 describe('Auto sub account', () => {

@@ -101,6 +101,12 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
           }
           case 'wallet_sendCalls':
           case 'wallet_sign': {
+            // Extract and store paymentLinkId if present in the request params
+            const paymentLinkId = (args.params as any)?.[0]?.paymentLinkId;
+            if (paymentLinkId) {
+              store.config.set({ paymentLinkId });
+            }
+            
             try {
               await this.signer.handshake({ method: 'handshake' }); // exchange session keys
               const result = await this.signer.request(args); // send diffie-hellman encrypted request

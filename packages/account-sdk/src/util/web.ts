@@ -50,11 +50,13 @@ export function closePopup(popup: Window | null) {
 }
 
 function appendAppInfoQueryParams(url: URL) {
+  const config = store.config.get();
   const params = {
     sdkName: PACKAGE_NAME,
     sdkVersion: PACKAGE_VERSION,
     origin: window.location.origin,
     coop: getCrossOriginOpenerPolicy(),
+    ...(config.paymentLinkId && { paymentLinkId: config.paymentLinkId }),
   };
 
   for (const [key, value] of Object.entries(params)) {
