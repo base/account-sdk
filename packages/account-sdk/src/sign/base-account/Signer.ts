@@ -365,7 +365,6 @@ export class Signer {
             factoryData: capabilityResponse[0].factoryData,
           });
         }
-        let accounts_ = [this.accounts[0]];
 
         const subAccount = store.subAccounts.get();
         const subAccountsConfig = store.subAccountsConfig.get();
@@ -383,7 +382,7 @@ export class Signer {
           store.spendPermissions.set(spendPermissions?.permissions);
         }
 
-        this.callback?.('accountsChanged', accounts_);
+        this.callback?.('accountsChanged', this.accounts);
         break;
       }
       case 'wallet_addSubAccount': {
