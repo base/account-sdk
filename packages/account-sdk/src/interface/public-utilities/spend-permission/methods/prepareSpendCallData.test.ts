@@ -8,9 +8,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { toSpendPermissionArgs } from '../utils.js';
 import { getPermissionStatus } from './getPermissionStatus.js';
+import { getPermissionStatus as getPermissionStatusNode } from './getPermissionStatus.node.js';
 import { PrepareSpendCallDataResponseType, prepareSpendCallData } from './prepareSpendCallData.js';
+import { prepareSpendCallData as prepareSpendCallDataNode } from './prepareSpendCallData.node.js';
 
 vi.mock('./getPermissionStatus.js');
+vi.mock('./getPermissionStatus.node.js');
 vi.mock('../utils.js');
 vi.mock('viem', async () => {
   const actual = await vi.importActual('viem');
@@ -21,6 +24,7 @@ vi.mock('viem', async () => {
 });
 
 const mockGetPermissionStatus = vi.mocked(getPermissionStatus);
+const mockGetPermissionStatusNode = vi.mocked(getPermissionStatusNode);
 const mockToSpendPermissionArgs = vi.mocked(toSpendPermissionArgs);
 const mockEncodeFunctionData = vi.mocked(encodeFunctionData);
 
@@ -55,14 +59,18 @@ describe('prepareSpendCallData', () => {
     extraData: '0x' as Hex,
   };
 
+  const mockStatus = {
+    remainingSpend: BigInt('500000000000000000'), // 0.5 ETH remaining
+    nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
+    isActive: true,
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'), // 0.5 ETH remaining
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: true,
-    });
+    mockGetPermissionStatus.mockResolvedValue(mockStatus);
+
+    mockGetPermissionStatusNode.mockResolvedValue(mockStatus);
 
     mockToSpendPermissionArgs.mockReturnValue(mockSpendPermissionArgs);
 
@@ -77,201 +85,275 @@ describe('prepareSpendCallData', () => {
     });
   });
 
-  it('should prepare call data for approve and spend operations when permission is not active', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: false, // Permission is not active, so approve call should be included
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should prepare call data for approve and spend operations when permission is not active for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const inactiveStatus = {
+        ...mockStatus,
+        isActive: false, // Permission is not active, so approve call should be included
+      };
+      mockGetPermissionStatus.mockResolvedValue(inactiveStatus);
+      mockGetPermissionStatusNode.mockResolvedValue(inactiveStatus);
 
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      const result = await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({
-      to: spendPermissionManagerAddress,
-      data: '0xapprovedata123456',
-      value: '0x0',
-    });
-    expect(result[1]).toEqual({
-      to: spendPermissionManagerAddress,
-      data: '0xspenddata789abc',
-      value: '0x0',
-    });
-  });
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({
+        to: spendPermissionManagerAddress,
+        data: '0xapprovedata123456',
+        value: '0x0',
+      });
+      expect(result[1]).toEqual({
+        to: spendPermissionManagerAddress,
+        data: '0xspenddata789abc',
+        value: '0x0',
+      });
+    }
+  );
 
-  it('should prepare call data for spend operation only when permission is already active', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: true, // Permission is active, so no approve call needed
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should prepare call data for spend operation only when permission is already active for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      mockGetPermissionStatus.mockResolvedValue(mockStatus);
+      mockGetPermissionStatusNode.mockResolvedValue(mockStatus);
 
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      const result = await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({
-      to: spendPermissionManagerAddress,
-      data: '0xspenddata789abc',
-      value: '0x0',
-    });
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        to: spendPermissionManagerAddress,
+        data: '0xspenddata789abc',
+        value: '0x0',
+      });
 
-    // Verify approve call is not made when permission is active
-    expect(mockEncodeFunctionData).not.toHaveBeenCalledWith({
-      abi: spendPermissionManagerAbi,
-      functionName: 'approveWithSignature',
-      args: expect.any(Array),
-    });
-  });
+      // Verify approve call is not made when permission is active
+      expect(mockEncodeFunctionData).not.toHaveBeenCalledWith({
+        abi: spendPermissionManagerAbi,
+        functionName: 'approveWithSignature',
+        args: expect.any(Array),
+      });
+    }
+  );
 
-  it('should use remaining spend amount when max-remaining-allowance is specified', async () => {
-    const remainingSpend = BigInt('750000000000000000');
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend,
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: true,
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should use remaining spend amount when max-remaining-allowance is specified for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const remainingSpend = BigInt('750000000000000000');
+      mockGetPermissionStatus.mockResolvedValue({
+        ...mockStatus,
+        remainingSpend,
+      });
+      mockGetPermissionStatusNode.mockResolvedValue({
+        ...mockStatus,
+        remainingSpend,
+      });
 
-    await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(mockEncodeFunctionData).toHaveBeenCalledWith({
-      abi: spendPermissionManagerAbi,
-      functionName: 'spend',
-      args: [mockSpendPermissionArgs, remainingSpend],
-    });
-  });
+      expect(mockEncodeFunctionData).toHaveBeenCalledWith({
+        abi: spendPermissionManagerAbi,
+        functionName: 'spend',
+        args: [mockSpendPermissionArgs, remainingSpend],
+      });
+    }
+  );
 
-  it('should use provided amount when specified', async () => {
-    const customAmount = BigInt('250000000000000000'); // 0.25 ETH
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should use provided amount when specified for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const customAmount = BigInt('250000000000000000'); // 0.25 ETH
 
-    await prepareSpendCallData(mockSpendPermission, customAmount);
+      await prepareSpendCallDataFunc(mockSpendPermission, customAmount);
 
-    expect(mockEncodeFunctionData).toHaveBeenCalledWith({
-      abi: spendPermissionManagerAbi,
-      functionName: 'spend',
-      args: [mockSpendPermissionArgs, customAmount],
-    });
-  });
+      expect(mockEncodeFunctionData).toHaveBeenCalledWith({
+        abi: spendPermissionManagerAbi,
+        functionName: 'spend',
+        args: [mockSpendPermissionArgs, customAmount],
+      });
+    }
+  );
 
-  it('should call getPermissionStatus with the correct permission', async () => {
+  it('should call getPermissionStatus with the correct permission for browser environment', async () => {
     await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     expect(mockGetPermissionStatus).toHaveBeenCalledWith(mockSpendPermission);
   });
 
-  it('should call toSpendPermissionArgs with the correct permission', async () => {
-    await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+  it('should call getPermissionStatus with the correct permission for node environment', async () => {
+    await prepareSpendCallDataNode(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(mockToSpendPermissionArgs).toHaveBeenCalledWith(mockSpendPermission);
+    expect(mockGetPermissionStatusNode).toHaveBeenCalledWith(mockSpendPermission);
   });
 
-  it('should encode approveWithSignature function data correctly when permission is not active', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: false, // Permission is not active
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should call toSpendPermissionArgs with the correct permission for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      expect(mockToSpendPermissionArgs).toHaveBeenCalledWith(mockSpendPermission);
+    }
+  );
 
-    expect(mockEncodeFunctionData).toHaveBeenCalledWith({
-      abi: spendPermissionManagerAbi,
-      functionName: 'approveWithSignature',
-      args: [mockSpendPermissionArgs, mockSpendPermission.signature],
-    });
-  });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should encode approveWithSignature function data correctly when permission is not active for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const inactiveStatus = {
+        ...mockStatus,
+        isActive: false, // Permission is not active, so approve call should be included
+      };
+      mockGetPermissionStatus.mockResolvedValue(inactiveStatus);
+      mockGetPermissionStatusNode.mockResolvedValue(inactiveStatus);
 
-  it('should encode spend function data correctly', async () => {
-    const customAmount = BigInt('300000000000000000');
+      await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    await prepareSpendCallData(mockSpendPermission, customAmount);
+      expect(mockEncodeFunctionData).toHaveBeenCalledWith({
+        abi: spendPermissionManagerAbi,
+        functionName: 'approveWithSignature',
+        args: [mockSpendPermissionArgs, mockSpendPermission.signature],
+      });
+    }
+  );
 
-    expect(mockEncodeFunctionData).toHaveBeenCalledWith({
-      abi: spendPermissionManagerAbi,
-      functionName: 'spend',
-      args: [mockSpendPermissionArgs, customAmount],
-    });
-  });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should encode spend function data correctly for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const customAmount = BigInt('300000000000000000');
 
-  it('should return calls with correct structure when permission is not active', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: false,
-    });
+      await prepareSpendCallDataFunc(mockSpendPermission, customAmount);
 
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      expect(mockEncodeFunctionData).toHaveBeenCalledWith({
+        abi: spendPermissionManagerAbi,
+        functionName: 'spend',
+        args: [mockSpendPermissionArgs, customAmount],
+      });
+    }
+  );
 
-    // Check that result matches the expected type
-    const typedResult: PrepareSpendCallDataResponseType = result;
-    expect(typedResult).toHaveLength(2);
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should return calls with correct structure when permission is not active for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const inactiveStatus = {
+        ...mockStatus,
+        isActive: false, // Permission is not active, so approve call should be included
+      };
+      mockGetPermissionStatus.mockResolvedValue(inactiveStatus);
+      mockGetPermissionStatusNode.mockResolvedValue(inactiveStatus);
 
-    // Check approve call structure
-    expect(typedResult[0]).toHaveProperty('to');
-    expect(typedResult[0]).toHaveProperty('data');
-    expect(typedResult[0]).toHaveProperty('value');
-    expect(typedResult[0].value).toBe('0x0');
+      const result = await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    // Check spend call structure
-    expect(typedResult[1]).toHaveProperty('to');
-    expect(typedResult[1]).toHaveProperty('data');
-    expect(typedResult[1]).toHaveProperty('value');
-    expect(typedResult[1].value).toBe('0x0');
-  });
+      // Check that result matches the expected type
+      const typedResult: PrepareSpendCallDataResponseType = result;
+      expect(typedResult).toHaveLength(2);
 
-  it('should return calls with correct structure when permission is active', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: true,
-    });
+      // Check approve call structure
+      expect(typedResult[0]).toHaveProperty('to');
+      expect(typedResult[0]).toHaveProperty('data');
+      expect(typedResult[0]).toHaveProperty('value');
+      expect(typedResult[0].value).toBe('0x0');
 
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      // Check spend call structure
+      expect(typedResult[1]).toHaveProperty('to');
+      expect(typedResult[1]).toHaveProperty('data');
+      expect(typedResult[1]).toHaveProperty('value');
+      expect(typedResult[1].value).toBe('0x0');
+    }
+  );
 
-    // Check that result matches the expected type
-    const typedResult: PrepareSpendCallDataResponseType = result;
-    expect(typedResult).toHaveLength(1);
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should return calls with correct structure when permission is active for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      mockGetPermissionStatus.mockResolvedValue(mockStatus);
+      mockGetPermissionStatusNode.mockResolvedValue(mockStatus);
 
-    // Check spend call structure (only call when active)
-    expect(typedResult[0]).toHaveProperty('to');
-    expect(typedResult[0]).toHaveProperty('data');
-    expect(typedResult[0]).toHaveProperty('value');
-    expect(typedResult[0].value).toBe('0x0');
-  });
+      const result = await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-  it('should handle zero amount', async () => {
+      // Check that result matches the expected type
+      const typedResult: PrepareSpendCallDataResponseType = result;
+      expect(typedResult).toHaveLength(1);
+
+      // Check spend call structure (only call when active)
+      expect(typedResult[0]).toHaveProperty('to');
+      expect(typedResult[0]).toHaveProperty('data');
+      expect(typedResult[0]).toHaveProperty('value');
+      expect(typedResult[0].value).toBe('0x0');
+    }
+  );
+
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])('should handle zero amount for %s environment', async (_, prepareSpendCallDataFunc) => {
     const zeroAmount = BigInt('0');
 
-    await expect(prepareSpendCallData(mockSpendPermission, zeroAmount)).rejects.toThrow(
+    await expect(prepareSpendCallDataFunc(mockSpendPermission, zeroAmount)).rejects.toThrow(
       'Spend amount cannot be 0'
     );
   });
 
-  it('should throw error when amount exceeds remaining spend', async () => {
-    const remainingSpend = BigInt('500000000000000000'); // 0.5 ETH remaining
-    const excessiveAmount = BigInt('600000000000000000'); // 0.6 ETH (more than remaining)
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should throw error when amount exceeds remaining spend for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const remainingSpend = BigInt('500000000000000000'); // 0.5 ETH remaining
+      const excessiveAmount = BigInt('600000000000000000'); // 0.6 ETH (more than remaining)
 
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend,
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: true,
-    });
+      mockGetPermissionStatus.mockResolvedValue({
+        ...mockStatus,
+        remainingSpend,
+      });
 
-    await expect(prepareSpendCallData(mockSpendPermission, excessiveAmount)).rejects.toThrow(
-      'Remaining spend amount is insufficient'
-    );
-  });
+      await expect(prepareSpendCallDataFunc(mockSpendPermission, excessiveAmount)).rejects.toThrow(
+        'Remaining spend amount is insufficient'
+      );
+    }
+  );
 
-  it('should handle very large amounts', async () => {
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])('should handle very large amounts for %s environment', async (_, prepareSpendCallDataFunc) => {
     const largeAmount = BigInt('999999999999999999999999999');
 
     // Mock sufficient remaining balance for the large amount
     mockGetPermissionStatus.mockResolvedValue({
+      ...mockStatus,
       remainingSpend: largeAmount, // Set remaining spend to match the large amount
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: true,
+    });
+    mockGetPermissionStatusNode.mockResolvedValue({
+      ...mockStatus,
+      remainingSpend: largeAmount, // Set remaining spend to match the large amount
     });
 
-    await prepareSpendCallData(mockSpendPermission, largeAmount);
+    await prepareSpendCallDataFunc(mockSpendPermission, largeAmount);
 
     expect(mockEncodeFunctionData).toHaveBeenCalledWith({
       abi: spendPermissionManagerAbi,
@@ -280,108 +362,176 @@ describe('prepareSpendCallData', () => {
     });
   });
 
-  it('should use the same spendPermissionManagerAddress for both calls when permission is not active', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: false,
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should use the same spendPermissionManagerAddress for both calls when permission is not active for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      mockGetPermissionStatus.mockResolvedValue({
+        remainingSpend: BigInt('500000000000000000'),
+        nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
+        isActive: false,
+      });
+      mockGetPermissionStatusNode.mockResolvedValue({
+        remainingSpend: BigInt('500000000000000000'),
+        nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
+        isActive: false,
+      });
 
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      const result = await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(result[0].to).toBe(spendPermissionManagerAddress);
-    expect(result[1].to).toBe(spendPermissionManagerAddress);
-  });
+      expect(result[0].to).toBe(spendPermissionManagerAddress);
+      expect(result[1].to).toBe(spendPermissionManagerAddress);
+    }
+  );
 
-  it('should use the same spendPermissionManagerAddress for spend call when permission is active', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: true,
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should use the same spendPermissionManagerAddress for spend call when permission is active for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const status = {
+        remainingSpend: BigInt('500000000000000000'),
+        nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
+        isActive: true,
+      };
+      mockGetPermissionStatus.mockResolvedValue(status);
+      mockGetPermissionStatusNode.mockResolvedValue(status);
 
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      const result = await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(result[0].to).toBe(spendPermissionManagerAddress);
-  });
+      expect(result[0].to).toBe(spendPermissionManagerAddress);
+    }
+  );
 
-  it('should set value to 0x0 for both calls when permission is not active', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: false,
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should set value to 0x0 for both calls when permission is not active for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const status = {
+        remainingSpend: BigInt('500000000000000000'),
+        nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
+        isActive: false,
+      };
+      mockGetPermissionStatus.mockResolvedValue(status);
+      mockGetPermissionStatusNode.mockResolvedValue(status);
 
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      const result = await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(result[0].value).toBe('0x0');
-    expect(result[1].value).toBe('0x0');
-  });
+      expect(result[0].value).toBe('0x0');
+      expect(result[1].value).toBe('0x0');
+    }
+  );
 
-  it('should set value to 0x0 for spend call when permission is active', async () => {
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should set value to 0x0 for spend call when permission is active for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const result = await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(result[0].value).toBe('0x0');
-  });
+      expect(result[0].value).toBe('0x0');
+    }
+  );
 
-  it('should handle remaining spend of zero', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('0'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: true,
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should handle remaining spend of zero for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const status = {
+        remainingSpend: BigInt('0'),
+        nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
+        isActive: true,
+      };
+      mockGetPermissionStatus.mockResolvedValue(status);
+      mockGetPermissionStatusNode.mockResolvedValue(status);
 
-    await expect(
-      prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance')
-    ).rejects.toThrow('Spend amount cannot be 0');
-  });
+      await expect(
+        prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance')
+      ).rejects.toThrow('Spend amount cannot be 0');
+    }
+  );
 
-  it('should work correctly when permission status indicates not approved', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: false,
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should work correctly when permission status indicates not approved for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const status = {
+        remainingSpend: BigInt('500000000000000000'),
+        nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
+        isActive: false,
+      };
+      mockGetPermissionStatus.mockResolvedValue(status);
+      mockGetPermissionStatusNode.mockResolvedValue(status);
 
-    const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
+      const result = await prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance');
 
-    // Should prepare both calls when permission is not active
-    expect(result).toHaveLength(2);
-    expect(mockEncodeFunctionData).toHaveBeenCalledWith({
-      abi: spendPermissionManagerAbi,
-      functionName: 'approveWithSignature',
-      args: [mockSpendPermissionArgs, mockSpendPermission.signature],
-    });
-  });
+      // Should prepare both calls when permission is not active
+      expect(result).toHaveLength(2);
+      expect(mockEncodeFunctionData).toHaveBeenCalledWith({
+        abi: spendPermissionManagerAbi,
+        functionName: 'approveWithSignature',
+        args: [mockSpendPermissionArgs, mockSpendPermission.signature],
+      });
+    }
+  );
 
-  it('should propagate errors from getPermissionStatus', async () => {
-    const error = new Error('Permission status error');
-    mockGetPermissionStatus.mockRejectedValue(error);
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should propagate errors from getPermissionStatus for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const error = new Error('Permission status error');
+      mockGetPermissionStatus.mockRejectedValue(error);
+      mockGetPermissionStatusNode.mockRejectedValue(error);
 
-    await expect(
-      prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance')
-    ).rejects.toThrow('Permission status error');
-  });
+      await expect(
+        prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance')
+      ).rejects.toThrow('Permission status error');
+    }
+  );
 
-  it('should propagate errors from toSpendPermissionArgs', async () => {
-    const error = new Error('Invalid permission args');
-    mockToSpendPermissionArgs.mockImplementation(() => {
-      throw error;
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should propagate errors from toSpendPermissionArgs for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const error = new Error('Invalid permission args');
+      mockToSpendPermissionArgs.mockImplementation(() => {
+        throw error;
+      });
 
-    await expect(
-      prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance')
-    ).rejects.toThrow('Invalid permission args');
-  });
+      await expect(
+        prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance')
+      ).rejects.toThrow('Invalid permission args');
+    }
+  );
 
-  it('should propagate errors from encodeFunctionData', async () => {
-    const error = new Error('Encoding error');
-    mockEncodeFunctionData.mockImplementation(() => {
-      throw error;
-    });
+  it.each([
+    ['browser', prepareSpendCallData],
+    ['node', prepareSpendCallDataNode],
+  ])(
+    'should propagate errors from encodeFunctionData for %s environment',
+    async (_, prepareSpendCallDataFunc) => {
+      const error = new Error('Encoding error');
+      mockEncodeFunctionData.mockImplementation(() => {
+        throw error;
+      });
 
-    await expect(
-      prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance')
-    ).rejects.toThrow('Encoding error');
-  });
+      await expect(
+        prepareSpendCallDataFunc(mockSpendPermission, 'max-remaining-allowance')
+      ).rejects.toThrow('Encoding error');
+    }
+  );
 });

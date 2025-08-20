@@ -4,15 +4,19 @@ import {
   spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
-import { createPublicClient, http } from 'viem';
+import { PublicClient, createPublicClient, http } from 'viem';
 import { readContract } from 'viem/actions';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { GetPermissionStatusResponseType, getPermissionStatus } from './getPermissionStatus.js';
+import { getPermissionStatus as getPermissionStatusNode } from './getPermissionStatus.node.js';
 
 vi.mock(':store/chain-clients/utils.js', () => ({
   getClient: vi.fn(),
 }));
+
+import * as utilsNode from '../utils.node.js';
+const getPublicClientFromChainIdSpy = vi.spyOn(utilsNode, 'getPublicClientFromChainId');
 
 vi.mock('viem/actions', () => ({
   readContract: vi.fn(),
@@ -23,7 +27,7 @@ vi.mock('../utils.js', () => ({
   timestampInSecondsToDate: vi.fn(),
 }));
 
-describe('getPermissionStatus', () => {
+describe('getPermissionStatus - browser + node', () => {
   let mockClient: ReturnType<typeof createPublicClient>;
   let mockSpendPermission: SpendPermission;
   let mockSpendPermissionArgs: ReturnType<typeof toSpendPermissionArgs>;
@@ -34,6 +38,8 @@ describe('getPermissionStatus', () => {
     mockClient = createPublicClient({
       transport: http('http://localhost:8545'),
     });
+
+    getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
 
     mockSpendPermission = {
       createdAt: 1234567890,
@@ -99,6 +105,16 @@ describe('getPermissionStatus', () => {
       expect(getClient).toHaveBeenCalledWith(8453);
       expect(toSpendPermissionArgs).toHaveBeenCalledWith(mockSpendPermission);
       expect(readContract).toHaveBeenCalledTimes(3);
+
+      (readContract as Mock)
+        .mockResolvedValueOnce(mockCurrentPeriod) // getCurrentPeriod
+        .mockResolvedValueOnce(mockIsRevoked) // isRevoked
+        .mockResolvedValueOnce(mockIsValid); // isValid
+
+      const nodeResult: GetPermissionStatusResponseType =
+        await getPermissionStatusNode(mockSpendPermission);
+
+      expect(nodeResult).toEqual(result);
     });
 
     it('should return zero remaining spend when allowance is exceeded', async () => {
@@ -120,6 +136,15 @@ describe('getPermissionStatus', () => {
 
       expect(result.remainingSpend).toBe(BigInt(0));
       expect(result.isActive).toBe(true);
+
+      (readContract as Mock)
+        .mockResolvedValueOnce(mockCurrentPeriod)
+        .mockResolvedValueOnce(mockIsRevoked)
+        .mockResolvedValueOnce(mockIsValid);
+
+      const nodeResult = await getPermissionStatusNode(mockSpendPermission);
+
+      expect(nodeResult).toEqual(result);
     });
 
     it('should return inactive status when permission is revoked', async () => {
@@ -140,6 +165,15 @@ describe('getPermissionStatus', () => {
       const result = await getPermissionStatus(mockSpendPermission);
 
       expect(result.isActive).toBe(false);
+
+      (readContract as Mock)
+        .mockResolvedValueOnce(mockCurrentPeriod)
+        .mockResolvedValueOnce(mockIsRevoked)
+        .mockResolvedValueOnce(mockIsValid);
+
+      const nodeResult = await getPermissionStatusNode(mockSpendPermission);
+
+      expect(nodeResult).toEqual(result);
     });
 
     it('should return inactive status when permission is invalid', async () => {
@@ -160,6 +194,15 @@ describe('getPermissionStatus', () => {
       const result = await getPermissionStatus(mockSpendPermission);
 
       expect(result.isActive).toBe(false);
+
+      (readContract as Mock)
+        .mockResolvedValueOnce(mockCurrentPeriod)
+        .mockResolvedValueOnce(mockIsRevoked)
+        .mockResolvedValueOnce(mockIsValid);
+
+      const nodeResult = await getPermissionStatusNode(mockSpendPermission);
+
+      expect(nodeResult).toEqual(result);
     });
 
     it('should handle different chain IDs correctly', async () => {
@@ -178,6 +221,15 @@ describe('getPermissionStatus', () => {
         await getPermissionStatus(permission);
 
         expect(getClient).toHaveBeenCalledWith(chainId);
+
+        (readContract as Mock)
+          .mockResolvedValueOnce(mockCurrentPeriod)
+          .mockResolvedValueOnce(false)
+          .mockResolvedValueOnce(true);
+
+        await getPermissionStatusNode(permission);
+
+        expect(getPublicClientFromChainIdSpy).toHaveBeenCalledWith(chainId);
       }
     });
   });
@@ -195,6 +247,13 @@ describe('getPermissionStatus', () => {
 
       expect(getClient).not.toHaveBeenCalled();
       expect(readContract).not.toHaveBeenCalled();
+
+      await expect(getPermissionStatusNode(permissionWithoutChainId)).rejects.toThrow(
+        'chainId is missing in the spend permission'
+      );
+
+      expect(getPublicClientFromChainIdSpy).not.toHaveBeenCalled();
+      expect(readContract).not.toHaveBeenCalled();
     });
 
     it('should throw error when client is not available', async () => {
@@ -205,6 +264,15 @@ describe('getPermissionStatus', () => {
       );
 
       expect(getClient).toHaveBeenCalledWith(8453);
+      expect(readContract).not.toHaveBeenCalled();
+
+      getPublicClientFromChainIdSpy.mockReturnValue(undefined);
+
+      await expect(getPermissionStatusNode(mockSpendPermission)).rejects.toThrow(
+        'No client available for chain ID 8453.'
+      );
+
+      expect(getPublicClientFromChainIdSpy).toHaveBeenCalledWith(8453);
       expect(readContract).not.toHaveBeenCalled();
     });
 
@@ -220,6 +288,13 @@ describe('getPermissionStatus', () => {
 
       expect(getClient).toHaveBeenCalledWith(8453);
       expect(readContract).toHaveBeenCalled();
+
+      await expect(getPermissionStatusNode(mockSpendPermission)).rejects.toThrow(
+        'Contract call failed'
+      );
+
+      expect(getPublicClientFromChainIdSpy).toHaveBeenCalledWith(8453);
+      expect(readContract).toHaveBeenCalled();
     });
 
     it('should handle network errors gracefully', async () => {
@@ -231,85 +306,101 @@ describe('getPermissionStatus', () => {
       await expect(getPermissionStatus(mockSpendPermission)).rejects.toThrow(
         'Network request failed'
       );
+
+      await expect(getPermissionStatusNode(mockSpendPermission)).rejects.toThrow(
+        'Network request failed'
+      );
     });
   });
 
   describe('contract call verification', () => {
-    it('should call all required contract functions with correct parameters', async () => {
-      const mockCurrentPeriod = { start: 1, end: 2, spend: BigInt('0') };
+    it.each([
+      ['browser', getPermissionStatus],
+      ['node', getPermissionStatusNode],
+    ])(
+      'should call all required contract functions with correct parameters for %s environment',
+      async (_, getPermissionStatusFunc) => {
+        const mockCurrentPeriod = { start: 1, end: 2, spend: BigInt('0') };
 
-      (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true);
+        (getClient as Mock).mockReturnValue(mockClient);
+        (readContract as Mock)
+          .mockResolvedValueOnce(mockCurrentPeriod)
+          .mockResolvedValueOnce(false)
+          .mockResolvedValueOnce(true);
 
-      await getPermissionStatus(mockSpendPermission);
+        await getPermissionStatusFunc(mockSpendPermission);
 
-      expect(readContract).toHaveBeenCalledTimes(3);
+        expect(readContract).toHaveBeenCalledTimes(3);
 
-      // Verify getCurrentPeriod call
-      expect(readContract).toHaveBeenNthCalledWith(1, mockClient, {
-        address: spendPermissionManagerAddress,
-        abi: spendPermissionManagerAbi,
-        functionName: 'getCurrentPeriod',
-        args: [mockSpendPermissionArgs],
-      });
+        // Verify getCurrentPeriod call
+        expect(readContract).toHaveBeenNthCalledWith(1, mockClient, {
+          address: spendPermissionManagerAddress,
+          abi: spendPermissionManagerAbi,
+          functionName: 'getCurrentPeriod',
+          args: [mockSpendPermissionArgs],
+        });
 
-      // Verify isRevoked call
-      expect(readContract).toHaveBeenNthCalledWith(2, mockClient, {
-        address: spendPermissionManagerAddress,
-        abi: spendPermissionManagerAbi,
-        functionName: 'isRevoked',
-        args: [mockSpendPermissionArgs],
-      });
+        // Verify isRevoked call
+        expect(readContract).toHaveBeenNthCalledWith(2, mockClient, {
+          address: spendPermissionManagerAddress,
+          abi: spendPermissionManagerAbi,
+          functionName: 'isRevoked',
+          args: [mockSpendPermissionArgs],
+        });
 
-      // Verify isValid call
-      expect(readContract).toHaveBeenNthCalledWith(3, mockClient, {
-        address: spendPermissionManagerAddress,
-        abi: spendPermissionManagerAbi,
-        functionName: 'isValid',
-        args: [mockSpendPermissionArgs],
-      });
-    });
+        // Verify isValid call
+        expect(readContract).toHaveBeenNthCalledWith(3, mockClient, {
+          address: spendPermissionManagerAddress,
+          abi: spendPermissionManagerAbi,
+          functionName: 'isValid',
+          args: [mockSpendPermissionArgs],
+        });
+      }
+    );
 
-    it('should make contract calls in parallel for better performance', async () => {
-      const mockCurrentPeriod = { start: 1, end: 2, spend: BigInt('0') };
+    it.each([
+      ['browser', getPermissionStatus],
+      ['node', getPermissionStatusNode],
+    ])(
+      'should make contract calls in parallel for better performance for %s environment',
+      async (_, getPermissionStatusFunc) => {
+        const mockCurrentPeriod = { start: 1, end: 2, spend: BigInt('0') };
 
-      (getClient as Mock).mockReturnValue(mockClient);
+        (getClient as Mock).mockReturnValue(mockClient);
 
-      // Create promises that we can control
-      let resolveGetCurrentPeriod: (value: any) => void;
-      let resolveIsRevoked: (value: any) => void;
-      let resolveIsValid: (value: any) => void;
+        // Create promises that we can control
+        let resolveGetCurrentPeriod: (value: any) => void;
+        let resolveIsRevoked: (value: any) => void;
+        let resolveIsValid: (value: any) => void;
 
-      const getCurrentPeriodPromise = new Promise((resolve) => {
-        resolveGetCurrentPeriod = resolve;
-      });
-      const isRevokedPromise = new Promise((resolve) => {
-        resolveIsRevoked = resolve;
-      });
-      const isValidPromise = new Promise((resolve) => {
-        resolveIsValid = resolve;
-      });
+        const getCurrentPeriodPromise = new Promise((resolve) => {
+          resolveGetCurrentPeriod = resolve;
+        });
+        const isRevokedPromise = new Promise((resolve) => {
+          resolveIsRevoked = resolve;
+        });
+        const isValidPromise = new Promise((resolve) => {
+          resolveIsValid = resolve;
+        });
 
-      (readContract as Mock)
-        .mockReturnValueOnce(getCurrentPeriodPromise)
-        .mockReturnValueOnce(isRevokedPromise)
-        .mockReturnValueOnce(isValidPromise);
+        (readContract as Mock)
+          .mockReturnValueOnce(getCurrentPeriodPromise)
+          .mockReturnValueOnce(isRevokedPromise)
+          .mockReturnValueOnce(isValidPromise);
 
-      const statusPromise = getPermissionStatus(mockSpendPermission);
+        const statusPromise = getPermissionStatusFunc(mockSpendPermission);
 
-      // Verify all contract calls are made immediately
-      expect(readContract).toHaveBeenCalledTimes(3);
+        // Verify all contract calls are made immediately
+        expect(readContract).toHaveBeenCalledTimes(3);
 
-      // Resolve all promises
-      resolveGetCurrentPeriod!(mockCurrentPeriod);
-      resolveIsRevoked!(false);
-      resolveIsValid!(true);
+        // Resolve all promises
+        resolveGetCurrentPeriod!(mockCurrentPeriod);
+        resolveIsRevoked!(false);
+        resolveIsValid!(true);
 
-      await statusPromise;
-    });
+        await statusPromise;
+      }
+    );
   });
 
   describe('edge cases', () => {
@@ -333,6 +424,15 @@ describe('getPermissionStatus', () => {
       const result = await getPermissionStatus(permissionWithZeroAllowance);
 
       expect(result.remainingSpend).toBe(BigInt(0));
+
+      (readContract as Mock)
+        .mockResolvedValueOnce(mockCurrentPeriod)
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(true);
+
+      const nodeResult = await getPermissionStatusNode(permissionWithZeroAllowance);
+
+      expect(nodeResult).toEqual(result);
     });
 
     it('should handle very large allowance values', async () => {
@@ -361,6 +461,15 @@ describe('getPermissionStatus', () => {
       expect(result.remainingSpend).toBe(
         BigInt('999999999999999999999999999999') - BigInt('1000000000000000000')
       );
+
+      (readContract as Mock)
+        .mockResolvedValueOnce(mockCurrentPeriod)
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(true);
+
+      const nodeResult = await getPermissionStatusNode(permissionWithLargeAllowance);
+
+      expect(nodeResult).toEqual(result);
     });
 
     it('should handle period end at maximum timestamp', async () => {
@@ -379,6 +488,15 @@ describe('getPermissionStatus', () => {
       const result = await getPermissionStatus(mockSpendPermission);
 
       expect(result.nextPeriodStart).toEqual(new Date(2147483648 * 1000));
+
+      (readContract as Mock)
+        .mockResolvedValueOnce(mockCurrentPeriod)
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(true);
+
+      const nodeResult = await getPermissionStatusNode(mockSpendPermission);
+
+      expect(nodeResult).toEqual(result);
     });
   });
 });
