@@ -28,6 +28,11 @@ const renderTip = (tip: string) => {
 };
 
 export const QuickTips = ({ tips }: QuickTipsProps) => {
+  // Handle undefined or empty tips gracefully
+  if (!tips || tips.length === 0) {
+    return null;
+  }
+
   return (
     <div className={styles.quickTips}>
       <h3 className={styles.tipsTitle}>

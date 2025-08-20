@@ -3,11 +3,12 @@ import * as acorn from 'acorn';
 // Define the whitelist of allowed operations
 export const WHITELIST = {
   // Allowed SDK functions
-  allowedFunctions: ['pay', 'getPaymentStatus', 'subscribe'],
+  allowedFunctions: ['pay', 'getPaymentStatus', 'subscribe', 'getStatus'],
 
   // Allowed object properties and methods
   allowedObjects: {
-    base: ['pay', 'getPaymentStatus', 'subscribe'],
+    base: ['pay', 'getPaymentStatus', 'subscribe', 'subscription'],
+    subscription: ['getStatus'],
     console: ['log', 'error', 'warn', 'info'],
     Promise: ['resolve', 'reject', 'all', 'race'],
     Object: ['keys', 'values', 'entries', 'assign'],
@@ -297,6 +298,27 @@ export class CodeSanitizer {
    * Validate member expressions (object.property)
    */
   private validateMemberExpression(node: ASTNode): void {
+    // Handle nested member expressions like base.subscription.getStatus
+    if (node.object.type === 'MemberExpression') {
+      // For nested expressions, check if it's base.subscription
+      if (node.object.object.type === 'Identifier' && 
+          node.object.object.name === 'base' &&
+          node.object.property.type === 'Identifier' && 
+          node.object.property.name === 'subscription') {
+        // This is base.subscription.*, check if the method is allowed
+        const methodName = node.property.type === 'Identifier' ? node.property.name : '';
+        if (methodName && WHITELIST.allowedObjects.subscription && 
+            !WHITELIST.allowedObjects.subscription.includes(methodName)) {
+          this.errors.push({
+            message: `Property 'base.subscription.${methodName}' is not allowed`,
+            line: node.loc?.start.line ? node.loc.start.line - 1 : undefined,
+            column: node.loc?.start.column,
+          });
+        }
+        return; // Skip the regular validation for this special case
+      }
+    }
+
     // Get the object name
     let objectName = '';
     if (node.object.type === 'Identifier') {

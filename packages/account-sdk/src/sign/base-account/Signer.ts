@@ -320,6 +320,12 @@ export class Signer {
         );
         return permissions;
       }
+      case 'coinbase_fetchPermission': {
+        // Handle fetching a single permission by ID or hash
+        // The request already has the correct format from the caller
+        const response = await fetchRPCRequest(request, CB_WALLET_RPC_URL);
+        return response;
+      }
       default:
         if (!this.chain.rpcUrl) {
           throw standardErrors.rpc.internal('No RPC URL set for chain');

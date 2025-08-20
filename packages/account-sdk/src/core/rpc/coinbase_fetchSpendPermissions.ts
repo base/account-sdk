@@ -9,6 +9,13 @@ export type EmptyFetchPermissionsRequest = Omit<FetchPermissionsRequest, 'params
   params: undefined;
 };
 
+export type FetchPermissionRequest = {
+  method: 'coinbase_fetchPermission';
+  params: [{
+    permissionHash: string; // permission id or hash
+  }];
+};
+
 /**
  * Represents a spending permission with limits
  */
@@ -46,4 +53,16 @@ export type SpendPermission = {
 
 export type FetchPermissionsResponse = {
   permissions: SpendPermission[];
+};
+
+export type FetchPermissionResponse = {
+  permission: SpendPermission;
+  /** Whether the permission is currently active (non-revoked) */
+  isActive: boolean;
+  /** Last payment date in unix seconds */
+  lastPaymentDate?: number;
+  /** Last payment amount in USD */
+  lastPaymentAmount?: string;
+  /** Next period start date in unix seconds */
+  nextPeriodStart?: number;
 };

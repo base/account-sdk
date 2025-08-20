@@ -164,5 +164,46 @@ export interface SubscriptionResult {
 }
 
 /**
+ * Options for checking subscription status
+ */
+export type SubscriptionStatusOptions = 
+  | {
+      /** Subscription hash/ID string */
+      subscription: string;
+      /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+      testnet?: boolean;
+      /** Optional wallet URL to use */
+      walletUrl?: string;
+      /** Whether to enable telemetry logging. Defaults to true */
+      telemetry?: boolean;
+    }
+  | {
+      /** Subscription result object */
+      subscription: SubscriptionResult;
+      /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+      testnet?: boolean;
+      /** Optional wallet URL to use */
+      walletUrl?: string;
+      /** Whether to enable telemetry logging. Defaults to true */
+      telemetry?: boolean;
+    };
+
+/**
+ * Subscription status information
+ */
+export interface SubscriptionStatus {
+  /** Whether the user has a non-revoked permission set for this app origin */
+  isSubscribed: boolean;
+  /** Date of the last payment */
+  lastPaymentDate?: Date;
+  /** Amount of the last payment (USD denoted e.g. "9.99") */
+  lastPaymentAmount?: string;
+  /** Start date of the next subscription period */
+  nextPeriodStart?: Date;
+  /** The recurring charge amount (USD denoted e.g. "9.99") */
+  recurringAmount?: string;
+}
+
+/**
  * Internal type for payment execution result
  */
