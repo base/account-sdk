@@ -106,7 +106,7 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
             if (paymentLinkId) {
               store.config.set({ paymentLinkId });
             }
-            
+
             try {
               await this.signer.handshake({ method: 'handshake' }); // exchange session keys
               const result = await this.signer.request(args); // send diffie-hellman encrypted request

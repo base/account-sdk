@@ -88,9 +88,9 @@ describe('PopupManager', () => {
 
   it('should include paymentLinkId in URL when present in store config', async () => {
     const paymentLinkId = 'payment_link_12345';
-    (store.config.get as Mock).mockReturnValue({ 
+    (store.config.get as Mock).mockReturnValue({
       metadata: { appName: 'Test App' },
-      paymentLinkId 
+      paymentLinkId,
     });
 
     const url = new URL('https://example.com');

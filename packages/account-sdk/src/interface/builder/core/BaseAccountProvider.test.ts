@@ -118,15 +118,15 @@ describe('Ephemeral methods', () => {
     'should extract and store paymentLinkId when present in params',
     async (method) => {
       const paymentLinkId = 'payment_link_12345';
-      const args = { 
-        method, 
-        params: [{ paymentLinkId, otherParam: 'value' }] 
+      const args = {
+        method,
+        params: [{ paymentLinkId, otherParam: 'value' }],
       };
-      
+
       store.config.set({ paymentLinkId: undefined });
-      
+
       await provider.request(args);
-      
+
       expect(store.config.get().paymentLinkId).toBe(paymentLinkId);
       expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
       expect(mockRequest).toHaveBeenCalledWith(args);
