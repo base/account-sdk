@@ -21,10 +21,27 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js"
     },
-    "./payment": {
+    "./payment/browser": {
       "types": "./dist/interface/payment/index.d.ts",
       "import": "./dist/interface/payment/index.js",
       "require": "./dist/interface/payment/index.js"
+    },
+    "./payment/node": {
+      "types": "./dist/interface/payment/index.node.d.ts",
+      "import": "./dist/interface/payment/index.node.js",
+      "require": "./dist/interface/payment/index.node.js"
+    },
+    "./payment": {
+      "browser": {
+        "types": "./dist/interface/payment/index.d.ts",
+        "import": "./dist/interface/payment/index.js",
+        "require": "./dist/interface/payment/index.js"
+      },
+      "node": {
+        "types": "./dist/interface/payment/index.node.d.ts",
+        "import": "./dist/interface/payment/index.node.js",
+        "require": "./dist/interface/payment/index.node.js"
+      }
     },
     "./spend-permission/browser": {
       "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
