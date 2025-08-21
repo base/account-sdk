@@ -6,4 +6,3 @@ export * from './methods/prepareRevokeCallData.js';
 export * from './methods/prepareSpendCallData.js';
 export * from './methods/requestRevoke.js';
 export * from './methods/requestSpendPermission.js';
-

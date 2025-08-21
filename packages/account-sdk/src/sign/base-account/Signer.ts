@@ -330,12 +330,12 @@ export class Signer {
           fetchPermissionRequest,
           CB_WALLET_RPC_URL
         )) as FetchPermissionResponse;
-        
+
         // Store the single permission if it has a chainId
         if (response.permission && response.permission.chainId) {
           store.spendPermissions.set([response.permission]);
         }
-        
+
         return response;
       }
       default:

@@ -1,8 +1,6 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { ProviderInterface } from ':core/provider/interface.js';
-import {
-    FetchPermissionResponse,
-} from ':core/rpc/coinbase_fetchPermission.js';
+import { FetchPermissionResponse } from ':core/rpc/coinbase_fetchPermission.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { withTelemetry } from '../withTelemetry.js';
@@ -53,7 +51,7 @@ const fetchPermissionFn = async ({
   permissionHash,
 }: FetchPermissionType): Promise<SpendPermission> => {
   let response: FetchPermissionResponse;
-  
+
   if (provider) {
     response = (await provider.request({
       method: 'coinbase_fetchPermission',
