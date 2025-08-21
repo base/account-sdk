@@ -86,11 +86,11 @@ describe('PopupManager', () => {
     expect(paramCount).toBe(4);
   });
 
-  it('should include paymentLinkId in URL when present in store config', async () => {
-    const paymentLinkId = 'payment_link_12345';
+  it('should include externalCorrelationId in URL when present in store config', async () => {
+    const externalCorrelationId = 'external_correlation_id_12345';
     (store.config.get as Mock).mockReturnValue({
       metadata: { appName: 'Test App' },
-      paymentLinkId,
+      externalCorrelationId,
     });
 
     const url = new URL('https://example.com');
@@ -98,7 +98,7 @@ describe('PopupManager', () => {
 
     await openPopup(url);
 
-    expect(url.searchParams.get('paymentLinkId')).toBe(paymentLinkId);
+    expect(url.searchParams.get('externalCorrelationId')).toBe(externalCorrelationId);
     expect(url.searchParams.get('sdkName')).toBe(PACKAGE_NAME);
     expect(url.searchParams.get('sdkVersion')).toBe(PACKAGE_VERSION);
     expect(url.searchParams.get('origin')).toBe(mockOrigin);
