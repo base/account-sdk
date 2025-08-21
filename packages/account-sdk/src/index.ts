@@ -3,6 +3,8 @@ export type { AppMetadata, Preference, ProviderInterface } from ':core/provider/
 
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
 
+export { externalCorrelationIds } from './store/external-correlation-id/store.js';
+
 export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js';
 
 // Payment interface exports
@@ -16,5 +18,5 @@ export type {
   PaymentStatus,
   PaymentStatusOptions,
   PaymentStatusType,
-  PaymentSuccess,
+  PaymentSuccess
 } from './interface/payment/index.js';
