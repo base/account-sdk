@@ -185,7 +185,7 @@ describe('getHash', () => {
       (getClient as Mock).mockReturnValue(null);
 
       await expect(getHash({ permission: mockPermission, chainId: 8453 })).rejects.toThrow(
-        'No client found for chain ID 8453. Please ensure SDK is in connected state'
+        'No client found for chain ID 8453. Chain not supported or RPC URL not available'
       );
 
       expect(getClient).toHaveBeenCalledWith(8453);
