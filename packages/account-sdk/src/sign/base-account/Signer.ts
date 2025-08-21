@@ -6,6 +6,10 @@ import { isActionableHttpRequestError, isViemError, standardErrors } from ':core
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import {
+  FetchPermissionRequest,
+  FetchPermissionResponse,
+} from ':core/rpc/coinbase_fetchPermission.js';
 import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { GetSubAccountsResponse } from ':core/rpc/wallet_getSubAccount.js';
@@ -319,6 +323,20 @@ export class Signer {
           }))
         );
         return permissions;
+      }
+      case 'coinbase_fetchPermission': {
+        const fetchPermissionRequest = request as FetchPermissionRequest;
+        const response = (await fetchRPCRequest(
+          fetchPermissionRequest,
+          CB_WALLET_RPC_URL
+        )) as FetchPermissionResponse;
+
+        // Store the single permission if it has a chainId
+        if (response.permission && response.permission.chainId) {
+          store.spendPermissions.set([response.permission]);
+        }
+
+        return response;
       }
       default:
         if (!this.chain.rpcUrl) {
