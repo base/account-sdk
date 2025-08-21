@@ -11,9 +11,11 @@ export type EmptyFetchPermissionsRequest = Omit<FetchPermissionsRequest, 'params
 
 export type FetchPermissionRequest = {
   method: 'coinbase_fetchPermission';
-  params: [{
-    permissionHash: string; // permission id or hash
-  }];
+  params: [
+    {
+      permissionHash: string; // permission id or hash
+    },
+  ];
 };
 
 /**

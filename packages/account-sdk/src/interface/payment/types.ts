@@ -166,7 +166,7 @@ export interface SubscriptionResult {
 /**
  * Options for checking subscription status
  */
-export type SubscriptionStatusOptions = 
+export type SubscriptionStatusOptions =
   | {
       /** Subscription hash/ID string */
       subscription: string;

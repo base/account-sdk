@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { CodeEditor, Header, Output, QuickTips } from './components';
 import {
-    DEFAULT_GET_STATUS_CODE,
-    DEFAULT_SUBSCRIBE_CODE,
-    GET_STATUS_QUICK_TIPS,
-    SUBSCRIBE_QUICK_TIPS
+  DEFAULT_GET_STATUS_CODE,
+  DEFAULT_SUBSCRIBE_CODE,
+  GET_STATUS_QUICK_TIPS,
+  SUBSCRIBE_QUICK_TIPS,
 } from './constants';
 import { useCodeExecution } from './hooks';
 import styles from './styles/Home.module.css';
@@ -41,7 +41,9 @@ function SubscriptionPlayground() {
         {/* subscribe Section */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>subscribe Function</h2>
-          <p className={styles.sectionDescription}>Create spend permissions for recurring USDC payments</p>
+          <p className={styles.sectionDescription}>
+            Create spend permissions for recurring USDC payments
+          </p>
 
           <div className={styles.playground}>
             <div className={styles.leftColumn}>
@@ -72,7 +74,9 @@ function SubscriptionPlayground() {
         {/* getStatus Section */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>subscription.getStatus Function</h2>
-          <p className={styles.sectionDescription}>Check the current status and details of a subscription</p>
+          <p className={styles.sectionDescription}>
+            Check the current status and details of a subscription
+          </p>
 
           <div className={styles.playground}>
             <div className={styles.leftColumn}>

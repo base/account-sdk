@@ -60,7 +60,7 @@ describe('getSubscriptionStatus', () => {
           params: [
             {
               permissionHash: permissionHash,
-            }
+            },
           ],
         },
         'https://rpc.wallet.coinbase.com'
@@ -159,7 +159,7 @@ describe('getSubscriptionStatus', () => {
           params: [
             {
               permissionHash: subscription.id,
-            }
+            },
           ],
         },
         'https://rpc.wallet.coinbase.com'

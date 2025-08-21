@@ -2,7 +2,6 @@ import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { FetchPermissionResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { formatUnits } from 'viem';
-import { CHAIN_IDS } from './constants.js';
 import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
 
 /**
@@ -39,16 +38,10 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
 export async function getSubscriptionStatus(
   options: SubscriptionStatusOptions
 ): Promise<SubscriptionStatus> {
-  const { subscription, testnet = false } = options;
+  const { subscription } = options;
 
   // Extract the permission hash from the input
-  const permissionHash = typeof subscription === 'string' 
-    ? subscription 
-    : subscription.id;
-
-  // Setup network configuration
-  const network = testnet ? 'baseSepolia' : 'base';
-  const chainId = CHAIN_IDS[network];
+  const permissionHash = typeof subscription === 'string' ? subscription : subscription.id;
 
   // Get the RPC URL from fallback chains or use CB wallet RPC
   // The coinbase_fetchPermission RPC is available at the CB wallet RPC endpoint
@@ -58,17 +51,17 @@ export async function getSubscriptionStatus(
   // Fetch permission details using the new RPC method directly
   // This doesn't require wallet connection, similar to getPaymentStatus
   // The backend expects params as an array with an object containing the permission hash
-  const response = await fetchRPCRequest(
+  const response = (await fetchRPCRequest(
     {
       method: 'coinbase_fetchPermission',
       params: [
         {
           permissionHash: permissionHash,
-        }
+        },
       ],
     },
     rpcUrl
-  ) as FetchPermissionResponse;
+  )) as FetchPermissionResponse;
 
   // Parse the response to create the subscription status
   const status: SubscriptionStatus = {

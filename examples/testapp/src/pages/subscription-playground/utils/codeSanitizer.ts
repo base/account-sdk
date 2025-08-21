@@ -301,14 +301,19 @@ export class CodeSanitizer {
     // Handle nested member expressions like base.subscription.getStatus
     if (node.object.type === 'MemberExpression') {
       // For nested expressions, check if it's base.subscription
-      if (node.object.object.type === 'Identifier' && 
-          node.object.object.name === 'base' &&
-          node.object.property.type === 'Identifier' && 
-          node.object.property.name === 'subscription') {
+      if (
+        node.object.object.type === 'Identifier' &&
+        node.object.object.name === 'base' &&
+        node.object.property.type === 'Identifier' &&
+        node.object.property.name === 'subscription'
+      ) {
         // This is base.subscription.*, check if the method is allowed
         const methodName = node.property.type === 'Identifier' ? node.property.name : '';
-        if (methodName && WHITELIST.allowedObjects.subscription && 
-            !WHITELIST.allowedObjects.subscription.includes(methodName)) {
+        if (
+          methodName &&
+          WHITELIST.allowedObjects.subscription &&
+          !WHITELIST.allowedObjects.subscription.includes(methodName)
+        ) {
           this.errors.push({
             message: `Property 'base.subscription.${methodName}' is not allowed`,
             line: node.loc?.start.line ? node.loc.start.line - 1 : undefined,

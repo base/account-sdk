@@ -4,14 +4,14 @@ import { getSubscriptionStatus } from './getSubscriptionStatus.js';
 import { pay } from './pay.js';
 import { subscribe } from './subscribe.js';
 import type {
-    PaymentOptions,
-    PaymentResult,
-    PaymentStatus,
-    PaymentStatusOptions,
-    SubscriptionOptions,
-    SubscriptionResult,
-    SubscriptionStatus,
-    SubscriptionStatusOptions,
+  PaymentOptions,
+  PaymentResult,
+  PaymentStatus,
+  PaymentStatusOptions,
+  SubscriptionOptions,
+  SubscriptionResult,
+  SubscriptionStatus,
+  SubscriptionStatusOptions,
 } from './types.js';
 
 /**

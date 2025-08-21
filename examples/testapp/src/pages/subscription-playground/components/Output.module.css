@@ -198,6 +198,34 @@ code.resultValue {
   word-break: break-word;
 }
 
+/* Info section */
+.infoSection {
+  border-top: 1px solid #e2e8f0;
+  background: #f0f9ff;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.infoIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: #3b82f6;
+}
+
+.infoIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.infoText {
+  font-size: 0.875rem;
+  color: #1e40af;
+  line-height: 1.4;
+}
+
 /* User data section */
 .userDataSection {
   border-top: 1px solid #e2e8f0;

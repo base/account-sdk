@@ -52,14 +52,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * ```
  */
 export async function subscribe(options: SubscriptionOptions): Promise<SubscriptionResult> {
-  const {
-    amount,
-    to,
-    periodInDays = 30,
-    testnet = false,
-    walletUrl,
-    telemetry = true,
-  } = options;
+  const { amount, to, periodInDays = 30, testnet = false, walletUrl, telemetry = true } = options;
 
   // Generate correlation ID for this subscription request
   const correlationId = crypto.randomUUID();
