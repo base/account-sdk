@@ -130,5 +130,39 @@ export interface PaymentStatus {
 }
 
 /**
+ * Options for creating a subscription
+ */
+export interface SubscriptionOptions {
+  /** Amount of USDC to spend per period as a string (e.g., "10.50") */
+  amount: string;
+  /** Ethereum address that will be the spender (your application's address) */
+  to: string;
+  /** The period in days for the subscription (e.g., 30 for monthly) */
+  periodInDays?: number;
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+  /** Optional wallet URL to use */
+  walletUrl?: string;
+  /** Whether to enable telemetry logging. Defaults to true */
+  telemetry?: boolean;
+}
+
+/**
+ * Successful subscription result
+ */
+export interface SubscriptionResult {
+  /** The subscription ID (permission hash) */
+  id: string;
+  /** The address that owns/controls the subscription (your application) */
+  subscriptionOwnerAddress: Address;
+  /** The address that will be charged (the user's wallet) */
+  subscriptionPayerAddress: Address;
+  /** The recurring charge amount (USD denoted e.g. "9.99") */
+  recurringCharge: string;
+  /** The period in days for the subscription */
+  periodInDays: number;
+}
+
+/**
  * Internal type for payment execution result
  */
