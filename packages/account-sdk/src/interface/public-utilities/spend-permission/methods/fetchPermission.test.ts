@@ -1,9 +1,9 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import * as utils from ':util/provider.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import * as utils from '../utils.js';
 import { fetchPermission } from './fetchPermission.js';
 
-vi.mock('../utils.js', () => ({
+vi.mock(':util/provider.js', () => ({
   fetchRPCRequest: vi.fn(),
 }));
 

@@ -1,6 +1,6 @@
 import { FetchPermissionResponse } from ':core/rpc/coinbase_fetchSpendPermission.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { fetchRPCRequest } from '../utils.js';
+import { fetchRPCRequest } from ':util/provider.js';
 import { withTelemetry } from '../withTelemetry.js';
 
 type FetchPermissionType = {
