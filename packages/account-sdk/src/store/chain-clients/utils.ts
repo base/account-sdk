@@ -84,9 +84,33 @@ export function createClients(chains: SDKChain[]) {
 }
 
 export function getClient(chainId: number): PublicClient | undefined {
-  return ChainClients.getState()[chainId]?.client;
+  let client = ChainClients.getState()[chainId]?.client;
+
+  // If no client exists, try to create one using fallback chains
+  if (!client) {
+    const fallbackChain = FALLBACK_CHAINS.find((chain) => chain.id === chainId);
+    if (fallbackChain) {
+      // Initialize the client with the fallback chain
+      createClients([fallbackChain]);
+      client = ChainClients.getState()[chainId]?.client;
+    }
+  }
+
+  return client;
 }
 
 export function getBundlerClient(chainId: number): BundlerClient | undefined {
-  return ChainClients.getState()[chainId]?.bundlerClient;
+  let bundlerClient = ChainClients.getState()[chainId]?.bundlerClient;
+
+  // If no bundler client exists, try to create one using fallback chains
+  if (!bundlerClient) {
+    const fallbackChain = FALLBACK_CHAINS.find((chain) => chain.id === chainId);
+    if (fallbackChain) {
+      // Initialize the client with the fallback chain
+      createClients([fallbackChain]);
+      bundlerClient = ChainClients.getState()[chainId]?.bundlerClient;
+    }
+  }
+
+  return bundlerClient;
 }

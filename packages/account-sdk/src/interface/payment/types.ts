@@ -130,5 +130,80 @@ export interface PaymentStatus {
 }
 
 /**
+ * Options for creating a subscription
+ */
+export interface SubscriptionOptions {
+  /** Amount of USDC to spend per period as a string (e.g., "10.50") */
+  amount: string;
+  /** Ethereum address that will be the spender (your application's address) */
+  to: string;
+  /** The period in days for the subscription (e.g., 30 for monthly) */
+  periodInDays?: number;
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+  /** Optional wallet URL to use */
+  walletUrl?: string;
+  /** Whether to enable telemetry logging. Defaults to true */
+  telemetry?: boolean;
+}
+
+/**
+ * Successful subscription result
+ */
+export interface SubscriptionResult {
+  /** The subscription ID (permission hash) */
+  id: string;
+  /** The address that owns/controls the subscription (your application) */
+  subscriptionOwnerAddress: Address;
+  /** The address that will be charged (the user's wallet) */
+  subscriptionPayerAddress: Address;
+  /** The recurring charge amount in USD */
+  recurringCharge: string;
+  /** The period in days for the subscription */
+  periodInDays: number;
+}
+
+/**
+ * Options for checking subscription status
+ */
+export type SubscriptionStatusOptions =
+  | {
+      /** Subscription hash/ID string */
+      subscription: string;
+      /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+      testnet?: boolean;
+      /** Optional wallet URL to use */
+      walletUrl?: string;
+      /** Whether to enable telemetry logging. Defaults to true */
+      telemetry?: boolean;
+    }
+  | {
+      /** Subscription result object */
+      subscription: SubscriptionResult;
+      /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+      testnet?: boolean;
+      /** Optional wallet URL to use */
+      walletUrl?: string;
+      /** Whether to enable telemetry logging. Defaults to true */
+      telemetry?: boolean;
+    };
+
+/**
+ * Subscription status information
+ */
+export interface SubscriptionStatus {
+  /** Whether the user has a non-revoked permission set for this app origin */
+  isSubscribed: boolean;
+  /** Date of the last payment */
+  lastPaymentDate?: Date;
+  /** Amount of the last payment (USD denoted e.g. "9.99") */
+  lastPaymentAmount?: string;
+  /** Start date of the next subscription period */
+  nextPeriodStart?: Date;
+  /** The recurring charge amount (USD denoted e.g. "9.99") */
+  recurringAmount?: string;
+}
+
+/**
  * Internal type for payment execution result
  */

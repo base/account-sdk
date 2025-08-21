@@ -122,7 +122,7 @@ export const DialogContainer: FunctionComponent = (props) => {
   const [startY, setStartY] = useState(0);
 
   // Touch event handlers for drag-to-dismiss (entire dialog area)
-  const handleTouchStart = (e: any) => {
+  const handleTouchStart = (e: TouchEvent) => {
     // Only enable drag on mobile portrait mode
     if (!isPhonePortrait()) return;
 
@@ -131,7 +131,7 @@ export const DialogContainer: FunctionComponent = (props) => {
     setIsDragging(true);
   };
 
-  const handleTouchMove = (e: any) => {
+  const handleTouchMove = (e: TouchEvent) => {
     if (!isDragging) return;
 
     const touch = e.touches[0];
