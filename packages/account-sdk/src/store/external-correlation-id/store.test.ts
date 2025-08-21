@@ -19,10 +19,10 @@ describe('externalCorrelationIds', () => {
   it('should update existing external correlation ID', () => {
     const firstId = 'first-id';
     const secondId = 'second-id';
-    
+
     externalCorrelationIds.set(firstId);
     expect(externalCorrelationIds.get()).toBe(firstId);
-    
+
     externalCorrelationIds.set(secondId);
     expect(externalCorrelationIds.get()).toBe(secondId);
   });
@@ -31,7 +31,7 @@ describe('externalCorrelationIds', () => {
     const testId = 'test-id';
     externalCorrelationIds.set(testId);
     expect(externalCorrelationIds.get()).toBe(testId);
-    
+
     externalCorrelationIds.clear();
     expect(externalCorrelationIds.get()).toBe(null);
   });

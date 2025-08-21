@@ -18,5 +18,5 @@ export type {
   PaymentStatus,
   PaymentStatusOptions,
   PaymentStatusType,
-  PaymentSuccess
+  PaymentSuccess,
 } from './interface/payment/index.js';
