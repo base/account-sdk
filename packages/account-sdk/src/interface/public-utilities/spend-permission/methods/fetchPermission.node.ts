@@ -1,6 +1,4 @@
-import {
-    FetchPermissionResponse,
-} from ':core/rpc/coinbase_fetchSpendPermission.js';
+import { FetchPermissionResponse } from ':core/rpc/coinbase_fetchSpendPermission.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { fetchRPCRequest } from '../utils.js';
 import { CB_WALLET_RPC_URL } from '../utils.node.js';

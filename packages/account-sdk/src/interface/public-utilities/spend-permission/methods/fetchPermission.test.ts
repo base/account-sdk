@@ -12,7 +12,7 @@ describe('fetchPermission', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockPermission = {
       signature: '0xsignature123',
       chainId: 8453,
@@ -38,7 +38,7 @@ describe('fetchPermission', () => {
 
   it('should fetch a permission by hash', async () => {
     const permissionHash = '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984';
-    
+
     const result = await fetchPermission({
       permissionHash,
     });
@@ -60,7 +60,7 @@ describe('fetchPermission', () => {
 
   it('should handle different permission hash formats', async () => {
     const permissionHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
-    
+
     await fetchPermission({
       permissionHash,
     });

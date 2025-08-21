@@ -1,6 +1,4 @@
-import {
-    FetchPermissionResponse,
-} from ':core/rpc/coinbase_fetchSpendPermission.js';
+import { FetchPermissionResponse } from ':core/rpc/coinbase_fetchSpendPermission.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { fetchRPCRequest } from '../utils.js';
 import { withTelemetry } from '../withTelemetry.js';
@@ -15,7 +13,7 @@ type FetchPermissionType = {
  * This helper method retrieves a specific spend permission using its unique hash identifier.
  * This is useful when you have a permission hash from a previous operation and need to
  * fetch the full permission details. This helper is for the browser environment.
- * For node environment or server side, use the `fetchPermission` method from the 
+ * For node environment or server side, use the `fetchPermission` method from the
  * `@base-org/account/spend-permission/node` package.
  *
  * The method uses coinbase_fetchPermission RPC method to query the permission
