@@ -52,7 +52,6 @@ import {
   assertGetCapabilitiesParams,
   assertParamsChainId,
   fillMissingParamsForFetchPermissions,
-  getCachedWalletConnectResponse,
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
@@ -250,16 +249,6 @@ export class Signer {
       case 'wallet_grantPermissions':
         return this.sendRequestToPopup(request);
       case 'wallet_connect': {
-        // Return cached wallet connect response if available, unless signInWithEthereum capability is present
-        // SIWE requires fresh signatures/nonces so we should not use cached responses
-        const hasSiweCapability = requestHasCapability(request, 'signInWithEthereum');
-        if (!hasSiweCapability) {
-          const cachedResponse = await getCachedWalletConnectResponse();
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-        }
-
         // Wait for the popup to be loaded before making async calls
         await this.communicator.waitForPopupLoaded?.();
         await initSubAccountConfig();
@@ -376,7 +365,6 @@ export class Signer {
             factoryData: capabilityResponse[0].factoryData,
           });
         }
-        let accounts_ = [this.accounts[0]];
 
         const subAccount = store.subAccounts.get();
         const subAccountsConfig = store.subAccountsConfig.get();
@@ -394,7 +382,7 @@ export class Signer {
           store.spendPermissions.set(spendPermissions?.permissions);
         }
 
-        this.callback?.('accountsChanged', accounts_);
+        this.callback?.('accountsChanged', this.accounts);
         break;
       }
       case 'wallet_addSubAccount': {
