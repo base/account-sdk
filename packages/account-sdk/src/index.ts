@@ -7,6 +7,8 @@ export type {
 
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
 
+export { externalCorrelationIds } from './store/external-correlation-id/store.js';
+
 export {
   getCryptoKeyAccount,
   removeCryptoKey,

@@ -1,6 +1,7 @@
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { logDialogActionClicked, logDialogShown } from ':core/telemetry/events/dialog.js';
+import { externalCorrelationIds } from ':store/external-correlation-id/store.js';
 import { store } from ':store/store.js';
 import { initDialog } from '../ui/Dialog/index.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
@@ -50,11 +51,13 @@ export function closePopup(popup: Window | null) {
 }
 
 function appendAppInfoQueryParams(url: URL) {
+  const externalCorrelationId = externalCorrelationIds.get();
   const params = {
     sdkName: PACKAGE_NAME,
     sdkVersion: PACKAGE_VERSION,
     origin: window.location.origin,
     coop: getCrossOriginOpenerPolicy(),
+    ...(externalCorrelationId && { externalCorrelationId }),
   };
 
   for (const [key, value] of Object.entries(params)) {
