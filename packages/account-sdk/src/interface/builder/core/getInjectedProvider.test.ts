@@ -19,7 +19,9 @@ describe('getInjectedProvider', () => {
 
     // Reset the mock window state
     mockWindow.ethereum = undefined;
-    mockWindow.top.ethereum = undefined;
+    mockWindow.top = {
+      ethereum: undefined as any,
+    };
 
     // Set up the global window mock
     global.window = mockWindow as any;
@@ -186,6 +188,27 @@ describe('getInjectedProvider', () => {
     it('should handle missing window.top', () => {
       mockWindow.ethereum = undefined;
       (mockWindow as any).top = undefined;
+
+      const result = getInjectedProvider();
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle when accessing window.top throws an error', () => {
+      // Mock window.ethereum to have the TBA identifier
+      const mockProvider = {
+        isCoinbaseBrowser: true,
+        request: vi.fn(),
+      };
+      mockWindow.ethereum = mockProvider;
+
+      // Make accessing window.top throw (simulates cross-origin iframe scenario)
+      Object.defineProperty(mockWindow, 'top', {
+        get() {
+          throw new Error('Blocked access to window.top');
+        },
+        configurable: true,
+      });
 
       const result = getInjectedProvider();
 
