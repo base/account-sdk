@@ -1,6 +1,6 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { spendPermissionManagerAddress } from ':sign/base-account/utils/constants.js';
-import { Address, Hex, getAddress } from 'viem';
+import { Address, Hex, getAddress, hexToBigInt } from 'viem';
 import { RequestSpendPermissionType } from './methods/requestSpendPermission.js';
 
 const ETERNITY_TIMESTAMP = 281474976710655; // 2^48 - 1
@@ -91,7 +91,7 @@ export function createSpendPermissionTypedData(
       period: 86400 * periodInDays,
       start: dateToTimestampInSeconds(start ?? new Date()),
       end: end ? dateToTimestampInSeconds(end) : ETERNITY_TIMESTAMP,
-      salt: salt ?? getRandomHexString(32),
+      salt: salt ?? hexToBigInt(getRandomHexString(32)).toString(), // backend expects an integer string
       extraData: extraData ? (extraData as Hex) : '0x',
     },
   };

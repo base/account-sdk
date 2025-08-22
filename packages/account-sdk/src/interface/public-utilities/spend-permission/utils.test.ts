@@ -1,4 +1,5 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import { hexToBigInt } from 'viem';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RequestSpendPermissionType } from './methods/requestSpendPermission.js';
 import {
@@ -90,7 +91,9 @@ describe('createSpendPermissionTypedData', () => {
         period: 86400 * 30, // 30 days in seconds
         start: mockCurrentTimestamp, // dateToTimestampInSeconds(new Date())
         end: ETERNITY_TIMESTAMP, // ETERNITY_TIMESTAMP when end is not specified
-        salt: '0xabababababababababababababababababababababababababababababababab',
+        salt: hexToBigInt(
+          '0xabababababababababababababababababababababababababababababababab'
+        ).toString(),
         extraData: '0x',
       },
     });
@@ -106,7 +109,7 @@ describe('createSpendPermissionTypedData', () => {
       ...baseRequest,
       start: startDate,
       end: endDate,
-      salt: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      salt: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
       extraData: '0xdeadbeef',
     };
 
@@ -115,7 +118,7 @@ describe('createSpendPermissionTypedData', () => {
     expect(result.message.start).toBe(startTimestamp);
     expect(result.message.end).toBe(endTimestamp);
     expect(result.message.salt).toBe(
-      '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+      '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
     );
     expect(result.message.extraData).toBe('0xdeadbeef');
   });
