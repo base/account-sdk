@@ -2,7 +2,7 @@ import { waitFor } from '@testing-library/preact';
 import { Mock, vi } from 'vitest';
 
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
-import { store } from ':store/store.js';
+import { externalCorrelationIds } from ':store/external-correlation-id/store.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 import { closePopup, openPopup } from './web.js';
 
@@ -33,6 +33,12 @@ vi.mock(':store/store.js', () => ({
   },
 }));
 
+vi.mock(':store/external-correlation-id/store.js', () => ({
+  externalCorrelationIds: {
+    get: vi.fn().mockReturnValue(null),
+  },
+}));
+
 describe('PopupManager', () => {
   beforeAll(() => {
     global.window = Object.create(window);
@@ -49,6 +55,8 @@ describe('PopupManager', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    // Reset external correlation ID mock to null
+    (externalCorrelationIds.get as Mock).mockReturnValue(null);
   });
 
   it('should open a popup with correct settings and focus it', async () => {
@@ -86,12 +94,9 @@ describe('PopupManager', () => {
     expect(paramCount).toBe(4);
   });
 
-  it('should include externalCorrelationId in URL when present in store config', async () => {
+  it('should include externalCorrelationId in URL when present in external correlation store', async () => {
     const externalCorrelationId = 'external_correlation_id_12345';
-    (store.config.get as Mock).mockReturnValue({
-      metadata: { appName: 'Test App' },
-      externalCorrelationId,
-    });
+    (externalCorrelationIds.get as Mock).mockReturnValue(externalCorrelationId);
 
     const url = new URL('https://example.com');
     (window.open as Mock).mockReturnValue({ focus: vi.fn() });
