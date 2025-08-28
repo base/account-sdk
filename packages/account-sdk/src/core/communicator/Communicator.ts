@@ -105,7 +105,7 @@ export class Communicator {
     }
 
     logPopupSetupStarted();
-    this.popup = await openPopup(this.url);
+    this.popup = await openPopup(this.url, this.preference.mode ?? 'popup');
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
       .then(() => {

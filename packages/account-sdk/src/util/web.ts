@@ -12,10 +12,33 @@ const POPUP_HEIGHT = 700;
 const POPUP_BLOCKED_TITLE = '{app} wants to continue in Base Account';
 const POPUP_BLOCKED_MESSAGE = 'This action requires your permission to open a new window.';
 
-export function openPopup(url: URL): Promise<Window> {
+// iFrame constants for embedded mode
+const IFRAME_ID = 'keys-frame';
+const IFRAME_ALLOW = 'publickey-credentials-get; publickey-credentials-create; clipboard-write';
+const IFRAME_STYLES = {
+  overflow: 'hidden',
+  overflowX: 'hidden',
+  overflowY: 'hidden',
+  height: '100%',
+  width: '100%',
+  position: 'absolute',
+  top: '0px',
+  left: '0px',
+  right: '0px',
+  bottom: '0px',
+  backgroundColor: 'transparent',
+  border: 'none',
+} as const;
+
+export function openPopup(url: URL, mode: 'embedded' | 'popup'): Promise<Window> {
+  appendAppInfoQueryParams(url);
+
+  if (mode === 'embedded') {
+    return Promise.resolve(createEmbeddedIframe(url));
+  }
+
   const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
   const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
-  appendAppInfoQueryParams(url);
 
   function tryOpenPopup(): Window | null {
     const popupId = `wallet_${crypto.randomUUID()}`;
@@ -45,7 +68,19 @@ export function openPopup(url: URL): Promise<Window> {
 }
 
 export function closePopup(popup: Window | null) {
-  if (popup && !popup.closed) {
+  if (!popup) {
+    return;
+  }
+
+  // If embedded, remove the iframe element
+  const iframe = document.getElementById(IFRAME_ID) as HTMLIFrameElement;
+  if (iframe && iframe.contentWindow === popup) {
+    iframe.remove();
+    return;
+  }
+
+  // Otherwise, close the popup
+  if (!popup.closed) {
     popup.close();
   }
 }
@@ -115,4 +150,24 @@ function openPopupWithDialog(tryOpenPopup: () => Window | null) {
       ],
     });
   });
+}
+
+function createEmbeddedIframe(url: URL): Window {
+  const iframe = document.createElement('iframe');
+  iframe.id = IFRAME_ID;
+  iframe.allowFullscreen = true;
+  iframe.allow = IFRAME_ALLOW;
+
+  iframe.style.cssText = Object.entries(IFRAME_STYLES)
+    .map(([key, value]) => `${key}:${value}`)
+    .join(';');
+
+  iframe.src = url.toString();
+  document.body.appendChild(iframe);
+
+  if (!iframe.contentWindow) {
+    throw standardErrors.rpc.internal('iframe failed to initialize');
+  }
+
+  return iframe.contentWindow;
 }

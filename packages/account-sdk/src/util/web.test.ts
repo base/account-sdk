@@ -63,7 +63,7 @@ describe('PopupManager', () => {
     const url = new URL('https://example.com');
     (window.open as Mock).mockReturnValue({ focus: vi.fn() });
 
-    const popup = await openPopup(url);
+    const popup = await openPopup(url, 'popup');
 
     expect(window.open).toHaveBeenNthCalledWith(
       1,
@@ -88,7 +88,7 @@ describe('PopupManager', () => {
 
     (window.open as Mock).mockReturnValue({ focus: vi.fn() });
 
-    await openPopup(url);
+    await openPopup(url, 'popup');
 
     const paramCount = url.searchParams.toString().split('&').length;
     expect(paramCount).toBe(4);
@@ -101,7 +101,7 @@ describe('PopupManager', () => {
     const url = new URL('https://example.com');
     (window.open as Mock).mockReturnValue({ focus: vi.fn() });
 
-    await openPopup(url);
+    await openPopup(url, 'popup');
 
     expect(url.searchParams.get('externalCorrelationId')).toBe(externalCorrelationId);
     expect(url.searchParams.get('sdkName')).toBe(PACKAGE_NAME);
@@ -115,7 +115,7 @@ describe('PopupManager', () => {
     const mockPopup = { focus: vi.fn() };
     (window.open as Mock).mockReturnValueOnce(null).mockReturnValueOnce(mockPopup);
 
-    const promise = openPopup(url);
+    const promise = openPopup(url, 'popup');
 
     await waitFor(() => {
       expect(mockPresentItem).toHaveBeenCalledWith(
@@ -145,7 +145,7 @@ describe('PopupManager', () => {
     const url = new URL('https://example.com');
     (window.open as Mock).mockReturnValue(null);
 
-    const promise = openPopup(url);
+    const promise = openPopup(url, 'popup');
 
     await waitFor(() => {
       expect(mockPresentItem).toHaveBeenCalledWith(
@@ -169,11 +169,111 @@ describe('PopupManager', () => {
     expect(mockClear).toHaveBeenCalled();
   });
 
-  it('should close an open popup window', () => {
-    const mockPopup = { close: vi.fn(), closed: false } as any as Window;
+  describe('embedded mode', () => {
+    beforeEach(() => {
+      // Mock document.createElement and document.body.appendChild
+      const mockDocument = {
+        createElement: vi.fn(),
+        body: {
+          appendChild: vi.fn(),
+        },
+        getElementById: vi.fn(),
+      };
+      global.document = mockDocument as any;
+    });
 
-    closePopup(mockPopup);
+    it('should create an embedded iframe with correct properties', async () => {
+      const url = new URL('https://example.com');
+      const mockIframe = {
+        id: '',
+        allowFullscreen: false,
+        allow: '',
+        style: { cssText: '' },
+        src: '',
+        contentWindow: { focus: vi.fn() },
+      };
 
-    expect(mockPopup.close).toHaveBeenCalledTimes(1);
+      (document.createElement as Mock).mockReturnValue(mockIframe);
+
+      const window = await openPopup(url, 'embedded');
+
+      expect(document.createElement).toHaveBeenCalledWith('iframe');
+      expect(mockIframe.id).toBe('keys-frame');
+      expect(mockIframe.allowFullscreen).toBe(true);
+      expect(mockIframe.allow).toBe(
+        'publickey-credentials-get; publickey-credentials-create; clipboard-write'
+      );
+      expect(mockIframe.style.cssText).toContain('border:none');
+      expect(mockIframe.style.cssText).toContain('position:absolute');
+      expect(mockIframe.src).toBe(url.toString());
+      expect(document.body.appendChild).toHaveBeenCalledWith(mockIframe);
+      expect(window).toBe(mockIframe.contentWindow);
+    });
+
+    it('should throw error when iframe contentWindow is null', () => {
+      const url = new URL('https://example.com');
+      const mockIframe = {
+        id: '',
+        allowFullscreen: false,
+        allow: '',
+        style: { cssText: '' },
+        src: '',
+        contentWindow: null,
+      };
+
+      (document.createElement as Mock).mockReturnValue(mockIframe);
+
+      expect(() => openPopup(url, 'embedded')).toThrow('iframe failed to initialize');
+    });
+  });
+
+  describe('closePopup', () => {
+    it('should close an open popup window', () => {
+      const mockPopup = { close: vi.fn(), closed: false } as any as Window;
+
+      closePopup(mockPopup);
+
+      expect(mockPopup.close).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not try to close an already closed popup window', () => {
+      const mockPopup = { close: vi.fn(), closed: true } as any as Window;
+
+      closePopup(mockPopup);
+
+      expect(mockPopup.close).not.toHaveBeenCalled();
+    });
+
+    it('should remove iframe when closing an embedded window', () => {
+      const mockIframe = {
+        contentWindow: { focus: vi.fn() },
+        remove: vi.fn(),
+      };
+      const mockPopup = mockIframe.contentWindow as any as Window;
+
+      (document.getElementById as Mock).mockReturnValue(mockIframe);
+
+      closePopup(mockPopup);
+
+      expect(document.getElementById).toHaveBeenCalledWith('keys-frame');
+      expect(mockIframe.remove).toHaveBeenCalledTimes(1);
+    });
+
+    it('should do nothing when popup is null', () => {
+      closePopup(null);
+
+      expect(document.getElementById).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to popup close when iframe not found', () => {
+      const mockPopup = { close: vi.fn(), closed: false } as any as Window;
+
+      (document.getElementById as Mock).mockReturnValue(null);
+
+      closePopup(mockPopup);
+
+      expect(document.getElementById).toHaveBeenCalledWith('keys-frame');
+      expect(mockPopup.close).toHaveBeenCalledTimes(1);
+    });
   });
 });
