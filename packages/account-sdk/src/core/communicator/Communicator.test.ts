@@ -50,7 +50,7 @@ const appMetadata: AppMetadata = {
   appChainIds: [1],
 };
 
-const preference: Preference = { walletUrl: CB_KEYS_URL };
+const preference: Preference = { walletUrl: CB_KEYS_URL, mode: 'popup' };
 
 describe('Communicator', () => {
   let urlOrigin: string;
@@ -162,7 +162,7 @@ describe('Communicator', () => {
 
       const popup = await communicator.waitForPopupLoaded();
 
-      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL));
+      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL), 'popup');
       expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
         1,
         {
@@ -208,6 +208,34 @@ describe('Communicator', () => {
       await communicator.waitForPopupLoaded();
 
       expect(openPopup).toHaveBeenCalledTimes(2);
+    });
+
+    it('should open popup in embedded mode when preference.mode is embedded', async () => {
+      const embeddedPreference: Preference = { walletUrl: CB_KEYS_URL, mode: 'embedded' };
+      const embeddedCommunicator = new Communicator({
+        url: CB_KEYS_URL,
+        metadata: appMetadata,
+        preference: embeddedPreference,
+      });
+
+      queueMessageEvent(popupLoadedMessage);
+      await embeddedCommunicator.waitForPopupLoaded();
+
+      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL), 'embedded');
+    });
+
+    it('should default to popup mode when preference.mode is undefined', async () => {
+      const defaultPreference: Preference = { walletUrl: CB_KEYS_URL };
+      const defaultCommunicator = new Communicator({
+        url: CB_KEYS_URL,
+        metadata: appMetadata,
+        preference: defaultPreference,
+      });
+
+      queueMessageEvent(popupLoadedMessage);
+      await defaultCommunicator.waitForPopupLoaded();
+
+      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL), 'popup');
     });
   });
 });
