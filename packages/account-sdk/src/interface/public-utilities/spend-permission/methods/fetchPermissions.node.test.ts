@@ -1,18 +1,19 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
+import { ProviderInterface } from ':core/provider/interface.js';
 import {
   FetchPermissionsResponse,
   SpendPermission,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fetchPermissions } from './fetchPermissions.node.js';
+import { fetchPermissions } from './fetchPermissions.js';
 
 // Mock the provider utility
 vi.mock(':util/provider.js');
 
 const mockFetchRPCRequest = vi.mocked(fetchRPCRequest);
 
-describe('fetchPermissions (node)', () => {
+describe('fetchPermissions (without provider)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -195,6 +196,121 @@ describe('fetchPermissions (node)', () => {
 
       await expect(
         fetchPermissions({
+          account: '0x1234567890abcdef1234567890abcdef12345678',
+          chainId: 8453,
+          spender: '0x5678901234567890abcdef1234567890abcdef12',
+        })
+      ).rejects.toThrow(errorMessage);
+    });
+  });
+});
+
+describe('fetchPermissions (with provider)', () => {
+  const mockProvider: ProviderInterface = {
+    request: vi.fn(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('successful requests', () => {
+    it('should fetch permissions successfully using provider', async () => {
+      const mockPermissions: SpendPermission[] = [
+        {
+          createdAt: 1234567890,
+          permissionHash: '0xabcdef123456',
+          signature: '0x987654321fedcba',
+          chainId: 8453,
+          permission: {
+            account: '0x1234567890abcdef1234567890abcdef12345678',
+            spender: '0x5678901234567890abcdef1234567890abcdef12',
+            token: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+            allowance: '1000000000000000000',
+            period: 86400,
+            start: 1234567890,
+            end: 1234654290,
+            salt: '123456789',
+            extraData: '0x',
+          },
+        },
+      ];
+
+      const mockResponse: FetchPermissionsResponse = {
+        permissions: mockPermissions,
+      };
+
+      vi.mocked(mockProvider.request).mockResolvedValue(mockResponse);
+
+      const result = await fetchPermissions({
+        provider: mockProvider,
+        account: '0x1234567890abcdef1234567890abcdef12345678',
+        chainId: 8453,
+        spender: '0x5678901234567890abcdef1234567890abcdef12',
+      });
+
+      expect(result).toEqual(mockPermissions);
+      expect(mockProvider.request).toHaveBeenCalledWith({
+        method: 'coinbase_fetchPermissions',
+        params: [
+          {
+            account: '0x1234567890abcdef1234567890abcdef12345678',
+            chainId: '0x2105',
+            spender: '0x5678901234567890abcdef1234567890abcdef12',
+          },
+        ],
+      });
+      // Ensure fetchRPCRequest was NOT called when provider is provided
+      expect(mockFetchRPCRequest).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('parameter handling', () => {
+    it('should convert chainId to hex format correctly with provider', async () => {
+      const mockResponse: FetchPermissionsResponse = {
+        permissions: [],
+      };
+
+      vi.mocked(mockProvider.request).mockResolvedValue(mockResponse);
+
+      const testCases = [
+        { input: 1, expected: '0x1' },
+        { input: 8453, expected: '0x2105' },
+        { input: 137, expected: '0x89' },
+      ];
+
+      for (const testCase of testCases) {
+        vi.mocked(mockProvider.request).mockClear();
+
+        await fetchPermissions({
+          provider: mockProvider,
+          account: '0x1234567890abcdef1234567890abcdef12345678',
+          chainId: testCase.input,
+          spender: '0x5678901234567890abcdef1234567890abcdef12',
+        });
+
+        expect(mockProvider.request).toHaveBeenCalledWith({
+          method: 'coinbase_fetchPermissions',
+          params: [
+            {
+              account: '0x1234567890abcdef1234567890abcdef12345678',
+              chainId: testCase.expected,
+              spender: '0x5678901234567890abcdef1234567890abcdef12',
+            },
+          ],
+        });
+      }
+    });
+  });
+
+  describe('error handling', () => {
+    it('should propagate provider errors', async () => {
+      const errorMessage = 'Provider error';
+      vi.mocked(mockProvider.request).mockRejectedValue(new Error(errorMessage));
+
+      await expect(
+        fetchPermissions({
+          provider: mockProvider,
           account: '0x1234567890abcdef1234567890abcdef12345678',
           chainId: 8453,
           spender: '0x5678901234567890abcdef1234567890abcdef12',
