@@ -206,9 +206,9 @@ describe('fetchPermissions (without provider)', () => {
 });
 
 describe('fetchPermissions (with provider)', () => {
-  const mockProvider: ProviderInterface = {
+  const mockProvider = {
     request: vi.fn(),
-  };
+  } as unknown as ProviderInterface;
 
   beforeEach(() => {
     vi.clearAllMocks();
