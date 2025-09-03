@@ -83,6 +83,8 @@ export type Preference = {
    * @default true
    */
   telemetry?: boolean;
+
+  mode?: 'embedded' | 'popup';
 } & Record<string, unknown>;
 
 export type SubAccountOptions = {
