@@ -2425,4 +2425,158 @@ describe('Signer', () => {
       expect(handleInsufficientBalanceError).toHaveBeenCalled();
     });
   });
+
+  describe('chainId extraction for wallet_sendCalls', () => {
+    beforeEach(async () => {
+      await signer.cleanup();
+
+      // Mock getClient to track which chainId is requested
+      (getClient as Mock).mockImplementation((chainId) => {
+        if (chainId === 84532 || chainId === 1) {
+          return {
+            request: vi.fn(),
+            chain: { id: chainId },
+            waitForTransaction: vi.fn().mockResolvedValue({ status: 'success' }),
+          };
+        }
+        return null;
+      });
+
+      // Set up accounts and sub account
+      signer['chain'] = { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' };
+      signer['accounts'] = [globalAccountAddress];
+
+      // Mock wallet_connect setup
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      await signer.request({ method: 'wallet_connect', params: [] });
+
+      // Mock sub account utilities
+      vi.mocked(findOwnerIndex).mockResolvedValue(0);
+      vi.mocked(createSubAccountSigner).mockResolvedValue({
+        request: vi.fn().mockResolvedValue('0xResult'),
+      });
+
+      // Mock spend permissions to avoid routing through global account
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue([createMockSpendPermission()]);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should extract and convert chainId from wallet_sendCalls request params', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x0',
+              },
+            ],
+            from: subAccountAddress,
+            chainId: '0x14a34', // 84532 in hex
+            version: '1.0',
+          },
+        ],
+      };
+
+      await signer.request(mockRequest);
+
+      // Verify getClient was called with the converted chainId (84532, not '0x14a34')
+      expect(getClient).toHaveBeenCalledWith(84532);
+    });
+
+    it('should use default chainId when wallet_sendCalls has no chainId param', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x0',
+              },
+            ],
+            from: subAccountAddress,
+            version: '1.0',
+            // No chainId specified
+          },
+        ],
+      };
+
+      await signer.request(mockRequest);
+
+      // Should use the signer's default chain.id (1)
+      expect(getClient).toHaveBeenCalledWith(1);
+    });
+
+    it('should use default chainId for non-wallet_sendCalls methods', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+            from: subAccountAddress,
+            data: '0x',
+            value: '0x0',
+            chainId: '0x14a34', // Should be ignored for non-wallet_sendCalls
+          },
+        ],
+      };
+
+      await signer.request(mockRequest);
+
+      // Should use the signer's default chain.id (1), not the chainId from params
+      expect(getClient).toHaveBeenCalledWith(1);
+    });
+
+    it('should handle missing or malformed chainId gracefully', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                data: '0x',
+                value: '0x0',
+              },
+            ],
+            from: subAccountAddress,
+            chainId: null, // Malformed chainId
+            version: '1.0',
+          },
+        ],
+      };
+
+      await signer.request(mockRequest);
+
+      // Should fall back to default chain.id (1) when chainId is malformed
+      expect(getClient).toHaveBeenCalledWith(1);
+    });
+  });
 });
