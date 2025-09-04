@@ -1,4 +1,5 @@
 import type { Hex } from 'viem';
+import { createClients, FALLBACK_CHAINS } from '../../../store/chain-clients/utils.js';
 import { createBaseAccountSDK } from '../../builder/core/createBaseAccountSDK.js';
 import { CHAIN_IDS } from '../constants.js';
 import type { PayerInfoResponses } from '../types.js';
@@ -54,6 +55,14 @@ export function createEphemeralSDK(chainId: number, walletUrl?: string, telemetr
       walletUrl,
     },
   });
+
+  // Initialize chain clients for the specified chain using FALLBACK_CHAINS
+  // This ensures that the chain client is available for operations like getHash
+  // even when the wallet hasn't been connected yet
+  const fallbackChain = FALLBACK_CHAINS.find((chain) => chain.id === chainId);
+  if (fallbackChain) {
+    createClients([fallbackChain]);
+  }
 
   return sdk;
 }
