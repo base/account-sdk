@@ -699,14 +699,6 @@ export class Signer {
       request = addSenderToRequest(request, subAccount.address);
     }
 
-    const client = getClient(this.chain.id);
-    assertPresence(
-      client,
-      standardErrors.rpc.internal(
-        `client not found for chainId ${this.chain.id} when sending request to sub account signer`
-      )
-    );
-
     const globalAccountAddress = this.accounts.find(
       (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
     );
@@ -722,6 +714,20 @@ export class Signer {
       dappOrigin: window.location.origin,
     });
 
+    // Determine effective chainId - use request chainId for wallet_sendCalls, default otherwise
+    const chainId =
+      request.method === 'wallet_sendCalls' && (request.params as any[])?.[0]?.chainId
+        ? hexToNumber((request.params as any[])[0].chainId)
+        : this.chain.id;
+
+    const client = getClient(chainId);
+    assertPresence(
+      client,
+      standardErrors.rpc.internal(
+        `client not found for chainId ${chainId} when sending request to sub account signer`
+      )
+    );
+
     if (['eth_sendTransaction', 'wallet_sendCalls'].includes(request.method)) {
       // If we have never had a spend permission, we need to do this tx through the global account
       // Only perform this check if unstable_enableAutoSpendPermissions is enabled
@@ -735,7 +741,7 @@ export class Signer {
             subAccountAddress: subAccount.address,
             client,
             globalAccountRequest: this.sendRequestToPopup.bind(this),
-            chainId: this.chain.id,
+            chainId,
           });
           return result;
         }
@@ -762,7 +768,7 @@ export class Signer {
         ownerIndex = await handleAddSubAccountOwner({
           ownerAccount: ownerAccount.account,
           globalAccountRequest: this.sendRequestToPopup.bind(this),
-          chainId: this.chain.id,
+          chainId: chainId,
         });
         logAddOwnerCompleted({ method: request.method, correlationId });
       } catch (error) {
