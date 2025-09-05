@@ -73,7 +73,7 @@ describe('calculateCurrentPeriod', () => {
   });
 
   it('should use current time when no timestamp is provided', () => {
-    const now = Math.floor(Date.now() / 1000);
+    const _now = Math.floor(Date.now() / 1000);
     const period = calculateCurrentPeriod(basePermission);
 
     // We can't test exact values since time moves, but we can verify it returns a valid structure

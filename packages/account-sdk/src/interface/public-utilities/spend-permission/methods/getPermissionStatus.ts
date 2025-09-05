@@ -107,7 +107,7 @@ const getPermissionStatusFn = async (
     currentPeriod = results[0];
     isRevoked = results[1];
     isValid = results[2];
-  } catch (error) {
+  } catch (_error) {
     // If we can't read on-chain state (e.g., permission never used),
     // infer the current period from the permission parameters
     currentPeriod = calculateCurrentPeriod(permission);
