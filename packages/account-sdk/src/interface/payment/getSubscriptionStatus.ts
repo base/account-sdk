@@ -1,8 +1,8 @@
 import { formatUnits } from 'viem';
 import { createClients, FALLBACK_CHAINS, getClient } from '../../store/chain-clients/utils.js';
 import {
-  fetchPermission,
-  getPermissionStatus,
+    fetchPermission,
+    getPermissionStatus,
 } from '../public-utilities/spend-permission/index.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';

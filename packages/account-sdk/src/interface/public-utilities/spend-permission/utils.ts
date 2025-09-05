@@ -156,17 +156,30 @@ export function calculateCurrentPeriod(
 
   // If we're before the permission starts, return the first period
   if (now < permissionStart) {
+    const firstPeriodEnd = permissionStart + periodDuration;
     return {
       start: permissionStart,
-      end: Math.min(permissionStart + periodDuration - 1, permissionEnd),
+      end: firstPeriodEnd > permissionEnd ? permissionEnd : firstPeriodEnd - 1,
       spend: BigInt(0),
     };
   }
 
   // If we're after the permission ends, return the last period
   if (now > permissionEnd) {
-    const periodsElapsed = Math.floor((permissionEnd - permissionStart) / periodDuration);
-    const lastPeriodStart = permissionStart + periodsElapsed * periodDuration;
+    // Calculate the start of the last period that would contain permissionEnd
+    const totalDuration = permissionEnd - permissionStart;
+    const completePeriods = Math.floor(totalDuration / periodDuration);
+    const lastPeriodStart = permissionStart + completePeriods * periodDuration;
+    
+    // If the last period would start after permissionEnd, go back one period
+    if (lastPeriodStart >= permissionEnd && completePeriods > 0) {
+      return {
+        start: permissionStart + (completePeriods - 1) * periodDuration,
+        end: permissionEnd,
+        spend: BigInt(0),
+      };
+    }
+    
     return {
       start: lastPeriodStart,
       end: permissionEnd,
@@ -178,7 +191,9 @@ export function calculateCurrentPeriod(
   const timeElapsed = now - permissionStart;
   const currentPeriodIndex = Math.floor(timeElapsed / periodDuration);
   const currentPeriodStart = permissionStart + currentPeriodIndex * periodDuration;
-  const currentPeriodEnd = Math.min(currentPeriodStart + periodDuration - 1, permissionEnd);
+  // For the last period, end should be exactly the permission end, not periodDuration - 1
+  const nextPeriodStart = currentPeriodStart + periodDuration;
+  const currentPeriodEnd = nextPeriodStart > permissionEnd ? permissionEnd : nextPeriodStart - 1;
 
   return {
     start: currentPeriodStart,
