@@ -68,4 +68,52 @@ export const GET_PAYMENT_STATUS_QUICK_TIPS = [
   'Make sure to use the same testnet setting as the original payment',
 ];
 
+export const DEFAULT_SUBSCRIBE_CODE = `import { base } from '@base-org/account'
+
+try {
+  const result = await base.subscribe({
+    amount: '1.00', // $1.00 per month
+    subscriptionOwner: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+    periodInDays: 30, // Monthly subscription
+    testnet: true
+  })
+  
+  return result;
+} catch (error) {
+  console.error('Subscription failed:', error.message);
+  throw error;
+}`;
+
+export const DEFAULT_GET_SUBSCRIPTION_STATUS_CODE = `import { base } from '@base-org/account'
+
+try {
+  const result = await base.subscription.getStatus({
+    id: '0x...',
+    testnet: true
+  })
+  
+  return result;
+} catch (error) {
+  console.error('Failed to check subscription status:', error.message);
+  throw error;
+}`;
+
+export const SUBSCRIBE_QUICK_TIPS = [
+  'Get testnet ETH at <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">https://faucet.circle.com/</a> - select "Base Sepolia" as the network',
+  'testnet (`true`) toggles base sepolia testnet',
+  'Amount is in USDC (e.g., "1" = $1 of USDC)',
+  'periodInDays sets the subscription period (e.g., 30 for monthly, 7 for weekly, 14 for bi-weekly)',
+  'Only USDC on base and base sepolia are supported',
+  'Subscriptions create spend permissions that allow recurring charges',
+];
+
+export const GET_SUBSCRIPTION_STATUS_QUICK_TIPS = [
+  'Use an `id` returned from the subscribe function',
+  'isSubscribed indicates if the subscription is currently active',
+  'recurringAmount shows the amount charged per period',
+  'nextPeriodStart shows when the next payment will be charged',
+  'lastPaymentDate and lastPaymentAmount show the most recent charge',
+  'Make sure to use the same testnet setting as the original subscription',
+];
+
 export const QUICK_TIPS = PAY_QUICK_TIPS;

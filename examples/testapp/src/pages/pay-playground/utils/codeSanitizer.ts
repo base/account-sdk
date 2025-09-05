@@ -3,11 +3,12 @@ import * as acorn from 'acorn';
 // Define the whitelist of allowed operations
 export const WHITELIST = {
   // Allowed SDK functions
-  allowedFunctions: ['pay', 'getPaymentStatus'],
+  allowedFunctions: ['pay', 'getPaymentStatus', 'subscribe', 'getSubscriptionStatus'],
 
   // Allowed object properties and methods
   allowedObjects: {
-    base: ['pay', 'getPaymentStatus'],
+    base: ['pay', 'getPaymentStatus', 'subscribe', 'subscription'],
+    subscription: ['subscribe', 'getStatus'],
     console: ['log', 'error', 'warn', 'info'],
     Promise: ['resolve', 'reject', 'all', 'race'],
     Object: ['keys', 'values', 'entries', 'assign'],
@@ -297,42 +298,104 @@ export class CodeSanitizer {
    * Validate member expressions (object.property)
    */
   private validateMemberExpression(node: ASTNode): void {
-    // Get the object name
-    let objectName = '';
-    if (node.object.type === 'Identifier') {
-      objectName = node.object.name;
-    } else if (
-      node.object.type === 'MemberExpression' &&
-      node.object.object.type === 'Identifier'
-    ) {
-      objectName = node.object.object.name;
-    }
+    // Handle nested member expressions like base.subscription.getStatus
+    if (node.object.type === 'MemberExpression') {
+      // For nested expressions, validate each level
+      // Example: base.subscription.getStatus
+      // First validate base.subscription, then subscription.getStatus
+      
+      // Get the full chain of properties
+      const chain = this.getMemberExpressionChain(node);
+      
+      // Validate each level of the chain
+      for (let i = 0; i < chain.length - 1; i++) {
+        const objectName = chain[i];
+        const propertyName = chain[i + 1];
+        
+        // Special handling for base.subscription.getStatus
+        if (i === 0 && objectName === 'base' && propertyName === 'subscription') {
+          // This is allowed, continue to next level
+          continue;
+        }
+        
+        if (objectName in WHITELIST.allowedObjects) {
+          const allowedProps = WHITELIST.allowedObjects[objectName];
+          if (!allowedProps.includes(propertyName)) {
+            this.errors.push({
+              message: `Property '${objectName}.${propertyName}' is not allowed`,
+              line: node.loc?.start.line ? node.loc.start.line - 1 : undefined,
+              column: node.loc?.start.column,
+            });
+            return;
+          }
+        } else if (WHITELIST.disallowedGlobals.includes(objectName)) {
+          this.errors.push({
+            message: `Object '${objectName}' is not allowed`,
+            line: node.loc?.start.line ? node.loc.start.line - 1 : undefined,
+            column: node.loc?.start.column,
+          });
+          return;
+        }
+      }
+      
+      // Also validate the nested object itself
+      this.validateNode(node.object);
+    } else {
+      // Simple member expression (e.g., base.pay)
+      let objectName = '';
+      if (node.object.type === 'Identifier') {
+        objectName = node.object.name;
+      }
 
-    // Get the property name
-    let propertyName = '';
-    if (node.property.type === 'Identifier') {
-      propertyName = node.computed ? '' : node.property.name;
-    } else if (node.property.type === 'Literal') {
-      propertyName = String(node.property.value);
-    }
+      // Get the property name
+      let propertyName = '';
+      if (node.property.type === 'Identifier') {
+        propertyName = node.computed ? '' : node.property.name;
+      } else if (node.property.type === 'Literal') {
+        propertyName = String(node.property.value);
+      }
 
-    // Validate against whitelist
-    if (objectName && objectName in WHITELIST.allowedObjects) {
-      const allowedProps = WHITELIST.allowedObjects[objectName];
-      if (propertyName && !allowedProps.includes(propertyName)) {
+      // Validate against whitelist
+      if (objectName && objectName in WHITELIST.allowedObjects) {
+        const allowedProps = WHITELIST.allowedObjects[objectName];
+        if (propertyName && !allowedProps.includes(propertyName)) {
+          this.errors.push({
+            message: `Property '${objectName}.${propertyName}' is not allowed`,
+            line: node.loc?.start.line ? node.loc.start.line - 1 : undefined,
+            column: node.loc?.start.column,
+          });
+        }
+      } else if (objectName && WHITELIST.disallowedGlobals.includes(objectName)) {
         this.errors.push({
-          message: `Property '${objectName}.${propertyName}' is not allowed`,
+          message: `Object '${objectName}' is not allowed`,
           line: node.loc?.start.line ? node.loc.start.line - 1 : undefined,
           column: node.loc?.start.column,
         });
       }
-    } else if (objectName && WHITELIST.disallowedGlobals.includes(objectName)) {
-      this.errors.push({
-        message: `Object '${objectName}' is not allowed`,
-        line: node.loc?.start.line ? node.loc.start.line - 1 : undefined,
-        column: node.loc?.start.column,
-      });
     }
+  }
+
+  /**
+   * Get the full chain of properties from a nested member expression
+   */
+  private getMemberExpressionChain(node: ASTNode): string[] {
+    const chain: string[] = [];
+    
+    function traverse(n: ASTNode): void {
+      if (n.type === 'MemberExpression') {
+        traverse(n.object);
+        if (n.property.type === 'Identifier' && !n.computed) {
+          chain.push(n.property.name);
+        } else if (n.property.type === 'Literal') {
+          chain.push(String(n.property.value));
+        }
+      } else if (n.type === 'Identifier') {
+        chain.push(n.name);
+      }
+    }
+    
+    traverse(node);
+    return chain;
   }
 
   /**

@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 import { CodeEditor, Header, Output, QuickTips } from './components';
 import {
   DEFAULT_GET_PAYMENT_STATUS_CODE,
+  DEFAULT_GET_SUBSCRIPTION_STATUS_CODE,
   DEFAULT_PAY_CODE,
+  DEFAULT_SUBSCRIBE_CODE,
   GET_PAYMENT_STATUS_QUICK_TIPS,
+  GET_SUBSCRIPTION_STATUS_QUICK_TIPS,
   PAY_CODE_WITH_PAYER_INFO,
   PAY_QUICK_TIPS,
+  SUBSCRIBE_QUICK_TIPS,
 } from './constants';
 import { useCodeExecution } from './hooks';
 import styles from './styles/Home.module.css';
@@ -14,9 +18,13 @@ function PayPlayground() {
   const [includePayerInfo, setIncludePayerInfo] = useState(false);
   const [payCode, setPayCode] = useState(DEFAULT_PAY_CODE);
   const [getPaymentStatusCode, setGetPaymentStatusCode] = useState(DEFAULT_GET_PAYMENT_STATUS_CODE);
+  const [subscribeCode, setSubscribeCode] = useState(DEFAULT_SUBSCRIBE_CODE);
+  const [getSubscriptionStatusCode, setGetSubscriptionStatusCode] = useState(DEFAULT_GET_SUBSCRIPTION_STATUS_CODE);
 
   const payExecution = useCodeExecution();
   const getPaymentStatusExecution = useCodeExecution();
+  const subscribeExecution = useCodeExecution();
+  const getSubscriptionStatusExecution = useCodeExecution();
 
   const handlePayExecute = () => {
     payExecution.executeCode(payCode);
@@ -42,6 +50,24 @@ function PayPlayground() {
   const handleGetPaymentStatusReset = () => {
     setGetPaymentStatusCode(DEFAULT_GET_PAYMENT_STATUS_CODE);
     getPaymentStatusExecution.reset();
+  };
+
+  const handleSubscribeExecute = () => {
+    subscribeExecution.executeCode(subscribeCode);
+  };
+
+  const handleSubscribeReset = () => {
+    setSubscribeCode(DEFAULT_SUBSCRIBE_CODE);
+    subscribeExecution.reset();
+  };
+
+  const handleGetSubscriptionStatusExecute = () => {
+    getSubscriptionStatusExecution.executeCode(getSubscriptionStatusCode);
+  };
+
+  const handleGetSubscriptionStatusReset = () => {
+    setGetSubscriptionStatusCode(DEFAULT_GET_SUBSCRIPTION_STATUS_CODE);
+    getSubscriptionStatusExecution.reset();
   };
 
   // Watch for successful payment results and update getPaymentStatus code with the transaction ID
@@ -70,6 +96,32 @@ try {
       setGetPaymentStatusCode(updatedCode);
     }
   }, [payExecution.result]);
+
+  // Watch for successful subscription results and update getSubscriptionStatus code with the subscription ID
+  useEffect(() => {
+    if (
+      subscribeExecution.result &&
+      'success' in subscribeExecution.result &&
+      subscribeExecution.result.success &&
+      subscribeExecution.result.id
+    ) {
+      const subscriptionId = subscribeExecution.result.id;
+      const updatedCode = `import { base } from '@base-org/account'
+
+try {
+  const result = await base.subscription.getStatus({
+    id: '${subscriptionId}',
+    testnet: true
+  })
+  
+  return result;
+} catch (error) {
+  console.error('Failed to check subscription status:', error.message);
+  throw error;
+}`;
+      setGetSubscriptionStatusCode(updatedCode);
+    }
+  }, [subscribeExecution.result]);
 
   return (
     <div className={styles.container}>
@@ -133,6 +185,68 @@ try {
                 error={getPaymentStatusExecution.error}
                 consoleOutput={getPaymentStatusExecution.consoleOutput}
                 isLoading={getPaymentStatusExecution.isLoading}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* subscribe Section */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>base.subscription.subscribe()</h2>
+          <p className={styles.sectionDescription}>Create recurring USDC subscriptions on Base</p>
+
+          <div className={styles.playground}>
+            <div className={styles.leftColumn}>
+              <CodeEditor
+                code={subscribeCode}
+                onChange={setSubscribeCode}
+                onExecute={handleSubscribeExecute}
+                onReset={handleSubscribeReset}
+                isLoading={subscribeExecution.isLoading}
+                includePayerInfo={false}
+                onPayerInfoToggle={() => {}}
+                showPayerInfoToggle={false}
+              />
+              <QuickTips tips={SUBSCRIBE_QUICK_TIPS} />
+            </div>
+
+            <div className={styles.rightColumn}>
+              <Output
+                result={subscribeExecution.result}
+                error={subscribeExecution.error}
+                consoleOutput={subscribeExecution.consoleOutput}
+                isLoading={subscribeExecution.isLoading}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* getSubscriptionStatus Section */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>base.subscription.getStatus()</h2>
+          <p className={styles.sectionDescription}>Check the status of a subscription</p>
+
+          <div className={styles.playground}>
+            <div className={styles.leftColumn}>
+              <CodeEditor
+                code={getSubscriptionStatusCode}
+                onChange={setGetSubscriptionStatusCode}
+                onExecute={handleGetSubscriptionStatusExecute}
+                onReset={handleGetSubscriptionStatusReset}
+                isLoading={getSubscriptionStatusExecution.isLoading}
+                includePayerInfo={false}
+                onPayerInfoToggle={() => {}}
+                showPayerInfoToggle={false}
+              />
+              <QuickTips tips={GET_SUBSCRIPTION_STATUS_QUICK_TIPS} />
+            </div>
+
+            <div className={styles.rightColumn}>
+              <Output
+                result={getSubscriptionStatusExecution.result}
+                error={getSubscriptionStatusExecution.error}
+                consoleOutput={getSubscriptionStatusExecution.consoleOutput}
+                isLoading={getSubscriptionStatusExecution.isLoading}
               />
             </div>
           </div>

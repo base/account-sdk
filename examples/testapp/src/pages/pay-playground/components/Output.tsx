@@ -1,8 +1,8 @@
-import type { PaymentResult, PaymentStatus } from '@base-org/account';
+import type { PaymentResult, PaymentStatus, SubscriptionResult, SubscriptionStatus } from '@base-org/account';
 import styles from './Output.module.css';
 
 interface OutputProps {
-  result: PaymentResult | PaymentStatus | null;
+  result: PaymentResult | PaymentStatus | SubscriptionResult | SubscriptionStatus | null;
   error: string | null;
   consoleOutput: string[];
   isLoading: boolean;
@@ -16,6 +16,16 @@ const isPaymentResult = (result: unknown): result is PaymentResult => {
 // Type guard to check if result is PaymentStatus
 const isPaymentStatus = (result: unknown): result is PaymentStatus => {
   return result !== null && typeof result === 'object' && 'status' in result && 'id' in result;
+};
+
+// Type guard to check if result is SubscriptionResult
+const isSubscriptionResult = (result: unknown): result is SubscriptionResult => {
+  return result !== null && typeof result === 'object' && 'subscriptionOwner' in result && 'recurringCharge' in result;
+};
+
+// Type guard to check if result is SubscriptionStatus
+const isSubscriptionStatus = (result: unknown): result is SubscriptionStatus => {
+  return result !== null && typeof result === 'object' && 'isSubscribed' in result && 'recurringAmount' in result;
 };
 
 export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps) => {
@@ -302,6 +312,125 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                   <span className={styles.resultLabel}>Error</span>
                   <span className={styles.errorMessage}>
                     {(result as { error?: string }).error}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {result && isSubscriptionResult(result) && (
+          <div className={`${styles.resultCard} ${styles.success}`}>
+            <div className={styles.resultHeader}>
+              <svg
+                className={styles.resultIcon}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <span className={styles.resultTitle}>Subscription Created!</span>
+            </div>
+
+            <div className={styles.resultBody}>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Recurring Amount</span>
+                <span className={styles.resultValue}>{result.recurringCharge} USDC</span>
+              </div>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Period</span>
+                <span className={styles.resultValue}>{result.periodInDays} days</span>
+              </div>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Subscription Owner</span>
+                <code className={styles.resultValue}>{result.subscriptionOwner}</code>
+              </div>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Subscription Payer</span>
+                <code className={styles.resultValue}>{result.subscriptionPayer}</code>
+              </div>
+              {result.id && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Subscription ID</span>
+                  <code className={styles.resultValue}>{result.id}</code>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {result && isSubscriptionStatus(result) && (
+          <div className={`${styles.resultCard} ${result.isSubscribed ? styles.success : styles.notFound}`}>
+            <div className={styles.resultHeader}>
+              {result.isSubscribed ? (
+                <>
+                  <svg
+                    className={styles.resultIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <span className={styles.resultTitle}>Active Subscription</span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    className={styles.resultIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span className={styles.resultTitle}>Subscription Not Active</span>
+                </>
+              )}
+            </div>
+
+            <div className={styles.resultBody}>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Status</span>
+                <span className={styles.resultValue}>{result.isSubscribed ? 'Active' : 'Inactive'}</span>
+              </div>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Recurring Amount</span>
+                <span className={styles.resultValue}>{result.recurringAmount} USDC</span>
+              </div>
+              {result.spentInCurrentPeriod !== undefined && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Spent This Period</span>
+                  <span className={styles.resultValue}>{result.spentInCurrentPeriod} USDC</span>
+                </div>
+              )}
+              {result.remainingSpendInPeriod !== undefined && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Remaining This Period</span>
+                  <span className={styles.resultValue}>{result.remainingSpendInPeriod} USDC</span>
+                </div>
+              )}
+              {result.currentPeriodStart && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Current Period Start</span>
+                  <span className={styles.resultValue}>
+                    {new Date(result.currentPeriodStart.getTime()).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {result.nextPeriodStart && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Next Period Start</span>
+                  <span className={styles.resultValue}>
+                    {new Date(result.nextPeriodStart.getTime()).toLocaleString()}
                   </span>
                 </div>
               )}
