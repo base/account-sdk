@@ -5,7 +5,11 @@ import {
 } from ':sign/base-account/utils/constants.js';
 import { createClients, FALLBACK_CHAINS, getClient } from ':store/chain-clients/utils.js';
 import { readContract } from 'viem/actions';
-import { calculateCurrentPeriod, timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
+import {
+  calculateCurrentPeriod,
+  timestampInSecondsToDate,
+  toSpendPermissionArgs,
+} from '../utils.js';
 import { withTelemetry } from '../withTelemetry.js';
 
 export type GetPermissionStatusResponseType = {
@@ -61,12 +65,12 @@ const getPermissionStatusFn = async (
   let client = getClient(chainId);
   if (!client) {
     // Try to initialize with fallback chain if available
-    const fallbackChain = FALLBACK_CHAINS.find(chain => chain.id === chainId);
+    const fallbackChain = FALLBACK_CHAINS.find((chain) => chain.id === chainId);
     if (fallbackChain) {
       createClients([fallbackChain]);
       client = getClient(chainId);
     }
-    
+
     // If still no client, throw error
     if (!client) {
       throw new Error(
@@ -103,7 +107,7 @@ const getPermissionStatusFn = async (
         args: [spendPermissionArgs],
       }) as Promise<boolean>,
     ]);
-    
+
     currentPeriod = results[0];
     isRevoked = results[1];
     isValid = results[2];
@@ -111,13 +115,14 @@ const getPermissionStatusFn = async (
     // If we can't read on-chain state (e.g., permission never used),
     // infer the current period from the permission parameters
     currentPeriod = calculateCurrentPeriod(permission);
-    
+
     // When there's no on-chain state, assume the permission is:
     // - Not revoked (since it hasn't been used yet)
     // - Valid if we're within its time bounds
     isRevoked = false;
     const now = Math.floor(Date.now() / 1000);
-    isValid = now >= Number(permission.permission.start) && now <= Number(permission.permission.end);
+    isValid =
+      now >= Number(permission.permission.start) && now <= Number(permission.permission.end);
   }
 
   // Calculate remaining spend in current period

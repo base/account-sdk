@@ -1,34 +1,36 @@
 import { formatUnits } from 'viem';
 import { createClients, FALLBACK_CHAINS, getClient } from '../../store/chain-clients/utils.js';
-import { fetchPermission, getPermissionStatus } from '../public-utilities/spend-permission/index.js';
+import {
+  fetchPermission,
+  getPermissionStatus,
+} from '../public-utilities/spend-permission/index.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
 
-
 /**
  * Gets the current status and details of a subscription.
- * 
+ *
  * This function fetches the subscription (spend permission) details using its ID (permission hash)
  * and returns status information about the subscription. If there's no on-chain state for the
  * subscription (e.g., it has never been used), the function will infer that the subscription
  * is unrevoked and the full recurring amount is available to spend.
- * 
+ *
  * @param options - Options for checking subscription status
  * @param options.id - The subscription ID (permission hash) returned from subscribe()
  * @param options.testnet - Whether to check on testnet (Base Sepolia). Defaults to false (mainnet)
  * @returns Promise<SubscriptionStatus> - Subscription status information
  * @throws Error if the subscription cannot be found or if fetching fails
- * 
+ *
  * @example
  * ```typescript
  * import { getSubscriptionStatus } from '@base-org/account/payment';
- * 
+ *
  * // Check status of a subscription using its ID
  * const status = await getSubscriptionStatus({
  *   id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
  *   testnet: false
  * });
- * 
+ *
  * console.log(`Subscribed: ${status.isSubscribed}`);
  * console.log(`Next payment: ${status.nextPeriodStart}`);
  * console.log(`Recurring amount: $${status.recurringAmount}`);
@@ -55,7 +57,7 @@ export async function getSubscriptionStatus(
 
   // Validate this is a USDC permission on Base/Base Sepolia
   const expectedChainId = testnet ? CHAIN_IDS.baseSepolia : CHAIN_IDS.base;
-  const expectedTokenAddress = testnet 
+  const expectedTokenAddress = testnet
     ? TOKENS.USDC.addresses.baseSepolia.toLowerCase()
     : TOKENS.USDC.addresses.base.toLowerCase();
 
@@ -63,17 +65,19 @@ export async function getSubscriptionStatus(
     // Determine if the subscription is on mainnet or testnet
     const isSubscriptionOnMainnet = permission.chainId === CHAIN_IDS.base;
     const isSubscriptionOnTestnet = permission.chainId === CHAIN_IDS.baseSepolia;
-    
+
     let errorMessage: string;
     if (testnet && isSubscriptionOnMainnet) {
-      errorMessage = 'The subscription was requested on testnet but is actually a mainnet subscription';
+      errorMessage =
+        'The subscription was requested on testnet but is actually a mainnet subscription';
     } else if (!testnet && isSubscriptionOnTestnet) {
-      errorMessage = 'The subscription was requested on mainnet but is actually a testnet subscription';
+      errorMessage =
+        'The subscription was requested on mainnet but is actually a testnet subscription';
     } else {
       // Fallback for unexpected chain IDs
       errorMessage = `Subscription is on chain ${permission.chainId}, expected ${expectedChainId} (${testnet ? 'Base Sepolia' : 'Base'})`;
     }
-    
+
     throw new Error(errorMessage);
   }
 
@@ -86,7 +90,7 @@ export async function getSubscriptionStatus(
   // Ensure chain client is initialized for the permission's chain
   // This is needed when getSubscriptionStatus is called standalone without SDK initialization
   if (permission.chainId && !getClient(permission.chainId)) {
-    const fallbackChain = FALLBACK_CHAINS.find(chain => chain.id === permission.chainId);
+    const fallbackChain = FALLBACK_CHAINS.find((chain) => chain.id === permission.chainId);
     if (fallbackChain) {
       createClients([fallbackChain]);
     }
@@ -104,16 +108,16 @@ export async function getSubscriptionStatus(
   const currentTime = Math.floor(Date.now() / 1000);
   const permissionStart = Number(permission.permission.start);
   const permissionEnd = Number(permission.permission.end);
-  
+
   if (currentTime < permissionStart) {
     throw new Error(
       `Subscription has not started yet. It will begin at ${new Date(permissionStart * 1000).toISOString()}`
     );
   }
-  
+
   // Check if the subscription has expired
   const hasNotExpired = currentTime <= permissionEnd;
-  
+
   // A subscription is considered active if we're within the valid time bounds
   // and the permission hasn't been revoked.
   // Since we've already checked that:

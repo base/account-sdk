@@ -3,4 +3,3 @@
  */
 export { getPaymentStatus } from './getPaymentStatus.js';
 export { getSubscriptionStatus } from './getSubscriptionStatus.js';
-

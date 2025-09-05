@@ -52,7 +52,14 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * ```
  */
 export async function subscribe(options: SubscriptionOptions): Promise<SubscriptionResult> {
-  const { amount, subscriptionOwner, periodInDays = 30, testnet = false, walletUrl, telemetry = true } = options;
+  const {
+    amount,
+    subscriptionOwner,
+    periodInDays = 30,
+    testnet = false,
+    walletUrl,
+    telemetry = true,
+  } = options;
 
   // Generate correlation ID for this subscription request
   const correlationId = crypto.randomUUID();
@@ -109,26 +116,32 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       };
 
       // Request signature from wallet
-      
+
       const result = await provider.request({
         method: 'wallet_sign',
         params: [signParams],
       });
 
-
       // Type guard and validation for the result
       if (!result || typeof result !== 'object') {
         console.error('[SUBSCRIBE] Invalid response - expected object but got:', result);
-        throw new Error(`Invalid response from wallet_sign: expected object but got ${typeof result}`);
+        throw new Error(
+          `Invalid response from wallet_sign: expected object but got ${typeof result}`
+        );
       }
 
       // Check for expected properties
       const hasSignature = 'signature' in result;
       const hasSignedData = 'signedData' in result;
-      
+
       if (!hasSignature || !hasSignedData) {
-        console.error('[SUBSCRIBE] Missing expected properties. Response keys:', Object.keys(result));
-        throw new Error(`Invalid response from wallet_sign: missing ${!hasSignature ? 'signature' : ''} ${!hasSignedData ? 'signedData' : ''}`);
+        console.error(
+          '[SUBSCRIBE] Missing expected properties. Response keys:',
+          Object.keys(result)
+        );
+        throw new Error(
+          `Invalid response from wallet_sign: missing ${!hasSignature ? 'signature' : ''} ${!hasSignedData ? 'signedData' : ''}`
+        );
       }
 
       // Cast to expected response type
@@ -136,7 +149,6 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         signature: `0x${string}`;
         signedData: SpendPermissionTypedData;
       };
-      
 
       // Extract the signed permission data
       const { signedData } = signResult;
@@ -172,7 +184,6 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       await provider.disconnect();
     }
   } catch (error) {
-    
     // Extract error message using the utility
     const errorMessage = parseErrorMessageFromAny(error);
 
