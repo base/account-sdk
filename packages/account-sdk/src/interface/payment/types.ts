@@ -164,5 +164,37 @@ export interface SubscriptionResult {
 }
 
 /**
+ * Options for checking subscription status
+ */
+export interface SubscriptionStatusOptions {
+  /** The subscription ID (permission hash) to check status for */
+  id: string;
+  /** Whether to check on testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+}
+
+/**
+ * Subscription status information
+ */
+export interface SubscriptionStatus {
+  /** Whether the user has an active (non-revoked) subscription */
+  isSubscribed: boolean;
+  /** Date of the last payment (if any payments have been made) */
+  lastPaymentDate?: Date;
+  /** Amount of the last payment in USD (e.g., "9.99") */
+  lastPaymentAmount?: string;
+  /** Start date of the next payment period */
+  nextPeriodStart?: Date;
+  /** The recurring charge amount in USD (e.g., "9.99") */
+  recurringAmount: string;
+  /** Transaction hash of the last payment (if available) */
+  lastPaymentTxHash?: Hex;
+  /** Whether the subscription has been used (has at least one payment) */
+  hasBeenUsed?: boolean;
+  /** If the subscription is active but never used */
+  isUnusedSubscription?: boolean;
+}
+
+/**
  * Internal type for payment execution result
  */

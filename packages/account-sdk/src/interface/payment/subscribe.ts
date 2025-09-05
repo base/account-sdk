@@ -1,14 +1,14 @@
 import {
-  logSubscriptionCompleted,
-  logSubscriptionError,
-  logSubscriptionStarted,
+    logSubscriptionCompleted,
+    logSubscriptionError,
+    logSubscriptionStarted,
 } from ':core/telemetry/events/subscription.js';
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { parseUnits } from 'viem';
 import { getHash } from '../public-utilities/spend-permission/index.js';
 import {
-  createSpendPermissionTypedData,
-  type SpendPermissionTypedData,
+    createSpendPermissionTypedData,
+    type SpendPermissionTypedData,
 } from '../public-utilities/spend-permission/utils.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { SubscriptionOptions, SubscriptionResult } from './types.js';
@@ -109,14 +109,33 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       };
 
       // Request signature from wallet
+      console.log('[SUBSCRIBE] Sending wallet_sign request with params:', JSON.stringify(signParams, null, 2));
+      
       const result = await provider.request({
         method: 'wallet_sign',
         params: [signParams],
       });
 
+      // Log the raw response for debugging
+      console.log('[SUBSCRIBE] Raw wallet_sign response:', result);
+      console.log('[SUBSCRIBE] Response type:', typeof result);
+      console.log('[SUBSCRIBE] Response structure:', JSON.stringify(result, null, 2));
+
       // Type guard and validation for the result
       if (!result || typeof result !== 'object') {
-        throw new Error('Invalid response from wallet_sign');
+        console.error('[SUBSCRIBE] Invalid response - expected object but got:', result);
+        throw new Error(`Invalid response from wallet_sign: expected object but got ${typeof result}`);
+      }
+
+      // Check for expected properties
+      const hasSignature = 'signature' in result;
+      const hasSignedData = 'signedData' in result;
+      console.log('[SUBSCRIBE] Response has signature:', hasSignature);
+      console.log('[SUBSCRIBE] Response has signedData:', hasSignedData);
+      
+      if (!hasSignature || !hasSignedData) {
+        console.error('[SUBSCRIBE] Missing expected properties. Response keys:', Object.keys(result));
+        throw new Error(`Invalid response from wallet_sign: missing ${!hasSignature ? 'signature' : ''} ${!hasSignedData ? 'signedData' : ''}`);
       }
 
       // Cast to expected response type
@@ -124,6 +143,8 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         signature: `0x${string}`;
         signedData: SpendPermissionTypedData;
       };
+      
+      console.log('[SUBSCRIBE] Successfully parsed wallet response');
 
       // Extract the signed permission data
       const { signedData } = signResult;
@@ -159,6 +180,11 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       await provider.disconnect();
     }
   } catch (error) {
+    // Log the full error details for debugging
+    console.error('[SUBSCRIBE] Error occurred:', error);
+    console.error('[SUBSCRIBE] Error type:', typeof error);
+    console.error('[SUBSCRIBE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
     // Extract error message using the utility
     const errorMessage = parseErrorMessageFromAny(error);
 
