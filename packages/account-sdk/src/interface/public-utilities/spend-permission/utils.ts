@@ -130,6 +130,61 @@ export function timestampInSecondsToDate(timestamp: number): Date {
 }
 
 /**
+ * Calculates the current period for a spend permission based on the permission parameters.
+ * 
+ * This function computes which period we're currently in based on the permission's start time,
+ * period duration, and the current time. It's useful when there's no on-chain state yet.
+ * 
+ * @param permission - The SpendPermission object to calculate the period for
+ * @param currentTimestamp - Optional timestamp to use as "now" (defaults to current time)
+ * @returns The current period with start, end, and spend (0 for inferred periods)
+ */
+export function calculateCurrentPeriod(permission: SpendPermission, currentTimestamp?: number): {
+  start: number;
+  end: number;
+  spend: bigint;
+} {
+  const now = currentTimestamp ?? Math.floor(Date.now() / 1000);
+  const { start, end, period } = permission.permission;
+  
+  const permissionStart = Number(start);
+  const permissionEnd = Number(end);
+  const periodDuration = Number(period);
+  
+  // If we're before the permission starts, return the first period
+  if (now < permissionStart) {
+    return {
+      start: permissionStart,
+      end: Math.min(permissionStart + periodDuration - 1, permissionEnd),
+      spend: BigInt(0),
+    };
+  }
+  
+  // If we're after the permission ends, return the last period
+  if (now > permissionEnd) {
+    const periodsElapsed = Math.floor((permissionEnd - permissionStart) / periodDuration);
+    const lastPeriodStart = permissionStart + (periodsElapsed * periodDuration);
+    return {
+      start: lastPeriodStart,
+      end: permissionEnd,
+      spend: BigInt(0),
+    };
+  }
+  
+  // Calculate which period we're in
+  const timeElapsed = now - permissionStart;
+  const currentPeriodIndex = Math.floor(timeElapsed / periodDuration);
+  const currentPeriodStart = permissionStart + (currentPeriodIndex * periodDuration);
+  const currentPeriodEnd = Math.min(currentPeriodStart + periodDuration - 1, permissionEnd);
+  
+  return {
+    start: currentPeriodStart,
+    end: currentPeriodEnd,
+    spend: BigInt(0), // When inferring, we assume no spend has occurred
+  };
+}
+
+/**
  * Converts a SpendPermission object to the arguments expected by the SpendPermissionManager contract.
  *
  * This function creates the standard args in the correct order.

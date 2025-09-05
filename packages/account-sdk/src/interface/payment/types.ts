@@ -136,7 +136,7 @@ export interface SubscriptionOptions {
   /** Amount of USDC to spend per period as a string (e.g., "10.50") */
   amount: string;
   /** Ethereum address that will be the spender (your application's address) */
-  to: string;
+  subscriptionOwner: string;
   /** The period in days for the subscription (e.g., 30 for monthly) */
   periodInDays?: number;
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
@@ -154,9 +154,9 @@ export interface SubscriptionResult {
   /** The subscription ID (permission hash) */
   id: string;
   /** The address that owns/controls the subscription (your application) */
-  subscriptionOwnerAddress: Address;
+  subscriptionOwner: Address;
   /** The address that will be charged (the user's wallet) */
-  subscriptionPayerAddress: Address;
+  subscriptionPayer: Address;
   /** The recurring charge amount (USD denoted e.g. "9.99") */
   recurringCharge: string;
   /** The period in days for the subscription */
@@ -179,20 +179,16 @@ export interface SubscriptionStatusOptions {
 export interface SubscriptionStatus {
   /** Whether the user has an active (non-revoked) subscription */
   isSubscribed: boolean;
-  /** Date of the last payment (if any payments have been made) */
-  lastPaymentDate?: Date;
-  /** Amount of the last payment in USD (e.g., "9.99") */
-  lastPaymentAmount?: string;
-  /** Start date of the next payment period */
-  nextPeriodStart?: Date;
   /** The recurring charge amount in USD (e.g., "9.99") */
   recurringAmount: string;
-  /** Transaction hash of the last payment (if available) */
-  lastPaymentTxHash?: Hex;
-  /** Whether the subscription has been used (has at least one payment) */
-  hasBeenUsed?: boolean;
-  /** If the subscription is active but never used */
-  isUnusedSubscription?: boolean;
+  /** Remaining amount that can be spent in the current period in USD */
+  remainingSpendInPeriod?: string;
+  /** Amount already spent in the current period in USD */
+  spentInCurrentPeriod?: string;
+  /** Start of the current period */
+  currentPeriodStart?: Date;
+  /** Start date of the next payment period (only available if subscription is active) */
+  nextPeriodStart?: Date;
 }
 
 /**

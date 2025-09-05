@@ -3,15 +3,17 @@ import {
   spendPermissionManagerAbi,
   spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
-import { getClient } from ':store/chain-clients/utils.js';
+import { createClients, FALLBACK_CHAINS, getClient } from ':store/chain-clients/utils.js';
 import { readContract } from 'viem/actions';
-import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
+import { calculateCurrentPeriod, timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { withTelemetry } from '../withTelemetry.js';
 
 export type GetPermissionStatusResponseType = {
   remainingSpend: bigint;
   nextPeriodStart: Date;
   isActive: boolean;
+  currentPeriodStart: Date;
+  currentPeriodSpend: bigint;
 };
 
 /**
@@ -56,35 +58,67 @@ const getPermissionStatusFn = async (
     throw new Error('chainId is missing in the spend permission');
   }
 
-  const client = getClient(chainId);
+  let client = getClient(chainId);
   if (!client) {
-    throw new Error(
-      `No client available for chain ID ${chainId}. Make sure the SDK is in connected state.`
-    );
+    // Try to initialize with fallback chain if available
+    const fallbackChain = FALLBACK_CHAINS.find(chain => chain.id === chainId);
+    if (fallbackChain) {
+      createClients([fallbackChain]);
+      client = getClient(chainId);
+    }
+    
+    // If still no client, throw error
+    if (!client) {
+      throw new Error(
+        `No client available for chain ID ${chainId}. Make sure the SDK is in connected state.`
+      );
+    }
   }
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
-  const [currentPeriod, isRevoked, isValid] = await Promise.all([
-    readContract(client, {
-      address: spendPermissionManagerAddress,
-      abi: spendPermissionManagerAbi,
-      functionName: 'getCurrentPeriod',
-      args: [spendPermissionArgs],
-    }) as Promise<{ start: number; end: number; spend: bigint }>,
-    readContract(client, {
-      address: spendPermissionManagerAddress,
-      abi: spendPermissionManagerAbi,
-      functionName: 'isRevoked',
-      args: [spendPermissionArgs],
-    }) as Promise<boolean>,
-    readContract(client, {
-      address: spendPermissionManagerAddress,
-      abi: spendPermissionManagerAbi,
-      functionName: 'isValid',
-      args: [spendPermissionArgs],
-    }) as Promise<boolean>,
-  ]);
+  // Try to get on-chain state
+  let currentPeriod: { start: number; end: number; spend: bigint };
+  let isRevoked: boolean;
+  let isValid: boolean;
+
+  try {
+    const results = await Promise.all([
+      readContract(client, {
+        address: spendPermissionManagerAddress,
+        abi: spendPermissionManagerAbi,
+        functionName: 'getCurrentPeriod',
+        args: [spendPermissionArgs],
+      }) as Promise<{ start: number; end: number; spend: bigint }>,
+      readContract(client, {
+        address: spendPermissionManagerAddress,
+        abi: spendPermissionManagerAbi,
+        functionName: 'isRevoked',
+        args: [spendPermissionArgs],
+      }) as Promise<boolean>,
+      readContract(client, {
+        address: spendPermissionManagerAddress,
+        abi: spendPermissionManagerAbi,
+        functionName: 'isValid',
+        args: [spendPermissionArgs],
+      }) as Promise<boolean>,
+    ]);
+    
+    currentPeriod = results[0];
+    isRevoked = results[1];
+    isValid = results[2];
+  } catch (error) {
+    // If we can't read on-chain state (e.g., permission never used),
+    // infer the current period from the permission parameters
+    currentPeriod = calculateCurrentPeriod(permission);
+    
+    // When there's no on-chain state, assume the permission is:
+    // - Not revoked (since it hasn't been used yet)
+    // - Valid if we're within its time bounds
+    isRevoked = false;
+    const now = Math.floor(Date.now() / 1000);
+    isValid = now >= Number(permission.permission.start) && now <= Number(permission.permission.end);
+  }
 
   // Calculate remaining spend in current period
   const allowance = BigInt(permission.permission.allowance);
@@ -102,6 +136,8 @@ const getPermissionStatusFn = async (
     remainingSpend,
     nextPeriodStart: timestampInSecondsToDate(Number(nextPeriodStart)),
     isActive,
+    currentPeriodStart: timestampInSecondsToDate(currentPeriod.start),
+    currentPeriodSpend: spent,
   };
 };
 

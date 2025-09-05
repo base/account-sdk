@@ -1,14 +1,14 @@
 import {
-    logSubscriptionCompleted,
-    logSubscriptionError,
-    logSubscriptionStarted,
+  logSubscriptionCompleted,
+  logSubscriptionError,
+  logSubscriptionStarted,
 } from ':core/telemetry/events/subscription.js';
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { parseUnits } from 'viem';
 import { getHash } from '../public-utilities/spend-permission/index.js';
 import {
-    createSpendPermissionTypedData,
-    type SpendPermissionTypedData,
+  createSpendPermissionTypedData,
+  type SpendPermissionTypedData,
 } from '../public-utilities/spend-permission/utils.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { SubscriptionOptions, SubscriptionResult } from './types.js';
@@ -23,7 +23,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  *
  * @param options - Subscription options
  * @param options.amount - Amount of USDC to spend per period as a string (e.g., "10.50")
- * @param options.to - Ethereum address that will be the spender (your application's address)
+ * @param options.subscriptionOwner - Ethereum address that will be the spender (your application's address)
  * @param options.periodInDays - The period in days for the subscription (default: 30)
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.walletUrl - Optional wallet URL to use
@@ -36,15 +36,15 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * try {
  *   const subscription = await subscribe({
  *     amount: "10.50",
- *     to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
+ *     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
  *     periodInDays: 30, // Monthly subscription
  *     testnet: true
  *   });
  *
  *   console.log(`Subscription created!`);
  *   console.log(`ID: ${subscription.id}`);
- *   console.log(`Payer: ${subscription.subscriptionPayerAddress}`);
- *   console.log(`Owner: ${subscription.subscriptionOwnerAddress}`);
+ *   console.log(`Payer: ${subscription.subscriptionPayer}`);
+ *   console.log(`Owner: ${subscription.subscriptionOwner}`);
  *   console.log(`Charge: $${subscription.recurringCharge} every ${subscription.periodInDays} days`);
  * } catch (error) {
  *   console.error(`Subscription failed: ${error.message}`);
@@ -52,7 +52,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * ```
  */
 export async function subscribe(options: SubscriptionOptions): Promise<SubscriptionResult> {
-  const { amount, to, periodInDays = 30, testnet = false, walletUrl, telemetry = true } = options;
+  const { amount, subscriptionOwner, periodInDays = 30, testnet = false, walletUrl, telemetry = true } = options;
 
   // Generate correlation ID for this subscription request
   const correlationId = crypto.randomUUID();
@@ -65,7 +65,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
   try {
     // Validate inputs
     validateStringAmount(amount, 6);
-    const spenderAddress = normalizeAddress(to);
+    const spenderAddress = normalizeAddress(subscriptionOwner);
 
     // Setup network configuration
     const network = testnet ? 'baseSepolia' : 'base';
@@ -109,17 +109,12 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       };
 
       // Request signature from wallet
-      console.log('[SUBSCRIBE] Sending wallet_sign request with params:', JSON.stringify(signParams, null, 2));
       
       const result = await provider.request({
         method: 'wallet_sign',
         params: [signParams],
       });
 
-      // Log the raw response for debugging
-      console.log('[SUBSCRIBE] Raw wallet_sign response:', result);
-      console.log('[SUBSCRIBE] Response type:', typeof result);
-      console.log('[SUBSCRIBE] Response structure:', JSON.stringify(result, null, 2));
 
       // Type guard and validation for the result
       if (!result || typeof result !== 'object') {
@@ -130,8 +125,6 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       // Check for expected properties
       const hasSignature = 'signature' in result;
       const hasSignedData = 'signedData' in result;
-      console.log('[SUBSCRIBE] Response has signature:', hasSignature);
-      console.log('[SUBSCRIBE] Response has signedData:', hasSignedData);
       
       if (!hasSignature || !hasSignedData) {
         console.error('[SUBSCRIBE] Missing expected properties. Response keys:', Object.keys(result));
@@ -144,7 +137,6 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         signedData: SpendPermissionTypedData;
       };
       
-      console.log('[SUBSCRIBE] Successfully parsed wallet response');
 
       // Extract the signed permission data
       const { signedData } = signResult;
@@ -170,8 +162,8 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       // Return simplified result
       return {
         id: permissionHash,
-        subscriptionOwnerAddress: message.spender,
-        subscriptionPayerAddress: message.account,
+        subscriptionOwner: message.spender,
+        subscriptionPayer: message.account,
         recurringCharge: amount, // The amount in USD as provided by the user
         periodInDays,
       };
@@ -180,10 +172,6 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       await provider.disconnect();
     }
   } catch (error) {
-    // Log the full error details for debugging
-    console.error('[SUBSCRIBE] Error occurred:', error);
-    console.error('[SUBSCRIBE] Error type:', typeof error);
-    console.error('[SUBSCRIBE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     
     // Extract error message using the utility
     const errorMessage = parseErrorMessageFromAny(error);
