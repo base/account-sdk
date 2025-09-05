@@ -13,6 +13,7 @@ import { getPermissionStatus as getPermissionStatusNode } from './getPermissionS
 
 vi.mock(':store/chain-clients/utils.js', () => ({
   getClient: vi.fn(),
+  FALLBACK_CHAINS: [],
 }));
 
 import * as utilsNode from '../utils.node.js';
@@ -25,6 +26,7 @@ vi.mock('viem/actions', () => ({
 vi.mock('../utils.js', () => ({
   toSpendPermissionArgs: vi.fn(),
   timestampInSecondsToDate: vi.fn(),
+  calculateCurrentPeriod: vi.fn(),
 }));
 
 describe('getPermissionStatus - browser + node', () => {

@@ -1,5 +1,6 @@
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import { getPaymentStatus } from './getPaymentStatus.js';
+import { getSubscriptionStatus } from './getSubscriptionStatus.js';
 import { pay } from './pay.js';
 import { subscribe } from './subscribe.js';
 import type {
@@ -9,6 +10,8 @@ import type {
   PaymentStatusOptions,
   SubscriptionOptions,
   SubscriptionResult,
+  SubscriptionStatus,
+  SubscriptionStatusOptions,
 } from './types.js';
 
 /**
@@ -18,6 +21,10 @@ export const base = {
   pay,
   subscribe,
   getPaymentStatus,
+  subscription: {
+    subscribe,
+    getStatus: getSubscriptionStatus,
+  },
   constants: {
     CHAIN_IDS,
     TOKENS,
@@ -29,5 +36,7 @@ export const base = {
     PaymentStatus: PaymentStatus;
     SubscriptionOptions: SubscriptionOptions;
     SubscriptionResult: SubscriptionResult;
+    SubscriptionStatus: SubscriptionStatus;
+    SubscriptionStatusOptions: SubscriptionStatusOptions;
   },
 };

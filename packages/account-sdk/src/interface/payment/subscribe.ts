@@ -23,7 +23,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  *
  * @param options - Subscription options
  * @param options.amount - Amount of USDC to spend per period as a string (e.g., "10.50")
- * @param options.to - Ethereum address that will be the spender (your application's address)
+ * @param options.subscriptionOwner - Ethereum address that will be the spender (your application's address)
  * @param options.periodInDays - The period in days for the subscription (default: 30)
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.walletUrl - Optional wallet URL to use
@@ -36,15 +36,15 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * try {
  *   const subscription = await subscribe({
  *     amount: "10.50",
- *     to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
+ *     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
  *     periodInDays: 30, // Monthly subscription
  *     testnet: true
  *   });
  *
  *   console.log(`Subscription created!`);
  *   console.log(`ID: ${subscription.id}`);
- *   console.log(`Payer: ${subscription.subscriptionPayerAddress}`);
- *   console.log(`Owner: ${subscription.subscriptionOwnerAddress}`);
+ *   console.log(`Payer: ${subscription.subscriptionPayer}`);
+ *   console.log(`Owner: ${subscription.subscriptionOwner}`);
  *   console.log(`Charge: $${subscription.recurringCharge} every ${subscription.periodInDays} days`);
  * } catch (error) {
  *   console.error(`Subscription failed: ${error.message}`);
@@ -52,7 +52,14 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * ```
  */
 export async function subscribe(options: SubscriptionOptions): Promise<SubscriptionResult> {
-  const { amount, to, periodInDays = 30, testnet = false, walletUrl, telemetry = true } = options;
+  const {
+    amount,
+    subscriptionOwner,
+    periodInDays = 30,
+    testnet = false,
+    walletUrl,
+    telemetry = true,
+  } = options;
 
   // Generate correlation ID for this subscription request
   const correlationId = crypto.randomUUID();
@@ -65,7 +72,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
   try {
     // Validate inputs
     validateStringAmount(amount, 6);
-    const spenderAddress = normalizeAddress(to);
+    const spenderAddress = normalizeAddress(subscriptionOwner);
 
     // Setup network configuration
     const network = testnet ? 'baseSepolia' : 'base';
@@ -109,6 +116,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       };
 
       // Request signature from wallet
+
       const result = await provider.request({
         method: 'wallet_sign',
         params: [signParams],
@@ -116,7 +124,24 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
 
       // Type guard and validation for the result
       if (!result || typeof result !== 'object') {
-        throw new Error('Invalid response from wallet_sign');
+        console.error('[SUBSCRIBE] Invalid response - expected object but got:', result);
+        throw new Error(
+          `Invalid response from wallet_sign: expected object but got ${typeof result}`
+        );
+      }
+
+      // Check for expected properties
+      const hasSignature = 'signature' in result;
+      const hasSignedData = 'signedData' in result;
+
+      if (!hasSignature || !hasSignedData) {
+        console.error(
+          '[SUBSCRIBE] Missing expected properties. Response keys:',
+          Object.keys(result)
+        );
+        throw new Error(
+          `Invalid response from wallet_sign: missing ${!hasSignature ? 'signature' : ''} ${!hasSignedData ? 'signedData' : ''}`
+        );
       }
 
       // Cast to expected response type
@@ -149,8 +174,8 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       // Return simplified result
       return {
         id: permissionHash,
-        subscriptionOwnerAddress: message.spender,
-        subscriptionPayerAddress: message.account,
+        subscriptionOwner: message.spender,
+        subscriptionPayer: message.account,
         recurringCharge: amount, // The amount in USD as provided by the user
         periodInDays,
       };
