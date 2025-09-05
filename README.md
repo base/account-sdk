@@ -126,3 +126,18 @@
   1. Fork this repo and clone it
   1. From the root dir run `yarn install`
   1. From the root dir run `yarn dev`
+<div className="capsule">
+  <h2>كبسولة توقيع السيادة</h2>
+  <p>تم التوقيع بواسطة: {address}</p>
+  <p>الرسالة: "تم التحقق من الهوية السيادية"</p>
+  <p>التاريخ: {new Date().toLocaleDateString()}</p>
+</div>
+
+"capsule": {
+  "name": "Sovereign Signature",
+  "url": "https://ali.cb.id/capsules/sovereign-signature"
+}
+echo "# كبسولة توقيع السيادة" > capsule-signature.md
+echo "تم التوقيع بواسطة: 0xAli..." >> capsule-signature.md
+echo "الرسالة: تم التحقق من الهوية السيادية" >> capsule-signature.md
+echo "التاريخ: $(date)" >> capsule-signature.md
