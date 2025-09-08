@@ -1,18 +1,18 @@
 import { formatUnits } from 'viem';
 import { readContract } from 'viem/actions';
 import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
+    spendPermissionManagerAbi,
+    spendPermissionManagerAddress,
 } from '../../sign/base-account/utils/constants.js';
 import { createClients, FALLBACK_CHAINS, getClient } from '../../store/chain-clients/utils.js';
 import {
-  fetchPermission,
-  getPermissionStatus,
+    fetchPermission,
+    getPermissionStatus,
 } from '../public-utilities/spend-permission/index.js';
 import {
-  calculateCurrentPeriod,
-  timestampInSecondsToDate,
-  toSpendPermissionArgs,
+    calculateCurrentPeriod,
+    timestampInSecondsToDate,
+    toSpendPermissionArgs,
 } from '../public-utilities/spend-permission/utils.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
@@ -98,7 +98,6 @@ export async function getSubscriptionStatus(
   }
 
   // Ensure chain client is initialized for the permission's chain
-  // This is needed when getSubscriptionStatus is called standalone without SDK initialization
   if (permission.chainId && !getClient(permission.chainId)) {
     const fallbackChain = FALLBACK_CHAINS.find((chain) => chain.id === permission.chainId);
     if (fallbackChain) {
@@ -156,15 +155,11 @@ export async function getSubscriptionStatus(
   const hasNoOnChainState = currentPeriod.spend === BigInt(0);
   const isSubscribed = hasNotExpired && (status.isActive || hasNoOnChainState);
 
-  // Format the spent amount in the current period (USDC has 6 decimals)
-  const spentInCurrentPeriod = formatUnits(currentPeriod.spend, 6);
-
   // Build the result with data from getCurrentPeriod and other on-chain functions
   const result: SubscriptionStatus = {
     isSubscribed,
     recurringCharge,
     remainingSpendInPeriod: formatUnits(status.remainingSpend, 6),
-    spentInCurrentPeriod,
     currentPeriodStart: timestampInSecondsToDate(currentPeriod.start),
     nextPeriodStart: status.nextPeriodStart,
     periodInDays,

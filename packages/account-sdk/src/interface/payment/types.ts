@@ -183,8 +183,6 @@ export interface SubscriptionStatus {
   recurringCharge: string;
   /** Remaining amount that can be spent in the current period in USD */
   remainingSpendInPeriod?: string;
-  /** Amount already spent in the current period in USD */
-  spentInCurrentPeriod?: string;
   /** Start of the current period */
   currentPeriodStart?: Date;
   /** Start date of the next payment period (only available if subscription is active) */
