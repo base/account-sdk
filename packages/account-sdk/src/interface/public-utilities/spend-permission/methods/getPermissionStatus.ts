@@ -6,9 +6,8 @@ import {
 import { createClients, FALLBACK_CHAINS, getClient } from ':store/chain-clients/utils.js';
 import { readContract } from 'viem/actions';
 import {
-  calculateCurrentPeriod,
   timestampInSecondsToDate,
-  toSpendPermissionArgs,
+  toSpendPermissionArgs
 } from '../utils.js';
 import { withTelemetry } from '../withTelemetry.js';
 
@@ -79,64 +78,31 @@ const getPermissionStatusFn = async (
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
-  // Try to get on-chain state
-  let currentPeriod: { start: number; end: number; spend: bigint };
-  let isRevoked: boolean;
-  let isValid: boolean;
+  // Get on-chain state
+  const results = await Promise.all([
+    readContract(client, {
+      address: spendPermissionManagerAddress,
+      abi: spendPermissionManagerAbi,
+      functionName: 'getCurrentPeriod',
+      args: [spendPermissionArgs],
+    }) as Promise<{ start: number; end: number; spend: bigint }>,
+    readContract(client, {
+      address: spendPermissionManagerAddress,
+      abi: spendPermissionManagerAbi,
+      functionName: 'isRevoked',
+      args: [spendPermissionArgs],
+    }) as Promise<boolean>,
+    readContract(client, {
+      address: spendPermissionManagerAddress,
+      abi: spendPermissionManagerAbi,
+      functionName: 'isValid',
+      args: [spendPermissionArgs],
+    }) as Promise<boolean>,
+  ]);
 
-  try {
-    const results = await Promise.all([
-      readContract(client, {
-        address: spendPermissionManagerAddress,
-        abi: spendPermissionManagerAbi,
-        functionName: 'getCurrentPeriod',
-        args: [spendPermissionArgs],
-      }) as Promise<{ start: number; end: number; spend: bigint }>,
-      readContract(client, {
-        address: spendPermissionManagerAddress,
-        abi: spendPermissionManagerAbi,
-        functionName: 'isRevoked',
-        args: [spendPermissionArgs],
-      }) as Promise<boolean>,
-      readContract(client, {
-        address: spendPermissionManagerAddress,
-        abi: spendPermissionManagerAbi,
-        functionName: 'isValid',
-        args: [spendPermissionArgs],
-      }) as Promise<boolean>,
-    ]);
-
-    currentPeriod = results[0];
-    isRevoked = results[1];
-    isValid = results[2];
-  } catch (error) {
-    // Check if this is a real error or just missing on-chain state
-    // If it's a real error (network issues, contract errors), re-throw it
-    if (error && typeof error === 'object' && 'message' in error) {
-      const errorMessage = (error as Error).message;
-      // Check for common error patterns that indicate real failures
-      if (
-        errorMessage.includes('Network') ||
-        errorMessage.includes('Contract') ||
-        errorMessage.includes('call failed') ||
-        errorMessage.includes('request failed')
-      ) {
-        throw error;
-      }
-    }
-
-    // If we can't read on-chain state (e.g., permission never used),
-    // infer the current period from the permission parameters
-    currentPeriod = calculateCurrentPeriod(permission);
-
-    // When there's no on-chain state, assume the permission is:
-    // - Not revoked (since it hasn't been used yet)
-    // - Valid if we're within its time bounds
-    isRevoked = false;
-    const now = Math.floor(Date.now() / 1000);
-    isValid =
-      now >= Number(permission.permission.start) && now <= Number(permission.permission.end);
-  }
+  const currentPeriod = results[0];
+  const isRevoked = results[1];
+  const isValid = results[2];
 
   // Calculate remaining spend in current period
   const allowance = BigInt(permission.permission.allowance);
