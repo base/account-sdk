@@ -192,5 +192,34 @@ export interface SubscriptionStatus {
 }
 
 /**
+ * Options for preparing subscription charge call data
+ */
+export interface PrepareChargeOptions {
+  /** The subscription ID (permission hash) */
+  id: string;
+  /** Amount of USDC to charge as a string (e.g., "10.50") or 'max-remaining-charge' */
+  amount: string | 'max-remaining-charge';
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+}
+
+/**
+ * Call data for approving and/or spending from a subscription
+ */
+export interface PrepareChargeCall {
+  /** The address to call */
+  to: Address;
+  /** The encoded call data */
+  data: Hex;
+  /** The value to send (always 0x0 for spend permissions) */
+  value: '0x0';
+}
+
+/**
+ * Result of preparing subscription charge call data
+ */
+export type PrepareChargeResult = PrepareChargeCall[];
+
+/**
  * Internal type for payment execution result
  */
