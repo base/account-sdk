@@ -3,3 +3,4 @@
  */
 export { getPaymentStatus } from './getPaymentStatus.js';
 export { getSubscriptionStatus } from './getSubscriptionStatus.js';
+export { prepareCharge } from './prepareCharge.js';
