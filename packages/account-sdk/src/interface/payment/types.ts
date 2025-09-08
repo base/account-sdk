@@ -133,10 +133,10 @@ export interface PaymentStatus {
  * Options for creating a subscription
  */
 export interface SubscriptionOptions {
-  /** Amount of USDC to spend per period as a string (e.g., "10.50") */
-  amount: string;
+  /** Amount of USDC to charge per period as a string (e.g., "10.50") */
+  recurringCharge: string;
   /** Ethereum address that will be the spender (your application's address) */
-  to: string;
+  subscriptionOwner: string;
   /** The period in days for the subscription (e.g., 30 for monthly) */
   periodInDays?: number;
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
@@ -154,14 +154,71 @@ export interface SubscriptionResult {
   /** The subscription ID (permission hash) */
   id: string;
   /** The address that owns/controls the subscription (your application) */
-  subscriptionOwnerAddress: Address;
+  subscriptionOwner: Address;
   /** The address that will be charged (the user's wallet) */
-  subscriptionPayerAddress: Address;
+  subscriptionPayer: Address;
   /** The recurring charge amount (USD denoted e.g. "9.99") */
   recurringCharge: string;
   /** The period in days for the subscription */
   periodInDays: number;
 }
+
+/**
+ * Options for checking subscription status
+ */
+export interface SubscriptionStatusOptions {
+  /** The subscription ID (permission hash) to check status for */
+  id: string;
+  /** Whether to check on testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+}
+
+/**
+ * Subscription status information
+ */
+export interface SubscriptionStatus {
+  /** Whether the user has an active (non-revoked) subscription */
+  isSubscribed: boolean;
+  /** The recurring charge amount in USD (e.g., "9.99") */
+  recurringCharge: string;
+  /** Remaining amount that can be charged in the current period in USD */
+  remainingChargeInPeriod?: string;
+  /** Start of the current period */
+  currentPeriodStart?: Date;
+  /** Start date of the next payment period (only available if subscription is active) */
+  nextPeriodStart?: Date;
+  /** The subscription period in days */
+  periodInDays?: number;
+}
+
+/**
+ * Options for preparing subscription charge call data
+ */
+export interface PrepareChargeOptions {
+  /** The subscription ID (permission hash) */
+  id: string;
+  /** Amount of USDC to charge as a string (e.g., "10.50") or 'max-remaining-charge' */
+  amount: string | 'max-remaining-charge';
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+}
+
+/**
+ * Call data for approving and/or spending from a subscription
+ */
+export interface PrepareChargeCall {
+  /** The address to call */
+  to: Address;
+  /** The encoded call data */
+  data: Hex;
+  /** The value to send (always 0x0 for spend permissions) */
+  value: '0x0';
+}
+
+/**
+ * Result of preparing subscription charge call data
+ */
+export type PrepareChargeResult = PrepareChargeCall[];
 
 /**
  * Internal type for payment execution result
