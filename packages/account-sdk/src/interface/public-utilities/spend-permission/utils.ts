@@ -170,7 +170,7 @@ export function calculateCurrentPeriod(
     const totalDuration = permissionEnd - permissionStart;
     const completePeriods = Math.floor(totalDuration / periodDuration);
     const lastPeriodStart = permissionStart + completePeriods * periodDuration;
-    
+
     // If the last period would start after permissionEnd, go back one period
     if (lastPeriodStart >= permissionEnd && completePeriods > 0) {
       return {
@@ -179,7 +179,7 @@ export function calculateCurrentPeriod(
         spend: BigInt(0),
       };
     }
-    
+
     return {
       start: lastPeriodStart,
       end: permissionEnd,
@@ -191,9 +191,11 @@ export function calculateCurrentPeriod(
   const timeElapsed = now - permissionStart;
   const currentPeriodIndex = Math.floor(timeElapsed / periodDuration);
   const currentPeriodStart = permissionStart + currentPeriodIndex * periodDuration;
-  // For the last period, end should be exactly the permission end, not periodDuration - 1
   const nextPeriodStart = currentPeriodStart + periodDuration;
-  const currentPeriodEnd = nextPeriodStart > permissionEnd ? permissionEnd : nextPeriodStart - 1;
+
+  // For the last period, end should be exactly the permission end
+  // For other periods, end should be nextPeriodStart - 1
+  const currentPeriodEnd = nextPeriodStart >= permissionEnd ? permissionEnd : nextPeriodStart - 1;
 
   return {
     start: currentPeriodStart,

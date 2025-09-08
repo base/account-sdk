@@ -22,7 +22,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * Creates a subscription using spend permissions on Base network
  *
  * @param options - Subscription options
- * @param options.amount - Amount of USDC to spend per period as a string (e.g., "10.50")
+ * @param options.recurringCharge - Amount of USDC to spend per period as a string (e.g., "10.50")
  * @param options.subscriptionOwner - Ethereum address that will be the spender (your application's address)
  * @param options.periodInDays - The period in days for the subscription (default: 30)
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
@@ -35,7 +35,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * ```typescript
  * try {
  *   const subscription = await subscribe({
- *     amount: "10.50",
+ *     recurringCharge: "10.50",
  *     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
  *     periodInDays: 30, // Monthly subscription
  *     testnet: true
@@ -53,7 +53,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  */
 export async function subscribe(options: SubscriptionOptions): Promise<SubscriptionResult> {
   const {
-    amount,
+    recurringCharge,
     subscriptionOwner,
     periodInDays = 30,
     testnet = false,
@@ -66,12 +66,12 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
 
   // Log subscription started
   if (telemetry) {
-    logSubscriptionStarted({ amount, periodInDays, testnet, correlationId });
+    logSubscriptionStarted({ recurringCharge, periodInDays, testnet, correlationId });
   }
 
   try {
     // Validate inputs
-    validateStringAmount(amount, 6);
+    validateStringAmount(recurringCharge, 6);
     const spenderAddress = normalizeAddress(subscriptionOwner);
 
     // Setup network configuration
@@ -80,7 +80,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     const tokenAddress = TOKENS.USDC.addresses[network];
 
     // Convert amount to wei (USDC has 6 decimals)
-    const allowanceInWei = parseUnits(amount, 6);
+    const allowanceInWei = parseUnits(recurringCharge, 6);
 
     // Create the spend permission typed data using the utility
     // The utility handles:
@@ -163,7 +163,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       // Log subscription completed
       if (telemetry) {
         logSubscriptionCompleted({
-          amount,
+          recurringCharge,
           periodInDays,
           testnet,
           correlationId,
@@ -176,7 +176,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         id: permissionHash,
         subscriptionOwner: message.spender,
         subscriptionPayer: message.account,
-        recurringCharge: amount, // The amount in USD as provided by the user
+        recurringCharge: recurringCharge, // The amount in USD as provided by the user
         periodInDays,
       };
     } finally {
@@ -190,7 +190,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     // Log subscription error
     if (telemetry) {
       logSubscriptionError({
-        amount,
+        recurringCharge,
         periodInDays,
         testnet,
         correlationId,

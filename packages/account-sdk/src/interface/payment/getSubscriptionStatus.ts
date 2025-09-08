@@ -1,9 +1,19 @@
 import { formatUnits } from 'viem';
+import { readContract } from 'viem/actions';
+import {
+  spendPermissionManagerAbi,
+  spendPermissionManagerAddress,
+} from '../../sign/base-account/utils/constants.js';
 import { createClients, FALLBACK_CHAINS, getClient } from '../../store/chain-clients/utils.js';
 import {
-    fetchPermission,
-    getPermissionStatus,
+  fetchPermission,
+  getPermissionStatus,
 } from '../public-utilities/spend-permission/index.js';
+import {
+  calculateCurrentPeriod,
+  timestampInSecondsToDate,
+  toSpendPermissionArgs,
+} from '../public-utilities/spend-permission/utils.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
 
@@ -51,7 +61,7 @@ export async function getSubscriptionStatus(
     // No permission found - the subscription doesn't exist or cannot be found
     return {
       isSubscribed: false,
-      recurringAmount: '0',
+      recurringCharge: '0',
     };
   }
 
@@ -97,12 +107,35 @@ export async function getSubscriptionStatus(
   }
 
   // Get the current permission status (includes period info and active state)
-  // This will either fetch on-chain state or infer from the permission parameters
-  // if there's no on-chain state (e.g., subscription never used)
   const status = await getPermissionStatus(permission);
 
+  // Get the current period info directly to get spend amount
+  let currentPeriod: { start: number; end: number; spend: bigint };
+
+  const client = getClient(permission.chainId!);
+  if (client) {
+    try {
+      const spendPermissionArgs = toSpendPermissionArgs(permission);
+      currentPeriod = (await readContract(client, {
+        address: spendPermissionManagerAddress,
+        abi: spendPermissionManagerAbi,
+        functionName: 'getCurrentPeriod',
+        args: [spendPermissionArgs],
+      })) as { start: number; end: number; spend: bigint };
+    } catch {
+      // If we can't read on-chain state, calculate from permission parameters
+      currentPeriod = calculateCurrentPeriod(permission);
+    }
+  } else {
+    // No client available, calculate from permission parameters
+    currentPeriod = calculateCurrentPeriod(permission);
+  }
+
   // Format the allowance amount from wei to USD string (USDC has 6 decimals)
-  const recurringAmount = formatUnits(BigInt(permission.permission.allowance), 6);
+  const recurringCharge = formatUnits(BigInt(permission.permission.allowance), 6);
+
+  // Calculate period in days from the period duration in seconds
+  const periodInDays = Number(permission.permission.period) / 86400;
 
   // Check if the subscription period has started
   const currentTime = Math.floor(Date.now() / 1000);
@@ -120,31 +153,21 @@ export async function getSubscriptionStatus(
 
   // A subscription is considered active if we're within the valid time bounds
   // and the permission hasn't been revoked.
-  // Since we've already checked that:
-  // 1. The permission exists (fetchPermission succeeded)
-  // 2. The subscription has started (checked above)
-  // 3. The subscription hasn't expired (hasNotExpired)
-  // Then the subscription should be active unless explicitly revoked.
-  //
-  // For subscriptions with no on-chain state (currentPeriodSpend === 0),
-  // they cannot be revoked since they've never been used, so we know they're active.
-  const hasNoOnChainState = status.currentPeriodSpend === BigInt(0);
+  const hasNoOnChainState = currentPeriod.spend === BigInt(0);
   const isSubscribed = hasNotExpired && (status.isActive || hasNoOnChainState);
 
   // Format the spent amount in the current period (USDC has 6 decimals)
-  // When inferred from permission parameters, this will be 0
-  const spentInCurrentPeriod = formatUnits(status.currentPeriodSpend, 6);
+  const spentInCurrentPeriod = formatUnits(currentPeriod.spend, 6);
 
   // Build the result with data from getCurrentPeriod and other on-chain functions
-  // Include period information even when subscription appears inactive to provide
-  // useful information about the subscription state
   const result: SubscriptionStatus = {
     isSubscribed,
-    recurringAmount,
+    recurringCharge,
     remainingSpendInPeriod: formatUnits(status.remainingSpend, 6),
-    spentInCurrentPeriod: spentInCurrentPeriod,
-    currentPeriodStart: status.currentPeriodStart,
+    spentInCurrentPeriod,
+    currentPeriodStart: timestampInSecondsToDate(currentPeriod.start),
     nextPeriodStart: status.nextPeriodStart,
+    periodInDays,
   };
 
   return result;

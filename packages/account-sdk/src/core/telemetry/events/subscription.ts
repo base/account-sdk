@@ -4,7 +4,7 @@ import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '.
  * Logs when a subscription request is started
  */
 export function logSubscriptionStarted(data: {
-  amount: string;
+  recurringCharge: string;
   periodInDays: number;
   testnet: boolean;
   correlationId: string;
@@ -17,7 +17,7 @@ export function logSubscriptionStarted(data: {
       method: 'subscribe',
       correlationId: data.correlationId,
       signerType: 'base-account',
-      amount: data.amount,
+      amount: data.recurringCharge,
       testnet: data.testnet,
     },
     AnalyticsEventImportance.high
@@ -28,7 +28,7 @@ export function logSubscriptionStarted(data: {
  * Logs when a subscription request is completed successfully
  */
 export function logSubscriptionCompleted(data: {
-  amount: string;
+  recurringCharge: string;
   periodInDays: number;
   testnet: boolean;
   correlationId: string;
@@ -42,7 +42,7 @@ export function logSubscriptionCompleted(data: {
       method: 'subscribe',
       correlationId: data.correlationId,
       signerType: 'base-account',
-      amount: data.amount,
+      amount: data.recurringCharge,
       testnet: data.testnet,
       status: data.permissionHash, // Using status field to store permission hash
     },
@@ -54,7 +54,7 @@ export function logSubscriptionCompleted(data: {
  * Logs when a subscription request fails
  */
 export function logSubscriptionError(data: {
-  amount: string;
+  recurringCharge: string;
   periodInDays: number;
   testnet: boolean;
   correlationId: string;
@@ -68,7 +68,7 @@ export function logSubscriptionError(data: {
       method: 'subscribe',
       correlationId: data.correlationId,
       signerType: 'base-account',
-      amount: data.amount,
+      amount: data.recurringCharge,
       testnet: data.testnet,
       errorMessage: data.errorMessage,
     },

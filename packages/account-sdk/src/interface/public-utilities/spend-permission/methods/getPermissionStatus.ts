@@ -16,8 +16,6 @@ export type GetPermissionStatusResponseType = {
   remainingSpend: bigint;
   nextPeriodStart: Date;
   isActive: boolean;
-  currentPeriodStart: Date;
-  currentPeriodSpend: bigint;
 };
 
 /**
@@ -111,7 +109,22 @@ const getPermissionStatusFn = async (
     currentPeriod = results[0];
     isRevoked = results[1];
     isValid = results[2];
-  } catch (_error) {
+  } catch (error) {
+    // Check if this is a real error or just missing on-chain state
+    // If it's a real error (network issues, contract errors), re-throw it
+    if (error && typeof error === 'object' && 'message' in error) {
+      const errorMessage = (error as Error).message;
+      // Check for common error patterns that indicate real failures
+      if (
+        errorMessage.includes('Network') ||
+        errorMessage.includes('Contract') ||
+        errorMessage.includes('call failed') ||
+        errorMessage.includes('request failed')
+      ) {
+        throw error;
+      }
+    }
+
     // If we can't read on-chain state (e.g., permission never used),
     // infer the current period from the permission parameters
     currentPeriod = calculateCurrentPeriod(permission);
@@ -141,8 +154,6 @@ const getPermissionStatusFn = async (
     remainingSpend,
     nextPeriodStart: timestampInSecondsToDate(Number(nextPeriodStart)),
     isActive,
-    currentPeriodStart: timestampInSecondsToDate(currentPeriod.start),
-    currentPeriodSpend: spent,
   };
 };
 
