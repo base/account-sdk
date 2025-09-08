@@ -98,7 +98,6 @@ export async function getSubscriptionStatus(
   }
 
   // Ensure chain client is initialized for the permission's chain
-  // This is needed when getSubscriptionStatus is called standalone without SDK initialization
   if (permission.chainId && !getClient(permission.chainId)) {
     const fallbackChain = FALLBACK_CHAINS.find((chain) => chain.id === permission.chainId);
     if (fallbackChain) {
@@ -156,15 +155,11 @@ export async function getSubscriptionStatus(
   const hasNoOnChainState = currentPeriod.spend === BigInt(0);
   const isSubscribed = hasNotExpired && (status.isActive || hasNoOnChainState);
 
-  // Format the spent amount in the current period (USDC has 6 decimals)
-  const spentInCurrentPeriod = formatUnits(currentPeriod.spend, 6);
-
   // Build the result with data from getCurrentPeriod and other on-chain functions
   const result: SubscriptionStatus = {
     isSubscribed,
     recurringCharge,
-    remainingSpendInPeriod: formatUnits(status.remainingSpend, 6),
-    spentInCurrentPeriod,
+    remainingChargeInPeriod: formatUnits(status.remainingSpend, 6),
     currentPeriodStart: timestampInSecondsToDate(currentPeriod.start),
     nextPeriodStart: status.nextPeriodStart,
     periodInDays,

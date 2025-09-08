@@ -3,12 +3,9 @@ import {
   spendPermissionManagerAbi,
   spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
-import { createClients, FALLBACK_CHAINS, getClient } from ':store/chain-clients/utils.js';
+import { getClient } from ':store/chain-clients/utils.js';
 import { readContract } from 'viem/actions';
-import {
-  timestampInSecondsToDate,
-  toSpendPermissionArgs
-} from '../utils.js';
+import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { withTelemetry } from '../withTelemetry.js';
 
 export type GetPermissionStatusResponseType = {
@@ -59,27 +56,16 @@ const getPermissionStatusFn = async (
     throw new Error('chainId is missing in the spend permission');
   }
 
-  let client = getClient(chainId);
+  const client = getClient(chainId);
   if (!client) {
-    // Try to initialize with fallback chain if available
-    const fallbackChain = FALLBACK_CHAINS.find((chain) => chain.id === chainId);
-    if (fallbackChain) {
-      createClients([fallbackChain]);
-      client = getClient(chainId);
-    }
-
-    // If still no client, throw error
-    if (!client) {
-      throw new Error(
-        `No client available for chain ID ${chainId}. Make sure the SDK is in connected state.`
-      );
-    }
+    throw new Error(
+      `No client available for chain ID ${chainId}. Make sure the SDK is in connected state.`
+    );
   }
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
-  // Get on-chain state
-  const results = await Promise.all([
+  const [currentPeriod, isRevoked, isValid] = await Promise.all([
     readContract(client, {
       address: spendPermissionManagerAddress,
       abi: spendPermissionManagerAbi,
@@ -99,10 +85,6 @@ const getPermissionStatusFn = async (
       args: [spendPermissionArgs],
     }) as Promise<boolean>,
   ]);
-
-  const currentPeriod = results[0];
-  const isRevoked = results[1];
-  const isValid = results[2];
 
   // Calculate remaining spend in current period
   const allowance = BigInt(permission.permission.allowance);

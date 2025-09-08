@@ -133,7 +133,7 @@ export interface PaymentStatus {
  * Options for creating a subscription
  */
 export interface SubscriptionOptions {
-  /** Amount of USDC to spend per period as a string (e.g., "10.50") */
+  /** Amount of USDC to charge per period as a string (e.g., "10.50") */
   recurringCharge: string;
   /** Ethereum address that will be the spender (your application's address) */
   subscriptionOwner: string;
@@ -181,10 +181,8 @@ export interface SubscriptionStatus {
   isSubscribed: boolean;
   /** The recurring charge amount in USD (e.g., "9.99") */
   recurringCharge: string;
-  /** Remaining amount that can be spent in the current period in USD */
-  remainingSpendInPeriod?: string;
-  /** Amount already spent in the current period in USD */
-  spentInCurrentPeriod?: string;
+  /** Remaining amount that can be charged in the current period in USD */
+  remainingChargeInPeriod?: string;
   /** Start of the current period */
   currentPeriodStart?: Date;
   /** Start date of the next payment period (only available if subscription is active) */

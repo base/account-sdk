@@ -22,7 +22,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * Creates a subscription using spend permissions on Base network
  *
  * @param options - Subscription options
- * @param options.recurringCharge - Amount of USDC to spend per period as a string (e.g., "10.50")
+ * @param options.recurringCharge - Amount of USDC to charge per period as a string (e.g., "10.50")
  * @param options.subscriptionOwner - Ethereum address that will be the spender (your application's address)
  * @param options.periodInDays - The period in days for the subscription (default: 30)
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
