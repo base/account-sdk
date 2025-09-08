@@ -4,8 +4,10 @@ import {
   spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
+import { PublicClient } from 'viem';
 import { readContract } from 'viem/actions';
 import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
+import { getPublicClientFromChainId } from '../utils.node.js';
 import { withTelemetry } from '../withTelemetry.js';
 
 export type GetPermissionStatusResponseType = {
@@ -56,11 +58,15 @@ const getPermissionStatusFn = async (
     throw new Error('chainId is missing in the spend permission');
   }
 
-  const client = getClient(chainId);
+  // Try to get client from store first (browser environment with connected SDK)
+  let client: PublicClient | undefined = getClient(chainId);
+
+  // If no client in store, create one using the node utility (node environment or disconnected SDK)
   if (!client) {
-    throw new Error(
-      `No client available for chain ID ${chainId}. Make sure the SDK is in connected state.`
-    );
+    client = getPublicClientFromChainId(chainId);
+    if (!client) {
+      throw new Error(`No client available for chain ID ${chainId}. Chain is not supported.`);
+    }
   }
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
