@@ -73,15 +73,15 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
       checkErrorForInvalidRequestArgs(args);
       if (!this.signer.isConnected) {
         switch (args.method) {
-          case "eth_requestAccounts": {
-            await this.signer.handshake({ method: "handshake" });
+          case 'eth_requestAccounts': {
+            await this.signer.handshake({ method: 'handshake' });
             // We are translating eth_requestAccounts to wallet_connect always
             await initSubAccountConfig();
             await this.signer.request({
-              method: "wallet_connect",
+              method: 'wallet_connect',
               params: [
                 {
-                  version: "1",
+                  version: '1',
                   capabilities: {
                     ...(store.subAccountsConfig.get()?.capabilities ?? {}),
                   },
@@ -94,40 +94,40 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
             // returning the accounts
             break;
           }
-          case "wallet_connect": {
-            await this.signer.handshake({ method: "handshake" }); // exchange session keys
+          case 'wallet_connect': {
+            await this.signer.handshake({ method: 'handshake' }); // exchange session keys
             const result = await this.signer.request(args); // send diffie-hellman encrypted request
             return result as T;
           }
-          case "wallet_switchEthereumChain": {
+          case 'wallet_switchEthereumChain': {
             // wallet_switchEthereumChain does not need to be sent to the popup
             // it is handled by the base account signer
             // so we just return the result
             const result = await this.signer.request(args);
             return result as T;
           }
-          case "wallet_sendCalls":
-          case "wallet_sign": {
+          case 'wallet_sendCalls':
+          case 'wallet_sign': {
             try {
-              await this.signer.handshake({ method: "handshake" }); // exchange session keys
+              await this.signer.handshake({ method: 'handshake' }); // exchange session keys
               const result = await this.signer.request(args); // send diffie-hellman encrypted request
               return result as T;
             } finally {
               await this.signer.cleanup(); // clean up (rotate) the ephemeral session keys
             }
           }
-          case "wallet_getCallsStatus": {
+          case 'wallet_getCallsStatus': {
             const result = await fetchRPCRequest(args, CB_WALLET_RPC_URL);
             return result as T;
           }
-          case "eth_accounts": {
+          case 'eth_accounts': {
             return [] as T;
           }
-          case "net_version": {
+          case 'net_version': {
             const result = 1 as T; // default value
             return result;
           }
-          case "eth_chainId": {
+          case 'eth_chainId': {
             const result = hexStringFromNumber(1) as T; // default value
             return result;
           }
