@@ -32,6 +32,7 @@
       "require": "./dist/interface/payment/index.node.js"
     },
     "./payment": {
+      "types": "./dist/interface/payment/index.d.ts",
       "browser": {
         "types": "./dist/interface/payment/index.d.ts",
         "import": "./dist/interface/payment/index.js",
@@ -54,6 +55,7 @@
       "require": "./dist/interface/public-utilities/spend-permission/index.node.js"
     },
     "./spend-permission": {
+      "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
       "browser": {
         "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
         "import": "./dist/interface/public-utilities/spend-permission/index.js",
