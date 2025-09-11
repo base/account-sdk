@@ -68,6 +68,7 @@ type CCAEventData = {
   amount?: string;
   testnet?: boolean;
   status?: string;
+  periodInDays?: number;
 };
 
 type AnalyticsEventData = {
@@ -111,3 +112,4 @@ export function identify(event: CCAEventData) {
 
 export { ActionType, AnalyticsEventImportance, ComponentType };
 export type { AnalyticsEventData, CCAEventData, LogEvent };
+
