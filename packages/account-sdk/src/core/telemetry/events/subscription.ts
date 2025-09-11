@@ -10,7 +10,7 @@ export function logSubscriptionStarted(data: {
   correlationId: string;
 }) {
   logEvent(
-    `subscription.subscribe.started.${data.periodInDays}days`,
+    'subscription.subscribe.started',
     {
       action: ActionType.process,
       componentType: ComponentType.unknown,
@@ -19,6 +19,7 @@ export function logSubscriptionStarted(data: {
       signerType: 'base-account',
       amount: data.recurringCharge,
       testnet: data.testnet,
+      periodInDays: data.periodInDays,
     },
     AnalyticsEventImportance.high
   );
@@ -35,7 +36,7 @@ export function logSubscriptionCompleted(data: {
   permissionHash: string;
 }) {
   logEvent(
-    `subscription.subscribe.completed.${data.periodInDays}days`,
+    'subscription.subscribe.completed',
     {
       action: ActionType.process,
       componentType: ComponentType.unknown,
@@ -44,6 +45,7 @@ export function logSubscriptionCompleted(data: {
       signerType: 'base-account',
       amount: data.recurringCharge,
       testnet: data.testnet,
+      periodInDays: data.periodInDays,
       status: data.permissionHash, // Using status field to store permission hash
     },
     AnalyticsEventImportance.high
@@ -61,7 +63,7 @@ export function logSubscriptionError(data: {
   errorMessage: string;
 }) {
   logEvent(
-    `subscription.subscribe.error.${data.periodInDays}days`,
+    'subscription.subscribe.error',
     {
       action: ActionType.error,
       componentType: ComponentType.unknown,
@@ -70,6 +72,7 @@ export function logSubscriptionError(data: {
       signerType: 'base-account',
       amount: data.recurringCharge,
       testnet: data.testnet,
+      periodInDays: data.periodInDays,
       errorMessage: data.errorMessage,
     },
     AnalyticsEventImportance.high

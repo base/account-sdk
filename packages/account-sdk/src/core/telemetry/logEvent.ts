@@ -68,6 +68,7 @@ type CCAEventData = {
   amount?: string;
   testnet?: boolean;
   status?: string;
+  periodInDays?: number;
 };
 
 type AnalyticsEventData = {
