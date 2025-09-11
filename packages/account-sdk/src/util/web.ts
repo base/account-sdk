@@ -16,18 +16,18 @@ const POPUP_BLOCKED_MESSAGE = 'This action requires your permission to open a ne
 const IFRAME_ID = 'keys-frame';
 const IFRAME_ALLOW = 'publickey-credentials-get; publickey-credentials-create; clipboard-write';
 const IFRAME_STYLES = {
-  'overflow': 'hidden',
-  'overflow-x': 'hidden',
-  'overflow-y': 'hidden',
-  'height': '100%',
-  'width': '100%',
-  'position': 'absolute',
-  'top': '0px',
-  'left': '0px',
-  'right': '0px',
-  'bottom': '0px',
-  'background-color': 'transparent',
-  'border': 'none',
+  overflow: 'hidden',
+  overflowX: 'hidden',
+  overflowY: 'hidden',
+  height: '100%',
+  width: '100%',
+  position: 'absolute',
+  top: '0px',
+  left: '0px',
+  right: '0px',
+  bottom: '0px',
+  backgroundColor: 'transparent',
+  border: 'none',
   'z-index': '1000',
 } as const;
 
