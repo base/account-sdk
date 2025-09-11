@@ -1,20 +1,23 @@
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import { getPaymentStatus } from './getPaymentStatus.js';
+import { getSubscriptionOwner } from './getSubscriptionOwner.js';
 import { getSubscriptionStatus } from './getSubscriptionStatus.js';
 import { pay } from './pay.js';
 import { prepareCharge } from './prepareCharge.js';
 import { subscribe } from './subscribe.js';
 import type {
-  PaymentOptions,
-  PaymentResult,
-  PaymentStatus,
-  PaymentStatusOptions,
-  PrepareChargeOptions,
-  PrepareChargeResult,
-  SubscriptionOptions,
-  SubscriptionResult,
-  SubscriptionStatus,
-  SubscriptionStatusOptions,
+    GetSubscriptionOwnerOptions,
+    GetSubscriptionOwnerResult,
+    PaymentOptions,
+    PaymentResult,
+    PaymentStatus,
+    PaymentStatusOptions,
+    PrepareChargeOptions,
+    PrepareChargeResult,
+    SubscriptionOptions,
+    SubscriptionResult,
+    SubscriptionStatus,
+    SubscriptionStatusOptions,
 } from './types.js';
 
 /**
@@ -28,6 +31,7 @@ export const base = {
     subscribe,
     getStatus: getSubscriptionStatus,
     prepareCharge,
+    getSubscriptionOwner,
   },
   constants: {
     CHAIN_IDS,
@@ -44,5 +48,7 @@ export const base = {
     SubscriptionResult: SubscriptionResult;
     SubscriptionStatus: SubscriptionStatus;
     SubscriptionStatusOptions: SubscriptionStatusOptions;
+    GetSubscriptionOwnerOptions: GetSubscriptionOwnerOptions;
+    GetSubscriptionOwnerResult: GetSubscriptionOwnerResult;
   },
 };

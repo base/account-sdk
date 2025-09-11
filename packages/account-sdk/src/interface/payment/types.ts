@@ -221,5 +221,31 @@ export interface PrepareChargeCall {
 export type PrepareChargeResult = PrepareChargeCall[];
 
 /**
+ * Options for getting or creating a subscription owner wallet
+ */
+export interface GetSubscriptionOwnerOptions {
+  /** CDP API key ID. Falls back to CDP_API_KEY_ID env var */
+  cdpApiKeyId?: string;
+  /** CDP API key secret. Falls back to CDP_API_KEY_SECRET env var */
+  cdpApiKeySecret?: string;
+  /** CDP wallet secret. Falls back to CDP_WALLET_SECRET env var */
+  cdpWalletSecret?: string;
+  /** Custom wallet name. Defaults to "subscription owner" */
+  walletName?: string;
+}
+
+/**
+ * Result from getting or creating a subscription owner wallet
+ */
+export interface GetSubscriptionOwnerResult {
+  /** The Ethereum address of the subscription owner wallet */
+  address: string;
+  /** Whether this was a newly created wallet or existing one */
+  isNew: boolean;
+  /** The name of the wallet */
+  walletName: string;
+}
+
+/**
  * Internal type for payment execution result
  */
