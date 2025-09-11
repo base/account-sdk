@@ -221,7 +221,7 @@ export interface PrepareChargeCall {
 export type PrepareChargeResult = PrepareChargeCall[];
 
 /**
- * Options for getting or creating a subscription owner wallet
+ * Options for getting or creating a subscription owner smart account
  */
 export interface GetSubscriptionOwnerOptions {
   /** CDP API key ID. Falls back to CDP_API_KEY_ID env var */
@@ -232,18 +232,54 @@ export interface GetSubscriptionOwnerOptions {
   cdpWalletSecret?: string;
   /** Custom wallet name. Defaults to "subscription owner" */
   walletName?: string;
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
 }
 
 /**
- * Result from getting or creating a subscription owner wallet
+ * Result from getting or creating a subscription owner smart account
  */
 export interface GetSubscriptionOwnerResult {
-  /** The Ethereum address of the subscription owner wallet */
-  address: string;
-  /** Whether this was a newly created wallet or existing one */
-  isNew: boolean;
+  /** The Ethereum address of the subscription owner smart account */
+  address: Address;
   /** The name of the wallet */
   walletName: string;
+  /** The EOA address that owns the smart account (for reference) */
+  eoaAddress?: Address;
+}
+
+/**
+ * Options for charging a subscription
+ */
+export interface ChargeOptions extends PrepareChargeOptions {
+  /** CDP API key ID. Falls back to CDP_API_KEY_ID env var */
+  cdpApiKeyId?: string;
+  /** CDP API key secret. Falls back to CDP_API_KEY_SECRET env var */
+  cdpApiKeySecret?: string;
+  /** CDP wallet secret. Falls back to CDP_WALLET_SECRET env var */
+  cdpWalletSecret?: string;
+  /** Custom wallet name. Defaults to "subscription owner" */
+  walletName?: string;
+  /** Paymaster URL for transaction sponsorship. Falls back to PAYMASTER_URL env var */
+  paymasterUrl?: string;
+  /** Whether to enable telemetry logging. Defaults to true */
+  telemetry?: boolean;
+}
+
+/**
+ * Result of charging a subscription
+ */
+export interface ChargeResult {
+  /** Whether the charge was successful */
+  success: true;
+  /** Transaction ID (hash) of the charge */
+  id: string;
+  /** The subscription ID that was charged */
+  subscriptionId: string;
+  /** The amount that was charged */
+  amount: string;
+  /** The address that executed the charge (subscription owner) */
+  chargedBy: Address;
 }
 
 /**
