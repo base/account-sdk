@@ -264,8 +264,6 @@ export interface ChargeOptions extends PrepareChargeOptions {
   walletName?: string;
   /** Paymaster URL for transaction sponsorship. Falls back to PAYMASTER_URL env var */
   paymasterUrl?: string;
-  /** Whether to enable telemetry logging. Defaults to true */
-  telemetry?: boolean;
 }
 
 /**

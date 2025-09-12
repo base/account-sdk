@@ -1,8 +1,3 @@
-import {
-  logSubscriptionChargeCompleted,
-  logSubscriptionChargeError,
-  logSubscriptionChargeStarted,
-} from ':core/telemetry/events/subscription.js';
 import { CdpClient } from '@coinbase/cdp-sdk';
 import { type Address } from 'viem';
 import { prepareCharge } from './prepareCharge.js';
@@ -31,7 +26,6 @@ import type { ChargeOptions, ChargeResult } from './types.js';
  * @param options.cdpWalletSecret - CDP wallet secret. Falls back to CDP_WALLET_SECRET env var
  * @param options.walletName - Custom wallet name. Defaults to "subscription owner"
  * @param options.paymasterUrl - Paymaster URL for sponsorship. Falls back to PAYMASTER_URL env var
- * @param options.telemetry - Whether to enable telemetry logging. Defaults to true
  * @param options.recipient - Optional recipient address to receive the charged USDC
  * @returns Promise<ChargeResult> - Result of the charge transaction
  * @throws Error if CDP credentials are missing, subscription not found, or charge fails
@@ -86,22 +80,8 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
     cdpWalletSecret,
     walletName = 'subscription owner',
     paymasterUrl = process.env.PAYMASTER_URL,
-    telemetry = true,
     recipient,
   } = options;
-
-  // Generate correlation ID for this charge request
-  const correlationId = crypto.randomUUID();
-
-  // Log charge started
-  if (telemetry) {
-    logSubscriptionChargeStarted({
-      subscriptionId: id,
-      amount: amount === 'max-remaining-charge' ? 'max' : amount,
-      testnet,
-      correlationId,
-    });
-  }
 
   try {
     // Step 1: Initialize CDP client with provided credentials or environment variables
@@ -198,16 +178,6 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
       throw new Error('No transaction hash received from charge execution');
     }
 
-    // Log charge completed
-    if (telemetry) {
-      logSubscriptionChargeCompleted({
-        subscriptionId: id,
-        amount: amount === 'max-remaining-charge' ? 'max' : amount,
-        testnet,
-        correlationId,
-      });
-    }
-
     // Return success result
     return {
       success: true,
@@ -218,26 +188,6 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
       ...(recipient && { recipient }),
     };
   } catch (error) {
-    // Extract error message
-    let errorMessage = 'Unknown error occurred';
-
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (typeof error === 'string') {
-      errorMessage = error;
-    }
-
-    // Log charge error
-    if (telemetry) {
-      logSubscriptionChargeError({
-        subscriptionId: id,
-        amount: amount === 'max-remaining-charge' ? 'max' : amount,
-        testnet,
-        correlationId,
-        errorMessage,
-      });
-    }
-
     // Re-throw the original error
     throw error;
   }

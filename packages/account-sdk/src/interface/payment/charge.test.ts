@@ -1,4 +1,3 @@
-import * as telemetryModule from ':core/telemetry/events/subscription.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { charge } from './charge.js';
 import * as prepareChargeModule from './prepareCharge.js';
@@ -11,13 +10,6 @@ vi.mock('@coinbase/cdp-sdk', () => ({
 // Mock prepareCharge
 vi.mock('./prepareCharge.js', () => ({
   prepareCharge: vi.fn(),
-}));
-
-// Mock telemetry
-vi.mock(':core/telemetry/events/subscription.js', () => ({
-  logSubscriptionChargeStarted: vi.fn(),
-  logSubscriptionChargeCompleted: vi.fn(),
-  logSubscriptionChargeError: vi.fn(),
 }));
 
 // Import the mocked CDP SDK
@@ -151,10 +143,6 @@ describe('charge', () => {
         chargedBy: mockSmartAccount.address,
       });
 
-      // Verify telemetry
-      expect(telemetryModule.logSubscriptionChargeStarted).toHaveBeenCalled();
-      expect(telemetryModule.logSubscriptionChargeCompleted).toHaveBeenCalled();
-      expect(telemetryModule.logSubscriptionChargeError).not.toHaveBeenCalled();
     });
 
     it('should charge a subscription on testnet', async () => {
@@ -258,22 +246,6 @@ describe('charge', () => {
       });
     });
 
-    it('should disable telemetry when requested', async () => {
-      const options = {
-        id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
-        amount: '9.99',
-        testnet: false,
-        telemetry: false,
-        cdpApiKeyId: 'test-api-key',
-        cdpApiKeySecret: 'test-api-secret',
-        cdpWalletSecret: 'test-wallet-secret',
-      };
-
-      await charge(options);
-
-      expect(telemetryModule.logSubscriptionChargeStarted).not.toHaveBeenCalled();
-      expect(telemetryModule.logSubscriptionChargeCompleted).not.toHaveBeenCalled();
-    });
 
     it('should charge and transfer to recipient when provided', async () => {
       const recipientAddress = '0x0000000000000000000000000000000000000001';
@@ -429,7 +401,6 @@ describe('charge', () => {
         'Failed to initialize CDP client for subscription charge'
       );
 
-      expect(telemetryModule.logSubscriptionChargeError).toHaveBeenCalled();
     });
 
     it('should throw error when wallet creation fails', async () => {
@@ -446,7 +417,6 @@ describe('charge', () => {
 
       await expect(charge(options)).rejects.toThrow('Failed to get or create charge smart wallet');
 
-      expect(telemetryModule.logSubscriptionChargeError).toHaveBeenCalled();
     });
 
     it('should throw error when charge preparation fails', async () => {
@@ -465,7 +435,6 @@ describe('charge', () => {
 
       await expect(charge(options)).rejects.toThrow('Subscription not found');
 
-      expect(telemetryModule.logSubscriptionChargeError).toHaveBeenCalled();
     });
 
     it('should throw error when user operation execution fails', async () => {
@@ -484,7 +453,6 @@ describe('charge', () => {
         'Failed to execute charge transaction with smart wallet: Insufficient funds'
       );
 
-      expect(telemetryModule.logSubscriptionChargeError).toHaveBeenCalled();
     });
 
     it('should throw error when user operation fails', async () => {
@@ -507,7 +475,6 @@ describe('charge', () => {
         'User operation failed: 0x9876543210987654321098765432109876543210987654321098765432109876'
       );
 
-      expect(telemetryModule.logSubscriptionChargeError).toHaveBeenCalled();
     });
   });
 
