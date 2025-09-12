@@ -142,7 +142,6 @@ describe('charge', () => {
         amount: options.amount,
         chargedBy: mockSmartAccount.address,
       });
-
     });
 
     it('should charge a subscription on testnet', async () => {
@@ -245,7 +244,6 @@ describe('charge', () => {
         ],
       });
     });
-
 
     it('should charge and transfer to recipient when provided', async () => {
       const recipientAddress = '0x0000000000000000000000000000000000000001';
@@ -400,7 +398,6 @@ describe('charge', () => {
       await expect(charge(options)).rejects.toThrow(
         'Failed to initialize CDP client for subscription charge'
       );
-
     });
 
     it('should throw error when wallet creation fails', async () => {
@@ -416,7 +413,6 @@ describe('charge', () => {
       };
 
       await expect(charge(options)).rejects.toThrow('Failed to get or create charge smart wallet');
-
     });
 
     it('should throw error when charge preparation fails', async () => {
@@ -434,7 +430,6 @@ describe('charge', () => {
       };
 
       await expect(charge(options)).rejects.toThrow('Subscription not found');
-
     });
 
     it('should throw error when user operation execution fails', async () => {
@@ -452,7 +447,6 @@ describe('charge', () => {
       await expect(charge(options)).rejects.toThrow(
         'Failed to execute charge transaction with smart wallet: Insufficient funds'
       );
-
     });
 
     it('should throw error when user operation fails', async () => {
@@ -474,7 +468,6 @@ describe('charge', () => {
       await expect(charge(options)).rejects.toThrow(
         'User operation failed: 0x9876543210987654321098765432109876543210987654321098765432109876'
       );
-
     });
   });
 

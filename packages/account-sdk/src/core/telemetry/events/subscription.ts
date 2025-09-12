@@ -75,4 +75,3 @@ export function logSubscriptionError(data: {
     AnalyticsEventImportance.high
   );
 }
-

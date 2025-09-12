@@ -4,6 +4,8 @@ import type { GetSubscriptionOwnerOptions, GetSubscriptionOwnerResult } from './
 /**
  * Gets or creates a CDP smart wallet to act as the subscription owner (spender).
  *
+ * Note: This function relies on Node.js APIs and is only available in Node.js environments.
+ *
  * This function creates or retrieves a CDP smart wallet that can be used as the
  * subscriptionOwner when calling the subscribe() function. The smart wallet is
  * controlled by an EVM account (EOA) and can leverage paymasters for gas sponsorship.

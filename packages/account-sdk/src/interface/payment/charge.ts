@@ -6,6 +6,8 @@ import type { ChargeOptions, ChargeResult } from './types.js';
 /**
  * Prepares and executes a charge for a given spend permission.
  *
+ * Note: This function relies on Node.js APIs and is only available in Node.js environments.
+ *
  * This function combines the functionality of getSubscriptionOwner and prepareCharge,
  * then executes the charge using a CDP smart wallet. The smart wallet is controlled
  * by an EVM account and can leverage paymasters for gas sponsorship.
@@ -83,112 +85,105 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
     recipient,
   } = options;
 
+  // Step 1: Initialize CDP client with provided credentials or environment variables
+  let cdpClient: CdpClient;
+
   try {
-    // Step 1: Initialize CDP client with provided credentials or environment variables
-    let cdpClient: CdpClient;
-
-    try {
-      cdpClient = new CdpClient({
-        apiKeyId: cdpApiKeyId,
-        apiKeySecret: cdpApiKeySecret,
-        walletSecret: cdpWalletSecret,
-      });
-    } catch (error) {
-      // Re-throw with more context about what credentials are missing
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `Failed to initialize CDP client for subscription charge. ${errorMessage}\n\nPlease ensure you have set the required CDP credentials either:\n1. As environment variables: CDP_API_KEY_ID, CDP_API_KEY_SECRET, CDP_WALLET_SECRET\n2. As function parameters: cdpApiKeyId, cdpApiKeySecret, cdpWalletSecret\n\nYou can get these credentials from https://portal.cdp.coinbase.com/`
-      );
-    }
-
-    // Step 2: Get or create the EVM account and smart wallet
-    let smartWallet;
-    try {
-      // First get or create the EOA that will own the smart wallet
-      const eoaAccount = await cdpClient.evm.getOrCreateAccount({ name: walletName });
-
-      // Get or create a smart wallet with the EOA as owner
-      // Using getOrCreateSmartAccount ensures idempotency
-      const smartWalletName = `${walletName}-smart`;
-      smartWallet = await cdpClient.evm.getOrCreateSmartAccount({
-        name: smartWalletName,
-        owner: eoaAccount,
-        // Note: We don't set enableSpendPermissions since this wallet will use
-        // spend permissions, not grant them to others
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `Failed to get or create charge smart wallet "${walletName}": ${errorMessage}`
-      );
-    }
-
-    // Step 3: Prepare the charge call data (including optional recipient transfer)
-    const chargeCalls = await prepareCharge({ id, amount, testnet, recipient });
-
-    // Step 4: Get the network-scoped smart wallet
-    const network = testnet ? 'base-sepolia' : 'base';
-    // biome-ignore lint/correctness/useHookAtTopLevel: useNetwork is not a React hook, it's a CDP SDK method
-    const networkSmartWallet = await smartWallet.useNetwork(network);
-
-    // Step 5: Execute the charge transaction(s) using the smart wallet
-    // Smart wallets can batch multiple calls and use paymasters for gas sponsorship
-    let transactionHash: string | undefined;
-
-    try {
-      // Build the calls array for the smart wallet
-      // Convert value from hex string to bigint if needed
-      const calls = chargeCalls.map((call) => ({
-        to: call.to,
-        data: call.data,
-        value: BigInt(call.value || '0x0'),
-      }));
-
-      // For smart wallets, we can send all calls in a single user operation
-      // This is more efficient and allows for better paymaster integration
-
-      // Send the user operation
-      const userOpResult = await networkSmartWallet.sendUserOperation({
-        calls,
-        ...(paymasterUrl && { paymasterUrl }),
-      });
-
-      // The sendUserOperation returns { smartAccountAddress, status: "broadcast", userOpHash }
-      // We need to wait for the operation to complete to get the transaction hash
-      const completedOp = await networkSmartWallet.waitForUserOperation({
-        userOpHash: userOpResult.userOpHash,
-        waitOptions: {
-          timeoutSeconds: 60, // Wait up to 60 seconds for the operation to complete
-        },
-      });
-
-      // Check if the operation was successful
-      if (completedOp.status === 'failed') {
-        throw new Error(`User operation failed: ${userOpResult.userOpHash}`);
-      }
-
-      // For completed operations, we have the transaction hash
-      transactionHash = completedOp.transactionHash;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to execute charge transaction with smart wallet: ${errorMessage}`);
-    }
-
-    if (!transactionHash) {
-      throw new Error('No transaction hash received from charge execution');
-    }
-
-    // Return success result
-    return {
-      success: true,
-      id: transactionHash,
-      subscriptionId: id,
-      amount: amount === 'max-remaining-charge' ? 'max' : amount,
-      chargedBy: smartWallet.address as Address,
-      ...(recipient && { recipient }),
-    };
+    cdpClient = new CdpClient({
+      apiKeyId: cdpApiKeyId,
+      apiKeySecret: cdpApiKeySecret,
+      walletSecret: cdpWalletSecret,
+    });
   } catch (error) {
-    // Re-throw the original error
-    throw error;
+    // Re-throw with more context about what credentials are missing
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to initialize CDP client for subscription charge. ${errorMessage}\n\nPlease ensure you have set the required CDP credentials either:\n1. As environment variables: CDP_API_KEY_ID, CDP_API_KEY_SECRET, CDP_WALLET_SECRET\n2. As function parameters: cdpApiKeyId, cdpApiKeySecret, cdpWalletSecret\n\nYou can get these credentials from https://portal.cdp.coinbase.com/`
+    );
   }
+
+  // Step 2: Get or create the EVM account and smart wallet
+  let smartWallet;
+  try {
+    // First get or create the EOA that will own the smart wallet
+    const eoaAccount = await cdpClient.evm.getOrCreateAccount({ name: walletName });
+
+    // Get or create a smart wallet with the EOA as owner
+    // Using getOrCreateSmartAccount ensures idempotency
+    const smartWalletName = `${walletName}-smart`;
+    smartWallet = await cdpClient.evm.getOrCreateSmartAccount({
+      name: smartWalletName,
+      owner: eoaAccount,
+      // Note: We don't set enableSpendPermissions since this wallet will use
+      // spend permissions, not grant them to others
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to get or create charge smart wallet "${walletName}": ${errorMessage}`);
+  }
+
+  // Step 3: Prepare the charge call data (including optional recipient transfer)
+  const chargeCalls = await prepareCharge({ id, amount, testnet, recipient });
+
+  // Step 4: Get the network-scoped smart wallet
+  const network = testnet ? 'base-sepolia' : 'base';
+  // biome-ignore lint/correctness/useHookAtTopLevel: useNetwork is not a React hook, it's a CDP SDK method
+  const networkSmartWallet = await smartWallet.useNetwork(network);
+
+  // Step 5: Execute the charge transaction(s) using the smart wallet
+  // Smart wallets can batch multiple calls and use paymasters for gas sponsorship
+  let transactionHash: string | undefined;
+
+  try {
+    // Build the calls array for the smart wallet
+    // Convert value from hex string to bigint if needed
+    const calls = chargeCalls.map((call) => ({
+      to: call.to,
+      data: call.data,
+      value: BigInt(call.value || '0x0'),
+    }));
+
+    // For smart wallets, we can send all calls in a single user operation
+    // This is more efficient and allows for better paymaster integration
+
+    // Send the user operation
+    const userOpResult = await networkSmartWallet.sendUserOperation({
+      calls,
+      ...(paymasterUrl && { paymasterUrl }),
+    });
+
+    // The sendUserOperation returns { smartAccountAddress, status: "broadcast", userOpHash }
+    // We need to wait for the operation to complete to get the transaction hash
+    const completedOp = await networkSmartWallet.waitForUserOperation({
+      userOpHash: userOpResult.userOpHash,
+      waitOptions: {
+        timeoutSeconds: 60, // Wait up to 60 seconds for the operation to complete
+      },
+    });
+
+    // Check if the operation was successful
+    if (completedOp.status === 'failed') {
+      throw new Error(`User operation failed: ${userOpResult.userOpHash}`);
+    }
+
+    // For completed operations, we have the transaction hash
+    transactionHash = completedOp.transactionHash;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to execute charge transaction with smart wallet: ${errorMessage}`);
+  }
+
+  if (!transactionHash) {
+    throw new Error('No transaction hash received from charge execution');
+  }
+
+  // Return success result
+  return {
+    success: true,
+    id: transactionHash,
+    subscriptionId: id,
+    amount: amount === 'max-remaining-charge' ? 'max' : amount,
+    chargedBy: smartWallet.address as Address,
+    ...(recipient && { recipient }),
+  };
 }
