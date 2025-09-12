@@ -11,6 +11,7 @@ vi.mock('../public-utilities/spend-permission/index.js', () => ({
 
 vi.mock('viem', () => ({
   parseUnits: vi.fn((value: string) => BigInt(parseFloat(value) * 1_000_000)),
+  encodeFunctionData: vi.fn(() => '0xencodedTransferData'),
 }));
 
 describe('prepareCharge', () => {
@@ -39,7 +40,7 @@ describe('prepareCharge', () => {
     });
 
     expect(fetchPermission).toHaveBeenCalledWith({ permissionHash: '0xhash123' });
-    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n);
+    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, undefined);
     expect(result).toEqual(mockCallData);
   });
 
@@ -56,7 +57,11 @@ describe('prepareCharge', () => {
       testnet: false,
     });
 
-    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 'max-remaining-allowance');
+    expect(prepareSpendCallData).toHaveBeenCalledWith(
+      mockPermission,
+      'max-remaining-allowance',
+      undefined
+    );
     expect(result).toEqual(mockCallData);
   });
 
@@ -78,7 +83,7 @@ describe('prepareCharge', () => {
       testnet: true,
     });
 
-    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n);
+    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n, undefined);
   });
 
   it('should throw error for network mismatch', async () => {
@@ -102,5 +107,79 @@ describe('prepareCharge', () => {
     await expect(prepareCharge({ id: '0xhash123', amount: '10', testnet: false })).rejects.toThrow(
       /Subscription is not for USDC token/
     );
+  });
+
+  it('should pass recipient to prepareSpendCallData when provided', async () => {
+    const { fetchPermission, prepareSpendCallData } = await import(
+      '../public-utilities/spend-permission/index.js'
+    );
+
+    vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
+    vi.mocked(prepareSpendCallData).mockResolvedValue(mockCallData);
+
+    const recipient = '0x0000000000000000000000000000000000000001';
+    const result = await prepareCharge({
+      id: '0xhash123',
+      amount: '10.50',
+      testnet: false,
+      recipient: recipient as any,
+    });
+
+    expect(fetchPermission).toHaveBeenCalledWith({ permissionHash: '0xhash123' });
+    // Now prepareSpendCallData handles the recipient and transfer logic
+    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, recipient);
+    expect(result).toEqual(mockCallData);
+  });
+
+  it('should pass recipient to prepareSpendCallData for testnet', async () => {
+    const testnetPermission = {
+      chainId: 84532, // Base Sepolia
+      permission: { token: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' }, // USDC testnet
+      signature: '0xmocksignature',
+    } as SpendPermission;
+
+    const { fetchPermission, prepareSpendCallData } = await import(
+      '../public-utilities/spend-permission/index.js'
+    );
+
+    vi.mocked(fetchPermission).mockResolvedValue(testnetPermission);
+    vi.mocked(prepareSpendCallData).mockResolvedValue(mockCallData);
+
+    const recipient = '0x0000000000000000000000000000000000000001';
+    const result = await prepareCharge({
+      id: '0xhash123',
+      amount: '5.00',
+      testnet: true,
+      recipient: recipient as any,
+    });
+
+    // Now prepareSpendCallData handles the recipient and transfer logic
+    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n, recipient);
+    expect(result).toEqual(mockCallData);
+  });
+
+  it('should handle recipient with max-remaining-charge', async () => {
+    const { fetchPermission, prepareSpendCallData } = await import(
+      '../public-utilities/spend-permission/index.js'
+    );
+
+    vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
+    vi.mocked(prepareSpendCallData).mockResolvedValue(mockCallData);
+
+    const recipient = '0x0000000000000000000000000000000000000001';
+    const result = await prepareCharge({
+      id: '0xhash123',
+      amount: 'max-remaining-charge',
+      testnet: false,
+      recipient: recipient as any,
+    });
+
+    // Now prepareSpendCallData handles the recipient and transfer logic with max amount
+    expect(prepareSpendCallData).toHaveBeenCalledWith(
+      mockPermission,
+      'max-remaining-allowance',
+      recipient
+    );
+    expect(result).toEqual(mockCallData);
   });
 });

@@ -201,6 +201,8 @@ export interface PrepareChargeOptions {
   amount: string | 'max-remaining-charge';
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
+  /** Optional recipient address to receive the charged USDC */
+  recipient?: Address;
 }
 
 /**
@@ -280,6 +282,8 @@ export interface ChargeResult {
   amount: string;
   /** The address that executed the charge (subscription owner) */
   chargedBy: Address;
+  /** The recipient address that received the USDC (if specified) */
+  recipient?: Address;
 }
 
 /**

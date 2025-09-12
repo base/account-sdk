@@ -6,14 +6,24 @@ export { createBaseAccountSDK } from './interface/builder/core/createBaseAccount
 export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js';
 
 // Payment interface exports
+// Note: This main index uses Node.js exports which include charge and getSubscriptionOwner
 export {
+  CHAIN_IDS,
+  TOKENS,
   base,
+  charge,
   getPaymentStatus,
+  getSubscriptionOwner,
   getSubscriptionStatus,
   pay,
+  prepareCharge,
   subscribe,
-} from './interface/payment/index.js';
+} from './interface/payment/index.node.js';
 export type {
+  ChargeOptions,
+  ChargeResult,
+  GetSubscriptionOwnerOptions,
+  GetSubscriptionOwnerResult,
   InfoRequest,
   PayerInfo,
   PayerInfoResponses,
@@ -23,8 +33,11 @@ export type {
   PaymentStatusOptions,
   PaymentStatusType,
   PaymentSuccess,
+  PrepareChargeCall,
+  PrepareChargeOptions,
+  PrepareChargeResult,
   SubscriptionOptions,
   SubscriptionResult,
   SubscriptionStatus,
   SubscriptionStatusOptions,
-} from './interface/payment/index.js';
+} from './interface/payment/index.node.js';

@@ -56,7 +56,7 @@ describe('charge', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup default mocks
     (CdpClient as any).mockImplementation(() => mockCdpClient);
     mockCdpClient.evm.getOrCreateAccount.mockResolvedValue(mockEoaAccount);
@@ -117,6 +117,7 @@ describe('charge', () => {
         id: options.id,
         amount: options.amount,
         testnet: options.testnet,
+        recipient: undefined,
       });
 
       // Verify network selection
@@ -188,6 +189,7 @@ describe('charge', () => {
         id: options.id,
         amount: 'max-remaining-charge',
         testnet: options.testnet,
+        recipient: undefined,
       });
 
       expect(result.amount).toBe('max');
@@ -272,6 +274,143 @@ describe('charge', () => {
       expect(telemetryModule.logSubscriptionChargeStarted).not.toHaveBeenCalled();
       expect(telemetryModule.logSubscriptionChargeCompleted).not.toHaveBeenCalled();
     });
+
+    it('should charge and transfer to recipient when provided', async () => {
+      const recipientAddress = '0x0000000000000000000000000000000000000001';
+      const mockChargeCallsWithTransfer = [
+        ...mockChargeCalls,
+        {
+          to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as any, // USDC address
+          data: '0xtransferData' as any,
+          value: '0x0' as any,
+        },
+      ];
+
+      // Mock prepareCharge to return calls including the transfer
+      (prepareChargeModule.prepareCharge as any).mockResolvedValue(mockChargeCallsWithTransfer);
+
+      const options = {
+        id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+        amount: '10.00',
+        recipient: recipientAddress as any,
+        testnet: false,
+        cdpApiKeyId: 'test-api-key',
+        cdpApiKeySecret: 'test-api-secret',
+        cdpWalletSecret: 'test-wallet-secret',
+      };
+
+      const result = await charge(options);
+
+      // Verify prepareCharge was called with recipient
+      expect(prepareChargeModule.prepareCharge).toHaveBeenCalledWith({
+        id: options.id,
+        amount: options.amount,
+        testnet: options.testnet,
+        recipient: recipientAddress,
+      });
+
+      // Verify that sendUserOperation was called with all calls from prepareCharge
+      expect(mockNetworkSmartAccount.sendUserOperation).toHaveBeenCalledWith({
+        calls: mockChargeCallsWithTransfer.map((call) => ({
+          to: call.to,
+          data: call.data,
+          value: BigInt(call.value),
+        })),
+      });
+
+      // Verify result includes recipient
+      expect(result).toEqual({
+        success: true,
+        id: '0xabcdef1234567890123456789012345678901234567890123456789012345678',
+        subscriptionId: options.id,
+        amount: options.amount,
+        chargedBy: mockSmartAccount.address,
+        recipient: recipientAddress,
+      });
+    });
+
+    it('should charge and transfer to recipient on testnet', async () => {
+      const recipientAddress = '0x0000000000000000000000000000000000000001';
+      const mockChargeCallsWithTransfer = [
+        ...mockChargeCalls,
+        {
+          to: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as any, // USDC testnet address
+          data: '0xtransferData' as any,
+          value: '0x0' as any,
+        },
+      ];
+
+      // Mock prepareCharge to return calls including the transfer
+      (prepareChargeModule.prepareCharge as any).mockResolvedValue(mockChargeCallsWithTransfer);
+
+      const options = {
+        id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+        amount: '5.00',
+        recipient: recipientAddress as any,
+        testnet: true,
+        cdpApiKeyId: 'test-api-key',
+        cdpApiKeySecret: 'test-api-secret',
+        cdpWalletSecret: 'test-wallet-secret',
+      };
+
+      await charge(options);
+
+      // Verify prepareCharge was called with recipient
+      expect(prepareChargeModule.prepareCharge).toHaveBeenCalledWith({
+        id: options.id,
+        amount: options.amount,
+        testnet: options.testnet,
+        recipient: recipientAddress,
+      });
+
+      // Verify testnet network selection
+      expect(mockSmartAccount.useNetwork).toHaveBeenCalledWith('base-sepolia');
+    });
+
+    it('should handle recipient with max-remaining-charge', async () => {
+      const recipientAddress = '0x0000000000000000000000000000000000000001';
+      const mockChargeCallsWithTransfer = [
+        ...mockChargeCalls,
+        {
+          to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as any, // USDC address
+          data: '0xtransferData' as any,
+          value: '0x0' as any,
+        },
+      ];
+
+      // Mock prepareCharge to return calls including the transfer
+      (prepareChargeModule.prepareCharge as any).mockResolvedValue(mockChargeCallsWithTransfer);
+
+      const options = {
+        id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+        amount: 'max-remaining-charge',
+        recipient: recipientAddress as any,
+        testnet: false,
+        cdpApiKeyId: 'test-api-key',
+        cdpApiKeySecret: 'test-api-secret',
+        cdpWalletSecret: 'test-wallet-secret',
+      };
+
+      const result = await charge(options);
+
+      // Verify prepareCharge was called with recipient and max-remaining-charge
+      expect(prepareChargeModule.prepareCharge).toHaveBeenCalledWith({
+        id: options.id,
+        amount: 'max-remaining-charge',
+        testnet: options.testnet,
+        recipient: recipientAddress,
+      });
+
+      // Verify result
+      expect(result).toEqual({
+        success: true,
+        id: '0xabcdef1234567890123456789012345678901234567890123456789012345678',
+        subscriptionId: options.id,
+        amount: 'max',
+        chargedBy: mockSmartAccount.address,
+        recipient: recipientAddress,
+      });
+    });
   });
 
   describe('error handling', () => {
@@ -294,9 +433,7 @@ describe('charge', () => {
     });
 
     it('should throw error when wallet creation fails', async () => {
-      mockCdpClient.evm.getOrCreateAccount.mockRejectedValue(
-        new Error('Failed to create wallet')
-      );
+      mockCdpClient.evm.getOrCreateAccount.mockRejectedValue(new Error('Failed to create wallet'));
 
       const options = {
         id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
@@ -307,9 +444,7 @@ describe('charge', () => {
         cdpWalletSecret: 'test-wallet-secret',
       };
 
-      await expect(charge(options)).rejects.toThrow(
-        'Failed to get or create charge wallet'
-      );
+      await expect(charge(options)).rejects.toThrow('Failed to get or create charge smart wallet');
 
       expect(telemetryModule.logSubscriptionChargeError).toHaveBeenCalled();
     });
@@ -334,9 +469,7 @@ describe('charge', () => {
     });
 
     it('should throw error when user operation execution fails', async () => {
-      mockNetworkSmartAccount.sendUserOperation.mockRejectedValue(
-        new Error('Insufficient funds')
-      );
+      mockNetworkSmartAccount.sendUserOperation.mockRejectedValue(new Error('Insufficient funds'));
 
       const options = {
         id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',

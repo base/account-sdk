@@ -7,20 +7,20 @@ import { pay } from './pay.js';
 import { prepareCharge } from './prepareCharge.js';
 import { subscribe } from './subscribe.js';
 import type {
-    ChargeOptions,
-    ChargeResult,
-    GetSubscriptionOwnerOptions,
-    GetSubscriptionOwnerResult,
-    PaymentOptions,
-    PaymentResult,
-    PaymentStatus,
-    PaymentStatusOptions,
-    PrepareChargeOptions,
-    PrepareChargeResult,
-    SubscriptionOptions,
-    SubscriptionResult,
-    SubscriptionStatus,
-    SubscriptionStatusOptions,
+  ChargeOptions,
+  ChargeResult,
+  GetSubscriptionOwnerOptions,
+  GetSubscriptionOwnerResult,
+  PaymentOptions,
+  PaymentResult,
+  PaymentStatus,
+  PaymentStatusOptions,
+  PrepareChargeOptions,
+  PrepareChargeResult,
+  SubscriptionOptions,
+  SubscriptionResult,
+  SubscriptionStatus,
+  SubscriptionStatusOptions,
 } from './types.js';
 
 /**

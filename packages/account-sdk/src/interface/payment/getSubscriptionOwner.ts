@@ -3,17 +3,17 @@ import type { GetSubscriptionOwnerOptions, GetSubscriptionOwnerResult } from './
 
 /**
  * Gets or creates a CDP smart wallet to act as the subscription owner (spender).
- * 
+ *
  * This function creates or retrieves a CDP smart wallet that can be used as the
  * subscriptionOwner when calling the subscribe() function. The smart wallet is
  * controlled by an EVM account (EOA) and can leverage paymasters for gas sponsorship.
- * 
+ *
  * The function will:
  * - Use the provided CDP credentials or fall back to environment variables
  * - Create or retrieve an EVM account to act as the smart wallet owner
  * - Create or retrieve a smart wallet controlled by that EVM account
  * - Return the smart wallet address (not the EOA address)
- * 
+ *
  * @param options - Options for getting or creating the subscription owner smart wallet
  * @param options.cdpApiKeyId - CDP API key ID. Falls back to CDP_API_KEY_ID env var
  * @param options.cdpApiKeySecret - CDP API key secret. Falls back to CDP_API_KEY_SECRET env var
@@ -21,22 +21,22 @@ import type { GetSubscriptionOwnerOptions, GetSubscriptionOwnerResult } from './
  * @param options.walletName - Custom wallet name. Defaults to "subscription owner"
  * @returns Promise<GetSubscriptionOwnerResult> - The smart wallet address and metadata
  * @throws Error if CDP credentials are missing or invalid
- * 
+ *
  * @example
  * ```typescript
  * import { base } from '@base-org/account/payment';
- * 
+ *
  * // Using environment variables (CDP_API_KEY_ID, CDP_API_KEY_SECRET, CDP_WALLET_SECRET)
  * const owner = await base.subscription.getSubscriptionOwner();
  * console.log(`Subscription owner smart wallet: ${owner.address}`);
- * 
+ *
  * // Using explicit credentials
  * const owner = await base.subscription.getSubscriptionOwner({
  *   cdpApiKeyId: 'your-api-key-id',
  *   cdpApiKeySecret: 'your-api-key-secret',
  *   cdpWalletSecret: 'your-wallet-secret'
  * });
- * 
+ *
  * // Use with subscribe function - now uses smart wallet address
  * const subscription = await base.subscription.subscribe({
  *   recurringCharge: "10.50",
@@ -44,7 +44,7 @@ import type { GetSubscriptionOwnerOptions, GetSubscriptionOwnerResult } from './
  *   periodInDays: 30,
  *   testnet: false
  * });
- * 
+ *
  * // Using a custom wallet name
  * const customOwner = await base.subscription.getSubscriptionOwner({
  *   walletName: 'my-app-subscription-wallet'
@@ -63,7 +63,7 @@ export async function getSubscriptionOwner(
 
   // Initialize CDP client with provided credentials or environment variables
   let cdpClient: CdpClient;
-  
+
   try {
     cdpClient = new CdpClient({
       apiKeyId: cdpApiKeyId,
@@ -74,11 +74,7 @@ export async function getSubscriptionOwner(
     // Re-throw with more context about what credentials are missing
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Failed to initialize CDP client for subscription owner wallet. ${errorMessage}\n\n` +
-      'Please ensure you have set the required CDP credentials either:\n' +
-      '1. As environment variables: CDP_API_KEY_ID, CDP_API_KEY_SECRET, CDP_WALLET_SECRET\n' +
-      '2. As function parameters: cdpApiKeyId, cdpApiKeySecret, cdpWalletSecret\n\n' +
-      'You can get these credentials from https://portal.cdp.coinbase.com/projects/api-keys'
+      `Failed to initialize CDP client for subscription owner wallet. ${errorMessage}\n\nPlease ensure you have set the required CDP credentials either:\n1. As environment variables: CDP_API_KEY_ID, CDP_API_KEY_SECRET, CDP_WALLET_SECRET\n2. As function parameters: cdpApiKeyId, cdpApiKeySecret, cdpWalletSecret\n\nYou can get these credentials from https://portal.cdp.coinbase.com/projects/api-keys`
     );
   }
 

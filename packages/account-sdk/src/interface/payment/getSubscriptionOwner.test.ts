@@ -48,7 +48,6 @@ describe('getSubscriptionOwner', () => {
 
   describe('successful smart wallet creation/retrieval', () => {
     it('should create a smart wallet with default name', async () => {
-
       const result = await getSubscriptionOwner({
         cdpApiKeyId: 'test-key-id',
         cdpApiKeySecret: 'test-key-secret',
@@ -78,7 +77,6 @@ describe('getSubscriptionOwner', () => {
     });
 
     it('should retrieve an existing smart wallet', async () => {
-
       const result = await getSubscriptionOwner({
         cdpApiKeyId: 'test-key-id',
         cdpApiKeySecret: 'test-key-secret',
@@ -93,7 +91,6 @@ describe('getSubscriptionOwner', () => {
     });
 
     it('should use custom wallet name', async () => {
-
       const result = await getSubscriptionOwner({
         cdpApiKeyId: 'test-key-id',
         cdpApiKeySecret: 'test-key-secret',
@@ -122,14 +119,14 @@ describe('getSubscriptionOwner', () => {
       process.env.CDP_API_KEY_SECRET = 'env-key-secret';
       process.env.CDP_WALLET_SECRET = 'env-wallet-secret';
 
-      mockCdpClient.evm.getAccount.mockResolvedValue(mockEoaAccount);
+      mockCdpClient.evm.getOrCreateAccount.mockResolvedValue(mockEoaAccount);
 
       const result = await getSubscriptionOwner();
 
       expect(result).toEqual({
-        address: '0x1234567890123456789012345678901234567890',
-        isNew: false,
-        walletName: 'subscription owner',
+        address: '0xabcdef1234567890123456789012345678901234',
+        walletName: 'subscription owner-smart',
+        eoaAddress: '0x1234567890123456789012345678901234567890',
       });
 
       // When no options are provided, undefined values are passed to CdpClient
@@ -146,7 +143,7 @@ describe('getSubscriptionOwner', () => {
       process.env.CDP_API_KEY_SECRET = 'env-key-secret';
       process.env.CDP_WALLET_SECRET = 'env-wallet-secret';
 
-      mockCdpClient.evm.getAccount.mockResolvedValue(mockEoaAccount);
+      mockCdpClient.evm.getOrCreateAccount.mockResolvedValue(mockEoaAccount);
 
       await getSubscriptionOwner({
         cdpApiKeyId: 'explicit-key-id',
@@ -186,7 +183,7 @@ describe('getSubscriptionOwner', () => {
           cdpApiKeySecret: 'test-key-secret',
           cdpWalletSecret: 'test-wallet-secret',
         })
-      ).rejects.toThrow(/Failed to get or create subscription owner wallet/);
+      ).rejects.toThrow(/Failed to get or create subscription owner smart wallet/);
     });
 
     it('should handle CDP API errors gracefully', async () => {
@@ -200,13 +197,15 @@ describe('getSubscriptionOwner', () => {
           cdpWalletSecret: 'test-wallet-secret',
           walletName: 'test-wallet',
         })
-      ).rejects.toThrow('Failed to get or create subscription owner wallet "test-wallet": Network error');
+      ).rejects.toThrow(
+        'Failed to get or create subscription owner smart wallet "test-wallet": Network error'
+      );
     });
   });
 
   describe('idempotency', () => {
     it('should return the same wallet when called multiple times', async () => {
-      mockCdpClient.evm.getAccount.mockResolvedValue(mockEoaAccount);
+      mockCdpClient.evm.getOrCreateAccount.mockResolvedValue(mockEoaAccount);
 
       const options: GetSubscriptionOwnerOptions = {
         cdpApiKeyId: 'test-key-id',

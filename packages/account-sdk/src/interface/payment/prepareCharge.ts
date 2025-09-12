@@ -21,6 +21,7 @@ import type { PrepareChargeOptions, PrepareChargeResult } from './types.js';
  * @param options.id - The subscription ID (permission hash) returned from subscribe()
  * @param options.amount - Amount to charge as a string (e.g., "10.50") or 'max-remaining-charge'
  * @param options.testnet - Whether this permission is on testnet (Base Sepolia). Defaults to false (mainnet)
+ * @param options.recipient - Optional recipient address to receive the charged USDC
  * @returns Promise<PrepareChargeResult> - Array of call data for the charge
  * @throws Error if the subscription cannot be found or if the amount exceeds remaining allowance
  *
@@ -41,6 +42,13 @@ import type { PrepareChargeOptions, PrepareChargeResult } from './types.js';
  *   amount: 'max-remaining-charge'
  * });
  *
+ * // Prepare to charge and transfer to a recipient
+ * const chargeWithRecipient = await base.subscription.prepareCharge({
+ *   id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+ *   amount: '10.00',
+ *   recipient: '0x0000000000000000000000000000000000000001'
+ * });
+ *
  * // Send the calls using your app's spender account
  * await provider.request({
  *   method: 'wallet_sendCalls',
@@ -55,7 +63,7 @@ import type { PrepareChargeOptions, PrepareChargeResult } from './types.js';
  * ```
  */
 export async function prepareCharge(options: PrepareChargeOptions): Promise<PrepareChargeResult> {
-  const { id, amount, testnet = false } = options;
+  const { id, amount, testnet = false, recipient } = options;
 
   // Fetch the permission using the subscription ID (permission hash)
   const permission = await fetchPermission({
@@ -99,21 +107,21 @@ export async function prepareCharge(options: PrepareChargeOptions): Promise<Prep
     );
   }
 
-  // Convert the amount to the appropriate format for prepareSpendCallData
+  // Determine the amount to pass to prepareSpendCallData
   let spendAmount: bigint | 'max-remaining-allowance';
 
   if (amount === 'max-remaining-charge') {
-    // Translate from subscription terminology to the core util terminology
+    // Pass 'max-remaining-allowance' to prepareSpendCallData
+    // It will handle getting the permission status internally
     spendAmount = 'max-remaining-allowance';
   } else {
     // Parse the USD amount string to USDC wei (6 decimals)
     // For example, "10.50" becomes 10500000n (10.50 * 10^6)
-    const usdcDecimals = TOKENS.USDC.decimals;
-    spendAmount = parseUnits(amount, usdcDecimals);
+    spendAmount = parseUnits(amount, TOKENS.USDC.decimals);
   }
 
-  // Call the existing prepareSpendCallData utility with the fetched permission
-  const callData = await prepareSpendCallData(permission, spendAmount);
+  // Call the existing prepareSpendCallData utility with the optional recipient
+  const callData = await prepareSpendCallData(permission, spendAmount, recipient);
 
   return callData;
 }
