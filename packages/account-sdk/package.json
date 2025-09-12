@@ -99,6 +99,7 @@
     "size": "size-limit"
   },
   "dependencies": {
+    "@coinbase/cdp-sdk": "^1.0.0",
     "@noble/hashes": "1.4.0",
     "clsx": "1.2.1",
     "eventemitter3": "5.0.1",

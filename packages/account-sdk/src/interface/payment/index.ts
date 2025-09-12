@@ -1,13 +1,16 @@
-/**
- * Payment interface exports
- */
 export { base } from './base.js';
+export { charge } from './charge.js';
 export { getPaymentStatus } from './getPaymentStatus.js';
+export { getSubscriptionOwner } from './getSubscriptionOwner.js';
 export { getSubscriptionStatus } from './getSubscriptionStatus.js';
 export { pay } from './pay.js';
 export { prepareCharge } from './prepareCharge.js';
 export { subscribe } from './subscribe.js';
 export type {
+  ChargeOptions,
+  ChargeResult,
+  GetSubscriptionOwnerOptions,
+  GetSubscriptionOwnerResult,
   InfoRequest,
   PayerInfo,
   PayerInfoResponses,

@@ -27,12 +27,16 @@ export type PrepareSpendCallDataResponseType = Call[];
  * When 'max-remaining-allowance' is provided as the amount, the function automatically uses all remaining
  * spend permission allowance.
  *
+ * If a recipient address is provided, an ERC20 transfer call will be appended to transfer
+ * the spent tokens to the recipient.
+ *
  * The resulting call data must be sent using the spender account, not the
  * account holder. The spender is responsible for executing both the approval
  * and spend operations.
  *
  * @param permission - The spend permission object containing the permission details and signature.
  * @param amount - The amount to spend in wei. If 'max-remaining-allowance' is provided, the full remaining allowance will be spent.
+ * @param recipient - Optional recipient address to receive the spent tokens via ERC20 transfer.
  *
  * @returns A promise that resolves to an array containing all the necessary calls.
  *
@@ -50,6 +54,13 @@ export type PrepareSpendCallDataResponseType = Call[];
  * const callsFullAmount = await prepareSpendCallData(
  *   permission,
  *   'max-remaining-allowance'
+ * );
+ *
+ * // Prepare calls with a recipient to receive the tokens
+ * const callsWithRecipient = await prepareSpendCallData(
+ *   permission,
+ *   50n * 10n ** 6n,
+ *   '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb8' // recipient address
  * );
  *
  * // Send the calls using your app's spender account
@@ -79,9 +90,24 @@ export type PrepareSpendCallDataResponseType = Call[];
  * await Promise.all(promises);
  * ```
  */
+// ERC20 transfer function ABI for recipient transfers
+const ERC20_TRANSFER_ABI = [
+  {
+    name: 'transfer',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+] as const;
+
 const prepareSpendCallDataFn = async (
   permission: SpendPermission,
-  amount: bigint | 'max-remaining-allowance'
+  amount: bigint | 'max-remaining-allowance',
+  recipient?: Address
 ): Promise<PrepareSpendCallDataResponseType> => {
   const { remainingSpend, isActive } = await getPermissionStatus(permission);
   const spendAmount = amount === 'max-remaining-allowance' ? remainingSpend : amount;
@@ -122,7 +148,26 @@ const prepareSpendCallDataFn = async (
     value: '0x0', // explicitly set to 0x0
   };
 
-  return [approveCall, spendCall].filter((item) => item !== null);
+  const calls: Call[] = [approveCall, spendCall].filter((item) => item !== null);
+
+  // If a recipient is specified, add an ERC20 transfer call
+  if (recipient) {
+    // Encode the ERC20 transfer call data
+    const transferCallData = encodeFunctionData({
+      abi: ERC20_TRANSFER_ABI,
+      functionName: 'transfer',
+      args: [recipient, spendAmount],
+    });
+
+    // Add the transfer call to the result
+    calls.push({
+      to: permission.permission.token as Address,
+      data: transferCallData,
+      value: '0x0',
+    });
+  }
+
+  return calls;
 };
 
 export const prepareSpendCallData = withTelemetry(prepareSpendCallDataFn);

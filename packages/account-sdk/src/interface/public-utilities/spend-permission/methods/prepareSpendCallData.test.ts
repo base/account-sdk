@@ -297,6 +297,97 @@ describe('prepareSpendCallData', () => {
     expect(result[0].to).toBe(spendPermissionManagerAddress);
   });
 
+  it('should include ERC20 transfer call when recipient is provided', async () => {
+    const recipientAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb8' as Address;
+    const spendAmount = BigInt('100000000'); // 100 USDC
+
+    mockGetPermissionStatus.mockResolvedValue(mockStatus);
+
+    // Mock the transfer call encoding
+    mockEncodeFunctionData.mockImplementation(({ functionName }) => {
+      if (functionName === 'spend') {
+        return '0xspenddata789abc' as `0x${string}`;
+      }
+      if (functionName === 'transfer') {
+        return '0xtransferdata123' as `0x${string}`;
+      }
+      return '0xinvaliddata' as `0x${string}`;
+    });
+
+    const result = await prepareSpendCallData(mockSpendPermission, spendAmount, recipientAddress);
+
+    // Should have 2 calls: spend and transfer
+    expect(result).toHaveLength(2);
+
+    // First call should be the spend call
+    expect(result[0]).toEqual({
+      to: spendPermissionManagerAddress,
+      data: '0xspenddata789abc',
+      value: '0x0',
+    });
+
+    // Second call should be the ERC20 transfer
+    expect(result[1]).toEqual({
+      to: mockSpendPermission.permission.token,
+      data: '0xtransferdata123',
+      value: '0x0',
+    });
+
+    // Verify encodeFunctionData was called with correct args for transfer
+    expect(mockEncodeFunctionData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        functionName: 'transfer',
+        args: [recipientAddress, spendAmount],
+      })
+    );
+  });
+
+  it('should include transfer with max amount when using max-remaining-allowance with recipient', async () => {
+    const recipientAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb8' as Address;
+
+    mockGetPermissionStatus.mockResolvedValue(mockStatus);
+
+    // Mock the transfer call encoding
+    mockEncodeFunctionData.mockImplementation(({ functionName }) => {
+      if (functionName === 'spend') {
+        return '0xspenddata789abc' as `0x${string}`;
+      }
+      if (functionName === 'transfer') {
+        return '0xtransferdata123' as `0x${string}`;
+      }
+      return '0xinvaliddata' as `0x${string}`;
+    });
+
+    const result = await prepareSpendCallData(
+      mockSpendPermission,
+      'max-remaining-allowance',
+      recipientAddress
+    );
+
+    // Should have 2 calls: spend and transfer
+    expect(result).toHaveLength(2);
+
+    // Verify encodeFunctionData was called with correct args for transfer using remaining spend
+    expect(mockEncodeFunctionData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        functionName: 'transfer',
+        args: [recipientAddress, mockStatus.remainingSpend],
+      })
+    );
+  });
+
+  it('should not include transfer call when recipient is not provided', async () => {
+    const spendAmount = BigInt('100000000'); // 100 USDC
+
+    mockGetPermissionStatus.mockResolvedValue(mockStatus);
+
+    const result = await prepareSpendCallData(mockSpendPermission, spendAmount);
+
+    // Should only have 1 call: spend (no transfer)
+    expect(result).toHaveLength(1);
+    expect(result[0].to).toBe(spendPermissionManagerAddress);
+  });
+
   it('should set value to 0x0 for both calls when permission is not active', async () => {
     const status = {
       remainingSpend: BigInt('500000000000000000'),

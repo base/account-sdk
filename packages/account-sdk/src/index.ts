@@ -7,13 +7,22 @@ export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js'
 
 // Payment interface exports
 export {
+  CHAIN_IDS,
+  TOKENS,
   base,
+  charge,
   getPaymentStatus,
+  getSubscriptionOwner,
   getSubscriptionStatus,
   pay,
+  prepareCharge,
   subscribe,
 } from './interface/payment/index.js';
 export type {
+  ChargeOptions,
+  ChargeResult,
+  GetSubscriptionOwnerOptions,
+  GetSubscriptionOwnerResult,
   InfoRequest,
   PayerInfo,
   PayerInfoResponses,
@@ -23,6 +32,9 @@ export type {
   PaymentStatusOptions,
   PaymentStatusType,
   PaymentSuccess,
+  PrepareChargeCall,
+  PrepareChargeOptions,
+  PrepareChargeResult,
   SubscriptionOptions,
   SubscriptionResult,
   SubscriptionStatus,

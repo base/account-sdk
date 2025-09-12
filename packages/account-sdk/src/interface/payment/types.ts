@@ -201,6 +201,8 @@ export interface PrepareChargeOptions {
   amount: string | 'max-remaining-charge';
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
+  /** Optional recipient address to receive the charged USDC */
+  recipient?: Address;
 }
 
 /**
@@ -219,6 +221,68 @@ export interface PrepareChargeCall {
  * Result of preparing subscription charge call data
  */
 export type PrepareChargeResult = PrepareChargeCall[];
+
+/**
+ * Options for getting or creating a subscription owner smart account
+ */
+export interface GetSubscriptionOwnerOptions {
+  /** CDP API key ID. Falls back to CDP_API_KEY_ID env var */
+  cdpApiKeyId?: string;
+  /** CDP API key secret. Falls back to CDP_API_KEY_SECRET env var */
+  cdpApiKeySecret?: string;
+  /** CDP wallet secret. Falls back to CDP_WALLET_SECRET env var */
+  cdpWalletSecret?: string;
+  /** Custom wallet name. Defaults to "subscription owner" */
+  walletName?: string;
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+}
+
+/**
+ * Result from getting or creating a subscription owner smart account
+ */
+export interface GetSubscriptionOwnerResult {
+  /** The Ethereum address of the subscription owner smart account */
+  address: Address;
+  /** The name of the wallet */
+  walletName: string;
+  /** The EOA address that owns the smart account (for reference) */
+  eoaAddress?: Address;
+}
+
+/**
+ * Options for charging a subscription
+ */
+export interface ChargeOptions extends PrepareChargeOptions {
+  /** CDP API key ID. Falls back to CDP_API_KEY_ID env var */
+  cdpApiKeyId?: string;
+  /** CDP API key secret. Falls back to CDP_API_KEY_SECRET env var */
+  cdpApiKeySecret?: string;
+  /** CDP wallet secret. Falls back to CDP_WALLET_SECRET env var */
+  cdpWalletSecret?: string;
+  /** Custom wallet name. Defaults to "subscription owner" */
+  walletName?: string;
+  /** Paymaster URL for transaction sponsorship. Falls back to PAYMASTER_URL env var */
+  paymasterUrl?: string;
+}
+
+/**
+ * Result of charging a subscription
+ */
+export interface ChargeResult {
+  /** Whether the charge was successful */
+  success: true;
+  /** Transaction ID (hash) of the charge */
+  id: string;
+  /** The subscription ID that was charged */
+  subscriptionId: string;
+  /** The amount that was charged */
+  amount: string;
+  /** The address that executed the charge (subscription owner) */
+  chargedBy: Address;
+  /** The recipient address that received the USDC (if specified) */
+  recipient?: Address;
+}
 
 /**
  * Internal type for payment execution result
