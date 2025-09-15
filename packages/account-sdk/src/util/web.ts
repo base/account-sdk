@@ -28,6 +28,7 @@ const IFRAME_STYLES = {
   bottom: '0px',
   backgroundColor: 'transparent',
   border: 'none',
+  'z-index': '1000',
 } as const;
 
 export function openPopup(url: URL, mode: 'embedded' | 'popup'): Promise<Window> {
