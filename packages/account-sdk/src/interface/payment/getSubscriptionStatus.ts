@@ -153,7 +153,8 @@ export async function getSubscriptionStatus(
   // A subscription is considered active if we're within the valid time bounds
   // and the permission hasn't been revoked.
   const hasNoOnChainState = currentPeriod.spend === BigInt(0);
-  const isSubscribed = hasNotExpired && (status.isActive || hasNoOnChainState);
+  const isSubscribed =
+    hasNotExpired && !status.isRevoked && (status.isActive || hasNoOnChainState);
 
   // Build the result with data from getCurrentPeriod and other on-chain functions
   const result: SubscriptionStatus = {

@@ -14,6 +14,7 @@ export type GetPermissionStatusResponseType = {
   remainingSpend: bigint;
   nextPeriodStart: Date;
   isActive: boolean;
+  isRevoked: boolean;
 };
 
 /**
@@ -108,6 +109,7 @@ const getPermissionStatusFn = async (
     remainingSpend,
     nextPeriodStart: timestampInSecondsToDate(Number(nextPeriodStart)),
     isActive,
+    isRevoked,
   };
 };
 
