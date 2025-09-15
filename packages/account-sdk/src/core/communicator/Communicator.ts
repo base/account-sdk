@@ -2,11 +2,13 @@ import { CB_KEYS_URL, PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { AppMetadata, Preference } from ':core/provider/interface.js';
 import {
+  logIframeTimeout,
+  logIframeVisible,
   logPopupSetupCompleted,
   logPopupSetupStarted,
   logPopupUnloadReceived,
 } from ':core/telemetry/events/communicator.js';
-import { closePopup, openPopup } from ':util/web.js';
+import { closePopup, IFRAME_ID, openPopup } from ':util/web.js';
 
 import { ConfigMessage } from '../message/ConfigMessage.js';
 import { Message, MessageID } from '../message/Message.js';
@@ -104,7 +106,7 @@ export class Communicator {
       return this.popup;
     }
 
-    logPopupSetupStarted();
+    logPopupSetupStarted(this.preference.mode);
     this.popup = await openPopup(this.url, this.preference.mode ?? 'popup');
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
@@ -114,8 +116,19 @@ export class Communicator {
       })
       .catch(() => {});
 
-    return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
+    const popupLoadedPromise = this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
       .then((message) => {
+        // Make the iframe visible when embedded mode is used
+        if (this.preference.mode === 'embedded') {
+          const iframe = document.getElementById(IFRAME_ID) as HTMLIFrameElement;
+          if (iframe) {
+            logIframeVisible();
+            iframe.style.transition = 'opacity 0.3s ease-in-out';
+            iframe.style.opacity = '1';
+            iframe.style.pointerEvents = 'auto';
+          }
+        }
+        
         this.postMessage({
           requestId: message.id,
           data: {
@@ -129,8 +142,29 @@ export class Communicator {
       })
       .then(() => {
         if (!this.popup) throw standardErrors.rpc.internal();
-        logPopupSetupCompleted();
+        logPopupSetupCompleted(this.preference.mode);
         return this.popup;
       });
+
+    // Add timeout for embedded mode
+    if (this.preference.mode === 'embedded') {
+      const IFRAME_TIMEOUT = 10000;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('iframe_timeout')), IFRAME_TIMEOUT);
+      });
+
+      return Promise.race([popupLoadedPromise, timeoutPromise]).catch((error) => {
+        if (error.message === 'iframe_timeout') {
+          // iFrame failed to load, fallback to popup
+          logIframeTimeout();
+          this.disconnect();
+          this.preference.mode = 'popup';
+          return this.waitForPopupLoaded();
+        }
+        throw error;
+      });
+    }
+
+    return popupLoadedPromise;
   };
 }
