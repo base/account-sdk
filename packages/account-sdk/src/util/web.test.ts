@@ -200,6 +200,7 @@ describe('PopupManager', () => {
       );
       expect(mockIframe.style.cssText).toContain('border:none');
       expect(mockIframe.style.cssText).toContain('position:absolute');
+      expect(mockIframe.style.cssText).toContain('z-index:1000');
       expect(mockIframe.src).toBe(url.toString());
       expect(document.body.appendChild).toHaveBeenCalledWith(mockIframe);
       expect(window).toBe(mockIframe.contentWindow);
