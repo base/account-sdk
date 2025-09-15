@@ -106,6 +106,7 @@ describe('getPermissionStatus - browser + node', () => {
         remainingSpend: BigInt('500000000000000000'), // 1 ETH - 0.5 ETH = 0.5 ETH remaining
         nextPeriodStart: new Date(1641081601 * 1000), // end + 1 converted to Date
         isActive: true, // not revoked and valid
+        isRevoked: false,
       });
 
       expect(getClient).toHaveBeenCalledWith(8453);

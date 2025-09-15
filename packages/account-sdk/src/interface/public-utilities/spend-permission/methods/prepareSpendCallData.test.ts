@@ -59,6 +59,7 @@ describe('prepareSpendCallData', () => {
     remainingSpend: BigInt('500000000000000000'), // 0.5 ETH remaining
     nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
     isActive: true,
+    isRevoked: false,
   };
 
   beforeEach(() => {
@@ -276,6 +277,7 @@ describe('prepareSpendCallData', () => {
       remainingSpend: BigInt('500000000000000000'),
       nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
       isActive: false,
+      isRevoked: false,
     });
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
@@ -289,6 +291,7 @@ describe('prepareSpendCallData', () => {
       remainingSpend: BigInt('500000000000000000'),
       nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
       isActive: true,
+      isRevoked: false,
     };
     mockGetPermissionStatus.mockResolvedValue(status);
 
@@ -393,6 +396,7 @@ describe('prepareSpendCallData', () => {
       remainingSpend: BigInt('500000000000000000'),
       nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
       isActive: false,
+      isRevoked: false,
     };
     mockGetPermissionStatus.mockResolvedValue(status);
 
@@ -413,6 +417,7 @@ describe('prepareSpendCallData', () => {
       remainingSpend: BigInt('0'),
       nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
       isActive: true,
+      isRevoked: false,
     };
     mockGetPermissionStatus.mockResolvedValue(status);
 
@@ -426,6 +431,7 @@ describe('prepareSpendCallData', () => {
       remainingSpend: BigInt('500000000000000000'),
       nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
       isActive: false,
+      isRevoked: false,
     };
     mockGetPermissionStatus.mockResolvedValue(status);
 
