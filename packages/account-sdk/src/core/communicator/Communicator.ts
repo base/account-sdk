@@ -128,7 +128,7 @@ export class Communicator {
             iframe.style.pointerEvents = 'auto';
           }
         }
-        
+
         this.postMessage({
           requestId: message.id,
           data: {

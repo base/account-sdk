@@ -111,4 +111,3 @@ export function identify(event: CCAEventData) {
 
 export { ActionType, AnalyticsEventImportance, ComponentType };
 export type { AnalyticsEventData, CCAEventData, LogEvent };
-
