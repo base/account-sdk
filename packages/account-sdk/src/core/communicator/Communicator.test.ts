@@ -9,7 +9,19 @@ import { Communicator } from './Communicator.js';
 
 vi.mock(':util/web', () => ({
   openPopup: vi.fn(),
+  closePopup: vi.fn(),
+  IFRAME_ID: 'keys-frame',
 }));
+
+vi.mock(':core/telemetry/events/communicator.js', () => ({
+  logPopupSetupStarted: vi.fn(),
+  logPopupSetupCompleted: vi.fn(),
+  logPopupUnloadReceived: vi.fn(),
+  logIframeTimeout: vi.fn(),
+  logIframeVisible: vi.fn(),
+}));
+
+// Import the mocked functions to verify they're called
 
 // Dispatches a message event to simulate postMessage calls from the popup
 function dispatchMessageEvent({ data, origin }: { data: Record<string, any>; origin: string }) {

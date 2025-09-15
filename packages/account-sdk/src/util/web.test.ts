@@ -33,6 +33,18 @@ vi.mock(':store/store.js', () => ({
   },
 }));
 
+vi.mock(':store/external-correlation-id/store.js', () => ({
+  externalCorrelationIds: {
+    get: vi.fn().mockReturnValue(null),
+  },
+}));
+
+vi.mock(':core/telemetry/events/communicator.js', () => ({
+  logIframeCreateStart: vi.fn(),
+  logIframeCreateSuccess: vi.fn(),
+  logIframeCreateFailure: vi.fn(),
+  logIframeDestroyed: vi.fn(),
+}));
 describe('PopupManager', () => {
   beforeAll(() => {
     global.window = Object.create(window);
@@ -240,10 +252,14 @@ describe('PopupManager', () => {
       expect(mockPopup.close).not.toHaveBeenCalled();
     });
 
-    it('should remove iframe when closing an embedded window', () => {
+    it('should remove iframe when closing an embedded window', async () => {
       const mockIframe = {
         contentWindow: { focus: vi.fn() },
         remove: vi.fn(),
+        style: {
+          transition: '',
+          opacity: '',
+        },
       };
       const mockPopup = mockIframe.contentWindow as any as Window;
 
@@ -252,6 +268,11 @@ describe('PopupManager', () => {
       closePopup(mockPopup);
 
       expect(document.getElementById).toHaveBeenCalledWith('keys-frame');
+      expect(mockIframe.style.transition).toBe('opacity 0.3s ease-in-out');
+      expect(mockIframe.style.opacity).toBe('0');
+
+      // Wait for the setTimeout to complete
+      await new Promise((resolve) => setTimeout(resolve, 350));
       expect(mockIframe.remove).toHaveBeenCalledTimes(1);
     });
 

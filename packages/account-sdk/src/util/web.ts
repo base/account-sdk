@@ -1,5 +1,11 @@
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
+import {
+  logIframeCreateFailure,
+  logIframeCreateStart,
+  logIframeCreateSuccess,
+  logIframeDestroyed,
+} from ':core/telemetry/events/communicator.js';
 import { logDialogActionClicked, logDialogShown } from ':core/telemetry/events/dialog.js';
 import { externalCorrelationIds } from ':store/external-correlation-id/store.js';
 import { store } from ':store/store.js';
@@ -13,7 +19,7 @@ const POPUP_BLOCKED_TITLE = '{app} wants to continue in Base Account';
 const POPUP_BLOCKED_MESSAGE = 'This action requires your permission to open a new window.';
 
 // iFrame constants for embedded mode
-const IFRAME_ID = 'keys-frame';
+export const IFRAME_ID = 'keys-frame';
 const IFRAME_ALLOW = 'publickey-credentials-get; publickey-credentials-create; clipboard-write';
 const IFRAME_STYLES = {
   overflow: 'hidden',
@@ -29,6 +35,9 @@ const IFRAME_STYLES = {
   backgroundColor: 'transparent',
   border: 'none',
   'z-index': '1000',
+  // The iframe is initially hidden and then made
+  // visible once the popup is loaded
+  opacity: '0',
 } as const;
 
 export function openPopup(url: URL, mode: 'embedded' | 'popup'): Promise<Window> {
@@ -76,7 +85,13 @@ export function closePopup(popup: Window | null) {
   // If embedded, remove the iframe element
   const iframe = document.getElementById(IFRAME_ID) as HTMLIFrameElement;
   if (iframe && iframe.contentWindow === popup) {
-    iframe.remove();
+    iframe.style.transition = 'opacity 0.3s ease-in-out';
+    iframe.style.opacity = '0';
+
+    setTimeout(() => {
+      iframe.remove();
+      logIframeDestroyed();
+    }, 300);
     return;
   }
 
@@ -154,6 +169,8 @@ function openPopupWithDialog(tryOpenPopup: () => Window | null) {
 }
 
 function createEmbeddedIframe(url: URL): Window {
+  logIframeCreateStart();
+
   const iframe = document.createElement('iframe');
   iframe.id = IFRAME_ID;
   iframe.allowFullscreen = true;
@@ -167,8 +184,10 @@ function createEmbeddedIframe(url: URL): Window {
   document.body.appendChild(iframe);
 
   if (!iframe.contentWindow) {
+    logIframeCreateFailure();
     throw standardErrors.rpc.internal('iframe failed to initialize');
   }
 
+  logIframeCreateSuccess();
   return iframe.contentWindow;
 }
