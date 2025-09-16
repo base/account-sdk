@@ -22,6 +22,7 @@ import {
   numberToHex,
   parseEther,
   parseUnits,
+  toHex,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
@@ -51,11 +52,8 @@ export default function AutoSubAccount() {
   });
   const [dataCallbackConfig, setDataCallbackConfig] = useState({
     email: true,
-    physicalAddress: true,
     name: true,
     phoneNumber: false,
-    onchainAddress: false,
-    callbackURL: 'https://example.com/validate',
   });
   const { subAccountsConfig, setSubAccountsConfig, config, setConfig } = useConfig();
   const { provider } = useEIP1193Provider();
@@ -213,7 +211,7 @@ export default function AutoSubAccount() {
       // Add SIWE capability if selected
       if (walletConnectCapabilities.siwe) {
         capabilities.signInWithEthereum = {
-          chainId: 84532,
+          chainId: toHex(84532),
           nonce: Math.random().toString(36).substring(2, 15),
         };
       }
@@ -238,21 +236,13 @@ export default function AutoSubAccount() {
       if (walletConnectCapabilities.dataCallback) {
         const requests: Array<{ type: string; optional: boolean }> = [];
         if (dataCallbackConfig.email) requests.push({ type: 'email', optional: false });
-        if (dataCallbackConfig.physicalAddress)
-          requests.push({ type: 'physicalAddress', optional: false });
         if (dataCallbackConfig.name) requests.push({ type: 'name', optional: false });
         if (dataCallbackConfig.phoneNumber)
           requests.push({ type: 'phoneNumber', optional: false });
-        if (dataCallbackConfig.onchainAddress)
-          requests.push({ type: 'onchainAddress', optional: false });
 
         if (requests.length > 0) {
           capabilities.dataCallback = {
             requests,
-            // Note: callbackURL is ignored during wallet_connect and only used with wallet_sendCalls
-            ...(dataCallbackConfig.callbackURL?.trim()
-              ? { callbackURL: dataCallbackConfig.callbackURL.trim() }
-              : {}),
           };
         }
       }
@@ -526,39 +516,7 @@ export default function AutoSubAccount() {
                   >
                     phoneNumber
                   </Checkbox>
-                  <Checkbox
-                    isChecked={dataCallbackConfig.physicalAddress}
-                    onChange={(e) =>
-                      setDataCallbackConfig((prev) => ({
-                        ...prev,
-                        physicalAddress: e.target.checked,
-                      }))
-                    }
-                  >
-                    physicalAddress
-                  </Checkbox>
-                  <Checkbox
-                    isChecked={dataCallbackConfig.onchainAddress}
-                    onChange={(e) =>
-                      setDataCallbackConfig((prev) => ({
-                        ...prev,
-                        onchainAddress: e.target.checked,
-                      }))
-                    }
-                  >
-                    onchainAddress
-                  </Checkbox>
                 </HStack>
-                <FormControl>
-                  <FormLabel fontSize="sm">Callback URL (optional)</FormLabel>
-                  <Input
-                    placeholder="https://your-api.com/validate"
-                    value={dataCallbackConfig.callbackURL}
-                    onChange={(e) =>
-                      setDataCallbackConfig((prev) => ({ ...prev, callbackURL: e.target.value }))
-                    }
-                  />
-                </FormControl>
               </VStack>
             )}
           </Stack>
