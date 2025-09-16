@@ -237,8 +237,7 @@ export default function AutoSubAccount() {
         const requests: Array<{ type: string; optional: boolean }> = [];
         if (dataCallbackConfig.email) requests.push({ type: 'email', optional: false });
         if (dataCallbackConfig.name) requests.push({ type: 'name', optional: false });
-        if (dataCallbackConfig.phoneNumber)
-          requests.push({ type: 'phoneNumber', optional: false });
+        if (dataCallbackConfig.phoneNumber) requests.push({ type: 'phoneNumber', optional: false });
 
         if (requests.length > 0) {
           capabilities.dataCallback = {
