@@ -22,6 +22,7 @@ import {
   numberToHex,
   parseEther,
   parseUnits,
+  toHex,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
@@ -47,6 +48,12 @@ export default function AutoSubAccount() {
   const [walletConnectCapabilities, setWalletConnectCapabilities] = useState({
     siwe: false,
     addSubAccount: false,
+    userInfo: false,
+  });
+  const [userInfoConfig, setUserInfoConfig] = useState({
+    email: true,
+    name: true,
+    phoneNumber: false,
   });
   const { subAccountsConfig, setSubAccountsConfig, config, setConfig } = useConfig();
   const { provider } = useEIP1193Provider();
@@ -194,13 +201,17 @@ export default function AutoSubAccount() {
     let params: unknown[] = [];
 
     // Build params based on selected capabilities
-    if (walletConnectCapabilities.siwe || walletConnectCapabilities.addSubAccount) {
+    if (
+      walletConnectCapabilities.siwe ||
+      walletConnectCapabilities.addSubAccount ||
+      walletConnectCapabilities.userInfo
+    ) {
       const capabilities: Record<string, unknown> = {};
 
       // Add SIWE capability if selected
       if (walletConnectCapabilities.siwe) {
         capabilities.signInWithEthereum = {
-          chainId: 84532,
+          chainId: toHex(84532),
           nonce: Math.random().toString(36).substring(2, 15),
         };
       }
@@ -221,9 +232,23 @@ export default function AutoSubAccount() {
         };
       }
 
+      // Add userInfo capability if selected
+      if (walletConnectCapabilities.userInfo) {
+        const collect: string[] = [];
+        if (userInfoConfig.email) collect.push('email');
+        if (userInfoConfig.name) collect.push('name');
+        if (userInfoConfig.phoneNumber) collect.push('phoneNumber');
+
+        if (collect.length > 0) {
+          capabilities.userInfo = {
+            collect,
+          };
+        }
+      }
+
       params = [
         {
-          ...(walletConnectCapabilities.siwe && { version: '1' }),
+          version: '1.0.0',
           capabilities,
         },
       ];
@@ -445,6 +470,54 @@ export default function AutoSubAccount() {
             >
               Add Sub Account
             </Checkbox>
+            <Checkbox
+              isChecked={walletConnectCapabilities.userInfo}
+              onChange={(e) =>
+                setWalletConnectCapabilities((prev) => ({
+                  ...prev,
+                  userInfo: e.target.checked,
+                }))
+              }
+            >
+              User Info
+            </Checkbox>
+
+            {walletConnectCapabilities.userInfo && (
+              <VStack align="start" pl={2} spacing={2}>
+                <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.300' }}>
+                  Select data to request (best-effort at connect time)
+                </Text>
+                <HStack wrap="wrap">
+                  <Checkbox
+                    isChecked={userInfoConfig.email}
+                    onChange={(e) =>
+                      setUserInfoConfig((prev) => ({ ...prev, email: e.target.checked }))
+                    }
+                  >
+                    email
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={userInfoConfig.name}
+                    onChange={(e) =>
+                      setUserInfoConfig((prev) => ({ ...prev, name: e.target.checked }))
+                    }
+                  >
+                    name
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={userInfoConfig.phoneNumber}
+                    onChange={(e) =>
+                      setUserInfoConfig((prev) => ({
+                        ...prev,
+                        phoneNumber: e.target.checked,
+                      }))
+                    }
+                  >
+                    phoneNumber
+                  </Checkbox>
+                </HStack>
+              </VStack>
+            )}
           </Stack>
         </FormControl>
         {accounts.length > 0 && (
