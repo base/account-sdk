@@ -776,7 +776,7 @@ describe('Signer', () => {
       expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
     });
 
-    it('should use cached response for subsequent wallet_connect calls', async () => {
+    it('should perform a fresh wallet_connect on subsequent calls (no cache)', async () => {
       // First wallet_connect call
       const mockRequest: RequestArguments = {
         method: 'wallet_connect',
@@ -812,17 +812,40 @@ describe('Signer', () => {
       // First wallet_connect call
       await signer.request(mockRequest);
 
-      // Reset decryptContent mock to verify it's not called again
+      // Reset and provide a fresh response for the second call
       (decryptContent as Mock).mockReset();
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                  spendPermissions: {
+                    permissions: mockSpendPermissions,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
 
-      // Second wallet_connect call
-      const cachedResponse = await signer.request(mockRequest);
+      // Second wallet_connect call should decrypt again (no cache)
+      const secondResponse = await signer.request(mockRequest);
 
-      // Verify decryptContent was not called for the second request
-      expect(decryptContent).not.toHaveBeenCalled();
+      // Verify decryptContent was called for the second request
+      expect(decryptContent).toHaveBeenCalledTimes(1);
 
-      // Verify cached response matches expected format
-      expect(cachedResponse).toEqual({
+      // Verify response matches expected format from fresh decrypt
+      expect(secondResponse).toEqual({
         accounts: [
           {
             address: globalAccountAddress,
