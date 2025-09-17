@@ -48,9 +48,9 @@ export default function AutoSubAccount() {
   const [walletConnectCapabilities, setWalletConnectCapabilities] = useState({
     siwe: false,
     addSubAccount: false,
-    dataCallback: false,
+    userInfo: false,
   });
-  const [dataCallbackConfig, setDataCallbackConfig] = useState({
+  const [userInfoConfig, setUserInfoConfig] = useState({
     email: true,
     name: true,
     phoneNumber: false,
@@ -204,7 +204,7 @@ export default function AutoSubAccount() {
     if (
       walletConnectCapabilities.siwe ||
       walletConnectCapabilities.addSubAccount ||
-      walletConnectCapabilities.dataCallback
+      walletConnectCapabilities.userInfo
     ) {
       const capabilities: Record<string, unknown> = {};
 
@@ -232,16 +232,16 @@ export default function AutoSubAccount() {
         };
       }
 
-      // Add dataCallback capability if selected
-      if (walletConnectCapabilities.dataCallback) {
-        const requests: Array<{ type: string; optional: boolean }> = [];
-        if (dataCallbackConfig.email) requests.push({ type: 'email', optional: false });
-        if (dataCallbackConfig.name) requests.push({ type: 'name', optional: false });
-        if (dataCallbackConfig.phoneNumber) requests.push({ type: 'phoneNumber', optional: false });
+      // Add userInfo capability if selected
+      if (walletConnectCapabilities.userInfo) {
+        const collect: string[] = [];
+        if (userInfoConfig.email) collect.push('email');
+        if (userInfoConfig.name) collect.push('name');
+        if (userInfoConfig.phoneNumber) collect.push('phoneNumber');
 
-        if (requests.length > 0) {
-          capabilities.dataCallback = {
-            requests,
+        if (collect.length > 0) {
+          capabilities.userInfo = {
+            collect,
           };
         }
       }
@@ -471,43 +471,43 @@ export default function AutoSubAccount() {
               Add Sub Account
             </Checkbox>
             <Checkbox
-              isChecked={walletConnectCapabilities.dataCallback}
+              isChecked={walletConnectCapabilities.userInfo}
               onChange={(e) =>
                 setWalletConnectCapabilities((prev) => ({
                   ...prev,
-                  dataCallback: e.target.checked,
+                  userInfo: e.target.checked,
                 }))
               }
             >
-              Data Callback
+              User Info
             </Checkbox>
 
-            {walletConnectCapabilities.dataCallback && (
+            {walletConnectCapabilities.userInfo && (
               <VStack align="start" pl={2} spacing={2}>
                 <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.300' }}>
                   Select data to request (best-effort at connect time)
                 </Text>
                 <HStack wrap="wrap">
                   <Checkbox
-                    isChecked={dataCallbackConfig.email}
+                    isChecked={userInfoConfig.email}
                     onChange={(e) =>
-                      setDataCallbackConfig((prev) => ({ ...prev, email: e.target.checked }))
+                      setUserInfoConfig((prev) => ({ ...prev, email: e.target.checked }))
                     }
                   >
                     email
                   </Checkbox>
                   <Checkbox
-                    isChecked={dataCallbackConfig.name}
+                    isChecked={userInfoConfig.name}
                     onChange={(e) =>
-                      setDataCallbackConfig((prev) => ({ ...prev, name: e.target.checked }))
+                      setUserInfoConfig((prev) => ({ ...prev, name: e.target.checked }))
                     }
                   >
                     name
                   </Checkbox>
                   <Checkbox
-                    isChecked={dataCallbackConfig.phoneNumber}
+                    isChecked={userInfoConfig.phoneNumber}
                     onChange={(e) =>
-                      setDataCallbackConfig((prev) => ({
+                      setUserInfoConfig((prev) => ({
                         ...prev,
                         phoneNumber: e.target.checked,
                       }))
