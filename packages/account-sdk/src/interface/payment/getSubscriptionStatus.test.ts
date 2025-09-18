@@ -38,7 +38,7 @@ vi.mock('../public-utilities/spend-permission/utils.js', () => ({
 
 describe('getSubscriptionStatus', () => {
   const mockPermissionHash = '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984';
-  const mockClient = { transport: { url: 'http://localhost:8545' } };
+  const mockClient = { transport: { url: 'http://localhost:8545' } } as any;
 
   const createMockPermission = (overrides?: Partial<SpendPermission>): SpendPermission => {
     const defaultPermission = {
@@ -215,7 +215,7 @@ describe('getSubscriptionStatus', () => {
       );
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
-      vi.mocked(getClient).mockReturnValue(null); // No client available
+      vi.mocked(getClient).mockReturnValue(null as any); // No client available
       vi.mocked(calculateCurrentPeriod).mockReturnValue({
         start: currentTime - 86400,
         end: currentTime + 2505600,
@@ -275,7 +275,7 @@ describe('getSubscriptionStatus', () => {
   describe('subscription not found', () => {
     it('should return not subscribed when permission is not found', async () => {
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
-      vi.mocked(fetchPermission).mockResolvedValue(null);
+      vi.mocked(fetchPermission).mockResolvedValue(null as any);
 
       const result = await getSubscriptionStatus({
         id: mockPermissionHash,
@@ -494,7 +494,7 @@ describe('getSubscriptionStatus', () => {
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient)
-        .mockReturnValueOnce(null) // First call returns null
+        .mockReturnValueOnce(null as any) // First call returns null
         .mockReturnValue(mockClient); // Subsequent calls return client
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
