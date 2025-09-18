@@ -32,8 +32,8 @@ describe('charge', () => {
 
   const mockCdpClient = {
     evm: {
-      getOrCreateAccount: vi.fn(),
-      getOrCreateSmartAccount: vi.fn(),
+      getAccount: vi.fn(),
+      getSmartAccount: vi.fn(),
       sendUserOperation: vi.fn(),
     },
   };
@@ -51,8 +51,8 @@ describe('charge', () => {
 
     // Setup default mocks
     (CdpClient as any).mockImplementation(() => mockCdpClient);
-    mockCdpClient.evm.getOrCreateAccount.mockResolvedValue(mockEoaAccount);
-    mockCdpClient.evm.getOrCreateSmartAccount.mockResolvedValue(mockSmartAccount);
+    mockCdpClient.evm.getAccount.mockResolvedValue(mockEoaAccount);
+    mockCdpClient.evm.getSmartAccount.mockResolvedValue(mockSmartAccount);
     mockSmartAccount.useNetwork.mockResolvedValue(mockNetworkSmartAccount);
     mockNetworkSmartAccount.sendUserOperation.mockResolvedValue({
       smartAccountAddress: mockSmartAccount.address,
@@ -93,14 +93,14 @@ describe('charge', () => {
         walletSecret: 'test-wallet-secret',
       });
 
-      // Verify EOA account creation
-      expect(mockCdpClient.evm.getOrCreateAccount).toHaveBeenCalledWith({
+      // Verify EOA account retrieval
+      expect(mockCdpClient.evm.getAccount).toHaveBeenCalledWith({
         name: 'subscription owner',
       });
 
-      // Verify smart account creation
-      expect(mockCdpClient.evm.getOrCreateSmartAccount).toHaveBeenCalledWith({
-        name: 'subscription owner-smart',
+      // Verify smart account retrieval
+      expect(mockCdpClient.evm.getSmartAccount).toHaveBeenCalledWith({
+        name: 'subscription owner',
         owner: mockEoaAccount,
       });
 
@@ -195,7 +195,7 @@ describe('charge', () => {
 
       await charge(options);
 
-      expect(mockCdpClient.evm.getOrCreateAccount).toHaveBeenCalledWith({
+      expect(mockCdpClient.evm.getAccount).toHaveBeenCalledWith({
         name: 'my-custom-wallet',
       });
     });
@@ -400,8 +400,8 @@ describe('charge', () => {
       );
     });
 
-    it('should throw error when wallet creation fails', async () => {
-      mockCdpClient.evm.getOrCreateAccount.mockRejectedValue(new Error('Failed to create wallet'));
+    it('should throw error when wallet not found', async () => {
+      mockCdpClient.evm.getAccount.mockResolvedValue(null);
 
       const options = {
         id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
@@ -412,7 +412,22 @@ describe('charge', () => {
         cdpWalletSecret: 'test-wallet-secret',
       };
 
-      await expect(charge(options)).rejects.toThrow('Failed to get or create charge smart wallet');
+      await expect(charge(options)).rejects.toThrow('EOA wallet "subscription owner" not found');
+    });
+
+    it('should throw error when smart wallet not found', async () => {
+      mockCdpClient.evm.getSmartAccount.mockResolvedValue(null);
+
+      const options = {
+        id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+        amount: '9.99',
+        testnet: false,
+        cdpApiKeyId: 'test-api-key',
+        cdpApiKeySecret: 'test-api-secret',
+        cdpWalletSecret: 'test-wallet-secret',
+      };
+
+      await expect(charge(options)).rejects.toThrow('Smart wallet "subscription owner" not found');
     });
 
     it('should throw error when charge preparation fails', async () => {
