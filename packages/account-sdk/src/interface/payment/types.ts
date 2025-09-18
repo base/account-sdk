@@ -189,6 +189,8 @@ export interface SubscriptionStatus {
   nextPeriodStart?: Date;
   /** The subscription period in days */
   periodInDays?: number;
+  /** The wallet address of the account that owns this subscription */
+  owner?: string;
 }
 
 /**
