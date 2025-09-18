@@ -703,11 +703,10 @@ export class Signer {
     });
 
     // Determine effective chainId - use request chainId for wallet_sendCalls, default otherwise
-    const chainId =
+    const walletSendCallsChainId =
       request.method === 'wallet_sendCalls' &&
-      (request.params as WalletSendCallsParameters)?.[0]?.chainId
-        ? hexToNumber((request.params as WalletSendCallsParameters)[0].chainId)
-        : this.chain.id;
+      (request.params as WalletSendCallsParameters)?.[0]?.chainId;
+    const chainId = walletSendCallsChainId ? hexToNumber(walletSendCallsChainId) : this.chain.id;
 
     const client = getClient(chainId);
     assertPresence(
