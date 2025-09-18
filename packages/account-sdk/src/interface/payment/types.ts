@@ -190,7 +190,7 @@ export interface SubscriptionStatus {
   /** The subscription period in days */
   periodInDays?: number;
   /** The wallet address of the account that owns this subscription */
-  owner?: string;
+  subscriptionOwner?: string;
 }
 
 /**
@@ -281,7 +281,7 @@ export interface ChargeResult {
   /** The amount that was charged */
   amount: string;
   /** The address that executed the charge (subscription owner) */
-  chargedBy: Address;
+  subscriptionOwner: Address;
   /** The recipient address that received the USDC (if specified) */
   recipient?: Address;
 }

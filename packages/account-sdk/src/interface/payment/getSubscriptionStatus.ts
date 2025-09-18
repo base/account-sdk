@@ -1,18 +1,18 @@
 import { formatUnits } from 'viem';
 import { readContract } from 'viem/actions';
 import {
-    spendPermissionManagerAbi,
-    spendPermissionManagerAddress,
+  spendPermissionManagerAbi,
+  spendPermissionManagerAddress,
 } from '../../sign/base-account/utils/constants.js';
 import { createClients, FALLBACK_CHAINS, getClient } from '../../store/chain-clients/utils.js';
 import {
-    fetchPermission,
-    getPermissionStatus,
+  fetchPermission,
+  getPermissionStatus,
 } from '../public-utilities/spend-permission/index.js';
 import {
-    calculateCurrentPeriod,
-    timestampInSecondsToDate,
-    toSpendPermissionArgs,
+  calculateCurrentPeriod,
+  timestampInSecondsToDate,
+  toSpendPermissionArgs,
 } from '../public-utilities/spend-permission/utils.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
@@ -44,7 +44,7 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
  * console.log(`Subscribed: ${status.isSubscribed}`);
  * console.log(`Next payment: ${status.nextPeriodStart}`);
  * console.log(`Recurring amount: $${status.recurringAmount}`);
- * console.log(`Owner address: ${status.owner}`);
+ * console.log(`Owner address: ${status.subscriptionOwner}`);
  * ```
  */
 export async function getSubscriptionStatus(
@@ -164,7 +164,7 @@ export async function getSubscriptionStatus(
     currentPeriodStart: timestampInSecondsToDate(currentPeriod.start),
     nextPeriodStart: status.nextPeriodStart,
     periodInDays,
-    owner: permission.permission.account,
+    subscriptionOwner: permission.permission.spender,
   };
 
   return result;

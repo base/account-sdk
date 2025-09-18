@@ -183,7 +183,7 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
     id: transactionHash,
     subscriptionId: id,
     amount: amount === 'max-remaining-charge' ? 'max' : amount,
-    chargedBy: smartWallet.address as Address,
+    subscriptionOwner: smartWallet.address as Address,
     ...(recipient && { recipient }),
   };
 }
