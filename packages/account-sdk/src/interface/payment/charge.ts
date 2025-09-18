@@ -139,7 +139,6 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
 
   // Step 4: Get the network-scoped smart wallet
   const network = testnet ? 'base-sepolia' : 'base';
-  // biome-ignore lint/correctness/useHookAtTopLevel: useNetwork is not a React hook, it's a CDP SDK method
   const networkSmartWallet = await smartWallet.useNetwork(network);
 
   // Step 5: Execute the charge transaction(s) using the smart wallet

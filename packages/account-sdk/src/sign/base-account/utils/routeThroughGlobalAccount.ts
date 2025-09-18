@@ -1,21 +1,21 @@
 import { RequestArguments } from ':core/provider/interface.js';
 import { spendPermissions } from ':store/store.js';
 import {
-  Address,
-  Hex,
-  PublicClient,
-  SendCallsReturnType,
-  WalletSendCallsParameters,
-  encodeFunctionData,
-  hexToBigInt,
+    Address,
+    Hex,
+    PublicClient,
+    SendCallsReturnType,
+    WalletSendCallsParameters,
+    encodeFunctionData,
+    hexToBigInt,
 } from 'viem';
 
 import {
-  createWalletSendCallsRequest,
-  injectRequestCapabilities,
-  isEthSendTransactionParams,
-  isSendCallsParams,
-  waitForCallsTransactionHash,
+    createWalletSendCallsRequest,
+    injectRequestCapabilities,
+    isEthSendTransactionParams,
+    isSendCallsParams,
+    waitForCallsTransactionHash,
 } from '../utils.js';
 import { abi } from './constants.js';
 
@@ -46,7 +46,7 @@ export async function routeThroughGlobalAccount({
   /** Optional calls to prepend to the request. */
   prependCalls?: { to: Address; data: Hex; value: Hex }[] | undefined;
   /** The function to use to send the request to the global account. */
-  globalAccountRequest: (request: RequestArguments) => Promise<any>;
+  globalAccountRequest: (request: RequestArguments) => Promise<unknown>;
 }) {
   // Construct call to execute the original calls using executeBatch
   let originalSendCallsParams: WalletSendCallsParameters[0];

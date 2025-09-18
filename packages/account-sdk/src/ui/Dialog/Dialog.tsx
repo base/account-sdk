@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
 import { clsx } from 'clsx';
-import { FunctionComponent, render } from 'preact';
+import { FunctionComponent, JSX, render } from 'preact';
 
 import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
 import { store } from ':store/store.js';
@@ -122,7 +122,7 @@ export const DialogContainer: FunctionComponent = (props) => {
   const [startY, setStartY] = useState(0);
 
   // Touch event handlers for drag-to-dismiss (entire dialog area)
-  const handleTouchStart = (e: any) => {
+  const handleTouchStart = (e: JSX.TargetedTouchEvent<HTMLDivElement>) => {
     // Only enable drag on mobile portrait mode
     if (!isPhonePortrait()) return;
 
@@ -131,7 +131,7 @@ export const DialogContainer: FunctionComponent = (props) => {
     setIsDragging(true);
   };
 
-  const handleTouchMove = (e: any) => {
+  const handleTouchMove = (e: JSX.TargetedTouchEvent<HTMLDivElement>) => {
     if (!isDragging) return;
 
     const touch = e.touches[0];
