@@ -1,7 +1,7 @@
 import { charge } from './charge.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
+import { getOrCreateSubscriptionOwnerWallet } from './getOrCreateSubscriptionOwnerWallet.js';
 import { getPaymentStatus } from './getPaymentStatus.js';
-import { getSubscriptionOwner } from './getSubscriptionOwner.js';
 import { getSubscriptionStatus } from './getSubscriptionStatus.js';
 import { pay } from './pay.js';
 import { prepareCharge } from './prepareCharge.js';
@@ -9,8 +9,8 @@ import { subscribe } from './subscribe.js';
 import type {
   ChargeOptions,
   ChargeResult,
-  GetSubscriptionOwnerOptions,
-  GetSubscriptionOwnerResult,
+  GetOrCreateSubscriptionOwnerWalletOptions,
+  GetOrCreateSubscriptionOwnerWalletResult,
   PaymentOptions,
   PaymentResult,
   PaymentStatus,
@@ -35,7 +35,7 @@ export const base = {
     getStatus: getSubscriptionStatus,
     prepareCharge,
     charge,
-    getSubscriptionOwner,
+    getOrCreateSubscriptionOwnerWallet,
   },
   constants: {
     CHAIN_IDS,
@@ -54,7 +54,7 @@ export const base = {
     SubscriptionResult: SubscriptionResult;
     SubscriptionStatus: SubscriptionStatus;
     SubscriptionStatusOptions: SubscriptionStatusOptions;
-    GetSubscriptionOwnerOptions: GetSubscriptionOwnerOptions;
-    GetSubscriptionOwnerResult: GetSubscriptionOwnerResult;
+    GetOrCreateSubscriptionOwnerWalletOptions: GetOrCreateSubscriptionOwnerWalletOptions;
+    GetOrCreateSubscriptionOwnerWalletResult: GetOrCreateSubscriptionOwnerWalletResult;
   },
 };

@@ -227,7 +227,7 @@ export type PrepareChargeResult = PrepareChargeCall[];
 /**
  * Options for getting or creating a subscription owner smart account
  */
-export interface GetSubscriptionOwnerOptions {
+export interface GetOrCreateSubscriptionOwnerWalletOptions {
   /** CDP API key ID. Falls back to CDP_API_KEY_ID env var */
   cdpApiKeyId?: string;
   /** CDP API key secret. Falls back to CDP_API_KEY_SECRET env var */
@@ -243,7 +243,7 @@ export interface GetSubscriptionOwnerOptions {
 /**
  * Result from getting or creating a subscription owner smart account
  */
-export interface GetSubscriptionOwnerResult {
+export interface GetOrCreateSubscriptionOwnerWalletResult {
   /** The Ethereum address of the subscription owner smart account */
   address: Address;
   /** The name of the wallet */

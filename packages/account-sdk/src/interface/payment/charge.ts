@@ -8,7 +8,7 @@ import type { ChargeOptions, ChargeResult } from './types.js';
  *
  * Note: This function relies on Node.js APIs and is only available in Node.js environments.
  *
- * This function combines the functionality of getSubscriptionOwner and prepareCharge,
+ * This function combines the functionality of getOrCreateSubscriptionOwnerWallet and prepareCharge,
  * then executes the charge using a CDP smart wallet. The smart wallet is controlled
  * by an EVM account and can leverage paymasters for gas sponsorship.
  *
@@ -112,7 +112,7 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
 
     if (!eoaAccount) {
       throw new Error(
-        `EOA wallet "${walletName}" not found. The wallet must be created before executing a charge. Use getSubscriptionOwner() to create the wallet first.`
+        `EOA wallet "${walletName}" not found. The wallet must be created before executing a charge. Use getOrCreateSubscriptionOwnerWallet() to create the wallet first.`
       );
     }
 
@@ -126,7 +126,7 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
 
     if (!smartWallet) {
       throw new Error(
-        `Smart wallet "${walletName}" not found. The wallet must be created before executing a charge. Use getSubscriptionOwner() to create the wallet first.`
+        `Smart wallet "${walletName}" not found. The wallet must be created before executing a charge. Use getOrCreateSubscriptionOwnerWallet() to create the wallet first.`
       );
     }
   } catch (error) {
