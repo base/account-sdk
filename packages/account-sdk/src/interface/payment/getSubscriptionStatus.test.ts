@@ -83,20 +83,10 @@ describe('getSubscriptionStatus', () => {
       const { toSpendPermissionArgs } = await import('../public-utilities/spend-permission/utils.js');
       const { timestampInSecondsToDate } = await import('../public-utilities/spend-permission/utils.js');
 
-      // Debug: log the mock permission to verify structure
-      console.log('Mock permission before mock:', JSON.stringify({
-        account: mockPermission.permission.account,
-        spender: mockPermission.permission.spender,
-      }));
-
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       
       // Add a spy to see what the implementation actually receives
       vi.mocked(fetchPermission).mockImplementation(async () => {
-        console.log('fetchPermission called, returning:', JSON.stringify({
-          account: mockPermission.permission.account,
-          spender: mockPermission.permission.spender,
-        }));
         return mockPermission;
       });
       vi.mocked(getClient).mockReturnValue(mockClient);
