@@ -140,7 +140,7 @@ describe('charge', () => {
         id: '0xabcdef1234567890123456789012345678901234567890123456789012345678',
         subscriptionId: options.id,
         amount: options.amount,
-        chargedBy: mockSmartAccount.address,
+        subscriptionOwner: mockSmartAccount.address,
       });
     });
 
@@ -294,7 +294,7 @@ describe('charge', () => {
         id: '0xabcdef1234567890123456789012345678901234567890123456789012345678',
         subscriptionId: options.id,
         amount: options.amount,
-        chargedBy: mockSmartAccount.address,
+        subscriptionOwner: mockSmartAccount.address,
         recipient: recipientAddress,
       });
     });
@@ -377,7 +377,7 @@ describe('charge', () => {
         id: '0xabcdef1234567890123456789012345678901234567890123456789012345678',
         subscriptionId: options.id,
         amount: 'max',
-        chargedBy: mockSmartAccount.address,
+        subscriptionOwner: mockSmartAccount.address,
         recipient: recipientAddress,
       });
     });
