@@ -1,21 +1,21 @@
 import { RequestArguments } from ':core/provider/interface.js';
 import { spendPermissions } from ':store/store.js';
 import {
-    Address,
-    Hex,
-    PublicClient,
-    SendCallsReturnType,
-    WalletSendCallsParameters,
-    encodeFunctionData,
-    hexToBigInt,
+  Address,
+  Hex,
+  PublicClient,
+  SendCallsReturnType,
+  WalletSendCallsParameters,
+  encodeFunctionData,
+  hexToBigInt,
 } from 'viem';
 
 import {
-    createWalletSendCallsRequest,
-    injectRequestCapabilities,
-    isEthSendTransactionParams,
-    isSendCallsParams,
-    waitForCallsTransactionHash,
+  createWalletSendCallsRequest,
+  injectRequestCapabilities,
+  isEthSendTransactionParams,
+  isSendCallsParams,
+  waitForCallsTransactionHash,
 } from '../utils.js';
 import { abi } from './constants.js';
 

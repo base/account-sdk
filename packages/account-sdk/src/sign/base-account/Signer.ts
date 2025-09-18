@@ -7,30 +7,30 @@ import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import {
-    FetchPermissionRequest,
-    FetchPermissionResponse,
+  FetchPermissionRequest,
+  FetchPermissionResponse,
 } from ':core/rpc/coinbase_fetchPermission.js';
 import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { GetSubAccountsResponse } from ':core/rpc/wallet_getSubAccount.js';
 import {
-    logHandshakeCompleted,
-    logHandshakeError,
-    logHandshakeStarted,
-    logRequestCompleted,
-    logRequestError,
-    logRequestStarted,
+  logHandshakeCompleted,
+  logHandshakeError,
+  logHandshakeStarted,
+  logRequestCompleted,
+  logRequestError,
+  logRequestStarted,
 } from ':core/telemetry/events/scw-signer.js';
 import {
-    logAddOwnerCompleted,
-    logAddOwnerError,
-    logAddOwnerStarted,
-    logInsufficientBalanceErrorHandlingCompleted,
-    logInsufficientBalanceErrorHandlingError,
-    logInsufficientBalanceErrorHandlingStarted,
-    logSubAccountRequestCompleted,
-    logSubAccountRequestError,
-    logSubAccountRequestStarted,
+  logAddOwnerCompleted,
+  logAddOwnerError,
+  logAddOwnerStarted,
+  logInsufficientBalanceErrorHandlingCompleted,
+  logInsufficientBalanceErrorHandlingError,
+  logInsufficientBalanceErrorHandlingStarted,
+  logSubAccountRequestCompleted,
+  logSubAccountRequestError,
+  logSubAccountRequestStarted,
 } from ':core/telemetry/events/scw-sub-account.js';
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { Address } from ':core/type/index.js';
@@ -41,27 +41,27 @@ import { spendPermissions, store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import {
-    decryptContent,
-    encryptContent,
-    exportKeyToHexString,
-    importKeyFromHexString,
+  decryptContent,
+  encryptContent,
+  exportKeyToHexString,
+  importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
 import {
-    addSenderToRequest,
-    appendWithoutDuplicates,
-    assertFetchPermissionsRequest,
-    assertGetCapabilitiesParams,
-    assertParamsChainId,
-    fillMissingParamsForFetchPermissions,
-    getSenderFromRequest,
-    initSubAccountConfig,
-    injectRequestCapabilities,
-    makeDataSuffix,
-    prependWithoutDuplicates,
-    requestHasCapability,
+  addSenderToRequest,
+  appendWithoutDuplicates,
+  assertFetchPermissionsRequest,
+  assertGetCapabilitiesParams,
+  assertParamsChainId,
+  fillMissingParamsForFetchPermissions,
+  getSenderFromRequest,
+  initSubAccountConfig,
+  injectRequestCapabilities,
+  makeDataSuffix,
+  prependWithoutDuplicates,
+  requestHasCapability,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { findOwnerIndex } from './utils/findOwnerIndex.js';
@@ -704,7 +704,8 @@ export class Signer {
 
     // Determine effective chainId - use request chainId for wallet_sendCalls, default otherwise
     const chainId =
-      request.method === 'wallet_sendCalls' && (request.params as WalletSendCallsParameters)?.[0]?.chainId
+      request.method === 'wallet_sendCalls' &&
+      (request.params as WalletSendCallsParameters)?.[0]?.chainId
         ? hexToNumber((request.params as WalletSendCallsParameters)[0].chainId)
         : this.chain.id;
 
