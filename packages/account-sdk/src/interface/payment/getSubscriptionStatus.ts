@@ -164,8 +164,7 @@ export async function getSubscriptionStatus(
     currentPeriodStart: timestampInSecondsToDate(currentPeriod.start),
     nextPeriodStart: status.nextPeriodStart,
     periodInDays,
-    subscriptionOwner: permission.permission.account,
+    subscriptionOwner: permission.permission.spender,
   };
-
   return result;
 }
