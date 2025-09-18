@@ -43,7 +43,7 @@ describe('pay', () => {
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
           data: '0xabcdef',
-          value: 0n,
+          value: '0x0',
         },
       ],
       capabilities: {},
@@ -103,7 +103,7 @@ describe('pay', () => {
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
           data: '0xabcdef',
-          value: 0n,
+          value: '0x0',
         },
       ],
       capabilities: {},
@@ -148,7 +148,7 @@ describe('pay', () => {
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
           data: '0xabcdef',
-          value: 0n,
+          value: '0x0',
         },
       ],
       capabilities: {},
@@ -234,7 +234,7 @@ describe('pay', () => {
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
           data: '0xabcdef',
-          value: 0n,
+          value: '0x0',
         },
       ],
       capabilities: {},
@@ -271,7 +271,7 @@ describe('pay', () => {
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
           data: '0xabcdef',
-          value: 0n,
+          value: '0x0',
         },
       ],
       capabilities: {},
@@ -352,7 +352,7 @@ describe('pay', () => {
         {
           to: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
           data: '0xabcdef',
-          value: 0n,
+          value: '0x0',
         },
       ],
       capabilities: {
@@ -417,7 +417,7 @@ describe('pay', () => {
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
           data: '0xabcdef',
-          value: 0n,
+          value: '0x0',
         },
       ],
       capabilities: {

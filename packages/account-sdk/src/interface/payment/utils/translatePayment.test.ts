@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { CHAIN_IDS, TOKENS } from '../constants.js';
 import type { PayerInfo } from '../types.js';
 import {
-  buildSendCallsRequest,
-  encodeTransferCall,
-  translatePaymentToSendCalls,
+    buildSendCallsRequest,
+    encodeTransferCall,
+    translatePaymentToSendCalls,
 } from './translatePayment.js';
 
 describe('translatePayment', () => {

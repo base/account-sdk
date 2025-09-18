@@ -1,4 +1,4 @@
-import { encodeFunctionData, parseUnits, type Address, type Hex } from 'viem';
+import { encodeFunctionData, parseUnits, toHex, type Address, type Hex } from 'viem';
 import { CHAIN_IDS, ERC20_TRANSFER_ABI, TOKENS } from '../constants.js';
 import type { PayerInfo } from '../types.js';
 
@@ -35,7 +35,7 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payer
   const call = {
     to: usdcAddress as Address,
     data: transferData,
-    value: '0x0' as Hex, // No ETH value for ERC20 transfer
+    value: toHex(0n), // No ETH value for ERC20 transfer
   };
 
   // Build the capabilities object
