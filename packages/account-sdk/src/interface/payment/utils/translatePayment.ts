@@ -26,7 +26,11 @@ export function encodeTransferCall(recipient: Address, amount: string): Hex {
  * @param payerInfo - Optional payer information configuration for data callbacks
  * @returns The request parameters for wallet_sendCalls
  */
-export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payerInfo?: PayerInfo): {
+export function buildSendCallsRequest(
+  transferData: Hex,
+  testnet: boolean,
+  payerInfo?: PayerInfo
+): {
   version: string;
   chainId: number;
   calls: Array<{
