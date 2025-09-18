@@ -1,14 +1,14 @@
 import { CdpClient } from '@coinbase/cdp-sdk';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getSubscriptionOwner } from './getSubscriptionOwner.js';
-import type { GetSubscriptionOwnerOptions } from './types.js';
+import { getOrCreateSubscriptionOwnerWallet } from './getOrCreateSubscriptionOwnerWallet.js';
+import type { GetOrCreateSubscriptionOwnerWalletOptions } from './types.js';
 
 // Mock the CDP SDK
 vi.mock('@coinbase/cdp-sdk', () => ({
   CdpClient: vi.fn(),
 }));
 
-describe('getSubscriptionOwner', () => {
+describe('getOrCreateSubscriptionOwnerWallet', () => {
   let mockCdpClient: any;
   let mockEoaAccount: any;
   let mockSmartAccount: any;
@@ -48,7 +48,7 @@ describe('getSubscriptionOwner', () => {
 
   describe('successful smart wallet creation/retrieval', () => {
     it('should create a smart wallet with default name', async () => {
-      const result = await getSubscriptionOwner({
+      const result = await getOrCreateSubscriptionOwnerWallet({
         cdpApiKeyId: 'test-key-id',
         cdpApiKeySecret: 'test-key-secret',
         cdpWalletSecret: 'test-wallet-secret',
@@ -56,7 +56,7 @@ describe('getSubscriptionOwner', () => {
 
       expect(result).toEqual({
         address: '0xabcdef1234567890123456789012345678901234',
-        walletName: 'subscription owner-smart',
+        walletName: 'subscription owner',
         eoaAddress: '0x1234567890123456789012345678901234567890',
       });
 
@@ -71,13 +71,13 @@ describe('getSubscriptionOwner', () => {
       });
 
       expect(mockCdpClient.evm.getOrCreateSmartAccount).toHaveBeenCalledWith({
-        name: 'subscription owner-smart',
+        name: 'subscription owner',
         owner: mockEoaAccount,
       });
     });
 
     it('should retrieve an existing smart wallet', async () => {
-      const result = await getSubscriptionOwner({
+      const result = await getOrCreateSubscriptionOwnerWallet({
         cdpApiKeyId: 'test-key-id',
         cdpApiKeySecret: 'test-key-secret',
         cdpWalletSecret: 'test-wallet-secret',
@@ -85,13 +85,13 @@ describe('getSubscriptionOwner', () => {
 
       expect(result).toEqual({
         address: '0xabcdef1234567890123456789012345678901234',
-        walletName: 'subscription owner-smart',
+        walletName: 'subscription owner',
         eoaAddress: '0x1234567890123456789012345678901234567890',
       });
     });
 
     it('should use custom wallet name', async () => {
-      const result = await getSubscriptionOwner({
+      const result = await getOrCreateSubscriptionOwnerWallet({
         cdpApiKeyId: 'test-key-id',
         cdpApiKeySecret: 'test-key-secret',
         cdpWalletSecret: 'test-wallet-secret',
@@ -100,7 +100,7 @@ describe('getSubscriptionOwner', () => {
 
       expect(result).toEqual({
         address: '0xabcdef1234567890123456789012345678901234',
-        walletName: 'custom-wallet-name-smart',
+        walletName: 'custom-wallet-name',
         eoaAddress: '0x1234567890123456789012345678901234567890',
       });
 
@@ -109,7 +109,7 @@ describe('getSubscriptionOwner', () => {
       });
 
       expect(mockCdpClient.evm.getOrCreateSmartAccount).toHaveBeenCalledWith({
-        name: 'custom-wallet-name-smart',
+        name: 'custom-wallet-name',
         owner: mockEoaAccount,
       });
     });
@@ -121,11 +121,11 @@ describe('getSubscriptionOwner', () => {
 
       mockCdpClient.evm.getOrCreateAccount.mockResolvedValue(mockEoaAccount);
 
-      const result = await getSubscriptionOwner();
+      const result = await getOrCreateSubscriptionOwnerWallet();
 
       expect(result).toEqual({
         address: '0xabcdef1234567890123456789012345678901234',
-        walletName: 'subscription owner-smart',
+        walletName: 'subscription owner',
         eoaAddress: '0x1234567890123456789012345678901234567890',
       });
 
@@ -145,7 +145,7 @@ describe('getSubscriptionOwner', () => {
 
       mockCdpClient.evm.getOrCreateAccount.mockResolvedValue(mockEoaAccount);
 
-      await getSubscriptionOwner({
+      await getOrCreateSubscriptionOwnerWallet({
         cdpApiKeyId: 'explicit-key-id',
         cdpApiKeySecret: 'explicit-key-secret',
         cdpWalletSecret: 'explicit-wallet-secret',
@@ -167,7 +167,7 @@ describe('getSubscriptionOwner', () => {
       });
 
       await expect(
-        getSubscriptionOwner({
+        getOrCreateSubscriptionOwnerWallet({
           // Missing credentials
         })
       ).rejects.toThrow(/Failed to initialize CDP client/);
@@ -178,7 +178,7 @@ describe('getSubscriptionOwner', () => {
       mockCdpClient.evm.getOrCreateAccount.mockRejectedValue(createError);
 
       await expect(
-        getSubscriptionOwner({
+        getOrCreateSubscriptionOwnerWallet({
           cdpApiKeyId: 'test-key-id',
           cdpApiKeySecret: 'test-key-secret',
           cdpWalletSecret: 'test-wallet-secret',
@@ -191,7 +191,7 @@ describe('getSubscriptionOwner', () => {
       mockCdpClient.evm.getOrCreateAccount.mockRejectedValue(apiError);
 
       await expect(
-        getSubscriptionOwner({
+        getOrCreateSubscriptionOwnerWallet({
           cdpApiKeyId: 'test-key-id',
           cdpApiKeySecret: 'test-key-secret',
           cdpWalletSecret: 'test-wallet-secret',
@@ -207,14 +207,14 @@ describe('getSubscriptionOwner', () => {
     it('should return the same wallet when called multiple times', async () => {
       mockCdpClient.evm.getOrCreateAccount.mockResolvedValue(mockEoaAccount);
 
-      const options: GetSubscriptionOwnerOptions = {
+      const options: GetOrCreateSubscriptionOwnerWalletOptions = {
         cdpApiKeyId: 'test-key-id',
         cdpApiKeySecret: 'test-key-secret',
         cdpWalletSecret: 'test-wallet-secret',
       };
 
-      const result1 = await getSubscriptionOwner(options);
-      const result2 = await getSubscriptionOwner(options);
+      const result1 = await getOrCreateSubscriptionOwnerWallet(options);
+      const result2 = await getOrCreateSubscriptionOwnerWallet(options);
 
       expect(result1.address).toBe(result2.address);
       expect(result1.walletName).toBe(result2.walletName);

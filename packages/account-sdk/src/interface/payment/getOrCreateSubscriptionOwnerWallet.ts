@@ -1,5 +1,8 @@
 import { CdpClient } from '@coinbase/cdp-sdk';
-import type { GetSubscriptionOwnerOptions, GetSubscriptionOwnerResult } from './types.js';
+import type {
+  GetOrCreateSubscriptionOwnerWalletOptions,
+  GetOrCreateSubscriptionOwnerWalletResult,
+} from './types.js';
 
 /**
  * Gets or creates a CDP smart wallet to act as the subscription owner (spender).
@@ -21,7 +24,7 @@ import type { GetSubscriptionOwnerOptions, GetSubscriptionOwnerResult } from './
  * @param options.cdpApiKeySecret - CDP API key secret. Falls back to CDP_API_KEY_SECRET env var
  * @param options.cdpWalletSecret - CDP wallet secret. Falls back to CDP_WALLET_SECRET env var
  * @param options.walletName - Custom wallet name. Defaults to "subscription owner"
- * @returns Promise<GetSubscriptionOwnerResult> - The smart wallet address and metadata
+ * @returns Promise<GetOrCreateSubscriptionOwnerWalletResult> - The smart wallet address and metadata
  * @throws Error if CDP credentials are missing or invalid
  *
  * @example
@@ -29,11 +32,11 @@ import type { GetSubscriptionOwnerOptions, GetSubscriptionOwnerResult } from './
  * import { base } from '@base-org/account/payment';
  *
  * // Using environment variables (CDP_API_KEY_ID, CDP_API_KEY_SECRET, CDP_WALLET_SECRET)
- * const owner = await base.subscription.getSubscriptionOwner();
+ * const owner = await base.subscription.getOrCreateSubscriptionOwnerWallet();
  * console.log(`Subscription owner smart wallet: ${owner.address}`);
  *
  * // Using explicit credentials
- * const owner = await base.subscription.getSubscriptionOwner({
+ * const owner = await base.subscription.getOrCreateSubscriptionOwnerWallet({
  *   cdpApiKeyId: 'your-api-key-id',
  *   cdpApiKeySecret: 'your-api-key-secret',
  *   cdpWalletSecret: 'your-wallet-secret'
@@ -48,14 +51,14 @@ import type { GetSubscriptionOwnerOptions, GetSubscriptionOwnerResult } from './
  * });
  *
  * // Using a custom wallet name
- * const customOwner = await base.subscription.getSubscriptionOwner({
+ * const customOwner = await base.subscription.getOrCreateSubscriptionOwnerWallet({
  *   walletName: 'my-app-subscription-wallet'
  * });
  * ```
  */
-export async function getSubscriptionOwner(
-  options: GetSubscriptionOwnerOptions = {}
-): Promise<GetSubscriptionOwnerResult> {
+export async function getOrCreateSubscriptionOwnerWallet(
+  options: GetOrCreateSubscriptionOwnerWalletOptions = {}
+): Promise<GetOrCreateSubscriptionOwnerWalletResult> {
   const {
     cdpApiKeyId,
     cdpApiKeySecret,
@@ -88,9 +91,10 @@ export async function getSubscriptionOwner(
     // Step 2: Get or create a smart wallet with the EVM account as the owner
     // Using getOrCreateSmartAccount ensures idempotency - the same name and owner
     // will always return the same smart wallet
-    const smartWalletName = `${walletName}-smart`;
+    // NOTE: Both the EOA wallet and smart wallet are given the same name intentionally.
+    // This simplifies wallet management and ensures consistency across the system.
     const smartWallet = await cdpClient.evm.getOrCreateSmartAccount({
-      name: smartWalletName,
+      name: walletName, // Same name as the EOA wallet
       owner: eoaAccount,
       // Note: We don't set enableSpendPermissions since this wallet will own/use
       // spend permissions, not grant them to others
@@ -98,7 +102,7 @@ export async function getSubscriptionOwner(
 
     return {
       address: smartWallet.address,
-      walletName: smartWalletName,
+      walletName: walletName,
       eoaAddress: eoaAccount.address, // Include EOA address for reference
     };
   } catch (error) {
