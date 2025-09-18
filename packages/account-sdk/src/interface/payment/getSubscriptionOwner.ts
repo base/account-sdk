@@ -91,7 +91,7 @@ export async function getSubscriptionOwner(
     // NOTE: Both the EOA wallet and smart wallet are given the same name intentionally.
     // This simplifies wallet management and ensures consistency across the system.
     const smartWallet = await cdpClient.evm.getOrCreateSmartAccount({
-      name: walletName,  // Same name as the EOA wallet
+      name: walletName, // Same name as the EOA wallet
       owner: eoaAccount,
       // Note: We don't set enableSpendPermissions since this wallet will own/use
       // spend permissions, not grant them to others

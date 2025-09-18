@@ -109,11 +109,10 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
   try {
     // First get the existing EOA that owns the smart wallet
     const eoaAccount = await cdpClient.evm.getAccount({ name: walletName });
-    
+
     if (!eoaAccount) {
       throw new Error(
-        `EOA wallet "${walletName}" not found. The wallet must be created before executing a charge. ` +
-        `Use getSubscriptionOwner() to create the wallet first.`
+        `EOA wallet "${walletName}" not found. The wallet must be created before executing a charge. Use getSubscriptionOwner() to create the wallet first.`
       );
     }
 
@@ -121,14 +120,13 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
     // NOTE: Both the EOA wallet and smart wallet are given the same name intentionally.
     // This simplifies wallet management and ensures consistency across the system.
     smartWallet = await cdpClient.evm.getSmartAccount({
-      name: walletName,  // Same name as the EOA wallet
+      name: walletName, // Same name as the EOA wallet
       owner: eoaAccount,
     });
-    
+
     if (!smartWallet) {
       throw new Error(
-        `Smart wallet "${walletName}" not found. The wallet must be created before executing a charge. ` +
-        `Use getSubscriptionOwner() to create the wallet first.`
+        `Smart wallet "${walletName}" not found. The wallet must be created before executing a charge. Use getSubscriptionOwner() to create the wallet first.`
       );
     }
   } catch (error) {
