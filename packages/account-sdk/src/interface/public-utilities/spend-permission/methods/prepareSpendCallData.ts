@@ -1,7 +1,7 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
+    spendPermissionManagerAbi,
+    spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { Address, Hex, encodeFunctionData } from 'viem';
 
@@ -12,7 +12,7 @@ import { getPermissionStatus } from './getPermissionStatus.js';
 type Call = {
   to: Address;
   data: Hex;
-  value: '0x0'; // explicitly set to 0x0
+  value: bigint;
 };
 
 export type PrepareSpendCallDataResponseType = Call[];
@@ -133,7 +133,7 @@ const prepareSpendCallDataFn = async (
     approveCall = {
       to: spendPermissionManagerAddress,
       data: approveData,
-      value: '0x0', // explicitly set to 0x0
+      value: 0n,
     };
   }
 
@@ -145,7 +145,7 @@ const prepareSpendCallDataFn = async (
   const spendCall: Call = {
     to: spendPermissionManagerAddress,
     data: spendData,
-    value: '0x0', // explicitly set to 0x0
+    value: 0n,
   };
 
   const calls: Call[] = [approveCall, spendCall].filter((item) => item !== null);
@@ -163,7 +163,7 @@ const prepareSpendCallDataFn = async (
     calls.push({
       to: permission.permission.token as Address,
       data: transferCallData,
-      value: '0x0',
+      value: 0n,
     });
   }
 

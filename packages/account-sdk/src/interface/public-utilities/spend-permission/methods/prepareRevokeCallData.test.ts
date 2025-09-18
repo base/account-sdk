@@ -1,7 +1,7 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
+    spendPermissionManagerAbi,
+    spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { describe, expect, it, vi } from 'vitest';
@@ -75,7 +75,7 @@ describe('prepareRevokeCallData', () => {
     expect(result).toEqual({
       to: spendPermissionManagerAddress,
       data: mockEncodedData,
-      value: '0x0',
+      value: 0n,
     });
   });
 
@@ -106,7 +106,7 @@ describe('prepareRevokeCallData', () => {
   it('should always set value to 0x0', async () => {
     const result = await prepareRevokeCallData(mockSpendPermission);
 
-    expect(result.value).toBe('0x0');
+    expect(result.value).toBe(0n);
   });
 
   it('should handle different spend permission structures', async () => {
@@ -143,7 +143,7 @@ describe('prepareRevokeCallData', () => {
     expect(result).toEqual({
       to: spendPermissionManagerAddress,
       data: differentEncodedData,
-      value: '0x0',
+      value: 0n,
     });
   });
 

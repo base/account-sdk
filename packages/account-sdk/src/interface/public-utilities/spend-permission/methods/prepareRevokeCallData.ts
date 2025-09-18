@@ -1,7 +1,7 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
+    spendPermissionManagerAbi,
+    spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { Address, Hex, encodeFunctionData } from 'viem';
 import { toSpendPermissionArgs } from '../utils.js';
@@ -10,7 +10,7 @@ import { withTelemetry } from '../withTelemetry.js';
 type RevokeSpendPermissionResponse = {
   to: Address;
   data: Hex;
-  value: '0x0'; // explicitly set to 0x0
+  value: bigint;
 };
 
 /**
@@ -40,7 +40,7 @@ type RevokeSpendPermissionResponse = {
  * const call = {
  *   to,
  *   data,
- *   value: '0x0'
+ *   value: 0n
  * };
  * ```
  */
@@ -57,7 +57,7 @@ const prepareRevokeCallDataFn = async (
   const response: RevokeSpendPermissionResponse = {
     to: spendPermissionManagerAddress,
     data,
-    value: '0x0', // explicitly set to 0x0
+    value: 0n,
   };
 
   return response;

@@ -1,7 +1,7 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
+    spendPermissionManagerAbi,
+    spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { Address, Hex, encodeFunctionData } from 'viem';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -92,12 +92,12 @@ describe('prepareSpendCallData', () => {
     expect(result[0]).toEqual({
       to: spendPermissionManagerAddress,
       data: '0xapprovedata123456',
-      value: '0x0',
+      value: 0n,
     });
     expect(result[1]).toEqual({
       to: spendPermissionManagerAddress,
       data: '0xspenddata789abc',
-      value: '0x0',
+      value: 0n,
     });
   });
 
@@ -110,7 +110,7 @@ describe('prepareSpendCallData', () => {
     expect(result[0]).toEqual({
       to: spendPermissionManagerAddress,
       data: '0xspenddata789abc',
-      value: '0x0',
+      value: 0n,
     });
 
     // Verify approve call is not made when permission is active
@@ -206,13 +206,13 @@ describe('prepareSpendCallData', () => {
     expect(typedResult[0]).toHaveProperty('to');
     expect(typedResult[0]).toHaveProperty('data');
     expect(typedResult[0]).toHaveProperty('value');
-    expect(typedResult[0].value).toBe('0x0');
+    expect(typedResult[0].value).toBe(0n);
 
     // Check spend call structure
     expect(typedResult[1]).toHaveProperty('to');
     expect(typedResult[1]).toHaveProperty('data');
     expect(typedResult[1]).toHaveProperty('value');
-    expect(typedResult[1].value).toBe('0x0');
+    expect(typedResult[1].value).toBe(0n);
   });
 
   it('should return calls with correct structure when permission is active', async () => {
@@ -228,7 +228,7 @@ describe('prepareSpendCallData', () => {
     expect(typedResult[0]).toHaveProperty('to');
     expect(typedResult[0]).toHaveProperty('data');
     expect(typedResult[0]).toHaveProperty('value');
-    expect(typedResult[0].value).toBe('0x0');
+    expect(typedResult[0].value).toBe(0n);
   });
 
   it('should handle zero amount', async () => {
@@ -323,14 +323,14 @@ describe('prepareSpendCallData', () => {
     expect(result[0]).toEqual({
       to: spendPermissionManagerAddress,
       data: '0xspenddata789abc',
-      value: '0x0',
+      value: 0n,
     });
 
     // Second call should be the ERC20 transfer
     expect(result[1]).toEqual({
       to: mockSpendPermission.permission.token,
       data: '0xtransferdata123',
-      value: '0x0',
+      value: 0n,
     });
 
     // Verify encodeFunctionData was called with correct args for transfer
@@ -398,14 +398,14 @@ describe('prepareSpendCallData', () => {
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(result[0].value).toBe('0x0');
-    expect(result[1].value).toBe('0x0');
+    expect(result[0].value).toBe(0n);
+    expect(result[1].value).toBe(0n);
   });
 
   it('should set value to 0x0 for spend call when permission is active', async () => {
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(result[0].value).toBe('0x0');
+    expect(result[0].value).toBe(0n);
   });
 
   it('should handle remaining spend of zero', async () => {
