@@ -26,20 +26,7 @@ export function encodeTransferCall(recipient: Address, amount: string): Hex {
  * @param payerInfo - Optional payer information configuration for data callbacks
  * @returns The request parameters for wallet_sendCalls
  */
-export function buildSendCallsRequest(
-  transferData: Hex,
-  testnet: boolean,
-  payerInfo?: PayerInfo
-): {
-  version: string;
-  chainId: number;
-  calls: Array<{
-    to: Address;
-    data: Hex;
-    value: Hex;
-  }>;
-  capabilities: Record<string, unknown>;
-} {
+export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payerInfo?: PayerInfo) {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
   const usdcAddress = TOKENS.USDC.addresses[network];
