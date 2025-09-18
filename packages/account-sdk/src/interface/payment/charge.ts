@@ -8,7 +8,7 @@ import type { ChargeOptions, ChargeResult } from './types.js';
  *
  * Note: This function relies on Node.js APIs and is only available in Node.js environments.
  *
- * This function combines the functionality of getSubscriptionOwner and prepareCharge,
+ * This function combines the functionality of getOrCreateSubscriptionOwnerWallet and prepareCharge,
  * then executes the charge using a CDP smart wallet. The smart wallet is controlled
  * by an EVM account and can leverage paymasters for gas sponsorship.
  *
@@ -102,24 +102,36 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
     );
   }
 
-  // Step 2: Get or create the EVM account and smart wallet
+  // Step 2: Get the existing EVM account and smart wallet
+  // NOTE: We use get() instead of getOrCreate() to ensure the wallet already exists.
+  // The wallet should have been created prior to executing a charge on it.
   let smartWallet;
   try {
-    // First get or create the EOA that will own the smart wallet
-    const eoaAccount = await cdpClient.evm.getOrCreateAccount({ name: walletName });
+    // First get the existing EOA that owns the smart wallet
+    const eoaAccount = await cdpClient.evm.getAccount({ name: walletName });
 
-    // Get or create a smart wallet with the EOA as owner
-    // Using getOrCreateSmartAccount ensures idempotency
-    const smartWalletName = `${walletName}-smart`;
-    smartWallet = await cdpClient.evm.getOrCreateSmartAccount({
-      name: smartWalletName,
+    if (!eoaAccount) {
+      throw new Error(
+        `EOA wallet "${walletName}" not found. The wallet must be created before executing a charge. Use getOrCreateSubscriptionOwnerWallet() to create the wallet first.`
+      );
+    }
+
+    // Get the existing smart wallet with the EOA as owner
+    // NOTE: Both the EOA wallet and smart wallet are given the same name intentionally.
+    // This simplifies wallet management and ensures consistency across the system.
+    smartWallet = await cdpClient.evm.getSmartAccount({
+      name: walletName, // Same name as the EOA wallet
       owner: eoaAccount,
-      // Note: We don't set enableSpendPermissions since this wallet will use
-      // spend permissions, not grant them to others
     });
+
+    if (!smartWallet) {
+      throw new Error(
+        `Smart wallet "${walletName}" not found. The wallet must be created before executing a charge. Use getOrCreateSubscriptionOwnerWallet() to create the wallet first.`
+      );
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get or create charge smart wallet "${walletName}": ${errorMessage}`);
+    throw new Error(`Failed to get charge smart wallet "${walletName}": ${errorMessage}`);
   }
 
   // Step 3: Prepare the charge call data (including optional recipient transfer)
@@ -183,7 +195,7 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
     id: transactionHash,
     subscriptionId: id,
     amount: amount === 'max-remaining-charge' ? 'max' : amount,
-    chargedBy: smartWallet.address as Address,
+    subscriptionOwner: smartWallet.address as Address,
     ...(recipient && { recipient }),
   };
 }

@@ -44,6 +44,7 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
  * console.log(`Subscribed: ${status.isSubscribed}`);
  * console.log(`Next payment: ${status.nextPeriodStart}`);
  * console.log(`Recurring amount: $${status.recurringAmount}`);
+ * console.log(`Owner address: ${status.subscriptionOwner}`);
  * ```
  */
 export async function getSubscriptionStatus(
@@ -163,6 +164,7 @@ export async function getSubscriptionStatus(
     currentPeriodStart: timestampInSecondsToDate(currentPeriod.start),
     nextPeriodStart: status.nextPeriodStart,
     periodInDays,
+    subscriptionOwner: permission.permission.account,
   };
 
   return result;
