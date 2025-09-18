@@ -56,7 +56,7 @@ describe('getSubscriptionOwner', () => {
 
       expect(result).toEqual({
         address: '0xabcdef1234567890123456789012345678901234',
-        walletName: 'subscription owner-smart',
+        walletName: 'subscription owner',
         eoaAddress: '0x1234567890123456789012345678901234567890',
       });
 
@@ -71,7 +71,7 @@ describe('getSubscriptionOwner', () => {
       });
 
       expect(mockCdpClient.evm.getOrCreateSmartAccount).toHaveBeenCalledWith({
-        name: 'subscription owner-smart',
+        name: 'subscription owner',
         owner: mockEoaAccount,
       });
     });
@@ -85,7 +85,7 @@ describe('getSubscriptionOwner', () => {
 
       expect(result).toEqual({
         address: '0xabcdef1234567890123456789012345678901234',
-        walletName: 'subscription owner-smart',
+        walletName: 'subscription owner',
         eoaAddress: '0x1234567890123456789012345678901234567890',
       });
     });
@@ -100,7 +100,7 @@ describe('getSubscriptionOwner', () => {
 
       expect(result).toEqual({
         address: '0xabcdef1234567890123456789012345678901234',
-        walletName: 'custom-wallet-name-smart',
+        walletName: 'custom-wallet-name',
         eoaAddress: '0x1234567890123456789012345678901234567890',
       });
 
@@ -109,7 +109,7 @@ describe('getSubscriptionOwner', () => {
       });
 
       expect(mockCdpClient.evm.getOrCreateSmartAccount).toHaveBeenCalledWith({
-        name: 'custom-wallet-name-smart',
+        name: 'custom-wallet-name',
         owner: mockEoaAccount,
       });
     });
@@ -125,7 +125,7 @@ describe('getSubscriptionOwner', () => {
 
       expect(result).toEqual({
         address: '0xabcdef1234567890123456789012345678901234',
-        walletName: 'subscription owner-smart',
+        walletName: 'subscription owner',
         eoaAddress: '0x1234567890123456789012345678901234567890',
       });
 
