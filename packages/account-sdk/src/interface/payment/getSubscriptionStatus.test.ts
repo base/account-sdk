@@ -80,11 +80,15 @@ describe('getSubscriptionStatus', () => {
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
       const { getClient } = await import('../../store/chain-clients/utils.js');
-      const { toSpendPermissionArgs } = await import('../public-utilities/spend-permission/utils.js');
-      const { timestampInSecondsToDate } = await import('../public-utilities/spend-permission/utils.js');
+      const { toSpendPermissionArgs } = await import(
+        '../public-utilities/spend-permission/utils.js'
+      );
+      const { timestampInSecondsToDate } = await import(
+        '../public-utilities/spend-permission/utils.js'
+      );
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
-      
+
       // Add a spy to see what the implementation actually receives
       vi.mocked(fetchPermission).mockImplementation(async () => {
         return mockPermission;
@@ -97,7 +101,9 @@ describe('getSubscriptionStatus', () => {
         remainingSpend: 8000000n, // 8 USDC remaining
         nextPeriodStart: new Date((currentTime + 2505600) * 1000),
       } as any);
-      vi.mocked(timestampInSecondsToDate).mockImplementation((timestamp: number) => new Date(timestamp * 1000));
+      vi.mocked(timestampInSecondsToDate).mockImplementation(
+        (timestamp: number) => new Date(timestamp * 1000)
+      );
 
       const result = await getSubscriptionStatus({
         id: mockPermissionHash,
@@ -204,7 +210,9 @@ describe('getSubscriptionStatus', () => {
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
       const { getClient } = await import('../../store/chain-clients/utils.js');
-      const { calculateCurrentPeriod } = await import('../public-utilities/spend-permission/utils.js');
+      const { calculateCurrentPeriod } = await import(
+        '../public-utilities/spend-permission/utils.js'
+      );
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(null); // No client available
@@ -235,7 +243,9 @@ describe('getSubscriptionStatus', () => {
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
       const { getClient } = await import('../../store/chain-clients/utils.js');
-      const { calculateCurrentPeriod } = await import('../public-utilities/spend-permission/utils.js');
+      const { calculateCurrentPeriod } = await import(
+        '../public-utilities/spend-permission/utils.js'
+      );
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
@@ -366,7 +376,9 @@ describe('getSubscriptionStatus', () => {
           id: mockPermissionHash,
           testnet: true, // Requesting testnet
         })
-      ).rejects.toThrow('The subscription was requested on testnet but is actually a mainnet subscription');
+      ).rejects.toThrow(
+        'The subscription was requested on testnet but is actually a mainnet subscription'
+      );
     });
 
     it('should throw error when mainnet requested but subscription is on testnet', async () => {
@@ -393,7 +405,9 @@ describe('getSubscriptionStatus', () => {
           id: mockPermissionHash,
           testnet: false, // Requesting mainnet
         })
-      ).rejects.toThrow('The subscription was requested on mainnet but is actually a testnet subscription');
+      ).rejects.toThrow(
+        'The subscription was requested on mainnet but is actually a testnet subscription'
+      );
     });
 
     it('should throw error for unexpected chain ID', async () => {
@@ -529,7 +543,9 @@ describe('getSubscriptionStatus', () => {
         });
 
         const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
-        const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
+        const { getPermissionStatus } = await import(
+          '../public-utilities/spend-permission/index.js'
+        );
         const { getClient } = await import('../../store/chain-clients/utils.js');
 
         vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
@@ -582,7 +598,9 @@ describe('getSubscriptionStatus', () => {
         });
 
         const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
-        const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
+        const { getPermissionStatus } = await import(
+          '../public-utilities/spend-permission/index.js'
+        );
         const { getClient } = await import('../../store/chain-clients/utils.js');
 
         vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
