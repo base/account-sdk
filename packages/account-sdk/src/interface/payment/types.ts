@@ -215,8 +215,8 @@ export interface PrepareChargeCall {
   to: Address;
   /** The encoded call data */
   data: Hex;
-  /** The value to send (always 0x0 for spend permissions) */
-  value: '0x0';
+  /** The value to send (always 0n for spend permissions) */
+  value: bigint;
 }
 
 /**

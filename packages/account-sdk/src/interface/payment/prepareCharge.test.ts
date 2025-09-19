@@ -22,8 +22,8 @@ describe('prepareCharge', () => {
   } as SpendPermission;
 
   const mockCallData: PrepareChargeResult = [
-    { to: '0xmock', data: '0xapprove', value: '0x0' },
-    { to: '0xmock', data: '0xspend', value: '0x0' },
+    { to: '0xmock', data: '0xapprove', value: 0n },
+    { to: '0xmock', data: '0xspend', value: 0n },
   ];
 
   it('should prepare charge for specific amount', async () => {

@@ -148,11 +148,10 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
 
   try {
     // Build the calls array for the smart wallet
-    // Convert value from hex string to bigint if needed
     const calls = chargeCalls.map((call) => ({
       to: call.to,
       data: call.data,
-      value: BigInt(call.value || '0x0'),
+      value: call.value,
     }));
 
     // For smart wallets, we can send all calls in a single user operation

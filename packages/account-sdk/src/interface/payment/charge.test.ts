@@ -42,7 +42,7 @@ describe('charge', () => {
     {
       to: '0xabc123' as any,
       data: '0xdef456' as any,
-      value: '0x0' as any,
+      value: 0n,
     },
   ];
 
@@ -205,12 +205,12 @@ describe('charge', () => {
         {
           to: '0xabc123' as any,
           data: '0xdef456' as any,
-          value: '0x0' as any,
+          value: 0n,
         },
         {
           to: '0xfed321' as any,
           data: '0xcba987' as any,
-          value: '0x0' as any,
+          value: 0n,
         },
       ];
 
@@ -252,7 +252,7 @@ describe('charge', () => {
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as any, // USDC address
           data: '0xtransferData' as any,
-          value: '0x0' as any,
+          value: 0n,
         },
       ];
 
@@ -306,7 +306,7 @@ describe('charge', () => {
         {
           to: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as any, // USDC testnet address
           data: '0xtransferData' as any,
-          value: '0x0' as any,
+          value: 0n,
         },
       ];
 
@@ -344,7 +344,7 @@ describe('charge', () => {
         {
           to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as any, // USDC address
           data: '0xtransferData' as any,
-          value: '0x0' as any,
+          value: 0n,
         },
       ];
 
