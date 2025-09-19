@@ -1,5 +1,5 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
-import { Hex, hexToNumber, isAddressEqual, numberToHex } from 'viem';
+import { Hex, WalletSendCallsParameters, hexToNumber, isAddressEqual, numberToHex } from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
 import { isActionableHttpRequestError, isViemError, standardErrors } from ':core/error/errors.js';
@@ -703,10 +703,10 @@ export class Signer {
     });
 
     // Determine effective chainId - use request chainId for wallet_sendCalls, default otherwise
-    const chainId =
-      request.method === 'wallet_sendCalls' && (request.params as any[])?.[0]?.chainId
-        ? hexToNumber((request.params as any[])[0].chainId)
-        : this.chain.id;
+    const walletSendCallsChainId =
+      request.method === 'wallet_sendCalls' &&
+      (request.params as WalletSendCallsParameters)?.[0]?.chainId;
+    const chainId = walletSendCallsChainId ? hexToNumber(walletSendCallsChainId) : this.chain.id;
 
     const client = getClient(chainId);
     assertPresence(

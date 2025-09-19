@@ -21,11 +21,22 @@ import type {
   SubscriptionResult,
 } from './interface/payment/types.js';
 
+// Extend Window interface for global exports
+declare global {
+  interface Window {
+    base: typeof base;
+    createBaseAccountSDK: typeof createBaseAccountSDK;
+    BaseAccountSDK: {
+      VERSION: string;
+    };
+  }
+}
+
 // Expose to global window object
 if (typeof window !== 'undefined') {
-  (window as any).base = base;
-  (window as any).createBaseAccountSDK = createBaseAccountSDK;
-  (window as any).BaseAccountSDK = {
+  window.base = base;
+  window.createBaseAccountSDK = createBaseAccountSDK;
+  window.BaseAccountSDK = {
     VERSION: PACKAGE_VERSION,
   };
 }
