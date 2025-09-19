@@ -86,8 +86,8 @@ export type Preference = {
 } & Record<string, unknown>;
 
 export type SubAccountOptions = {
-  /* Automatically create a subaccount for the user and use it for all transactions. */
-  enableAutoSubAccounts?: boolean;
+  /* Sub-account usage mode. When 'auto', automatically create/use a subaccount for all transactions. */
+  mode?: 'auto' | 'manual';
   /**
    * @returns The owner account that will be used to sign the subaccount transactions.
    */

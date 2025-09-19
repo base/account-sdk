@@ -49,7 +49,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
 
   store.subAccountsConfig.set({
     toOwnerAccount: params.subAccounts?.toOwnerAccount,
-    enableAutoSubAccounts: params.subAccounts?.enableAutoSubAccounts,
+    mode: params.subAccounts?.mode ?? 'manual',
     unstable_enableAutoSpendPermissions:
       params.subAccounts?.unstable_enableAutoSpendPermissions ?? true,
   });

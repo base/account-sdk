@@ -531,7 +531,7 @@ describe('Signer', () => {
       vi.restoreAllMocks();
     });
 
-    it('should return accounts in correct order based on enableAutoSubAccounts', async () => {
+    it('should return accounts in correct order based on sub-account mode', async () => {
       // Set up the signer with a global account
       signer['accounts'] = [globalAccountAddress];
       signer['chain'] = { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' };
@@ -543,23 +543,23 @@ describe('Signer', () => {
         factoryData: '0x',
       });
 
-      // Test with enableAutoSubAccounts = false
+      // Test with mode = 'manual'
       const configSpy = vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: false,
+        mode: 'manual',
       });
 
       let accounts = await signer.request({ method: 'eth_accounts' });
       expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
 
-      // Test with enableAutoSubAccounts = true
+      // Test with mode = 'auto'
       configSpy.mockReturnValue({
-        enableAutoSubAccounts: true,
+        mode: 'auto',
       });
 
       accounts = await signer.request({ method: 'eth_accounts' });
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
 
-      // Test when enableAutoSubAccounts is undefined (should default to false behavior)
+      // Test when mode is undefined (should default to manual behavior)
       configSpy.mockReturnValue(undefined);
 
       accounts = await signer.request({ method: 'eth_accounts' });
@@ -705,7 +705,7 @@ describe('Signer', () => {
         factoryData: '0x',
       });
 
-      // eth_accounts should return [globalAccount, subAccount] when enableAutoSubAccounts is not true
+      // eth_accounts should return [globalAccount, subAccount] when mode is not 'auto'
       const accounts = await signer.request({ method: 'eth_accounts' });
 
       expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
@@ -771,7 +771,7 @@ describe('Signer', () => {
         factoryData: '0x',
       });
 
-      // eth_accounts should return [globalAccount, subAccount] when enableAutoSubAccounts is not true
+      // eth_accounts should return [globalAccount, subAccount] when mode is not 'auto'
       const accounts = await signer.request({ method: 'eth_accounts' });
       expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
     });
@@ -972,12 +972,12 @@ describe('Signer', () => {
       });
     });
 
-    it('should always return sub account first when enableAutoSubAccounts is true', async () => {
+    it("should always return sub account first when mode is 'auto'", async () => {
       expect(signer['accounts']).toEqual([]);
 
       // Enable auto sub accounts
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
+        mode: 'auto',
       });
 
       const mockRequest: RequestArguments = {
@@ -1021,7 +1021,7 @@ describe('Signer', () => {
         factoryData: '0x',
       });
 
-      // When enableAutoSubAccounts is true, sub account should be first
+      // When mode is 'auto', sub account should be first
       const accounts = await signer.request({ method: 'eth_accounts' });
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
 
@@ -1192,12 +1192,12 @@ describe('Signer', () => {
       expect(accounts).toEqual([globalAccountAddress, subAccountAddress]);
     });
 
-    it('should always return sub account first when enableAutoSubAccounts is true', async () => {
+    it("should always return sub account first when mode is 'auto'", async () => {
       await signer.cleanup();
 
       // Enable auto sub accounts
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
+        mode: 'auto',
       });
 
       const mockRequest: RequestArguments = {
@@ -1257,11 +1257,11 @@ describe('Signer', () => {
         ],
       });
 
-      // wallet_addSubAccount now respects enableAutoSubAccounts, so sub account should be first
+      // wallet_addSubAccount now respects sub account mode, so sub account should be first
       const accounts = await signer.request({ method: 'eth_accounts' });
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
 
-      // However, eth_requestAccounts will reorder based on enableAutoSubAccounts
+      // However, eth_requestAccounts will reorder based on sub account mode
       const requestedAccounts = await signer.request({ method: 'eth_requestAccounts' });
       expect(requestedAccounts).toEqual([subAccountAddress, globalAccountAddress]);
     });
@@ -1279,7 +1279,7 @@ describe('Signer', () => {
       });
 
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
+        mode: 'auto',
       });
 
       (decryptContent as Mock).mockResolvedValueOnce({
@@ -1904,7 +1904,7 @@ describe('Signer', () => {
       });
 
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
+        mode: 'auto',
         toOwnerAccount: async () => ({
           account: {
             type: 'local' as const,
@@ -2198,7 +2198,7 @@ describe('Signer', () => {
     it('should skip spend permission check when unstable_enableAutoSpendPermissions is false', async () => {
       // Mock the config with unstable_enableAutoSpendPermissions disabled
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
+        mode: 'auto',
         unstable_enableAutoSpendPermissions: false,
         toOwnerAccount: async () => ({
           account: {
@@ -2249,7 +2249,7 @@ describe('Signer', () => {
     it('should skip insufficient balance error handling when unstable_enableAutoSpendPermissions is false', async () => {
       // Mock the config with unstable_enableAutoSpendPermissions disabled
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
+        mode: 'auto',
         unstable_enableAutoSpendPermissions: false,
         toOwnerAccount: async () => ({
           account: {
@@ -2328,7 +2328,7 @@ describe('Signer', () => {
     it('should still route through global account and handle insufficient balance errors when unstable_enableAutoSpendPermissions is true', async () => {
       // Mock the config with unstable_enableAutoSpendPermissions enabled (default)
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
+        mode: 'auto',
         unstable_enableAutoSpendPermissions: true,
         toOwnerAccount: async () => ({
           account: {
@@ -2374,7 +2374,7 @@ describe('Signer', () => {
     it('should handle insufficient balance errors when unstable_enableAutoSpendPermissions is undefined (default behavior)', async () => {
       // Mock the config without unstable_enableAutoSpendPermissions (undefined)
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
+        mode: 'auto',
         toOwnerAccount: async () => ({
           account: {
             type: 'local' as const,

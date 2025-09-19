@@ -354,7 +354,7 @@ export default function AutoSubAccount() {
   return (
     <Container mb={16}>
       <Text fontSize="3xl" fontWeight="bold" mb={4}>
-        Auto Sub Account
+        Sub Account
       </Text>
       <VStack w="full" spacing={4}>
         <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
@@ -370,19 +370,19 @@ export default function AutoSubAccount() {
           </RadioGroup>
         </FormControl>
         <FormControl>
-          <FormLabel>Auto Sub-Accounts</FormLabel>
+          <FormLabel>Sub-Account Mode</FormLabel>
           <RadioGroup
-            value={(subAccountsConfig?.enableAutoSubAccounts || false).toString()}
+            value={subAccountsConfig?.mode ?? 'manual'}
             onChange={(value) =>
               setSubAccountsConfig((prev) => ({
                 ...prev,
-                enableAutoSubAccounts: value === 'true',
+                mode: value as 'auto' | 'manual',
               }))
             }
           >
             <Stack direction="row">
-              <Radio value="true">Enabled</Radio>
-              <Radio value="false">Disabled</Radio>
+              <Radio value="manual">Manual</Radio>
+              <Radio value="auto">Auto</Radio>
             </Stack>
           </RadioGroup>
         </FormControl>
