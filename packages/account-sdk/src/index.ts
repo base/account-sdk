@@ -5,6 +5,8 @@ export { createBaseAccountSDK } from './interface/builder/core/createBaseAccount
 
 export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js';
 
+export { PACKAGE_VERSION as VERSION } from './core/constants.js';
+
 // Payment interface exports
 export {
   CHAIN_IDS,
