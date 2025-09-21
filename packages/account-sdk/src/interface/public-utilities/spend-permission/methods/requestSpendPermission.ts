@@ -35,7 +35,7 @@ export type RequestSpendPermissionType = {
  * @param params.token - The token to request a spend permission for.
  * @param params.chainId - The chain ID to request a spend permission for.
  * @param params.allowance - The allowance to request a spend permission for.
- * @param params.periodInDays - The peroid in days for the allowance to be valid for.
+ * @param params.periodInDays - The period in days for the allowance to be valid for.
  * @param params.start - The start date for the allowance to be valid from.
  * @param params.end - The end date for the allowance to be valid until next period starts.
  * @param params.salt - Salt
