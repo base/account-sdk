@@ -2,36 +2,36 @@ import type { Address, TypedData } from 'abitype';
 import * as Signature from 'ox/Signature';
 import type * as WebAuthnP256 from 'ox/WebAuthnP256';
 import {
-    Assign,
-    BaseError,
-    Chain,
-    type Client,
-    type Hash,
-    type Hex,
-    JsonRpcAccount,
-    LocalAccount,
-    type Prettify,
-    Transport,
-    type TypedDataDefinition,
-    decodeFunctionData,
-    encodeAbiParameters,
-    encodeFunctionData,
-    encodePacked,
-    hashMessage,
-    hashTypedData,
-    pad,
-    parseSignature,
-    size,
-    stringToHex
+  Assign,
+  BaseError,
+  Chain,
+  type Client,
+  type Hash,
+  type Hex,
+  JsonRpcAccount,
+  LocalAccount,
+  type Prettify,
+  Transport,
+  type TypedDataDefinition,
+  decodeFunctionData,
+  encodeAbiParameters,
+  encodeFunctionData,
+  encodePacked,
+  hashMessage,
+  hashTypedData,
+  pad,
+  parseSignature,
+  size,
+  stringToHex,
 } from 'viem';
 import {
-    type SmartAccount,
-    type SmartAccountImplementation,
-    type UserOperation,
-    entryPoint06Abi,
-    entryPoint06Address,
-    getUserOperationHash,
-    toSmartAccount,
+  type SmartAccount,
+  type SmartAccountImplementation,
+  type UserOperation,
+  entryPoint06Abi,
+  entryPoint06Address,
+  getUserOperationHash,
+  toSmartAccount,
 } from 'viem/account-abstraction';
 
 import { OwnerAccount } from ':core/type/index.js';
@@ -139,7 +139,7 @@ export async function createSmartAccount(
 
     async getFactoryArgsWithGeneration() {
       if (factoryData) return { factory: factoryAddress, factoryData };
-      
+
       // Generate factory data for owner initialization
       const generatedFactoryData = createFactoryData(owner);
       return { factory: factoryAddress, factoryData: generatedFactoryData };
@@ -393,7 +393,7 @@ export function wrapSignature(parameters: { ownerIndex?: number | undefined; sig
 
 /**
  * @description Creates factory data for smart account initialization.
- * 
+ *
  * This function generates the encoded data needed to initialize a smart account
  * through the factory contract. It supports both local (private key) and WebAuthn
  * account types.
@@ -410,11 +410,12 @@ export function wrapSignature(parameters: { ownerIndex?: number | undefined; sig
 export function createFactoryData(owner: OwnerAccount): Hex {
   // Convert owner to the format expected by the factory
   let ownerBytes: Hex;
-  
+
   if (owner.type === 'webAuthn') {
     // For WebAuthn accounts, we need to encode the public key
     // The public key should be 64 bytes (32 bytes x + 32 bytes y)
-    if (!owner.publicKey || owner.publicKey.length !== 130) { // 0x + 64 hex chars = 130
+    if (!owner.publicKey || owner.publicKey.length !== 130) {
+      // 0x + 64 hex chars = 130
       throw new BaseError('WebAuthn owner must have a valid 64-byte public key');
     }
     ownerBytes = owner.publicKey as Hex;
