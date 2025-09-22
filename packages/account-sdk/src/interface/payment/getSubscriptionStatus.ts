@@ -1,19 +1,10 @@
 import { formatUnits } from 'viem';
-import { readContract } from 'viem/actions';
-import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
-} from '../../sign/base-account/utils/constants.js';
 import { createClients, FALLBACK_CHAINS, getClient } from '../../store/chain-clients/utils.js';
 import {
   fetchPermission,
   getPermissionStatus,
 } from '../public-utilities/spend-permission/index.js';
-import {
-  calculateCurrentPeriod,
-  timestampInSecondsToDate,
-  toSpendPermissionArgs,
-} from '../public-utilities/spend-permission/utils.js';
+import { timestampInSecondsToDate } from '../public-utilities/spend-permission/utils.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
 
@@ -21,9 +12,7 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
  * Gets the current status and details of a subscription.
  *
  * This function fetches the subscription (spend permission) details using its ID (permission hash)
- * and returns status information about the subscription. If there's no on-chain state for the
- * subscription (e.g., it has never been used), the function will infer that the subscription
- * is unrevoked and the full recurring amount is available to spend.
+ * and returns status information about the subscription.
  *
  * @param options - Options for checking subscription status
  * @param options.id - The subscription ID (permission hash) returned from subscribe()
@@ -43,7 +32,7 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
  *
  * console.log(`Subscribed: ${status.isSubscribed}`);
  * console.log(`Next payment: ${status.nextPeriodStart}`);
- * console.log(`Recurring amount: $${status.recurringAmount}`);
+ * console.log(`Recurring amount: $${status.recurringCharge}`);
  * console.log(`Owner address: ${status.subscriptionOwner}`);
  * ```
  */
@@ -109,28 +98,6 @@ export async function getSubscriptionStatus(
   // Get the current permission status (includes period info and active state)
   const status = await getPermissionStatus(permission);
 
-  // Get the current period info directly to get spend amount
-  let currentPeriod: { start: number; end: number; spend: bigint };
-
-  const client = getClient(permission.chainId!);
-  if (client) {
-    try {
-      const spendPermissionArgs = toSpendPermissionArgs(permission);
-      currentPeriod = (await readContract(client, {
-        address: spendPermissionManagerAddress,
-        abi: spendPermissionManagerAbi,
-        functionName: 'getCurrentPeriod',
-        args: [spendPermissionArgs],
-      })) as { start: number; end: number; spend: bigint };
-    } catch {
-      // If we can't read on-chain state, calculate from permission parameters
-      currentPeriod = calculateCurrentPeriod(permission);
-    }
-  } else {
-    // No client available, calculate from permission parameters
-    currentPeriod = calculateCurrentPeriod(permission);
-  }
-
   // Format the allowance amount from wei to USD string (USDC has 6 decimals)
   const recurringCharge = formatUnits(BigInt(permission.permission.allowance), 6);
 
@@ -140,7 +107,6 @@ export async function getSubscriptionStatus(
   // Check if the subscription period has started
   const currentTime = Math.floor(Date.now() / 1000);
   const permissionStart = Number(permission.permission.start);
-  const permissionEnd = Number(permission.permission.end);
 
   if (currentTime < permissionStart) {
     throw new Error(
@@ -148,20 +114,12 @@ export async function getSubscriptionStatus(
     );
   }
 
-  // Check if the subscription has expired
-  const hasNotExpired = currentTime <= permissionEnd;
-
-  // A subscription is considered active if we're within the valid time bounds
-  // and the permission hasn't been revoked.
-  const hasNoOnChainState = currentPeriod.spend === BigInt(0);
-  const isSubscribed = hasNotExpired && (status.isActive || hasNoOnChainState);
-
-  // Build the result with data from getCurrentPeriod and other on-chain functions
+  // Build the result with data from getPermissionStatus
   const result: SubscriptionStatus = {
-    isSubscribed,
+    isSubscribed: status.isActive,
     recurringCharge,
     remainingChargeInPeriod: formatUnits(status.remainingSpend, 6),
-    currentPeriodStart: timestampInSecondsToDate(currentPeriod.start),
+    currentPeriodStart: timestampInSecondsToDate(status.currentPeriod.start),
     nextPeriodStart: status.nextPeriodStart,
     periodInDays,
     subscriptionOwner: permission.permission.spender,
