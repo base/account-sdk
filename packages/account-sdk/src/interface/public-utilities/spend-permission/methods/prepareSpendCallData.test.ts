@@ -7,7 +7,7 @@ import { Address, Hex, encodeFunctionData } from 'viem';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { toSpendPermissionArgs } from '../utils.js';
-import { getPermissionStatus } from './getPermissionStatus.js';
+import { GetPermissionStatusResponseType, getPermissionStatus } from './getPermissionStatus.js';
 import { PrepareSpendCallDataResponseType, prepareSpendCallData } from './prepareSpendCallData.js';
 
 vi.mock('./getPermissionStatus.js');
@@ -23,6 +23,30 @@ vi.mock('viem', async () => {
 const mockGetPermissionStatus = vi.mocked(getPermissionStatus);
 const mockToSpendPermissionArgs = vi.mocked(toSpendPermissionArgs);
 const mockEncodeFunctionData = vi.mocked(encodeFunctionData);
+
+// Factory function to create a complete mock status object
+// This makes tests more resilient to changes in GetPermissionStatusResponseType
+function createMockPermissionStatus(
+  overrides?: Partial<GetPermissionStatusResponseType>
+): GetPermissionStatusResponseType {
+  const defaultStatus: GetPermissionStatusResponseType = {
+    remainingSpend: BigInt('500000000000000000'), // 0.5 ETH remaining
+    nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
+    isActive: true,
+    isRevoked: false,
+    isExpired: false,
+    currentPeriod: {
+      start: 1234567890,
+      end: 1234654290,
+      spend: BigInt('500000000000000000'),
+    },
+  };
+
+  return {
+    ...defaultStatus,
+    ...overrides,
+  };
+}
 
 describe('prepareSpendCallData', () => {
   const mockSpendPermission: SpendPermission = {
@@ -55,18 +79,11 @@ describe('prepareSpendCallData', () => {
     extraData: '0x' as Hex,
   };
 
-  const mockStatus = {
-    remainingSpend: BigInt('500000000000000000'), // 0.5 ETH remaining
-    nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-    isActive: true,
-    isRevoked: false,
-    isExpired: false,
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockGetPermissionStatus.mockResolvedValue(mockStatus);
+    // Use the factory function to create default mock status
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus());
 
     mockToSpendPermissionArgs.mockReturnValue(mockSpendPermissionArgs);
 
@@ -82,11 +99,7 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should prepare call data for approve and spend operations when permission is not active', async () => {
-    const inactiveStatus = {
-      ...mockStatus,
-      isActive: false, // Permission is not active, so approve call should be included
-    };
-    mockGetPermissionStatus.mockResolvedValue(inactiveStatus);
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus({ isActive: false }));
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -104,7 +117,7 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should prepare call data for spend operation only when permission is already active', async () => {
-    mockGetPermissionStatus.mockResolvedValue(mockStatus);
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus());
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -125,10 +138,7 @@ describe('prepareSpendCallData', () => {
 
   it('should use remaining spend amount when max-remaining-allowance is specified', async () => {
     const remainingSpend = BigInt('750000000000000000');
-    mockGetPermissionStatus.mockResolvedValue({
-      ...mockStatus,
-      remainingSpend,
-    });
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus({ remainingSpend }));
 
     await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -164,11 +174,7 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should encode approveWithSignature function data correctly when permission is not active', async () => {
-    const inactiveStatus = {
-      ...mockStatus,
-      isActive: false, // Permission is not active, so approve call should be included
-    };
-    mockGetPermissionStatus.mockResolvedValue(inactiveStatus);
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus({ isActive: false }));
 
     await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -192,11 +198,7 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should return calls with correct structure when permission is not active', async () => {
-    const inactiveStatus = {
-      ...mockStatus,
-      isActive: false, // Permission is not active, so approve call should be included
-    };
-    mockGetPermissionStatus.mockResolvedValue(inactiveStatus);
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus({ isActive: false }));
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -218,7 +220,7 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should return calls with correct structure when permission is active', async () => {
-    mockGetPermissionStatus.mockResolvedValue(mockStatus);
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus());
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -245,10 +247,7 @@ describe('prepareSpendCallData', () => {
     const remainingSpend = BigInt('500000000000000000'); // 0.5 ETH remaining
     const excessiveAmount = BigInt('600000000000000000'); // 0.6 ETH (more than remaining)
 
-    mockGetPermissionStatus.mockResolvedValue({
-      ...mockStatus,
-      remainingSpend,
-    });
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus({ remainingSpend }));
 
     await expect(prepareSpendCallData(mockSpendPermission, excessiveAmount)).rejects.toThrow(
       'Remaining spend amount is insufficient'
@@ -259,10 +258,9 @@ describe('prepareSpendCallData', () => {
     const largeAmount = BigInt('999999999999999999999999999');
 
     // Mock sufficient remaining balance for the large amount
-    mockGetPermissionStatus.mockResolvedValue({
-      ...mockStatus,
-      remainingSpend: largeAmount, // Set remaining spend to match the large amount
-    });
+    mockGetPermissionStatus.mockResolvedValue(
+      createMockPermissionStatus({ remainingSpend: largeAmount })
+    );
 
     await prepareSpendCallData(mockSpendPermission, largeAmount);
 
@@ -274,13 +272,12 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should use the same spendPermissionManagerAddress for both calls when permission is not active', async () => {
-    mockGetPermissionStatus.mockResolvedValue({
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: false,
-      isRevoked: true,
-      isExpired: false,
-    });
+    mockGetPermissionStatus.mockResolvedValue(
+      createMockPermissionStatus({
+        isActive: false,
+        isRevoked: true,
+      })
+    );
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -289,14 +286,7 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should use the same spendPermissionManagerAddress for spend call when permission is active', async () => {
-    const status = {
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: true,
-      isRevoked: false,
-      isExpired: false,
-    };
-    mockGetPermissionStatus.mockResolvedValue(status);
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus());
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -307,7 +297,7 @@ describe('prepareSpendCallData', () => {
     const recipientAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb8' as Address;
     const spendAmount = BigInt('100000000'); // 100 USDC
 
-    mockGetPermissionStatus.mockResolvedValue(mockStatus);
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus());
 
     // Mock the transfer call encoding
     mockEncodeFunctionData.mockImplementation(({ functionName }) => {
@@ -351,6 +341,7 @@ describe('prepareSpendCallData', () => {
   it('should include transfer with max amount when using max-remaining-allowance with recipient', async () => {
     const recipientAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb8' as Address;
 
+    const mockStatus = createMockPermissionStatus();
     mockGetPermissionStatus.mockResolvedValue(mockStatus);
 
     // Mock the transfer call encoding
@@ -385,7 +376,7 @@ describe('prepareSpendCallData', () => {
   it('should not include transfer call when recipient is not provided', async () => {
     const spendAmount = BigInt('100000000'); // 100 USDC
 
-    mockGetPermissionStatus.mockResolvedValue(mockStatus);
+    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus());
 
     const result = await prepareSpendCallData(mockSpendPermission, spendAmount);
 
@@ -395,14 +386,12 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should set value to 0x0 for both calls when permission is not active', async () => {
-    const status = {
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: false,
-      isRevoked: false,
-      isExpired: true,
-    };
-    mockGetPermissionStatus.mockResolvedValue(status);
+    mockGetPermissionStatus.mockResolvedValue(
+      createMockPermissionStatus({
+        isActive: false,
+        isExpired: true,
+      })
+    );
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -417,14 +406,9 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should handle remaining spend of zero', async () => {
-    const status = {
-      remainingSpend: BigInt('0'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: true,
-      isRevoked: false,
-      isExpired: false,
-    };
-    mockGetPermissionStatus.mockResolvedValue(status);
+    mockGetPermissionStatus.mockResolvedValue(
+      createMockPermissionStatus({ remainingSpend: BigInt('0') })
+    );
 
     await expect(
       prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance')
@@ -432,14 +416,12 @@ describe('prepareSpendCallData', () => {
   });
 
   it('should work correctly when permission status indicates not approved', async () => {
-    const status = {
-      remainingSpend: BigInt('500000000000000000'),
-      nextPeriodStart: new Date('2024-01-01T00:00:00Z'),
-      isActive: false,
-      isRevoked: false,
-      isExpired: true,
-    };
-    mockGetPermissionStatus.mockResolvedValue(status);
+    mockGetPermissionStatus.mockResolvedValue(
+      createMockPermissionStatus({
+        isActive: false,
+        isExpired: true,
+      })
+    );
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
