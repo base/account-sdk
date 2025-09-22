@@ -1,7 +1,7 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
+    spendPermissionManagerAbi,
+    spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { PublicClient, createPublicClient, http } from 'viem';
@@ -110,6 +110,7 @@ describe('getPermissionStatus - browser + node', () => {
         isRevoked: false,
         isExpired: false, // current time (1234567890) < end time (1234654290)
         isActive: true, // not revoked and not expired
+        currentPeriod: mockCurrentPeriod,
       });
 
       expect(getClient).toHaveBeenCalledWith(8453);
@@ -157,6 +158,7 @@ describe('getPermissionStatus - browser + node', () => {
       expect(result.isRevoked).toBe(false);
       expect(result.isExpired).toBe(false);
       expect(result.isActive).toBe(true);
+      expect(result.currentPeriod).toEqual(mockCurrentPeriod);
 
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
@@ -196,6 +198,7 @@ describe('getPermissionStatus - browser + node', () => {
       expect(result.isRevoked).toBe(true);
       expect(result.isExpired).toBe(false);
       expect(result.isActive).toBe(false);
+      expect(result.currentPeriod).toEqual(mockCurrentPeriod);
 
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
@@ -235,6 +238,7 @@ describe('getPermissionStatus - browser + node', () => {
       expect(result.isRevoked).toBe(false);
       expect(result.isExpired).toBe(true);
       expect(result.isActive).toBe(false);
+      expect(result.currentPeriod).toEqual(mockCurrentPeriod);
 
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
@@ -501,6 +505,7 @@ describe('getPermissionStatus - browser + node', () => {
       const result = await getPermissionStatus(permissionWithZeroAllowance);
 
       expect(result.remainingSpend).toBe(BigInt(0));
+      expect(result.currentPeriod).toEqual(mockCurrentPeriod);
 
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
@@ -543,6 +548,7 @@ describe('getPermissionStatus - browser + node', () => {
       expect(result.remainingSpend).toBe(
         BigInt('999999999999999999999999999999') - BigInt('1000000000000000000')
       );
+      expect(result.currentPeriod).toEqual(mockCurrentPeriod);
 
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
@@ -575,6 +581,7 @@ describe('getPermissionStatus - browser + node', () => {
       const result = await getPermissionStatus(mockSpendPermission);
 
       expect(result.nextPeriodStart).toEqual(new Date(2147483648 * 1000));
+      expect(result.currentPeriod).toEqual(mockCurrentPeriod);
 
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);

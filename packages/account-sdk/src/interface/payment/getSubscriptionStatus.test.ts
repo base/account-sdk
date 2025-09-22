@@ -1,5 +1,4 @@
 import type { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { readContract } from 'viem/actions';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import { getSubscriptionStatus } from './getSubscriptionStatus.js';
@@ -10,10 +9,6 @@ vi.mock('viem', () => ({
   formatUnits: vi.fn((value: bigint, decimals: number) => {
     return (Number(value) / Math.pow(10, decimals)).toString();
   }),
-}));
-
-vi.mock('viem/actions', () => ({
-  readContract: vi.fn(),
 }));
 
 vi.mock('../../store/chain-clients/utils.js', () => ({
@@ -31,9 +26,7 @@ vi.mock('../public-utilities/spend-permission/index.js', () => ({
 }));
 
 vi.mock('../public-utilities/spend-permission/utils.js', () => ({
-  calculateCurrentPeriod: vi.fn(),
   timestampInSecondsToDate: vi.fn((timestamp: number) => new Date(timestamp * 1000)),
-  toSpendPermissionArgs: vi.fn(),
 }));
 
 describe('getSubscriptionStatus', () => {
@@ -80,9 +73,6 @@ describe('getSubscriptionStatus', () => {
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
       const { getClient } = await import('../../store/chain-clients/utils.js');
-      const { toSpendPermissionArgs } = await import(
-        '../public-utilities/spend-permission/utils.js'
-      );
       const { timestampInSecondsToDate } = await import(
         '../public-utilities/spend-permission/utils.js'
       );
@@ -94,14 +84,13 @@ describe('getSubscriptionStatus', () => {
         return mockPermission;
       });
       vi.mocked(getClient).mockReturnValue(mockClient);
-      vi.mocked(toSpendPermissionArgs).mockReturnValue(['mockArgs'] as any);
-      vi.mocked(readContract).mockResolvedValue(mockCurrentPeriod);
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
         isRevoked: false,
         isExpired: false,
         remainingSpend: 8000000n, // 8 USDC remaining
         nextPeriodStart: new Date((currentTime + 2505600) * 1000),
+        currentPeriod: mockCurrentPeriod,
       } as any);
       vi.mocked(timestampInSecondsToDate).mockImplementation(
         (timestamp: number) => new Date(timestamp * 1000)
@@ -124,7 +113,6 @@ describe('getSubscriptionStatus', () => {
 
       expect(fetchPermission).toHaveBeenCalledWith({ permissionHash: mockPermissionHash });
       expect(getPermissionStatus).toHaveBeenCalledWith(mockPermission);
-      expect(readContract).toHaveBeenCalled();
     });
 
     it('should return subscription status based on isActive from getPermissionStatus', async () => {
@@ -142,13 +130,13 @@ describe('getSubscriptionStatus', () => {
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
-      vi.mocked(readContract).mockResolvedValue(mockCurrentPeriod);
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: false, // Not active
         isRevoked: false,
         isExpired: false,
         remainingSpend: 10000000n, // Full amount available
         nextPeriodStart: new Date((currentTime + 2505600) * 1000),
+        currentPeriod: mockCurrentPeriod,
       } as any);
 
       const result = await getSubscriptionStatus({
@@ -184,17 +172,17 @@ describe('getSubscriptionStatus', () => {
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
-      vi.mocked(readContract).mockResolvedValue({
-        start: Math.floor(Date.now() / 1000) - 3600,
-        end: Math.floor(Date.now() / 1000) + 82800,
-        spend: 1000000n,
-      });
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
         isRevoked: false,
         isExpired: false,
         remainingSpend: 4000000n,
         nextPeriodStart: new Date((Math.floor(Date.now() / 1000) + 82800) * 1000),
+        currentPeriod: {
+          start: Math.floor(Date.now() / 1000) - 3600,
+          end: Math.floor(Date.now() / 1000) + 82800,
+          spend: 1000000n,
+        },
       } as any);
 
       const result = await getSubscriptionStatus({
@@ -210,30 +198,27 @@ describe('getSubscriptionStatus', () => {
       });
     });
 
-    it('should calculate period from permission when client is not available', async () => {
+    it('should get period from getPermissionStatus when client is not available', async () => {
       const mockPermission = createMockPermission();
       const currentTime = Math.floor(Date.now() / 1000);
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
       const { getClient } = await import('../../store/chain-clients/utils.js');
-      const { calculateCurrentPeriod } = await import(
-        '../public-utilities/spend-permission/utils.js'
-      );
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(null as any); // No client available
-      vi.mocked(calculateCurrentPeriod).mockReturnValue({
-        start: currentTime - 86400,
-        end: currentTime + 2505600,
-        spend: 0n,
-      });
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
         isRevoked: false,
         isExpired: false,
         remainingSpend: 10000000n,
         nextPeriodStart: new Date((currentTime + 2505600) * 1000),
+        currentPeriod: {
+          start: currentTime - 86400,
+          end: currentTime + 2505600,
+          spend: 0n,
+        },
       } as any);
 
       const result = await getSubscriptionStatus({
@@ -241,35 +226,31 @@ describe('getSubscriptionStatus', () => {
         testnet: false,
       });
 
-      expect(calculateCurrentPeriod).toHaveBeenCalledWith(mockPermission);
       expect(result.isSubscribed).toBe(true);
     });
 
-    it('should handle readContract errors gracefully', async () => {
+    it('should get period from getPermissionStatus even if readContract would fail', async () => {
       const mockPermission = createMockPermission();
       const currentTime = Math.floor(Date.now() / 1000);
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
       const { getClient } = await import('../../store/chain-clients/utils.js');
-      const { calculateCurrentPeriod } = await import(
-        '../public-utilities/spend-permission/utils.js'
-      );
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
-      vi.mocked(readContract).mockRejectedValue(new Error('Contract read failed'));
-      vi.mocked(calculateCurrentPeriod).mockReturnValue({
-        start: currentTime - 86400,
-        end: currentTime + 2505600,
-        spend: 0n,
-      });
+      // Note: readContract is no longer called directly in getSubscriptionStatus
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
         isRevoked: false,
         isExpired: false,
         remainingSpend: 10000000n,
         nextPeriodStart: new Date((currentTime + 2505600) * 1000),
+        currentPeriod: {
+          start: currentTime - 86400,
+          end: currentTime + 2505600,
+          spend: 0n,
+        },
       } as any);
 
       const result = await getSubscriptionStatus({
@@ -277,8 +258,7 @@ describe('getSubscriptionStatus', () => {
         testnet: false,
       });
 
-      // Should fall back to calculateCurrentPeriod
-      expect(calculateCurrentPeriod).toHaveBeenCalledWith(mockPermission);
+      // Now gets period from getPermissionStatus directly
       expect(result.isSubscribed).toBe(true);
     });
   });
@@ -322,17 +302,17 @@ describe('getSubscriptionStatus', () => {
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
-      vi.mocked(readContract).mockResolvedValue({
-        start: Math.floor(Date.now() / 1000) - 31536000,
-        end: Math.floor(Date.now() / 1000) - 86400,
-        spend: 0n,
-      });
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: false, // Not active because expired
         isRevoked: false,
         isExpired: true, // Expired
         remainingSpend: 10000000n,
         nextPeriodStart: undefined,
+        currentPeriod: {
+          start: Math.floor(Date.now() / 1000) - 31536000,
+          end: Math.floor(Date.now() / 1000) - 86400,
+          spend: 0n,
+        },
       } as any);
 
       const result = await getSubscriptionStatus({
@@ -355,17 +335,17 @@ describe('getSubscriptionStatus', () => {
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
-      vi.mocked(readContract).mockResolvedValue({
-        start: currentTime - 86400,
-        end: currentTime + 2505600,
-        spend: 1000000n, // Has been used (not 0)
-      });
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: false, // Not active because revoked
         isRevoked: true, // Revoked
         isExpired: false,
         remainingSpend: 0n,
         nextPeriodStart: undefined,
+        currentPeriod: {
+          start: currentTime - 86400,
+          end: currentTime + 2505600,
+          spend: 1000000n, // Has been used (not 0)
+        },
       } as any);
 
       const result = await getSubscriptionStatus({
@@ -388,17 +368,17 @@ describe('getSubscriptionStatus', () => {
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
-      vi.mocked(readContract).mockResolvedValue({
-        start: currentTime - 86400,
-        end: currentTime + 2505600,
-        spend: 0n, // Never been used - no on-chain spending
-      });
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: false, // Not active because revoked
         isRevoked: true, // Revoked
         isExpired: false,
         remainingSpend: 10000000n, // Full amount still available (never used)
         nextPeriodStart: undefined,
+        currentPeriod: {
+          start: currentTime - 86400,
+          end: currentTime + 2505600,
+          spend: 0n, // Never been used - no on-chain spending
+        },
       } as any);
 
       const result = await getSubscriptionStatus({
@@ -551,12 +531,12 @@ describe('getSubscriptionStatus', () => {
         isActive: true,
         remainingSpend: 10000000n,
         nextPeriodStart: new Date(),
+        currentPeriod: {
+          start: Math.floor(Date.now() / 1000) - 86400,
+          end: Math.floor(Date.now() / 1000) + 2505600,
+          spend: 0n,
+        },
       } as any);
-      vi.mocked(readContract).mockResolvedValue({
-        start: Math.floor(Date.now() / 1000) - 86400,
-        end: Math.floor(Date.now() / 1000) + 2505600,
-        spend: 0n,
-      });
 
       await getSubscriptionStatus({
         id: mockPermissionHash,
@@ -601,15 +581,15 @@ describe('getSubscriptionStatus', () => {
 
         vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
         vi.mocked(getClient).mockReturnValue(mockClient);
-        vi.mocked(readContract).mockResolvedValue({
-          start: Math.floor(Date.now() / 1000) - 86400,
-          end: Math.floor(Date.now() / 1000) + periodSeconds - 86400,
-          spend: 0n,
-        });
         vi.mocked(getPermissionStatus).mockResolvedValue({
           isActive: true,
           remainingSpend: 10000000n,
           nextPeriodStart: new Date(),
+          currentPeriod: {
+            start: Math.floor(Date.now() / 1000) - 86400,
+            end: Math.floor(Date.now() / 1000) + periodSeconds - 86400,
+            spend: 0n,
+          },
         } as any);
 
         const result = await getSubscriptionStatus({
@@ -656,15 +636,15 @@ describe('getSubscriptionStatus', () => {
 
         vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
         vi.mocked(getClient).mockReturnValue(mockClient);
-        vi.mocked(readContract).mockResolvedValue({
-          start: Math.floor(Date.now() / 1000) - 86400,
-          end: Math.floor(Date.now() / 1000) + 2505600,
-          spend: 0n,
-        });
         vi.mocked(getPermissionStatus).mockResolvedValue({
           isActive: true,
           remainingSpend: BigInt(allowance),
           nextPeriodStart: new Date(),
+          currentPeriod: {
+            start: Math.floor(Date.now() / 1000) - 86400,
+            end: Math.floor(Date.now() / 1000) + 2505600,
+            spend: 0n,
+          },
         } as any);
 
         const result = await getSubscriptionStatus({

@@ -16,6 +16,11 @@ export type GetPermissionStatusResponseType = {
   isRevoked: boolean;
   isExpired: boolean;
   isActive: boolean;
+  currentPeriod: {
+    start: number;
+    end: number;
+    spend: bigint;
+  };
 };
 
 /**
@@ -112,6 +117,7 @@ const getPermissionStatusFn = async (
     isRevoked,
     isExpired,
     isActive,
+    currentPeriod,
   };
 };
 
