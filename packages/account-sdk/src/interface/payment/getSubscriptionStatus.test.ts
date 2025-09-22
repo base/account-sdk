@@ -98,6 +98,8 @@ describe('getSubscriptionStatus', () => {
       vi.mocked(readContract).mockResolvedValue(mockCurrentPeriod);
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
+        isRevoked: false,
+        isExpired: false,
         remainingSpend: 8000000n, // 8 USDC remaining
         nextPeriodStart: new Date((currentTime + 2505600) * 1000),
       } as any);
@@ -125,7 +127,7 @@ describe('getSubscriptionStatus', () => {
       expect(readContract).toHaveBeenCalled();
     });
 
-    it('should return active subscription when no on-chain state exists', async () => {
+    it('should return subscription status based on isActive from getPermissionStatus', async () => {
       const mockPermission = createMockPermission();
       const currentTime = Math.floor(Date.now() / 1000);
       const mockCurrentPeriod = {
@@ -142,7 +144,9 @@ describe('getSubscriptionStatus', () => {
       vi.mocked(getClient).mockReturnValue(mockClient);
       vi.mocked(readContract).mockResolvedValue(mockCurrentPeriod);
       vi.mocked(getPermissionStatus).mockResolvedValue({
-        isActive: false, // No on-chain activity yet
+        isActive: false, // Not active
+        isRevoked: false,
+        isExpired: false,
         remainingSpend: 10000000n, // Full amount available
         nextPeriodStart: new Date((currentTime + 2505600) * 1000),
       } as any);
@@ -152,7 +156,8 @@ describe('getSubscriptionStatus', () => {
         testnet: false,
       });
 
-      expect(result.isSubscribed).toBe(true); // Should still be subscribed
+      // Now isSubscribed directly reflects isActive from getPermissionStatus
+      expect(result.isSubscribed).toBe(false);
       expect(result.recurringCharge).toBe('10');
       expect(result.remainingChargeInPeriod).toBe('10');
     });
@@ -186,6 +191,8 @@ describe('getSubscriptionStatus', () => {
       });
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
+        isRevoked: false,
+        isExpired: false,
         remainingSpend: 4000000n,
         nextPeriodStart: new Date((Math.floor(Date.now() / 1000) + 82800) * 1000),
       } as any);
@@ -223,6 +230,8 @@ describe('getSubscriptionStatus', () => {
       });
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
+        isRevoked: false,
+        isExpired: false,
         remainingSpend: 10000000n,
         nextPeriodStart: new Date((currentTime + 2505600) * 1000),
       } as any);
@@ -257,6 +266,8 @@ describe('getSubscriptionStatus', () => {
       });
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
+        isRevoked: false,
+        isExpired: false,
         remainingSpend: 10000000n,
         nextPeriodStart: new Date((currentTime + 2505600) * 1000),
       } as any);
@@ -317,7 +328,9 @@ describe('getSubscriptionStatus', () => {
         spend: 0n,
       });
       vi.mocked(getPermissionStatus).mockResolvedValue({
-        isActive: true, // May still be "active" in contract state
+        isActive: false, // Not active because expired
+        isRevoked: false,
+        isExpired: true, // Expired
         remainingSpend: 10000000n,
         nextPeriodStart: undefined,
       } as any);
@@ -327,7 +340,7 @@ describe('getSubscriptionStatus', () => {
         testnet: false,
       });
 
-      expect(result.isSubscribed).toBe(false); // Should not be subscribed due to expiration
+      expect(result.isSubscribed).toBe(false); // Should not be subscribed because isActive is false
     });
   });
 
@@ -348,7 +361,9 @@ describe('getSubscriptionStatus', () => {
         spend: 1000000n, // Has been used (not 0)
       });
       vi.mocked(getPermissionStatus).mockResolvedValue({
-        isActive: false, // Revoked
+        isActive: false, // Not active because revoked
+        isRevoked: true, // Revoked
+        isExpired: false,
         remainingSpend: 0n,
         nextPeriodStart: undefined,
       } as any);
@@ -359,6 +374,42 @@ describe('getSubscriptionStatus', () => {
       });
 
       expect(result.isSubscribed).toBe(false); // Should not be subscribed due to revocation
+    });
+
+    it('should return not subscribed for revoked subscription with no on-chain spending', async () => {
+      // This tests the specific bug fix: a revoked subscription that has never been used
+      // should NOT be considered active just because it has no on-chain state
+      const mockPermission = createMockPermission();
+      const currentTime = Math.floor(Date.now() / 1000);
+
+      const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
+      const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
+      const { getClient } = await import('../../store/chain-clients/utils.js');
+
+      vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
+      vi.mocked(getClient).mockReturnValue(mockClient);
+      vi.mocked(readContract).mockResolvedValue({
+        start: currentTime - 86400,
+        end: currentTime + 2505600,
+        spend: 0n, // Never been used - no on-chain spending
+      });
+      vi.mocked(getPermissionStatus).mockResolvedValue({
+        isActive: false, // Not active because revoked
+        isRevoked: true, // Revoked
+        isExpired: false,
+        remainingSpend: 10000000n, // Full amount still available (never used)
+        nextPeriodStart: undefined,
+      } as any);
+
+      const result = await getSubscriptionStatus({
+        id: mockPermissionHash,
+        testnet: false,
+      });
+
+      // Now correctly returns false because isActive is false (no hasNoOnChainState logic)
+      expect(result.isSubscribed).toBe(false);
+      expect(result.recurringCharge).toBe('10');
+      expect(result.remainingChargeInPeriod).toBe('10');
     });
   });
 

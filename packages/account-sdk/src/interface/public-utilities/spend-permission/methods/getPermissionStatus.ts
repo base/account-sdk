@@ -13,6 +13,8 @@ import { withTelemetry } from '../withTelemetry.js';
 export type GetPermissionStatusResponseType = {
   remainingSpend: bigint;
   nextPeriodStart: Date;
+  isRevoked: boolean;
+  isExpired: boolean;
   isActive: boolean;
 };
 
@@ -41,7 +43,9 @@ export type GetPermissionStatusResponseType = {
  * const status = await getPermissionStatus(permission);
  *
  * console.log(`Remaining spend: ${status.remainingSpend} wei`);
- * console.log(`Next period starts: ${new Date(parseInt(status.nextPeriodStart) * 1000)}`);
+ * console.log(`Next period starts: ${status.nextPeriodStart}`);
+ * console.log(`Is revoked: ${status.isRevoked}`);
+ * console.log(`Is expired: ${status.isExpired}`);
  * console.log(`Is active: ${status.isActive}`);
  *
  * if (status.isActive && status.remainingSpend > BigInt(0)) {
@@ -71,7 +75,7 @@ const getPermissionStatusFn = async (
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
-  const [currentPeriod, isRevoked, isValid] = await Promise.all([
+  const [currentPeriod, isRevoked] = await Promise.all([
     readContract(client, {
       address: spendPermissionManagerAddress,
       abi: spendPermissionManagerAbi,
@@ -82,12 +86,6 @@ const getPermissionStatusFn = async (
       address: spendPermissionManagerAddress,
       abi: spendPermissionManagerAbi,
       functionName: 'isRevoked',
-      args: [spendPermissionArgs],
-    }) as Promise<boolean>,
-    readContract(client, {
-      address: spendPermissionManagerAddress,
-      abi: spendPermissionManagerAbi,
-      functionName: 'isValid',
       args: [spendPermissionArgs],
     }) as Promise<boolean>,
   ]);
@@ -101,12 +99,18 @@ const getPermissionStatusFn = async (
   // Next period starts immediately after current period ends
   const nextPeriodStart = (Number(currentPeriod.end) + 1).toString();
 
-  // Permission is active if it's not revoked and is still valid
-  const isActive = !isRevoked && isValid;
+  // Check if permission is expired
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+  const isExpired = currentTimestamp > permission.permission.end;
+
+  // Permission is active if it's not revoked and not expired
+  const isActive = !isRevoked && !isExpired;
 
   return {
     remainingSpend,
     nextPeriodStart: timestampInSecondsToDate(Number(nextPeriodStart)),
+    isRevoked,
+    isExpired,
     isActive,
   };
 };

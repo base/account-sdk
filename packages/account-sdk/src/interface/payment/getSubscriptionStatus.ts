@@ -21,9 +21,7 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
  * Gets the current status and details of a subscription.
  *
  * This function fetches the subscription (spend permission) details using its ID (permission hash)
- * and returns status information about the subscription. If there's no on-chain state for the
- * subscription (e.g., it has never been used), the function will infer that the subscription
- * is unrevoked and the full recurring amount is available to spend.
+ * and returns status information about the subscription.
  *
  * @param options - Options for checking subscription status
  * @param options.id - The subscription ID (permission hash) returned from subscribe()
@@ -43,7 +41,7 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
  *
  * console.log(`Subscribed: ${status.isSubscribed}`);
  * console.log(`Next payment: ${status.nextPeriodStart}`);
- * console.log(`Recurring amount: $${status.recurringAmount}`);
+ * console.log(`Recurring amount: $${status.recurringCharge}`);
  * console.log(`Owner address: ${status.subscriptionOwner}`);
  * ```
  */
@@ -109,7 +107,7 @@ export async function getSubscriptionStatus(
   // Get the current permission status (includes period info and active state)
   const status = await getPermissionStatus(permission);
 
-  // Get the current period info directly to get spend amount
+  // Get the current period info directly to get start time
   let currentPeriod: { start: number; end: number; spend: bigint };
 
   const client = getClient(permission.chainId!);
@@ -140,7 +138,6 @@ export async function getSubscriptionStatus(
   // Check if the subscription period has started
   const currentTime = Math.floor(Date.now() / 1000);
   const permissionStart = Number(permission.permission.start);
-  const permissionEnd = Number(permission.permission.end);
 
   if (currentTime < permissionStart) {
     throw new Error(
@@ -148,17 +145,9 @@ export async function getSubscriptionStatus(
     );
   }
 
-  // Check if the subscription has expired
-  const hasNotExpired = currentTime <= permissionEnd;
-
-  // A subscription is considered active if we're within the valid time bounds
-  // and the permission hasn't been revoked.
-  const hasNoOnChainState = currentPeriod.spend === BigInt(0);
-  const isSubscribed = hasNotExpired && (status.isActive || hasNoOnChainState);
-
   // Build the result with data from getCurrentPeriod and other on-chain functions
   const result: SubscriptionStatus = {
-    isSubscribed,
+    isSubscribed: status.isActive,
     recurringCharge,
     remainingChargeInPeriod: formatUnits(status.remainingSpend, 6),
     currentPeriodStart: timestampInSecondsToDate(currentPeriod.start),
