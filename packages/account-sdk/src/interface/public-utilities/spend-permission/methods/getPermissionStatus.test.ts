@@ -1,7 +1,7 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import {
-    spendPermissionManagerAbi,
-    spendPermissionManagerAddress,
+  spendPermissionManagerAbi,
+  spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { PublicClient, createPublicClient, http } from 'viem';
@@ -496,9 +496,7 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false);
+      (readContract as Mock).mockResolvedValueOnce(mockCurrentPeriod).mockResolvedValueOnce(false);
 
       const result = await getPermissionStatus(permissionWithZeroAllowance);
 
@@ -507,9 +505,7 @@ describe('getPermissionStatus - browser + node', () => {
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false);
+      (readContract as Mock).mockResolvedValueOnce(mockCurrentPeriod).mockResolvedValueOnce(false);
 
       const nodeResult = await getPermissionStatus(permissionWithZeroAllowance);
 
@@ -540,9 +536,7 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false);
+      (readContract as Mock).mockResolvedValueOnce(mockCurrentPeriod).mockResolvedValueOnce(false);
 
       const result = await getPermissionStatus(permissionWithLargeAllowance);
 
@@ -553,9 +547,7 @@ describe('getPermissionStatus - browser + node', () => {
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false);
+      (readContract as Mock).mockResolvedValueOnce(mockCurrentPeriod).mockResolvedValueOnce(false);
 
       const nodeResult = await getPermissionStatus(permissionWithLargeAllowance);
 
@@ -578,9 +570,7 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false);
+      (readContract as Mock).mockResolvedValueOnce(mockCurrentPeriod).mockResolvedValueOnce(false);
 
       const result = await getPermissionStatus(mockSpendPermission);
 
@@ -589,9 +579,7 @@ describe('getPermissionStatus - browser + node', () => {
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false);
+      (readContract as Mock).mockResolvedValueOnce(mockCurrentPeriod).mockResolvedValueOnce(false);
 
       const nodeResult = await getPermissionStatus(mockSpendPermission);
 
