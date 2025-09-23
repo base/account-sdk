@@ -6,6 +6,7 @@ import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '.
 export function logSubscriptionStarted(data: {
   recurringCharge: string;
   periodInDays: number;
+  periodInSeconds?: number; // Optional, only for testnet
   testnet: boolean;
   correlationId: string;
 }) {
@@ -20,6 +21,7 @@ export function logSubscriptionStarted(data: {
       amount: data.recurringCharge,
       testnet: data.testnet,
       periodInDays: data.periodInDays,
+      ...(data.periodInSeconds !== undefined && { periodInSeconds: data.periodInSeconds }),
     },
     AnalyticsEventImportance.high
   );
@@ -31,6 +33,7 @@ export function logSubscriptionStarted(data: {
 export function logSubscriptionCompleted(data: {
   recurringCharge: string;
   periodInDays: number;
+  periodInSeconds?: number; // Optional, only for testnet
   testnet: boolean;
   correlationId: string;
   permissionHash: string;
@@ -47,6 +50,7 @@ export function logSubscriptionCompleted(data: {
       testnet: data.testnet,
       periodInDays: data.periodInDays,
       status: data.permissionHash, // Using status field to store permission hash
+      ...(data.periodInSeconds !== undefined && { periodInSeconds: data.periodInSeconds }),
     },
     AnalyticsEventImportance.high
   );
@@ -58,6 +62,7 @@ export function logSubscriptionCompleted(data: {
 export function logSubscriptionError(data: {
   recurringCharge: string;
   periodInDays: number;
+  periodInSeconds?: number; // Optional, only for testnet
   testnet: boolean;
   correlationId: string;
   errorMessage: string;
@@ -74,6 +79,7 @@ export function logSubscriptionError(data: {
       testnet: data.testnet,
       periodInDays: data.periodInDays,
       errorMessage: data.errorMessage,
+      ...(data.periodInSeconds !== undefined && { periodInSeconds: data.periodInSeconds }),
     },
     AnalyticsEventImportance.high
   );

@@ -8,6 +8,7 @@ import { parseUnits } from 'viem';
 import { getHash } from '../public-utilities/spend-permission/index.js';
 import {
   createSpendPermissionTypedData,
+  createSpendPermissionTypedDataWithSeconds,
   type SpendPermissionTypedData,
 } from '../public-utilities/spend-permission/utils.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
@@ -25,6 +26,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * @param options.recurringCharge - Amount of USDC to charge per period as a string (e.g., "10.50")
  * @param options.subscriptionOwner - Ethereum address that will be the spender (your application's address)
  * @param options.periodInDays - The period in days for the subscription (default: 30)
+ * @param options.periodInSeconds - TEST ONLY: The period in seconds (only works when testnet=true)
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.walletUrl - Optional wallet URL to use
  * @param options.telemetry - Whether to enable telemetry logging (default: true)
@@ -33,12 +35,13 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  *
  * @example
  * ```typescript
+ * // Production usage (mainnet or testnet with days)
  * try {
  *   const subscription = await subscribe({
  *     recurringCharge: "10.50",
  *     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
  *     periodInDays: 30, // Monthly subscription
- *     testnet: true
+ *     testnet: false // or true for testnet
  *   });
  *
  *   console.log(`Subscription created!`);
@@ -50,23 +53,68 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  *   console.error(`Subscription failed: ${error.message}`);
  * }
  * ```
+ * 
+ * @example
+ * ```typescript
+ * // TEST ONLY: Using periodInSeconds on testnet for faster testing
+ * try {
+ *   const subscription = await subscribe({
+ *     recurringCharge: "0.01",
+ *     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
+ *     periodInSeconds: 300, // 5 minutes for testing - ONLY WORKS ON TESTNET
+ *     testnet: true // REQUIRED when using periodInSeconds
+ *   });
+ *
+ *   console.log(`Test subscription created with 5-minute period`);
+ * } catch (error) {
+ *   console.error(`Subscription failed: ${error.message}`);
+ * }
+ * ```
  */
 export async function subscribe(options: SubscriptionOptions): Promise<SubscriptionResult> {
   const {
     recurringCharge,
     subscriptionOwner,
     periodInDays = 30,
+    periodInSeconds,
     testnet = false,
     walletUrl,
     telemetry = true,
   } = options;
+
+  // Runtime validation: Ensure periodInSeconds is only used with testnet
+  if (periodInSeconds !== undefined && !testnet) {
+    throw new Error(
+      'periodInSeconds is only available for testing on testnet. ' +
+      'Set testnet: true to use periodInSeconds, or use periodInDays for production.'
+    );
+  }
+
+  // Determine the actual period to use
+  let effectivePeriodInDays: number;
+  let effectivePeriodInSeconds: number | undefined;
+  
+  if (testnet && periodInSeconds !== undefined) {
+    // On testnet with periodInSeconds specified
+    effectivePeriodInSeconds = periodInSeconds;
+    effectivePeriodInDays = Math.ceil(periodInSeconds / 86400); // For telemetry/display purposes
+  } else {
+    // Normal flow: use periodInDays
+    effectivePeriodInDays = periodInDays;
+  }
 
   // Generate correlation ID for this subscription request
   const correlationId = crypto.randomUUID();
 
   // Log subscription started
   if (telemetry) {
-    logSubscriptionStarted({ recurringCharge, periodInDays, testnet, correlationId });
+    logSubscriptionStarted({ 
+      recurringCharge, 
+      periodInDays: effectivePeriodInDays, 
+      testnet, 
+      correlationId,
+      periodInSeconds: effectivePeriodInSeconds // Will be undefined if not used
+    });
   }
 
   try {
@@ -88,14 +136,23 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     // - Auto-generation of salt and extraData
     // - Proper formatting of all fields
     // We use PLACEHOLDER_ADDRESS which will be replaced by wallet with actual account
-    const typedData = createSpendPermissionTypedData({
-      account: PLACEHOLDER_ADDRESS,
-      spender: spenderAddress,
-      token: tokenAddress,
-      chainId: chainId,
-      allowance: allowanceInWei,
-      periodInDays: periodInDays,
-    });
+    const typedData = testnet && effectivePeriodInSeconds !== undefined
+      ? createSpendPermissionTypedDataWithSeconds({
+          account: PLACEHOLDER_ADDRESS,
+          spender: spenderAddress,
+          token: tokenAddress,
+          chainId: chainId,
+          allowance: allowanceInWei,
+          periodInSeconds: effectivePeriodInSeconds,
+        })
+      : createSpendPermissionTypedData({
+          account: PLACEHOLDER_ADDRESS,
+          spender: spenderAddress,
+          token: tokenAddress,
+          chainId: chainId,
+          allowance: allowanceInWei,
+          periodInDays: effectivePeriodInDays,
+        });
 
     // Create SDK instance
     const sdk = createEphemeralSDK(chainId, walletUrl, telemetry);
@@ -164,7 +221,8 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       if (telemetry) {
         logSubscriptionCompleted({
           recurringCharge,
-          periodInDays,
+          periodInDays: effectivePeriodInDays,
+          periodInSeconds: effectivePeriodInSeconds,
           testnet,
           correlationId,
           permissionHash,
@@ -177,7 +235,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         subscriptionOwner: message.spender,
         subscriptionPayer: message.account,
         recurringCharge: recurringCharge, // The amount in USD as provided by the user
-        periodInDays,
+        periodInDays: effectivePeriodInDays,
       };
     } finally {
       // Clean up provider state
@@ -191,7 +249,8 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     if (telemetry) {
       logSubscriptionError({
         recurringCharge,
-        periodInDays,
+        periodInDays: effectivePeriodInDays,
+        periodInSeconds: effectivePeriodInSeconds,
         testnet,
         correlationId,
         errorMessage,
