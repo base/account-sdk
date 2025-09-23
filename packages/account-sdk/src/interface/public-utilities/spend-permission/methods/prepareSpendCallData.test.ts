@@ -35,6 +35,7 @@ function createMockPermissionStatus(
     isActive: true,
     isRevoked: false,
     isExpired: false,
+    isApprovedOnchain: true,
     currentPeriod: {
       start: 1234567890,
       end: 1234654290,
@@ -98,8 +99,10 @@ describe('prepareSpendCallData', () => {
     });
   });
 
-  it('should prepare call data for approve and spend operations when permission is not active', async () => {
-    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus({ isActive: false }));
+  it('should prepare call data for approve and spend operations when permission is not approved onchain', async () => {
+    mockGetPermissionStatus.mockResolvedValue(
+      createMockPermissionStatus({ isApprovedOnchain: false })
+    );
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -128,7 +131,7 @@ describe('prepareSpendCallData', () => {
       value: 0n,
     });
 
-    // Verify approve call is not made when permission is active
+    // Verify approve call is not made when permission is already approved onchain
     expect(mockEncodeFunctionData).not.toHaveBeenCalledWith({
       abi: spendPermissionManagerAbi,
       functionName: 'approveWithSignature',
@@ -173,8 +176,10 @@ describe('prepareSpendCallData', () => {
     expect(mockToSpendPermissionArgs).toHaveBeenCalledWith(mockSpendPermission);
   });
 
-  it('should encode approveWithSignature function data correctly when permission is not active', async () => {
-    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus({ isActive: false }));
+  it('should encode approveWithSignature function data correctly when permission is not approved onchain', async () => {
+    mockGetPermissionStatus.mockResolvedValue(
+      createMockPermissionStatus({ isApprovedOnchain: false })
+    );
 
     await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -197,8 +202,10 @@ describe('prepareSpendCallData', () => {
     });
   });
 
-  it('should return calls with correct structure when permission is not active', async () => {
-    mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus({ isActive: false }));
+  it('should return calls with correct structure when permission is not approved onchain', async () => {
+    mockGetPermissionStatus.mockResolvedValue(
+      createMockPermissionStatus({ isApprovedOnchain: false })
+    );
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
@@ -219,7 +226,7 @@ describe('prepareSpendCallData', () => {
     expect(typedResult[1].value).toBe(0n);
   });
 
-  it('should return calls with correct structure when permission is active', async () => {
+  it('should return calls with correct structure when permission is already approved onchain', async () => {
     mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus());
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
@@ -271,10 +278,10 @@ describe('prepareSpendCallData', () => {
     });
   });
 
-  it('should use the same spendPermissionManagerAddress for both calls when permission is not active', async () => {
+  it('should use the same spendPermissionManagerAddress for both calls when permission is not approved onchain', async () => {
     mockGetPermissionStatus.mockResolvedValue(
       createMockPermissionStatus({
-        isActive: false,
+        isApprovedOnchain: false,
         isRevoked: true,
       })
     );
@@ -285,7 +292,7 @@ describe('prepareSpendCallData', () => {
     expect(result[1].to).toBe(spendPermissionManagerAddress);
   });
 
-  it('should use the same spendPermissionManagerAddress for spend call when permission is active', async () => {
+  it('should use the same spendPermissionManagerAddress for spend call when permission is already approved onchain', async () => {
     mockGetPermissionStatus.mockResolvedValue(createMockPermissionStatus());
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
@@ -385,10 +392,10 @@ describe('prepareSpendCallData', () => {
     expect(result[0].to).toBe(spendPermissionManagerAddress);
   });
 
-  it('should set value to 0x0 for both calls when permission is not active', async () => {
+  it('should set value to 0x0 for both calls when permission is not approved onchain', async () => {
     mockGetPermissionStatus.mockResolvedValue(
       createMockPermissionStatus({
-        isActive: false,
+        isApprovedOnchain: false,
         isExpired: true,
       })
     );
@@ -399,7 +406,7 @@ describe('prepareSpendCallData', () => {
     expect(result[1].value).toBe(0n);
   });
 
-  it('should set value to 0x0 for spend call when permission is active', async () => {
+  it('should set value to 0x0 for spend call when permission is already approved onchain', async () => {
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
     expect(result[0].value).toBe(0n);
@@ -418,14 +425,14 @@ describe('prepareSpendCallData', () => {
   it('should work correctly when permission status indicates not approved', async () => {
     mockGetPermissionStatus.mockResolvedValue(
       createMockPermissionStatus({
-        isActive: false,
+        isApprovedOnchain: false,
         isExpired: true,
       })
     );
 
     const result = await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
-    // Should prepare both calls when permission is not active
+    // Should prepare both calls when permission is not approved onchain
     expect(result).toHaveLength(2);
     expect(mockEncodeFunctionData).toHaveBeenCalledWith({
       abi: spendPermissionManagerAbi,

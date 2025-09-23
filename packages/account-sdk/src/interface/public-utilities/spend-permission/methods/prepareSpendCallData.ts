@@ -22,7 +22,7 @@ export type PrepareSpendCallDataResponseType = Call[];
  *
  * This helper method constructs the call data for `approveWithSignature`
  * and `spend` functions. The approve call is only included when the permission
- * is not yet active. If the permission is already approved, only the spend call is returned.
+ * is not yet approved onchain. If the permission is already approved, only the spend call is returned.
  *
  * When 'max-remaining-allowance' is provided as the amount, the function automatically uses all remaining
  * spend permission allowance.
@@ -109,7 +109,7 @@ const prepareSpendCallDataFn = async (
   amount: bigint | 'max-remaining-allowance',
   recipient?: Address
 ): Promise<PrepareSpendCallDataResponseType> => {
-  const { remainingSpend, isActive } = await getPermissionStatus(permission);
+  const { remainingSpend, isApprovedOnchain } = await getPermissionStatus(permission);
   const spendAmount = amount === 'max-remaining-allowance' ? remainingSpend : amount;
 
   if (spendAmount === BigInt(0)) {
@@ -124,7 +124,7 @@ const prepareSpendCallDataFn = async (
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
-  if (!isActive) {
+  if (!isApprovedOnchain) {
     const approveData = encodeFunctionData({
       abi: spendPermissionManagerAbi,
       functionName: 'approveWithSignature',
