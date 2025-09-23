@@ -101,7 +101,7 @@ export function createSpendPermissionTypedData(
  * TEST ONLY: Creates a spend permission with period in seconds instead of days.
  * ⚠️ WARNING: This function should ONLY be used for testing purposes on testnet.
  * Using this in production scenarios is not supported and may lead to unexpected behavior.
- * 
+ *
  * @testOnly
  * @param request - The request parameters with periodInSeconds instead of periodInDays
  * @returns SpendPermissionTypedData
@@ -109,14 +109,24 @@ export function createSpendPermissionTypedData(
 export function createSpendPermissionTypedDataWithSeconds(
   request: Omit<RequestSpendPermissionType, 'periodInDays'> & { periodInSeconds: number }
 ): SpendPermissionTypedData {
-  const { account, spender, token, chainId, allowance, periodInSeconds, start, end, salt, extraData } =
-    request;
+  const {
+    account,
+    spender,
+    token,
+    chainId,
+    allowance,
+    periodInSeconds,
+    start,
+    end,
+    salt,
+    extraData,
+  } = request;
 
   // Runtime check to prevent misuse
   if (process.env.NODE_ENV === 'production') {
     console.warn(
       '⚠️ createSpendPermissionTypedDataWithSeconds is being used. ' +
-      'This function is intended for testing purposes only.'
+        'This function is intended for testing purposes only.'
     );
   }
 

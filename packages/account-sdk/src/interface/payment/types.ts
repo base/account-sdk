@@ -139,7 +139,7 @@ export interface SubscriptionOptions {
   subscriptionOwner: string;
   /** The period in days for the subscription (e.g., 30 for monthly) */
   periodInDays?: number;
-  /** 
+  /**
    * TEST ONLY: The period in seconds for the subscription.
    * ⚠️ WARNING: This parameter is ONLY available when testnet is true.
    * Using this in production (testnet=false) will throw an error.

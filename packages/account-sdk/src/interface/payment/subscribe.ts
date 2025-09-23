@@ -53,7 +53,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  *   console.error(`Subscription failed: ${error.message}`);
  * }
  * ```
- * 
+ *
  * @example
  * ```typescript
  * // TEST ONLY: Using periodInSeconds on testnet for faster testing
@@ -86,14 +86,14 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
   if (periodInSeconds !== undefined && !testnet) {
     throw new Error(
       'periodInSeconds is only available for testing on testnet. ' +
-      'Set testnet: true to use periodInSeconds, or use periodInDays for production.'
+        'Set testnet: true to use periodInSeconds, or use periodInDays for production.'
     );
   }
 
   // Determine the actual period to use
   let effectivePeriodInDays: number;
   let effectivePeriodInSeconds: number | undefined;
-  
+
   if (testnet && periodInSeconds !== undefined) {
     // On testnet with periodInSeconds specified
     effectivePeriodInSeconds = periodInSeconds;
@@ -108,12 +108,12 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
 
   // Log subscription started
   if (telemetry) {
-    logSubscriptionStarted({ 
-      recurringCharge, 
-      periodInDays: effectivePeriodInDays, 
-      testnet, 
+    logSubscriptionStarted({
+      recurringCharge,
+      periodInDays: effectivePeriodInDays,
+      testnet,
       correlationId,
-      periodInSeconds: effectivePeriodInSeconds // Will be undefined if not used
+      periodInSeconds: effectivePeriodInSeconds, // Will be undefined if not used
     });
   }
 
@@ -136,23 +136,24 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     // - Auto-generation of salt and extraData
     // - Proper formatting of all fields
     // We use PLACEHOLDER_ADDRESS which will be replaced by wallet with actual account
-    const typedData = testnet && effectivePeriodInSeconds !== undefined
-      ? createSpendPermissionTypedDataWithSeconds({
-          account: PLACEHOLDER_ADDRESS,
-          spender: spenderAddress,
-          token: tokenAddress,
-          chainId: chainId,
-          allowance: allowanceInWei,
-          periodInSeconds: effectivePeriodInSeconds,
-        })
-      : createSpendPermissionTypedData({
-          account: PLACEHOLDER_ADDRESS,
-          spender: spenderAddress,
-          token: tokenAddress,
-          chainId: chainId,
-          allowance: allowanceInWei,
-          periodInDays: effectivePeriodInDays,
-        });
+    const typedData =
+      testnet && effectivePeriodInSeconds !== undefined
+        ? createSpendPermissionTypedDataWithSeconds({
+            account: PLACEHOLDER_ADDRESS,
+            spender: spenderAddress,
+            token: tokenAddress,
+            chainId: chainId,
+            allowance: allowanceInWei,
+            periodInSeconds: effectivePeriodInSeconds,
+          })
+        : createSpendPermissionTypedData({
+            account: PLACEHOLDER_ADDRESS,
+            spender: spenderAddress,
+            token: tokenAddress,
+            chainId: chainId,
+            allowance: allowanceInWei,
+            periodInDays: effectivePeriodInDays,
+          });
 
     // Create SDK instance
     const sdk = createEphemeralSDK(chainId, walletUrl, telemetry);
