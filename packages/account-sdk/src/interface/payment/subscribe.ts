@@ -35,13 +35,12 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  *
  * @example
  * ```typescript
- * // Production usage (mainnet or testnet with days)
  * try {
  *   const subscription = await subscribe({
  *     recurringCharge: "10.50",
  *     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
  *     periodInDays: 30, // Monthly subscription
- *     testnet: false // or true for testnet
+ *     testnet: true
  *   });
  *
  *   console.log(`Subscription created!`);
@@ -90,19 +89,6 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     );
   }
 
-  // Determine the actual period to use
-  let effectivePeriodInDays: number;
-  let effectivePeriodInSeconds: number | undefined;
-
-  if (testnet && periodInSeconds !== undefined) {
-    // On testnet with periodInSeconds specified
-    effectivePeriodInSeconds = periodInSeconds;
-    effectivePeriodInDays = Math.ceil(periodInSeconds / 86400); // For telemetry/display purposes
-  } else {
-    // Normal flow: use periodInDays
-    effectivePeriodInDays = periodInDays;
-  }
-
   // Generate correlation ID for this subscription request
   const correlationId = crypto.randomUUID();
 
@@ -110,10 +96,10 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
   if (telemetry) {
     logSubscriptionStarted({
       recurringCharge,
-      periodInDays: effectivePeriodInDays,
+      periodInDays: testnet && periodInSeconds !== undefined ? Math.ceil(periodInSeconds / 86400) : periodInDays,
       testnet,
       correlationId,
-      periodInSeconds: effectivePeriodInSeconds, // Will be undefined if not used
+      periodInSeconds: testnet ? periodInSeconds : undefined,
     });
   }
 
@@ -137,14 +123,14 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     // - Proper formatting of all fields
     // We use PLACEHOLDER_ADDRESS which will be replaced by wallet with actual account
     const typedData =
-      testnet && effectivePeriodInSeconds !== undefined
+      testnet && periodInSeconds !== undefined
         ? createSpendPermissionTypedDataWithSeconds({
             account: PLACEHOLDER_ADDRESS,
             spender: spenderAddress,
             token: tokenAddress,
             chainId: chainId,
             allowance: allowanceInWei,
-            periodInSeconds: effectivePeriodInSeconds,
+            periodInSeconds: periodInSeconds,
           })
         : createSpendPermissionTypedData({
             account: PLACEHOLDER_ADDRESS,
@@ -152,7 +138,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
             token: tokenAddress,
             chainId: chainId,
             allowance: allowanceInWei,
-            periodInDays: effectivePeriodInDays,
+            periodInDays: periodInDays,
           });
 
     // Create SDK instance
@@ -222,8 +208,8 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       if (telemetry) {
         logSubscriptionCompleted({
           recurringCharge,
-          periodInDays: effectivePeriodInDays,
-          periodInSeconds: effectivePeriodInSeconds,
+          periodInDays: testnet && periodInSeconds !== undefined ? Math.ceil(periodInSeconds / 86400) : periodInDays,
+          periodInSeconds: testnet ? periodInSeconds : undefined,
           testnet,
           correlationId,
           permissionHash,
@@ -236,7 +222,8 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         subscriptionOwner: message.spender,
         subscriptionPayer: message.account,
         recurringCharge: recurringCharge, // The amount in USD as provided by the user
-        periodInDays: effectivePeriodInDays,
+        periodInDays: testnet && periodInSeconds !== undefined ? Math.ceil(periodInSeconds / 86400) : periodInDays,
+        ...(testnet && periodInSeconds !== undefined && { periodInSeconds }),
       };
     } finally {
       // Clean up provider state
@@ -250,8 +237,8 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     if (telemetry) {
       logSubscriptionError({
         recurringCharge,
-        periodInDays: effectivePeriodInDays,
-        periodInSeconds: effectivePeriodInSeconds,
+        periodInDays: testnet && periodInSeconds !== undefined ? Math.ceil(periodInSeconds / 86400) : periodInDays,
+        periodInSeconds: testnet ? periodInSeconds : undefined,
         testnet,
         correlationId,
         errorMessage,
