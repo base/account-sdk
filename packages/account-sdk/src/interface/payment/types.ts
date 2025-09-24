@@ -169,8 +169,8 @@ export interface SubscriptionResult {
   recurringCharge: string;
   /** The period in days for the subscription */
   periodInDays: number;
-  /** 
-   * TEST ONLY: The period in seconds if specified on testnet 
+  /**
+   * TEST ONLY: The period in seconds if specified on testnet
    * Only present when using periodInSeconds on testnet
    */
   periodInSeconds?: number;

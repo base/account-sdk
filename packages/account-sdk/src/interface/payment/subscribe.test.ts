@@ -71,7 +71,7 @@ describe('subscribe with periodInSeconds', () => {
     } as any);
 
     const result = await subscribe(options);
-    
+
     // Verify the result includes periodInSeconds
     expect(result).toBeDefined();
     expect(result.periodInSeconds).toBe(300);

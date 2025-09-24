@@ -96,7 +96,10 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
   if (telemetry) {
     logSubscriptionStarted({
       recurringCharge,
-      periodInDays: testnet && periodInSeconds !== undefined ? Math.ceil(periodInSeconds / 86400) : periodInDays,
+      periodInDays:
+        testnet && periodInSeconds !== undefined
+          ? Math.ceil(periodInSeconds / 86400)
+          : periodInDays,
       testnet,
       correlationId,
       periodInSeconds: testnet ? periodInSeconds : undefined,
@@ -208,7 +211,10 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       if (telemetry) {
         logSubscriptionCompleted({
           recurringCharge,
-          periodInDays: testnet && periodInSeconds !== undefined ? Math.ceil(periodInSeconds / 86400) : periodInDays,
+          periodInDays:
+            testnet && periodInSeconds !== undefined
+              ? Math.ceil(periodInSeconds / 86400)
+              : periodInDays,
           periodInSeconds: testnet ? periodInSeconds : undefined,
           testnet,
           correlationId,
@@ -222,7 +228,10 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         subscriptionOwner: message.spender,
         subscriptionPayer: message.account,
         recurringCharge: recurringCharge, // The amount in USD as provided by the user
-        periodInDays: testnet && periodInSeconds !== undefined ? Math.ceil(periodInSeconds / 86400) : periodInDays,
+        periodInDays:
+          testnet && periodInSeconds !== undefined
+            ? Math.ceil(periodInSeconds / 86400)
+            : periodInDays,
         ...(testnet && periodInSeconds !== undefined && { periodInSeconds }),
       };
     } finally {
@@ -237,7 +246,10 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     if (telemetry) {
       logSubscriptionError({
         recurringCharge,
-        periodInDays: testnet && periodInSeconds !== undefined ? Math.ceil(periodInSeconds / 86400) : periodInDays,
+        periodInDays:
+          testnet && periodInSeconds !== undefined
+            ? Math.ceil(periodInSeconds / 86400)
+            : periodInDays,
         periodInSeconds: testnet ? periodInSeconds : undefined,
         testnet,
         correlationId,
