@@ -40,6 +40,10 @@ export type PrepareSpendCallDataResponseType = Call[];
  *
  * @returns A promise that resolves to an array containing all the necessary calls.
  *
+ * @throws {Error} Throws an error if the spend permission has been revoked.
+ * @throws {Error} Throws an error if the spend amount is 0.
+ * @throws {Error} Throws an error if the spend amount exceeds the remaining allowance.
+ *
  * @example
  * ```typescript
  * import { prepareSpendCallData } from '@base-org/account/spend-permission';
@@ -109,7 +113,12 @@ const prepareSpendCallDataFn = async (
   amount: bigint | 'max-remaining-allowance',
   recipient?: Address
 ): Promise<PrepareSpendCallDataResponseType> => {
-  const { remainingSpend, isApprovedOnchain } = await getPermissionStatus(permission);
+  const { remainingSpend, isApprovedOnchain, isRevoked } = await getPermissionStatus(permission);
+
+  if (isRevoked) {
+    throw new Error('Spend permission has been revoked');
+  }
+
   const spendAmount = amount === 'max-remaining-allowance' ? remainingSpend : amount;
 
   if (spendAmount === BigInt(0)) {

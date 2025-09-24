@@ -278,11 +278,23 @@ describe('prepareSpendCallData', () => {
     });
   });
 
+  it('should throw error when permission is revoked', async () => {
+    mockGetPermissionStatus.mockResolvedValue(
+      createMockPermissionStatus({
+        isRevoked: true,
+      })
+    );
+
+    await expect(
+      prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance')
+    ).rejects.toThrow('Spend permission has been revoked');
+  });
+
   it('should use the same spendPermissionManagerAddress for both calls when permission is not approved onchain', async () => {
     mockGetPermissionStatus.mockResolvedValue(
       createMockPermissionStatus({
         isApprovedOnchain: false,
-        isRevoked: true,
+        isRevoked: false,
       })
     );
 
