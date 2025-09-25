@@ -15,7 +15,7 @@ export const logSubAccountRequestStarted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountMode: store.subAccountsConfig.get()?.mode,
     },
     AnalyticsEventImportance.high
   );
@@ -35,7 +35,7 @@ export const logSubAccountRequestCompleted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountMode: store.subAccountsConfig.get()?.mode,
     },
     AnalyticsEventImportance.high
   );
@@ -58,7 +58,7 @@ export const logSubAccountRequestError = ({
       method,
       correlationId,
       errorMessage,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountMode: store.subAccountsConfig.get()?.mode,
     },
     AnalyticsEventImportance.high
   );
@@ -78,7 +78,7 @@ export const logAddOwnerStarted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountMode: store.subAccountsConfig.get()?.mode,
     },
     AnalyticsEventImportance.high
   );
@@ -98,7 +98,7 @@ export const logAddOwnerCompleted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountMode: store.subAccountsConfig.get()?.mode,
     },
     AnalyticsEventImportance.high
   );
@@ -121,7 +121,7 @@ export const logAddOwnerError = ({
       method,
       correlationId,
       errorMessage,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountMode: store.subAccountsConfig.get()?.mode,
     },
     AnalyticsEventImportance.high
   );
@@ -141,7 +141,7 @@ export const logInsufficientBalanceErrorHandlingStarted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountMode: store.subAccountsConfig.get()?.mode,
     },
     AnalyticsEventImportance.high
   );
@@ -161,7 +161,7 @@ export const logInsufficientBalanceErrorHandlingCompleted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountMode: store.subAccountsConfig.get()?.mode,
     },
     AnalyticsEventImportance.high
   );
@@ -184,7 +184,7 @@ export const logInsufficientBalanceErrorHandlingError = ({
       method,
       correlationId,
       errorMessage,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountMode: store.subAccountsConfig.get()?.mode,
     },
     AnalyticsEventImportance.high
   );

@@ -148,7 +148,7 @@ export async function initSubAccountConfig() {
 
   const capabilities: WalletConnectRequest['params'][0]['capabilities'] = {};
 
-  if (config.enableAutoSubAccounts) {
+  if (config.mode === 'auto') {
     // Get the owner account
     const { account: owner } = config.toOwnerAccount
       ? await config.toOwnerAccount()

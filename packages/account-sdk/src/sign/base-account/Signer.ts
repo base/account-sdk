@@ -218,9 +218,10 @@ export class Signer {
         if (subAccount?.address) {
           // if auto sub accounts are enabled and we have a sub account, we need to return it as a top level account
           // otherwise, we just append it to the accounts array
-          this.accounts = subAccountsConfig?.enableAutoSubAccounts
-            ? prependWithoutDuplicates(this.accounts, subAccount.address)
-            : appendWithoutDuplicates(this.accounts, subAccount.address);
+          this.accounts =
+            subAccountsConfig?.mode === 'auto'
+              ? prependWithoutDuplicates(this.accounts, subAccount.address)
+              : appendWithoutDuplicates(this.accounts, subAccount.address);
         }
 
         this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
@@ -389,9 +390,10 @@ export class Signer {
 
         if (subAccount?.address) {
           // Sub account should be returned as a top level account if auto sub accounts are enabled
-          this.accounts = subAccountsConfig?.enableAutoSubAccounts
-            ? prependWithoutDuplicates(this.accounts, subAccount.address)
-            : appendWithoutDuplicates(this.accounts, subAccount.address);
+          this.accounts =
+            subAccountsConfig?.mode === 'auto'
+              ? prependWithoutDuplicates(this.accounts, subAccount.address)
+              : appendWithoutDuplicates(this.accounts, subAccount.address);
         }
 
         const spendPermissions = response?.accounts?.[0].capabilities?.spendPermissions;
@@ -408,9 +410,10 @@ export class Signer {
         const subAccount = result.value;
         store.subAccounts.set(subAccount);
         const subAccountsConfig = store.subAccountsConfig.get();
-        this.accounts = subAccountsConfig?.enableAutoSubAccounts
-          ? prependWithoutDuplicates(this.accounts, subAccount.address)
-          : appendWithoutDuplicates(this.accounts, subAccount.address);
+        this.accounts =
+          subAccountsConfig?.mode === 'auto'
+            ? prependWithoutDuplicates(this.accounts, subAccount.address)
+            : appendWithoutDuplicates(this.accounts, subAccount.address);
         this.callback?.('accountsChanged', this.accounts);
         break;
       }
@@ -601,9 +604,10 @@ export class Signer {
     const subAccount = state.subAccount;
     const subAccountsConfig = store.subAccountsConfig.get();
     if (subAccount?.address) {
-      this.accounts = subAccountsConfig?.enableAutoSubAccounts
-        ? prependWithoutDuplicates(this.accounts, subAccount.address)
-        : appendWithoutDuplicates(this.accounts, subAccount.address);
+      this.accounts =
+        subAccountsConfig?.mode === 'auto'
+          ? prependWithoutDuplicates(this.accounts, subAccount.address)
+          : appendWithoutDuplicates(this.accounts, subAccount.address);
       this.callback?.('accountsChanged', this.accounts);
       return subAccount;
     }
