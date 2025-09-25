@@ -22,7 +22,7 @@ export type PrepareSpendCallDataResponseType = Call[];
  *
  * This helper method constructs the call data for `approveWithSignature`
  * and `spend` functions. The approve call is only included when the permission
- * is not yet active. If the permission is already approved, only the spend call is returned.
+ * is not yet approved onchain. If the permission is already approved, only the spend call is returned.
  *
  * When 'max-remaining-allowance' is provided as the amount, the function automatically uses all remaining
  * spend permission allowance.
@@ -39,6 +39,10 @@ export type PrepareSpendCallDataResponseType = Call[];
  * @param recipient - Optional recipient address to receive the spent tokens via ERC20 transfer.
  *
  * @returns A promise that resolves to an array containing all the necessary calls.
+ *
+ * @throws {Error} Throws an error if the spend permission has been revoked.
+ * @throws {Error} Throws an error if the spend amount is 0.
+ * @throws {Error} Throws an error if the spend amount exceeds the remaining allowance.
  *
  * @example
  * ```typescript
@@ -109,7 +113,12 @@ const prepareSpendCallDataFn = async (
   amount: bigint | 'max-remaining-allowance',
   recipient?: Address
 ): Promise<PrepareSpendCallDataResponseType> => {
-  const { remainingSpend, isActive } = await getPermissionStatus(permission);
+  const { remainingSpend, isApprovedOnchain, isRevoked } = await getPermissionStatus(permission);
+
+  if (isRevoked) {
+    throw new Error('Spend permission has been revoked');
+  }
+
   const spendAmount = amount === 'max-remaining-allowance' ? remainingSpend : amount;
 
   if (spendAmount === BigInt(0)) {
@@ -124,7 +133,7 @@ const prepareSpendCallDataFn = async (
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
-  if (!isActive) {
+  if (!isApprovedOnchain) {
     const approveData = encodeFunctionData({
       abi: spendPermissionManagerAbi,
       functionName: 'approveWithSignature',

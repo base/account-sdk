@@ -16,6 +16,7 @@ export type GetPermissionStatusResponseType = {
   isRevoked: boolean;
   isExpired: boolean;
   isActive: boolean;
+  isApprovedOnchain: boolean;
   currentPeriod: {
     start: number;
     end: number;
@@ -80,7 +81,7 @@ const getPermissionStatusFn = async (
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
-  const [currentPeriod, isRevoked] = await Promise.all([
+  const [currentPeriod, isRevoked, isValid] = await Promise.all([
     readContract(client, {
       address: spendPermissionManagerAddress,
       abi: spendPermissionManagerAbi,
@@ -91,6 +92,12 @@ const getPermissionStatusFn = async (
       address: spendPermissionManagerAddress,
       abi: spendPermissionManagerAbi,
       functionName: 'isRevoked',
+      args: [spendPermissionArgs],
+    }) as Promise<boolean>,
+    readContract(client, {
+      address: spendPermissionManagerAddress,
+      abi: spendPermissionManagerAbi,
+      functionName: 'isValid',
       args: [spendPermissionArgs],
     }) as Promise<boolean>,
   ]);
@@ -111,12 +118,16 @@ const getPermissionStatusFn = async (
   // Permission is active if it's not revoked and not expired
   const isActive = !isRevoked && !isExpired;
 
+  // isApprovedOnchain indicates if the permission has been approved on the blockchain and is not revoked
+  const isApprovedOnchain = isValid;
+
   return {
     remainingSpend,
     nextPeriodStart: timestampInSecondsToDate(Number(nextPeriodStart)),
     isRevoked,
     isExpired,
     isActive,
+    isApprovedOnchain,
     currentPeriod,
   };
 };
