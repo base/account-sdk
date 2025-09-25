@@ -130,30 +130,99 @@ export interface PaymentStatus {
 }
 
 /**
- * Options for creating a subscription
+ * Base subscription options shared across all subscription types
  */
-export interface SubscriptionOptions {
+interface BaseSubscriptionOptions {
   /** Amount of USDC to charge per period as a string (e.g., "10.50") */
   recurringCharge: string;
   /** Ethereum address that will be the spender (your application's address) */
   subscriptionOwner: string;
-  /** The period in days for the subscription (e.g., 30 for monthly) */
-  periodInDays?: number;
-  /**
-   * TEST ONLY: The period in seconds for the subscription.
-   * ⚠️ WARNING: This parameter is ONLY available when testnet is true.
-   * Using this in production (testnet=false) will throw an error.
-   * This is intended for testing shorter subscription periods on testnet.
-   * @testOnly
-   */
-  periodInSeconds?: number;
-  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
-  testnet?: boolean;
   /** Optional wallet URL to use */
   walletUrl?: string;
   /** Whether to enable telemetry logging. Defaults to true */
   telemetry?: boolean;
 }
+
+/**
+ * Mainnet subscription options with period in days
+ */
+interface MainnetSubscriptionOptions extends BaseSubscriptionOptions {
+  /** The period in days for the subscription (e.g., 30 for monthly) */
+  periodInDays?: number;
+  /** Mainnet mode (production) */
+  testnet?: false;
+}
+
+/**
+ * Testnet subscription options with period in days
+ */
+interface TestnetSubscriptionWithDays extends BaseSubscriptionOptions {
+  /** The period in days for the subscription (e.g., 30 for monthly) */
+  periodInDays?: number;
+  /** Testnet mode (Base Sepolia) */
+  testnet: true;
+  /**
+   * Optional override for testing: period in seconds.
+   * When provided, this overrides periodInDays for faster testing cycles.
+   * ⚠️ WARNING: Only works on testnet.
+   * @testOnly
+   */
+  overridePeriodInSecondsForTestnet?: never;
+}
+
+/**
+ * Testnet subscription options with period in seconds for testing
+ */
+interface TestnetSubscriptionWithSeconds extends BaseSubscriptionOptions {
+  /**
+   * Required when using seconds: ignored but kept for API consistency.
+   * The actual period will be determined by overridePeriodInSecondsForTestnet.
+   */
+  periodInDays?: number;
+  /** Testnet mode (Base Sepolia) - required when using period in seconds */
+  testnet: true;
+  /**
+   * Override period in seconds for faster testing cycles on testnet.
+   * ⚠️ WARNING: Only works on testnet. When provided, this overrides periodInDays.
+   * @testOnly
+   */
+  overridePeriodInSecondsForTestnet: number;
+}
+
+/**
+ * Options for creating a subscription.
+ *
+ * @example
+ * ```typescript
+ * // Mainnet subscription (30-day period)
+ * await subscribe({
+ *   recurringCharge: "10.50",
+ *   subscriptionOwner: "0x...",
+ *   periodInDays: 30
+ * });
+ *
+ * // Testnet subscription with days
+ * await subscribe({
+ *   recurringCharge: "10.50",
+ *   subscriptionOwner: "0x...",
+ *   periodInDays: 30,
+ *   testnet: true
+ * });
+ *
+ * // Testnet subscription with seconds override for testing
+ * await subscribe({
+ *   recurringCharge: "0.01",
+ *   subscriptionOwner: "0x...",
+ *   periodInDays: 30, // ignored but can be provided for consistency
+ *   testnet: true,
+ *   overridePeriodInSecondsForTestnet: 300 // 5 minutes
+ * });
+ * ```
+ */
+export type SubscriptionOptions =
+  | MainnetSubscriptionOptions
+  | TestnetSubscriptionWithDays
+  | TestnetSubscriptionWithSeconds;
 
 /**
  * Successful subscription result
@@ -170,10 +239,10 @@ export interface SubscriptionResult {
   /** The period in days for the subscription */
   periodInDays: number;
   /**
-   * TEST ONLY: The period in seconds if specified on testnet
-   * Only present when using periodInSeconds on testnet
+   * TEST ONLY: The actual period in seconds if overridden on testnet
+   * Only present when using overridePeriodInSecondsForTestnet on testnet
    */
-  periodInSeconds?: number;
+  overridePeriodInSecondsForTestnet?: number;
 }
 
 /**

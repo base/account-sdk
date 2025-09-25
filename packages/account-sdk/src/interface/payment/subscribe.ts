@@ -26,7 +26,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * @param options.recurringCharge - Amount of USDC to charge per period as a string (e.g., "10.50")
  * @param options.subscriptionOwner - Ethereum address that will be the spender (your application's address)
  * @param options.periodInDays - The period in days for the subscription (default: 30)
- * @param options.periodInSeconds - TEST ONLY: The period in seconds (only works when testnet=true)
+ * @param options.overridePeriodInSecondsForTestnet - TEST ONLY: Override period in seconds (only works when testnet=true)
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.walletUrl - Optional wallet URL to use
  * @param options.telemetry - Whether to enable telemetry logging (default: true)
@@ -55,13 +55,13 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  *
  * @example
  * ```typescript
- * // TEST ONLY: Using periodInSeconds on testnet for faster testing
+ * // TEST ONLY: Using overridePeriodInSecondsForTestnet for faster testing
  * try {
  *   const subscription = await subscribe({
  *     recurringCharge: "0.01",
  *     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
- *     periodInSeconds: 300, // 5 minutes for testing - ONLY WORKS ON TESTNET
- *     testnet: true // REQUIRED when using periodInSeconds
+ *     overridePeriodInSecondsForTestnet: 300, // 5 minutes for testing - ONLY WORKS ON TESTNET
+ *     testnet: true // REQUIRED when using overridePeriodInSecondsForTestnet
  *   });
  *
  *   console.log(`Test subscription created with 5-minute period`);
@@ -75,17 +75,22 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     recurringCharge,
     subscriptionOwner,
     periodInDays = 30,
-    periodInSeconds,
     testnet = false,
     walletUrl,
     telemetry = true,
   } = options;
 
-  // Runtime validation: Ensure periodInSeconds is only used with testnet
-  if (periodInSeconds !== undefined && !testnet) {
+  // Extract the overridePeriodInSecondsForTestnet if present (type-safe due to discriminated union)
+  const overridePeriodInSecondsForTestnet =
+    testnet && 'overridePeriodInSecondsForTestnet' in options
+      ? options.overridePeriodInSecondsForTestnet
+      : undefined;
+
+  // Runtime validation: The discriminated union should prevent this, but double-check
+  if (overridePeriodInSecondsForTestnet !== undefined && !testnet) {
     throw new Error(
-      'periodInSeconds is only available for testing on testnet. ' +
-        'Set testnet: true to use periodInSeconds, or use periodInDays for production.'
+      'overridePeriodInSecondsForTestnet is only available for testing on testnet. ' +
+        'Set testnet: true to use overridePeriodInSecondsForTestnet, or use periodInDays for production.'
     );
   }
 
@@ -97,12 +102,12 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     logSubscriptionStarted({
       recurringCharge,
       periodInDays:
-        testnet && periodInSeconds !== undefined
-          ? Math.ceil(periodInSeconds / 86400)
+        testnet && overridePeriodInSecondsForTestnet !== undefined
+          ? Math.ceil(overridePeriodInSecondsForTestnet / 86400)
           : periodInDays,
       testnet,
       correlationId,
-      periodInSeconds: testnet ? periodInSeconds : undefined,
+      periodInSeconds: testnet ? overridePeriodInSecondsForTestnet : undefined,
     });
   }
 
@@ -126,14 +131,14 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     // - Proper formatting of all fields
     // We use PLACEHOLDER_ADDRESS which will be replaced by wallet with actual account
     const typedData =
-      testnet && periodInSeconds !== undefined
+      testnet && overridePeriodInSecondsForTestnet !== undefined
         ? createSpendPermissionTypedDataWithSeconds({
             account: PLACEHOLDER_ADDRESS,
             spender: spenderAddress,
             token: tokenAddress,
             chainId: chainId,
             allowance: allowanceInWei,
-            periodInSeconds: periodInSeconds,
+            periodInSeconds: overridePeriodInSecondsForTestnet,
           })
         : createSpendPermissionTypedData({
             account: PLACEHOLDER_ADDRESS,
@@ -212,10 +217,10 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         logSubscriptionCompleted({
           recurringCharge,
           periodInDays:
-            testnet && periodInSeconds !== undefined
-              ? Math.ceil(periodInSeconds / 86400)
+            testnet && overridePeriodInSecondsForTestnet !== undefined
+              ? Math.ceil(overridePeriodInSecondsForTestnet / 86400)
               : periodInDays,
-          periodInSeconds: testnet ? periodInSeconds : undefined,
+          periodInSeconds: testnet ? overridePeriodInSecondsForTestnet : undefined,
           testnet,
           correlationId,
           permissionHash,
@@ -229,10 +234,13 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         subscriptionPayer: message.account,
         recurringCharge: recurringCharge, // The amount in USD as provided by the user
         periodInDays:
-          testnet && periodInSeconds !== undefined
-            ? Math.ceil(periodInSeconds / 86400)
+          testnet && overridePeriodInSecondsForTestnet !== undefined
+            ? Math.ceil(overridePeriodInSecondsForTestnet / 86400)
             : periodInDays,
-        ...(testnet && periodInSeconds !== undefined && { periodInSeconds }),
+        ...(testnet &&
+          overridePeriodInSecondsForTestnet !== undefined && {
+            overridePeriodInSecondsForTestnet,
+          }),
       };
     } finally {
       // Clean up provider state
@@ -247,10 +255,10 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       logSubscriptionError({
         recurringCharge,
         periodInDays:
-          testnet && periodInSeconds !== undefined
-            ? Math.ceil(periodInSeconds / 86400)
+          testnet && overridePeriodInSecondsForTestnet !== undefined
+            ? Math.ceil(overridePeriodInSecondsForTestnet / 86400)
             : periodInDays,
-        periodInSeconds: testnet ? periodInSeconds : undefined,
+        periodInSeconds: testnet ? overridePeriodInSecondsForTestnet : undefined,
         testnet,
         correlationId,
         errorMessage,

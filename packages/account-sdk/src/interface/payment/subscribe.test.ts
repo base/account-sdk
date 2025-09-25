@@ -22,26 +22,26 @@ vi.mock('../public-utilities/spend-permission/index.js', () => ({
   getHash: vi.fn(() => Promise.resolve('0xmockhash')),
 }));
 
-describe('subscribe with periodInSeconds', () => {
-  it('should throw error when periodInSeconds is used without testnet', async () => {
-    const options: SubscriptionOptions = {
+describe('subscribe with overridePeriodInSecondsForTestnet', () => {
+  it('should throw error when overridePeriodInSecondsForTestnet is used without testnet', async () => {
+    const options = {
       recurringCharge: '10.00',
       subscriptionOwner: '0x1234567890123456789012345678901234567890',
-      periodInSeconds: 300, // 5 minutes
+      overridePeriodInSecondsForTestnet: 300, // 5 minutes
       testnet: false, // This should cause an error
-    };
+    } as any; // Use 'as any' to bypass TypeScript's discriminated union check for testing
 
     await expect(subscribe(options)).rejects.toThrow(
-      'periodInSeconds is only available for testing on testnet'
+      'overridePeriodInSecondsForTestnet is only available for testing on testnet'
     );
   });
 
-  it('should accept periodInSeconds when testnet is true and include it in result', async () => {
+  it('should accept overridePeriodInSecondsForTestnet when testnet is true and include it in result', async () => {
     const options: SubscriptionOptions = {
       recurringCharge: '0.01',
       subscriptionOwner: '0x1234567890123456789012345678901234567890',
-      periodInSeconds: 300, // 5 minutes for testing
-      testnet: true, // Required for periodInSeconds
+      overridePeriodInSecondsForTestnet: 300, // 5 minutes for testing
+      testnet: true, // Required for overridePeriodInSecondsForTestnet
     };
 
     // Mock the provider response
@@ -72,13 +72,13 @@ describe('subscribe with periodInSeconds', () => {
 
     const result = await subscribe(options);
 
-    // Verify the result includes periodInSeconds
+    // Verify the result includes overridePeriodInSecondsForTestnet
     expect(result).toBeDefined();
-    expect(result.periodInSeconds).toBe(300);
+    expect(result.overridePeriodInSecondsForTestnet).toBe(300);
     expect(result.periodInDays).toBe(1); // 300 seconds = 5 minutes = ceil(300/86400) = 1 day
   });
 
-  it('should use periodInDays when periodInSeconds is not provided on testnet', async () => {
+  it('should use periodInDays when overridePeriodInSecondsForTestnet is not provided on testnet', async () => {
     const options: SubscriptionOptions = {
       recurringCharge: '10.00',
       subscriptionOwner: '0x1234567890123456789012345678901234567890',
@@ -114,14 +114,14 @@ describe('subscribe with periodInSeconds', () => {
 
     const result = await subscribe(options);
     expect(result.periodInDays).toBe(7);
-    expect(result.periodInSeconds).toBeUndefined(); // Should not have periodInSeconds when not provided
+    expect(result.overridePeriodInSecondsForTestnet).toBeUndefined(); // Should not have overridePeriodInSecondsForTestnet when not provided
   });
 
-  it('should include periodInSeconds in result and calculate periodInDays correctly', async () => {
+  it('should include overridePeriodInSecondsForTestnet in result and calculate periodInDays correctly', async () => {
     const options: SubscriptionOptions = {
       recurringCharge: '0.01',
       subscriptionOwner: '0x1234567890123456789012345678901234567890',
-      periodInSeconds: 172800, // Exactly 2 days
+      overridePeriodInSecondsForTestnet: 172800, // Exactly 2 days
       testnet: true,
     };
 
@@ -152,11 +152,11 @@ describe('subscribe with periodInSeconds', () => {
     } as any);
 
     const result = await subscribe(options);
-    expect(result.periodInSeconds).toBe(172800); // Should include the exact periodInSeconds
+    expect(result.overridePeriodInSecondsForTestnet).toBe(172800); // Should include the exact overridePeriodInSecondsForTestnet
     expect(result.periodInDays).toBe(2); // Should be exactly 2 days
   });
 
-  it('should not include periodInSeconds when using mainnet', async () => {
+  it('should not include overridePeriodInSecondsForTestnet when using mainnet', async () => {
     const options: SubscriptionOptions = {
       recurringCharge: '10.00',
       subscriptionOwner: '0x1234567890123456789012345678901234567890',
@@ -192,6 +192,6 @@ describe('subscribe with periodInSeconds', () => {
 
     const result = await subscribe(options);
     expect(result.periodInDays).toBe(30);
-    expect(result.periodInSeconds).toBeUndefined(); // Should not have periodInSeconds on mainnet
+    expect(result.overridePeriodInSecondsForTestnet).toBeUndefined(); // Should not have overridePeriodInSecondsForTestnet on mainnet
   });
 });
