@@ -80,19 +80,20 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     telemetry = true,
   } = options;
 
-  // Extract the overridePeriodInSecondsForTestnet if present (type-safe due to discriminated union)
-  const overridePeriodInSecondsForTestnet =
-    testnet && 'overridePeriodInSecondsForTestnet' in options
-      ? options.overridePeriodInSecondsForTestnet
-      : undefined;
+  // Check if overridePeriodInSecondsForTestnet is present in options
+  const hasOverridePeriod = 'overridePeriodInSecondsForTestnet' in options;
 
-  // Runtime validation: The discriminated union should prevent this, but double-check
-  if (overridePeriodInSecondsForTestnet !== undefined && !testnet) {
+  // Runtime validation: overridePeriodInSecondsForTestnet requires testnet: true
+  if (hasOverridePeriod && !testnet) {
     throw new Error(
       'overridePeriodInSecondsForTestnet is only available for testing on testnet. ' +
         'Set testnet: true to use overridePeriodInSecondsForTestnet, or use periodInDays for production.'
     );
   }
+
+  // Extract the overridePeriodInSecondsForTestnet if present and valid
+  const overridePeriodInSecondsForTestnet =
+    testnet && hasOverridePeriod ? (options as any).overridePeriodInSecondsForTestnet : undefined;
 
   // Generate correlation ID for this subscription request
   const correlationId = crypto.randomUUID();
