@@ -18,8 +18,15 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
+      "browser": {
+        "import": "./dist/index.js",
+        "require": "./dist/index.js"
+      },
+      "node": {
+        "import": "./dist/index.node.js",
+        "require": "./dist/index.node.js"
+      },
+      "default": "./dist/index.js"
     },
     "./payment/browser": {
       "types": "./dist/interface/payment/index.d.ts",
