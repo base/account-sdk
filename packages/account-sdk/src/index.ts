@@ -7,13 +7,12 @@ export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js'
 
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 
-// Payment interface exports
+// Payment interface exports - browser-safe only
+// Note: charge and getOrCreateSubscriptionOwnerWallet are Node-only and available via /payment/node
 export {
   CHAIN_IDS,
   TOKENS,
   base,
-  charge,
-  getOrCreateSubscriptionOwnerWallet,
   getPaymentStatus,
   getSubscriptionStatus,
   pay,

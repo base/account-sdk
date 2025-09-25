@@ -5,7 +5,7 @@
 
 import { PACKAGE_VERSION } from './core/constants.js';
 import { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
-import { base } from './interface/payment/base.js';
+import { base } from './interface/payment/base.browser.js';
 import { CHAIN_IDS, TOKENS } from './interface/payment/constants.js';
 import { getPaymentStatus } from './interface/payment/getPaymentStatus.js';
 import { pay } from './interface/payment/pay.js';
