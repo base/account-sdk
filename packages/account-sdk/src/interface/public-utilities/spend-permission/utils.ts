@@ -97,6 +97,62 @@ export function createSpendPermissionTypedData(
   };
 }
 
+/**
+ * TEST ONLY: Creates a spend permission with period in seconds instead of days.
+ * ⚠️ WARNING: This function should ONLY be used for testing purposes on testnet.
+ * Using this in production scenarios is not supported and may lead to unexpected behavior.
+ *
+ * @testOnly
+ * @param request - The request parameters with periodInSeconds instead of periodInDays
+ * @returns SpendPermissionTypedData
+ */
+export function createSpendPermissionTypedDataWithSeconds(
+  request: Omit<RequestSpendPermissionType, 'periodInDays'> & { periodInSeconds: number }
+): SpendPermissionTypedData {
+  const {
+    account,
+    spender,
+    token,
+    chainId,
+    allowance,
+    periodInSeconds,
+    start,
+    end,
+    salt,
+    extraData,
+  } = request;
+
+  // Runtime check to prevent misuse
+  if (process.env.NODE_ENV === 'production') {
+    console.warn(
+      '⚠️ createSpendPermissionTypedDataWithSeconds is being used. ' +
+        'This function is intended for testing purposes only.'
+    );
+  }
+
+  return {
+    domain: {
+      name: 'Spend Permission Manager',
+      version: '1',
+      chainId: chainId,
+      verifyingContract: spendPermissionManagerAddress,
+    },
+    types: SPEND_PERMISSION_TYPED_DATA_TYPES,
+    primaryType: 'SpendPermission',
+    message: {
+      account: getAddress(account),
+      spender: getAddress(spender),
+      token: getAddress(token),
+      allowance: allowance.toString(),
+      period: periodInSeconds, // Direct seconds value for testing
+      start: dateToTimestampInSeconds(start ?? new Date()),
+      end: end ? dateToTimestampInSeconds(end) : ETERNITY_TIMESTAMP,
+      salt: salt ?? getRandomHexString(32),
+      extraData: extraData ? (extraData as Hex) : '0x',
+    },
+  };
+}
+
 function getRandomHexString(byteLength: number): `0x${string}` {
   const bytes = new Uint8Array(byteLength);
   crypto.getRandomValues(bytes);
