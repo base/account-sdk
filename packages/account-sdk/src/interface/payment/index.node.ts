@@ -2,7 +2,7 @@
  * Payment interface exports for Node.js environment
  * Includes all browser exports plus Node-only functions that rely on CDP SDK
  */
-export { base } from './base.js';
+export { base } from './base.node.js';
 export { charge } from './charge.js';
 export { getOrCreateSubscriptionOwnerWallet } from './getOrCreateSubscriptionOwnerWallet.js';
 export { getPaymentStatus } from './getPaymentStatus.js';

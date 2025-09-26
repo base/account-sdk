@@ -1,6 +1,5 @@
-export { base } from './base.js';
-export { charge } from './charge.js';
-export { getOrCreateSubscriptionOwnerWallet } from './getOrCreateSubscriptionOwnerWallet.js';
+// Browser-safe exports only - no CDP SDK dependencies
+export { base } from './base.browser.js';
 export { getPaymentStatus } from './getPaymentStatus.js';
 export { getSubscriptionStatus } from './getSubscriptionStatus.js';
 export { pay } from './pay.js';
