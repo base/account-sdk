@@ -7,7 +7,6 @@ export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js'
 
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 
-
 export {
   CHAIN_IDS,
   TOKENS,
