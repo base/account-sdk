@@ -25,7 +25,6 @@ import type {
 
 /**
  * Node.js payment interface
- * This version includes all browser functions plus Node-only functions that depend on CDP SDK
  */
 export const base = {
   pay,
@@ -35,8 +34,8 @@ export const base = {
     subscribe,
     getStatus: getSubscriptionStatus,
     prepareCharge,
-    charge, // Node-only: requires CDP SDK
-    getOrCreateSubscriptionOwnerWallet, // Node-only: requires CDP SDK
+    charge,
+    getOrCreateSubscriptionOwnerWallet,
   },
   constants: {
     CHAIN_IDS,
