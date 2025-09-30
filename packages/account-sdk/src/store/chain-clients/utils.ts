@@ -1,6 +1,18 @@
 import { Chain, createPublicClient, defineChain, http, PublicClient } from 'viem';
 import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
-import * as viemChains from 'viem/chains';
+import {
+  arbitrum,
+  avalanche,
+  base,
+  baseSepolia,
+  bsc,
+  mainnet,
+  optimism,
+  optimismSepolia,
+  polygon,
+  sepolia,
+  zora,
+} from 'viem/chains';
 
 import { RPCResponseNativeCurrency } from ':core/message/RPCResponse.js';
 import { ChainClients } from './store.js';
@@ -11,26 +23,39 @@ export type SDKChain = {
   nativeCurrency?: RPCResponseNativeCurrency;
 };
 
-const VIEM_CHAINS_BY_ID: Map<number, Chain> = Object.values(viemChains).reduce((acc, chain) => {
-  if (
-    typeof chain === 'object' &&
-    chain !== null &&
-    'id' in chain &&
-    typeof chain.id === 'number'
-  ) {
-    acc.set(chain.id, chain as Chain);
-  }
+export const SUPPORTED_MAINNET_CHAINS: [Chain, ...Chain[]] = [
+  base,
+  avalanche,
+  arbitrum,
+  polygon,
+  mainnet,
+  bsc,
+  zora,
+  optimism,
+];
+
+export const SUPPORTED_TESTNET_CHAINS: [Chain, ...Chain[]] = [
+  baseSepolia,
+  sepolia,
+  optimismSepolia,
+];
+
+const SUPPORTED_CHAINS_BY_ID: Map<number, Chain> = [
+  ...SUPPORTED_MAINNET_CHAINS,
+  ...SUPPORTED_TESTNET_CHAINS,
+].reduce((acc, chain) => {
+  acc.set(chain.id, chain);
   return acc;
 }, new Map<number, Chain>());
 
-// Get fallback chain data from viem's built-in chains
-function getViemChainById(chainId: number): Chain | undefined {
-  return VIEM_CHAINS_BY_ID.get(chainId);
+// Get fallback chain data from supported chain list
+function getSupportedChainById(chainId: number): Chain | undefined {
+  return SUPPORTED_CHAINS_BY_ID.get(chainId);
 }
 
 // Get fallback RPC URL from viem's chain definitions
 function getFallbackRpcUrl(chainId: number): string | undefined {
-  const viemChain = getViemChainById(chainId);
+  const viemChain = getSupportedChainById(chainId);
   if (viemChain?.rpcUrls?.default?.http?.[0]) {
     return viemChain.rpcUrls.default.http[0];
   }
@@ -81,7 +106,7 @@ export function createClients(chains: SDKChain[]) {
       return;
     }
 
-    const viemChain = getViemChainById(c.id);
+    const viemChain = getSupportedChainById(c.id);
     const clients = createClientPair({
       chainId: c.id,
       rpcUrl,
@@ -125,7 +150,7 @@ function createClientPair(options: {
 
 function createFallbackClientPair(chainId: number): ClientPair | undefined {
   const rpcUrl = getFallbackRpcUrl(chainId);
-  const viemChain = getViemChainById(chainId);
+  const viemChain = getSupportedChainById(chainId);
 
   if (!rpcUrl) {
     return undefined;

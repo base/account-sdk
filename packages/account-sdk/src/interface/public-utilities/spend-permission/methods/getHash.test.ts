@@ -90,9 +90,9 @@ describe('getHash', () => {
       }
     });
 
-    it('should work with fallback client when getClient returns one', async () => {
-      // With the new implementation, getClient will automatically create a fallback client
-      // if one doesn't exist in storage and the chain has an RPC URL in viem
+    it('should work with supported fallback client when getClient returns one', async () => {
+      // With the curated supported chains list, getClient will automatically create a fallback client
+      // if one doesn't exist in storage and the chain is in the supported list
       (getClient as Mock).mockReturnValue(mockClient);
       (readContract as Mock).mockResolvedValue(mockHash);
 
@@ -197,7 +197,7 @@ describe('getHash', () => {
 
   describe('error handling', () => {
     it('should throw error when no client is found', async () => {
-      // getClient returns undefined when chain is not supported or has no RPC URL
+      // getClient returns undefined when chain is not in the supported list or has no RPC URL
       (getClient as Mock).mockReturnValue(undefined);
 
       await expect(getHash({ permission: mockPermission, chainId: 999999 })).rejects.toThrow(

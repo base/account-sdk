@@ -512,7 +512,7 @@ describe('getSubscriptionStatus', () => {
   });
 
   describe('chain client initialization', () => {
-    it('should work with automatic fallback client creation', async () => {
+    it('should work with supported fallback client creation', async () => {
       const mockPermission = createMockPermission();
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
@@ -520,7 +520,7 @@ describe('getSubscriptionStatus', () => {
       const { getClient } = await import('../../store/chain-clients/utils.js');
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
-      // getClient now automatically creates fallback clients, so it always returns a client if the chain is supported
+      // getClient now automatically creates fallback clients for chains in the supported list
       vi.mocked(getClient).mockReturnValue(mockClient);
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
@@ -538,7 +538,7 @@ describe('getSubscriptionStatus', () => {
         testnet: false,
       });
 
-      // The function should work correctly with the automatic fallback client
+      // The function should work correctly with the automatic supported fallback client
       expect(result.isSubscribed).toBe(true);
     });
   });
