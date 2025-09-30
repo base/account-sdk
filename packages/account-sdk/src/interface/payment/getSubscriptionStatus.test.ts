@@ -13,10 +13,6 @@ vi.mock('viem', () => ({
 
 vi.mock('../../store/chain-clients/utils.js', () => ({
   createClients: vi.fn(),
-  FALLBACK_CHAINS: [
-    { id: 8453, name: 'Base' },
-    { id: 84532, name: 'Base Sepolia' },
-  ],
   getClient: vi.fn(),
 }));
 
@@ -516,17 +512,16 @@ describe('getSubscriptionStatus', () => {
   });
 
   describe('chain client initialization', () => {
-    it('should create client for fallback chain if not initialized', async () => {
+    it('should work with automatic fallback client creation', async () => {
       const mockPermission = createMockPermission();
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
-      const { getClient, createClients } = await import('../../store/chain-clients/utils.js');
+      const { getClient } = await import('../../store/chain-clients/utils.js');
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
-      vi.mocked(getClient)
-        .mockReturnValueOnce(null as any) // First call returns null
-        .mockReturnValue(mockClient); // Subsequent calls return client
+      // getClient now automatically creates fallback clients, so it always returns a client if the chain is supported
+      vi.mocked(getClient).mockReturnValue(mockClient);
       vi.mocked(getPermissionStatus).mockResolvedValue({
         isActive: true,
         remainingSpend: 10000000n,
@@ -538,12 +533,13 @@ describe('getSubscriptionStatus', () => {
         },
       } as any);
 
-      await getSubscriptionStatus({
+      const result = await getSubscriptionStatus({
         id: mockPermissionHash,
         testnet: false,
       });
 
-      expect(createClients).toHaveBeenCalledWith([{ id: 8453, name: 'Base' }]);
+      // The function should work correctly with the automatic fallback client
+      expect(result.isSubscribed).toBe(true);
     });
   });
 
