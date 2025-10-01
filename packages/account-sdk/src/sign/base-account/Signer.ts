@@ -35,7 +35,7 @@ import {
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
-import { FALLBACK_CHAINS, SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
+import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
 import { spendPermissions, store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
@@ -94,8 +94,11 @@ export class Signer {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
 
-    // Use fallback chains if no chains are provided
-    createClients(chains ?? FALLBACK_CHAINS);
+    // Initialize chain clients if chains are provided
+    if (chains) {
+      createClients(chains);
+    }
+    // Note: getClient will automatically create fallback clients when needed
   }
 
   public get isConnected() {

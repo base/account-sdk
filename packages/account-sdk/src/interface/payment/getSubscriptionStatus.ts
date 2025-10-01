@@ -1,5 +1,4 @@
 import { formatUnits } from 'viem';
-import { createClients, FALLBACK_CHAINS, getClient } from '../../store/chain-clients/utils.js';
 import {
   fetchPermission,
   getPermissionStatus,
@@ -85,14 +84,6 @@ export async function getSubscriptionStatus(
     throw new Error(
       `Subscription is not for USDC token. Got ${permission.permission.token}, expected ${expectedTokenAddress}`
     );
-  }
-
-  // Ensure chain client is initialized for the permission's chain
-  if (permission.chainId && !getClient(permission.chainId)) {
-    const fallbackChain = FALLBACK_CHAINS.find((chain) => chain.id === permission.chainId);
-    if (fallbackChain) {
-      createClients([fallbackChain]);
-    }
   }
 
   // Get the current permission status (includes period info and active state)

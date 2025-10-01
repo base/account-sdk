@@ -13,7 +13,6 @@ import { GetPermissionStatusResponseType, getPermissionStatus } from './getPermi
 
 vi.mock(':store/chain-clients/utils.js', () => ({
   getClient: vi.fn(),
-  FALLBACK_CHAINS: [],
 }));
 
 vi.mock('../utils.node.js', () => ({
