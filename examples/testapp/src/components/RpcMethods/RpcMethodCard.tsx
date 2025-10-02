@@ -76,6 +76,34 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
           (shortcut) => Number(shortcut.data.chainId) === hexToNumber(chainId)
         )?.data.chain ?? mainnet;
 
+      if (method.includes('wallet_sign')) {
+        const type = data.type || (data.request as any).type;
+        const walletSignData = data.data || (data.request as any).data;
+        let result: string | null = null;
+        if (type === '0x01') {
+          result = await verifySignMsg({
+            method: 'eth_signTypedData_v4',
+            from: data.address?.toLowerCase(),
+            sign: response,
+            message: walletSignData,
+            chain: chain as Chain,
+          });
+        }
+        if (type === '0x45') {
+          result = await verifySignMsg({
+            method: 'personal_sign',
+            from: data.address?.toLowerCase(),
+            sign: response,
+            message: walletSignData.message,
+            chain: chain as Chain,
+          });
+        }
+        if (result) {
+          setVerifyResult(result);
+          return;
+        }
+      }
+
       const verifyResult = await verifySignMsg({
         method,
         from: data.address?.toLowerCase(),
@@ -83,6 +111,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
         message: data.message,
         chain: chain as Chain,
       });
+
       if (verifyResult) {
         setVerifyResult(verifyResult);
         return;
@@ -118,7 +147,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
       }
       try {
         const response = (await provider.request({
-          method,
+          method: method.split('#')[0], // so we can use # to add a description in method name
           params: values,
           // biome-ignore lint/suspicious/noExplicitAny: old code, refactor soon
         })) as any;
