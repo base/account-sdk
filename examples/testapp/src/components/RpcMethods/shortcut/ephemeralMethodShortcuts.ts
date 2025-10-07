@@ -48,6 +48,40 @@ const BASE_PAY_DATA = {
   },
 };
 
+const SUBSCRIPTION_DATA = {
+  domain: {
+    name: 'Spend Permission Manager',
+    version: '1',
+    chainId: 1,
+    verifyingContract: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad',
+  },
+  types: {
+    SpendPermission: [
+      { name: 'account', type: 'address' },
+      { name: 'spender', type: 'address' },
+      { name: 'token', type: 'address' },
+      { name: 'allowance', type: 'uint160' },
+      { name: 'period', type: 'uint48' },
+      { name: 'start', type: 'uint48' },
+      { name: 'end', type: 'uint48' },
+      { name: 'salt', type: 'uint256' },
+      { name: 'extraData', type: 'bytes' },
+    ],
+  },
+  primaryType: 'SpendPermission',
+  message: {
+    account: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', // Placeholder
+    spender: '0xd4e17478581878A967aA22d45a5158A9fE96AA08',
+    token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    allowance: '1000000',
+    period: 86400,
+    start: 1724264802,
+    end: 17242884802,
+    salt: '0x1',
+    extraData: '0x',
+  },
+};
+
 const walletSendCallsEphemeralShortcuts: ShortcutType[] = [
   {
     key: 'wallet_sendCalls',
@@ -66,6 +100,20 @@ const walletSignOldSpecEphemeralShortcuts: ShortcutType[] = [
       version: '1.0',
       type: '0x01',
       data: BASE_PAY_DATA,
+      mutableData: {
+        fields: ['message.from'],
+      },
+    },
+  },
+  {
+    key: 'Subscription',
+    data: {
+      version: '1.0',
+      type: '0x01',
+      data: SUBSCRIPTION_DATA,
+      mutableData: {
+        fields: ['message.account'],
+      },
     },
   },
 ];
@@ -78,6 +126,22 @@ const walletSignNewSpecEphemeralShortcuts: ShortcutType[] = [
       request: {
         type: '0x01',
         data: BASE_PAY_DATA,
+      },
+      mutableData: {
+        fields: ['message.from'],
+      },
+    },
+  },
+  {
+    key: 'Subscription',
+    data: {
+      version: '1.0',
+      request: {
+        type: '0x01',
+        data: SUBSCRIPTION_DATA,
+      },
+      mutableData: {
+        fields: ['message.account'],
       },
     },
   },
