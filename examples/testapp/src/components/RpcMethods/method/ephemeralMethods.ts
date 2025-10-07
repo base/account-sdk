@@ -25,6 +25,7 @@ const walletSignOldSpecEphemeral: RpcRequestInput = {
     { key: 'address', required: false },
     { key: 'data', required: true },
     { key: 'capabilities', required: false },
+    { key: 'mutableData', required: false },
   ],
   format: (data: Record<string, string>) => [
     {
@@ -33,6 +34,7 @@ const walletSignOldSpecEphemeral: RpcRequestInput = {
       address: data.address,
       data: parseMessage(data.data),
       capabilities: data.capabilities,
+      mutableData: data.mutableData,
     },
   ],
 };
@@ -51,8 +53,8 @@ const walletSignNewSpecEphemeral: RpcRequestInput = {
       version: data.version,
       request: parseMessage(data.request),
       address: data.address,
-      mutableData: data.mutableData,
       capabilities: data.capabilities,
+      mutableData: data.mutableData,
     },
   ],
 };
