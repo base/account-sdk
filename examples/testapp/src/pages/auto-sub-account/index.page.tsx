@@ -62,11 +62,12 @@ export default function AutoSubAccount() {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        
+
         if (parsed.signerType) setSignerType(parsed.signerType);
         if (parsed.sendMethod) setSendMethod(parsed.sendMethod);
-        if (parsed.walletConnectCapabilities) setWalletConnectCapabilities(parsed.walletConnectCapabilities);
-        
+        if (parsed.walletConnectCapabilities)
+          setWalletConnectCapabilities(parsed.walletConnectCapabilities);
+
         if (parsed.subAccountCreation) {
           setSubAccountsConfig((prev) => ({ ...prev, creation: parsed.subAccountCreation }));
         }
@@ -96,7 +97,7 @@ export default function AutoSubAccount() {
       funding: subAccountsConfig?.funding,
       attribution: config?.attribution,
     };
-    
+
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(configToStore));
   }, [
     signerType,
