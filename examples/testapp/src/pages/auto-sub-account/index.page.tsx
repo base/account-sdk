@@ -22,6 +22,7 @@ import {
   numberToHex,
   parseEther,
   parseUnits,
+  toHex,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
@@ -30,6 +31,7 @@ import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider
 import { unsafe_generateOrLoadPrivateKey } from '../../utils/unsafe_generateOrLoadPrivateKey';
 
 type SignerType = 'cryptokey' | 'secp256k1';
+type SendMethod = 'eth_sendTransaction' | 'wallet_sendCalls';
 
 interface WalletConnectResponse {
   accounts: Array<{
@@ -38,12 +40,15 @@ interface WalletConnectResponse {
   }>;
 }
 
+const LOCAL_STORAGE_KEY = 'ba-playground:config';
+
 export default function AutoSubAccount() {
   const [accounts, setAccounts] = useState<string[]>([]);
   const [lastResult, setLastResult] = useState<string>();
   const [sendingAmounts, setSendingAmounts] = useState<Record<number, boolean>>({});
   const [sendingUsdcAmounts, setSendingUsdcAmounts] = useState<Record<string, boolean>>({});
   const [signerType, setSignerType] = useState<SignerType>('cryptokey');
+  const [sendMethod, setSendMethod] = useState<SendMethod>('eth_sendTransaction');
   const [walletConnectCapabilities, setWalletConnectCapabilities] = useState({
     siwe: false,
     addSubAccount: false,
@@ -51,16 +56,57 @@ export default function AutoSubAccount() {
   const { subAccountsConfig, setSubAccountsConfig, config, setConfig } = useConfig();
   const { provider } = useEIP1193Provider();
 
+  // Load persisted configs on mount
   useEffect(() => {
-    const stored = localStorage.getItem('signer-type');
-    if (stored !== null) {
-      setSignerType(stored as SignerType);
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        
+        if (parsed.signerType) setSignerType(parsed.signerType);
+        if (parsed.sendMethod) setSendMethod(parsed.sendMethod);
+        if (parsed.walletConnectCapabilities) setWalletConnectCapabilities(parsed.walletConnectCapabilities);
+        
+        if (parsed.subAccountCreation) {
+          setSubAccountsConfig((prev) => ({ ...prev, creation: parsed.subAccountCreation }));
+        }
+        if (parsed.defaultAccount) {
+          setSubAccountsConfig((prev) => ({ ...prev, defaultAccount: parsed.defaultAccount }));
+        }
+        if (parsed.funding) {
+          setSubAccountsConfig((prev) => ({ ...prev, funding: parsed.funding }));
+        }
+        if (parsed.attribution) {
+          setConfig((prev) => ({ ...prev, attribution: parsed.attribution }));
+        }
+      } catch (e) {
+        console.error('Failed to parse stored config:', e);
+      }
     }
-  }, []);
+  }, [setSubAccountsConfig, setConfig]);
 
+  // Persist configs on change
   useEffect(() => {
-    localStorage.setItem('signer-type', signerType);
-  }, [signerType]);
+    const configToStore = {
+      signerType,
+      sendMethod,
+      walletConnectCapabilities,
+      subAccountCreation: subAccountsConfig?.creation,
+      defaultAccount: subAccountsConfig?.defaultAccount,
+      funding: subAccountsConfig?.funding,
+      attribution: config?.attribution,
+    };
+    
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(configToStore));
+  }, [
+    signerType,
+    sendMethod,
+    walletConnectCapabilities,
+    subAccountsConfig?.creation,
+    subAccountsConfig?.defaultAccount,
+    subAccountsConfig?.funding,
+    config?.attribution,
+  ]);
 
   useEffect(() => {
     const getSigner =
@@ -126,6 +172,36 @@ export default function AutoSubAccount() {
         ],
       });
       setLastResult(JSON.stringify(response, null, 2));
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    }
+  };
+
+  const handlePersonalSign = async () => {
+    if (!provider || !accounts.length) return;
+
+    try {
+      const message = 'Hello from Coinbase Account SDK!';
+      const hexMessage = toHex(message);
+
+      const response = await provider.request({
+        method: 'personal_sign',
+        params: [hexMessage, accounts[0]],
+      });
+
+      const publicClient = createPublicClient({
+        chain: baseSepolia,
+        transport: http(),
+      });
+
+      const isValid = await publicClient.verifyMessage({
+        address: accounts[0] as `0x${string}`,
+        message,
+        signature: response as `0x${string}`,
+      });
+
+      setLastResult(`isValid: ${isValid}\n${response}`);
     } catch (e) {
       console.error('error', e);
       setLastResult(JSON.stringify(e, null, 2));
@@ -200,7 +276,7 @@ export default function AutoSubAccount() {
       // Add SIWE capability if selected
       if (walletConnectCapabilities.siwe) {
         capabilities.signInWithEthereum = {
-          chainId: 84532,
+          chainId: toHex(84532),
           nonce: Math.random().toString(36).substring(2, 15),
         };
       }
@@ -235,6 +311,13 @@ export default function AutoSubAccount() {
         params,
       })) as WalletConnectResponse;
       setLastResult(JSON.stringify(response, null, 2));
+
+      // Call eth_accounts to get and set the accounts after successful connection
+      const accountsResponse = await provider.request({
+        method: 'eth_accounts',
+        params: [],
+      });
+      setAccounts(accountsResponse as string[]);
     } catch (e) {
       console.error('error', e);
       setLastResult(JSON.stringify(e, null, 2));
@@ -249,17 +332,44 @@ export default function AutoSubAccount() {
       const to = '0x8d25687829d6b85d9e0020b8c89e3ca24de20a89';
       const value = parseEther(amount);
 
-      const response = await provider.request({
-        method: 'eth_sendTransaction',
-        params: [
-          {
-            from: accounts[0],
-            to: to,
-            value: numberToHex(value),
-            data: '0x',
-          },
-        ],
-      });
+      let response;
+      if (sendMethod === 'eth_sendTransaction') {
+        response = await provider.request({
+          method: 'eth_sendTransaction',
+          params: [
+            {
+              from: accounts[0],
+              to: to,
+              value: numberToHex(value),
+              data: '0x',
+            },
+          ],
+        });
+      } else {
+        // wallet_sendCalls with paymaster support
+        response = await provider.request({
+          method: 'wallet_sendCalls',
+          params: [
+            {
+              version: '1.0',
+              chainId: numberToHex(baseSepolia.id),
+              from: accounts[0],
+              calls: [
+                {
+                  to: to,
+                  value: numberToHex(value),
+                  data: '0x',
+                },
+              ],
+              capabilities: {
+                paymasterService: {
+                  url: 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+                },
+              },
+            },
+          ],
+        });
+      }
       setLastResult(JSON.stringify(response, null, 2));
     } catch (e) {
       console.error('error', e);
@@ -541,6 +651,23 @@ export default function AutoSubAccount() {
         </Button>
         <Button
           w="full"
+          onClick={handlePersonalSign}
+          isDisabled={!accounts.length}
+          bg="blue.500"
+          color="white"
+          border="1px solid"
+          borderColor="blue.500"
+          _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
+          _dark={{
+            bg: 'blue.600',
+            borderColor: 'blue.600',
+            _hover: { bg: 'blue.700', borderColor: 'blue.700' },
+          }}
+        >
+          personal_sign
+        </Button>
+        <Button
+          w="full"
           onClick={handleSignTypedData}
           isDisabled={!accounts.length}
           bg="blue.500"
@@ -572,6 +699,15 @@ export default function AutoSubAccount() {
         >
           wallet_connect
         </Button>
+        <FormControl>
+          <FormLabel>Send Method</FormLabel>
+          <RadioGroup value={sendMethod} onChange={(value: SendMethod) => setSendMethod(value)}>
+            <Stack direction="row">
+              <Radio value="eth_sendTransaction">eth_sendTransaction</Radio>
+              <Radio value="wallet_sendCalls">wallet_sendCalls (with paymaster)</Radio>
+            </Stack>
+          </RadioGroup>
+        </FormControl>
         <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
           Send
         </Box>
