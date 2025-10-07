@@ -95,8 +95,19 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
             break;
           }
           case 'wallet_connect': {
+            console.log(
+              '[BaseAccountProvider wallet_connect] Handling wallet_connect, not connected yet'
+            );
+            console.log('[BaseAccountProvider wallet_connect] Original args:', args);
             await this.signer.handshake({ method: 'handshake' }); // exchange session keys
+            console.log(
+              '[BaseAccountProvider wallet_connect] Handshake complete, calling signer.request'
+            );
             const result = await this.signer.request(args); // send diffie-hellman encrypted request
+            console.log(
+              '[BaseAccountProvider wallet_connect] Signer.request complete, result:',
+              result
+            );
             return result as T;
           }
           case 'wallet_switchEthereumChain': {

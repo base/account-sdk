@@ -266,12 +266,89 @@ describe('injectRequestCapabilities', () => {
 
     expect(() => injectRequestCapabilities(request, capabilities)).toThrow();
   });
+
+  it('should inject addSubAccount capability when not present in request', () => {
+    const request = {
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+        },
+      ],
+    };
+
+    const result = injectRequestCapabilities(request, capabilities);
+    expect(result).toEqual({
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: {
+            addSubAccount: capabilities.addSubAccount,
+          },
+        },
+      ],
+    });
+  });
+
+  it('should not override addSubAccount capability if already present in request', () => {
+    const customAddSubAccount = {
+      account: {
+        type: 'import',
+        keys: [{ type: 'webauthn-p256', publicKey: '0xabc' }],
+      },
+    };
+
+    const request = {
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: {
+            addSubAccount: customAddSubAccount,
+          },
+        },
+      ],
+    };
+
+    const result = injectRequestCapabilities(request, capabilities);
+    expect(result).toEqual({
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: {
+            addSubAccount: customAddSubAccount, // Request's version takes precedence
+          },
+        },
+      ],
+    });
+  });
+
+  it('should inject addSubAccount capability when params is empty array', () => {
+    const request = {
+      method: 'wallet_connect',
+      params: [],
+    };
+
+    const result = injectRequestCapabilities(request, capabilities);
+    expect(result).toEqual({
+      method: 'wallet_connect',
+      params: [
+        {
+          capabilities: {
+            addSubAccount: capabilities.addSubAccount,
+          },
+        },
+      ],
+    });
+  });
 });
 
 describe('initSubAccountConfig', () => {
   it('should initialize the sub account config', async () => {
     store.subAccountsConfig.set({
-      enableAutoSubAccounts: true,
+      creation: 'on-connect',
       toOwnerAccount: vi.fn().mockResolvedValue({
         account: {
           address: '0x123',

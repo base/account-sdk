@@ -370,36 +370,53 @@ export default function AutoSubAccount() {
           </RadioGroup>
         </FormControl>
         <FormControl>
-          <FormLabel>Auto Sub-Accounts</FormLabel>
+          <FormLabel>Sub-Account Creation</FormLabel>
           <RadioGroup
-            value={(subAccountsConfig?.enableAutoSubAccounts || false).toString()}
+            value={subAccountsConfig?.creation || 'manual'}
             onChange={(value) =>
               setSubAccountsConfig((prev) => ({
                 ...prev,
-                enableAutoSubAccounts: value === 'true',
+                creation: value as 'on-connect' | 'manual',
               }))
             }
           >
             <Stack direction="row">
-              <Radio value="true">Enabled</Radio>
-              <Radio value="false">Disabled</Radio>
+              <Radio value="on-connect">On Connect</Radio>
+              <Radio value="manual">Manual</Radio>
             </Stack>
           </RadioGroup>
         </FormControl>
         <FormControl>
-          <FormLabel>Enable Auto Spend Permissions (Unstable)</FormLabel>
+          <FormLabel>Default Account</FormLabel>
           <RadioGroup
-            value={(subAccountsConfig?.unstable_enableAutoSpendPermissions ?? true).toString()}
+            value={subAccountsConfig?.defaultAccount || 'universal'}
             onChange={(value) =>
               setSubAccountsConfig((prev) => ({
                 ...prev,
-                unstable_enableAutoSpendPermissions: value === 'true',
+                defaultAccount: value as 'sub' | 'universal',
               }))
             }
           >
             <Stack direction="row">
-              <Radio value="true">Enabled</Radio>
-              <Radio value="false">Disabled</Radio>
+              <Radio value="sub">Sub</Radio>
+              <Radio value="universal">Universal</Radio>
+            </Stack>
+          </RadioGroup>
+        </FormControl>
+        <FormControl>
+          <FormLabel>Funding Mode</FormLabel>
+          <RadioGroup
+            value={subAccountsConfig?.funding || 'spend-permissions'}
+            onChange={(value) =>
+              setSubAccountsConfig((prev) => ({
+                ...prev,
+                funding: value as 'spend-permissions' | 'manual',
+              }))
+            }
+          >
+            <Stack direction="row">
+              <Radio value="spend-permissions">Spend Permissions</Radio>
+              <Radio value="manual">Manual</Radio>
             </Stack>
           </RadioGroup>
         </FormControl>
