@@ -27,7 +27,7 @@ The following is a set of guidelines for contributing to the Base Account SDK. T
 
 ### Suggesting Enhancements
 
-1. **Check the [Issues](https://github.com/base/account-sdk/issues)** to see if there's someone who has already suggested the same enhancement.
+1. **Check the [Issues](https://github.com/base/account-sdk/issues)** to see if someone has already suggested the same enhancement.
 
 2. If it doesn't exist, [create a new issue](https://github.com/base/account-sdk/issues/new). Provide a clear and detailed explanation of the feature you want and why it's important to add.
 
@@ -83,8 +83,7 @@ It's recommended to run `yarn format` before committing your changes to ensure c
 
 ### Signing Commits
 
-All commits need to be signed with a GPG key. This adds a second factor of authentication that proves that it came from
-you, and not someone who managed to compromise your GitHub account. You can enable signing by following the guide [here](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification#gpg-commit-signature-verification).
+All commits need to be signed with a GPG key. This adds a second factor of authentication that proves it came from you, and not someone who managed to compromise your GitHub account. You can enable signing by following the guide [here](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification#gpg-commit-signature-verification).
 
 ## Coding Conventions
 

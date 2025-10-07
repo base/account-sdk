@@ -7,12 +7,11 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "libs/*",
     "examples/*"
   ],
   "scripts": {
     "build:packages": "yarn workspace @base-org/account build && yarn workspace @base-org/account-ui build",
-    "clean": "yarn workspaces foreach -A -ipv run clean && rm -rf node_modules && yarn",
+    "clean": "yarn workspaces foreach -A -ipv run clean && rmdir /s /q node_modules 2>nul && yarn",
     "deploy": "yarn build:packages && yarn workspace sdk-playground export",
     "dev": "yarn workspaces foreach -A -ipv run dev",
     "lint": "yarn workspaces foreach -A -pt run lint",
