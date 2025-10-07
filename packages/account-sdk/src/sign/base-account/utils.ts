@@ -123,6 +123,9 @@ export function injectRequestCapabilities<T extends RequestArguments>(
       throw standardErrors.rpc.invalidParams();
     }
 
+    // Merge capabilities: injected capabilities first, then request capabilities
+    // This ensures that if the request doesn't have a capability (e.g., addSubAccount),
+    // it gets injected. If the request already has it, the request's version takes precedence.
     requestCapabilities = {
       ...capabilities,
       ...requestCapabilities,
@@ -148,7 +151,7 @@ export async function initSubAccountConfig() {
 
   const capabilities: WalletConnectRequest['params'][0]['capabilities'] = {};
 
-  if (config.enableAutoSubAccounts) {
+  if (config.creation === 'on-connect') {
     // Get the owner account
     const { account: owner } = config.toOwnerAccount
       ? await config.toOwnerAccount()
@@ -171,8 +174,9 @@ export async function initSubAccountConfig() {
     };
   }
 
-  // Store the owner account and capabilities in the non-persisted config
+  // Merge capabilities with existing config (don't overwrite the other properties!)
   store.subAccountsConfig.set({
+    ...config,
     capabilities,
   });
 }

@@ -61,7 +61,6 @@ import {
   injectRequestCapabilities,
   makeDataSuffix,
   prependWithoutDuplicates,
-  requestHasCapability,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { findOwnerIndex } from './utils/findOwnerIndex.js';
@@ -179,12 +178,12 @@ export class Signer {
           await this.communicator.waitForPopupLoaded?.();
           await initSubAccountConfig();
 
-          // Check if addSubAccount capability is present and if so, inject the the sub account capabilities
-          let capabilitiesToInject: Record<string, unknown> = {};
-          if (requestHasCapability(request, 'addSubAccount')) {
-            capabilitiesToInject = store.subAccountsConfig.get()?.capabilities ?? {};
-          }
-          const modifiedRequest = injectRequestCapabilities(request, capabilitiesToInject);
+          const subAccountsConfig = store.subAccountsConfig.get();
+          // Inject capabilities from config (e.g., addSubAccount when creation: 'on-connect')
+          const modifiedRequest = injectRequestCapabilities(
+            request,
+            subAccountsConfig?.capabilities ?? {}
+          );
           return this.sendRequestToPopup(modifiedRequest);
         }
         case 'wallet_sendCalls':
@@ -219,11 +218,12 @@ export class Signer {
         const subAccount = store.subAccounts.get();
         const subAccountsConfig = store.subAccountsConfig.get();
         if (subAccount?.address) {
-          // if auto sub accounts are enabled and we have a sub account, we need to return it as a top level account
+          // if defaultAccount is 'sub' and we have a sub account, we need to return it as the first account
           // otherwise, we just append it to the accounts array
-          this.accounts = subAccountsConfig?.enableAutoSubAccounts
-            ? prependWithoutDuplicates(this.accounts, subAccount.address)
-            : appendWithoutDuplicates(this.accounts, subAccount.address);
+          this.accounts =
+            subAccountsConfig?.defaultAccount === 'sub'
+              ? prependWithoutDuplicates(this.accounts, subAccount.address)
+              : appendWithoutDuplicates(this.accounts, subAccount.address);
         }
 
         this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
@@ -391,10 +391,11 @@ export class Signer {
         const subAccountsConfig = store.subAccountsConfig.get();
 
         if (subAccount?.address) {
-          // Sub account should be returned as a top level account if auto sub accounts are enabled
-          this.accounts = subAccountsConfig?.enableAutoSubAccounts
-            ? prependWithoutDuplicates(this.accounts, subAccount.address)
-            : appendWithoutDuplicates(this.accounts, subAccount.address);
+          // Sub account should be returned as the default account if defaultAccount is 'sub'
+          this.accounts =
+            subAccountsConfig?.defaultAccount === 'sub'
+              ? prependWithoutDuplicates(this.accounts, subAccount.address)
+              : appendWithoutDuplicates(this.accounts, subAccount.address);
         }
 
         const spendPermissions = response?.accounts?.[0].capabilities?.spendPermissions;
@@ -411,9 +412,10 @@ export class Signer {
         const subAccount = result.value;
         store.subAccounts.set(subAccount);
         const subAccountsConfig = store.subAccountsConfig.get();
-        this.accounts = subAccountsConfig?.enableAutoSubAccounts
-          ? prependWithoutDuplicates(this.accounts, subAccount.address)
-          : appendWithoutDuplicates(this.accounts, subAccount.address);
+        this.accounts =
+          subAccountsConfig?.defaultAccount === 'sub'
+            ? prependWithoutDuplicates(this.accounts, subAccount.address)
+            : appendWithoutDuplicates(this.accounts, subAccount.address);
         this.callback?.('accountsChanged', this.accounts);
         break;
       }
@@ -604,9 +606,10 @@ export class Signer {
     const subAccount = state.subAccount;
     const subAccountsConfig = store.subAccountsConfig.get();
     if (subAccount?.address) {
-      this.accounts = subAccountsConfig?.enableAutoSubAccounts
-        ? prependWithoutDuplicates(this.accounts, subAccount.address)
-        : appendWithoutDuplicates(this.accounts, subAccount.address);
+      this.accounts =
+        subAccountsConfig?.defaultAccount === 'sub'
+          ? prependWithoutDuplicates(this.accounts, subAccount.address)
+          : appendWithoutDuplicates(this.accounts, subAccount.address);
       this.callback?.('accountsChanged', this.accounts);
       return subAccount;
     }
@@ -721,9 +724,9 @@ export class Signer {
 
     if (['eth_sendTransaction', 'wallet_sendCalls'].includes(request.method)) {
       // If we have never had a spend permission, we need to do this tx through the global account
-      // Only perform this check if unstable_enableAutoSpendPermissions is enabled
+      // Only perform this check if funding mode is 'spend-permissions'
       const subAccountsConfig = store.subAccountsConfig.get();
-      if (subAccountsConfig?.unstable_enableAutoSpendPermissions !== false) {
+      if (subAccountsConfig?.funding === 'spend-permissions') {
         const storedSpendPermissions = spendPermissions.get();
         if (storedSpendPermissions.length === 0) {
           const result = await routeThroughGlobalAccount({
@@ -789,9 +792,9 @@ export class Signer {
       const result = await subAccountRequest(request);
       return result;
     } catch (error) {
-      // Skip insufficient balance error handling if unstable_enableAutoSpendPermissions is disabled
+      // Skip insufficient balance error handling if funding mode is 'manual'
       const subAccountsConfig = store.subAccountsConfig.get();
-      if (subAccountsConfig?.unstable_enableAutoSpendPermissions === false) {
+      if (subAccountsConfig?.funding === 'manual') {
         throw error;
       }
 

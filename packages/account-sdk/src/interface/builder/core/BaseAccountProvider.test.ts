@@ -116,9 +116,11 @@ describe('Ephemeral methods', () => {
 });
 
 describe('Auto sub account', () => {
-  it('call handshake without method when enableAutoSubAccounts is true', async () => {
+  it('call handshake without method when creation is on-connect', async () => {
     vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-      enableAutoSubAccounts: true,
+      creation: 'on-connect',
+      defaultAccount: 'sub',
+      funding: 'spend-permissions',
     });
 
     await provider.request({ method: 'eth_requestAccounts' });

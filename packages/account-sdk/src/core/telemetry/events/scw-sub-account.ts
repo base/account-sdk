@@ -8,6 +8,7 @@ export const logSubAccountRequestStarted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
+  const config = store.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.request.started',
     {
@@ -15,7 +16,9 @@ export const logSubAccountRequestStarted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountCreation: config?.creation,
+      subAccountDefaultAccount: config?.defaultAccount,
+      subAccountFunding: config?.funding,
     },
     AnalyticsEventImportance.high
   );
@@ -28,6 +31,7 @@ export const logSubAccountRequestCompleted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
+  const config = store.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.request.completed',
     {
@@ -35,7 +39,9 @@ export const logSubAccountRequestCompleted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountCreation: config?.creation,
+      subAccountDefaultAccount: config?.defaultAccount,
+      subAccountFunding: config?.funding,
     },
     AnalyticsEventImportance.high
   );
@@ -50,6 +56,7 @@ export const logSubAccountRequestError = ({
   correlationId: string | undefined;
   errorMessage: string;
 }) => {
+  const config = store.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.request.error',
     {
@@ -58,7 +65,9 @@ export const logSubAccountRequestError = ({
       method,
       correlationId,
       errorMessage,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountCreation: config?.creation,
+      subAccountDefaultAccount: config?.defaultAccount,
+      subAccountFunding: config?.funding,
     },
     AnalyticsEventImportance.high
   );
@@ -71,6 +80,7 @@ export const logAddOwnerStarted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
+  const config = store.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.add_owner.started',
     {
@@ -78,7 +88,9 @@ export const logAddOwnerStarted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountCreation: config?.creation,
+      subAccountDefaultAccount: config?.defaultAccount,
+      subAccountFunding: config?.funding,
     },
     AnalyticsEventImportance.high
   );
@@ -91,6 +103,7 @@ export const logAddOwnerCompleted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
+  const config = store.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.add_owner.completed',
     {
@@ -98,7 +111,9 @@ export const logAddOwnerCompleted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountCreation: config?.creation,
+      subAccountDefaultAccount: config?.defaultAccount,
+      subAccountFunding: config?.funding,
     },
     AnalyticsEventImportance.high
   );
@@ -113,6 +128,7 @@ export const logAddOwnerError = ({
   correlationId: string | undefined;
   errorMessage: string;
 }) => {
+  const config = store.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.add_owner.error',
     {
@@ -121,7 +137,9 @@ export const logAddOwnerError = ({
       method,
       correlationId,
       errorMessage,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountCreation: config?.creation,
+      subAccountDefaultAccount: config?.defaultAccount,
+      subAccountFunding: config?.funding,
     },
     AnalyticsEventImportance.high
   );
@@ -134,6 +152,7 @@ export const logInsufficientBalanceErrorHandlingStarted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
+  const config = store.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.insufficient_balance.error_handling.started',
     {
@@ -141,7 +160,9 @@ export const logInsufficientBalanceErrorHandlingStarted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountCreation: config?.creation,
+      subAccountDefaultAccount: config?.defaultAccount,
+      subAccountFunding: config?.funding,
     },
     AnalyticsEventImportance.high
   );
@@ -154,6 +175,7 @@ export const logInsufficientBalanceErrorHandlingCompleted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
+  const config = store.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.insufficient_balance.error_handling.completed',
     {
@@ -161,7 +183,9 @@ export const logInsufficientBalanceErrorHandlingCompleted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountCreation: config?.creation,
+      subAccountDefaultAccount: config?.defaultAccount,
+      subAccountFunding: config?.funding,
     },
     AnalyticsEventImportance.high
   );
@@ -176,6 +200,7 @@ export const logInsufficientBalanceErrorHandlingError = ({
   correlationId: string | undefined;
   errorMessage: string;
 }) => {
+  const config = store.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.insufficient_balance.error_handling.error',
     {
@@ -184,7 +209,9 @@ export const logInsufficientBalanceErrorHandlingError = ({
       method,
       correlationId,
       errorMessage,
-      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+      subAccountCreation: config?.creation,
+      subAccountDefaultAccount: config?.defaultAccount,
+      subAccountFunding: config?.funding,
     },
     AnalyticsEventImportance.high
   );
