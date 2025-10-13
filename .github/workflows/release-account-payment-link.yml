@@ -1,0 +1,50 @@
+name: Release Account (payment-link)
+on:
+  workflow_dispatch:
+    inputs:
+      packageVersion:
+        description: "The version to publish in MAJOR.MINOR.PATCH format"
+        required: true
+        default: ""
+
+jobs:
+  payment-link:
+    name: Release payment-link
+    runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    timeout-minutes: 5
+    env:
+      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 'Setup'
+        uses: ./.github/actions/setup
+
+      - name: Set version
+        run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}-payment-link
+        
+      # Build the package
+      - name: Prebuild Packages
+        run: yarn workspace @base-org/account prebuild
+
+      - name: Build Packages
+        run: yarn workspace @base-org/account build
+
+      - name: Set deployment token
+        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
+
+      - name: Publish to npm
+        run: |
+          cd packages/account-sdk
+          npm publish --tag payment-link --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+ 
