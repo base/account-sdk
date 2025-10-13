@@ -2,7 +2,7 @@ name: Release Account (payment-link)
 on:
   push:
     branches:
-      - payment-link-fork
+      - arjun/payment-link-fork
   workflow_dispatch:
     inputs:
       packageVersion:
