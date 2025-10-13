@@ -1,4 +1,9 @@
-import type { PaymentResult, PaymentStatus, SubscriptionResult, SubscriptionStatus } from '@base-org/account';
+import type {
+  PaymentResult,
+  PaymentStatus,
+  SubscriptionResult,
+  SubscriptionStatus,
+} from '@base-org/account';
 import { getPaymentStatus, getSubscriptionStatus, pay, subscribe } from '@base-org/account';
 import { useCallback, useState } from 'react';
 import { transformAndSanitizeCode } from '../utils/codeTransform';
@@ -6,7 +11,9 @@ import { useConsoleCapture } from './useConsoleCapture';
 
 export const useCodeExecution = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<PaymentResult | PaymentStatus | SubscriptionResult | SubscriptionStatus | null>(null);
+  const [result, setResult] = useState<
+    PaymentResult | PaymentStatus | SubscriptionResult | SubscriptionStatus | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
   const { captureConsole } = useConsoleCapture();

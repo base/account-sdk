@@ -8,13 +8,7 @@ interface CodeEditorProps {
   isLoading: boolean;
 }
 
-export const CodeEditor = ({
-  code,
-  onChange,
-  onExecute,
-  onReset,
-  isLoading,
-}: CodeEditorProps) => {
+export const CodeEditor = ({ code, onChange, onExecute, onReset, isLoading }: CodeEditorProps) => {
   return (
     <div className={styles.editorPanel}>
       <div className={styles.panelHeader}>

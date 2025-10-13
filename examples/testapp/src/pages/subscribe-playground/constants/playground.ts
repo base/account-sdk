@@ -46,7 +46,7 @@ try {
 
 export const SUBSCRIBE_QUICK_TIPS = [
   'Get testnet USDC at <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">https://faucet.circle.com/</a> - select "Base Sepolia" as the network',
-  'subscriptionOwner is your application\'s address that will control the subscription',
+  "subscriptionOwner is your application's address that will control the subscription",
   'recurringCharge is the amount of USDC to charge per period (e.g., "10.50" = $10.50)',
   'periodInDays sets the billing cycle (default: 30 days)',
   'overridePeriodInSecondsForTestnet allows faster testing cycles on testnet only',

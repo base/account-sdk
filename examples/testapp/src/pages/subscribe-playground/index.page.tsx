@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { CodeEditor, Header, Output, QuickTips } from './components';
 import {
-    DEFAULT_GET_SUBSCRIPTION_STATUS_CODE,
-    DEFAULT_SUBSCRIBE_CODE,
-    GET_SUBSCRIPTION_STATUS_QUICK_TIPS,
-    SUBSCRIBE_CODE_WITH_TEST_PERIOD,
-    SUBSCRIBE_QUICK_TIPS,
+  DEFAULT_GET_SUBSCRIPTION_STATUS_CODE,
+  DEFAULT_SUBSCRIBE_CODE,
+  GET_SUBSCRIPTION_STATUS_QUICK_TIPS,
+  SUBSCRIBE_CODE_WITH_TEST_PERIOD,
+  SUBSCRIBE_QUICK_TIPS,
 } from './constants';
 import { useCodeExecution } from './hooks';
 import styles from './styles/Home.module.css';
@@ -13,7 +13,9 @@ import styles from './styles/Home.module.css';
 function SubscribePlayground() {
   const [subscribeVariant, setSubscribeVariant] = useState<'default' | 'test'>('default');
   const [subscribeCode, setSubscribeCode] = useState(DEFAULT_SUBSCRIBE_CODE);
-  const [getSubscriptionStatusCode, setGetSubscriptionStatusCode] = useState(DEFAULT_GET_SUBSCRIPTION_STATUS_CODE);
+  const [getSubscriptionStatusCode, setGetSubscriptionStatusCode] = useState(
+    DEFAULT_GET_SUBSCRIPTION_STATUS_CODE
+  );
 
   const subscribeExecution = useCodeExecution();
   const getSubscriptionStatusExecution = useCodeExecution();

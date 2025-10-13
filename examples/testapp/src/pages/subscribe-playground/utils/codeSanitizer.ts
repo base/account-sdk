@@ -215,7 +215,7 @@ export class CodeSanitizer {
    */
   private validateNode(node: ASTNode): void {
     if (!node) return;
-    
+
     // Skip nodes without a type property (these are typically values or other non-AST properties)
     if (!node.type) return;
 
@@ -302,17 +302,19 @@ export class CodeSanitizer {
   private validateMemberExpression(node: ASTNode): void {
     // For nested member expressions like base.subscription.subscribe
     // We need to validate the chain properly
-    
+
     if (node.object.type === 'MemberExpression') {
       // Handle nested member expressions (e.g., base.subscription.getStatus)
       // First validate the parent member expression
       this.validateMemberExpression(node.object);
-      
+
       // For base.subscription.*, we need special handling
-      if (node.object.object?.type === 'Identifier' && 
-          node.object.object.name === 'base' &&
-          node.object.property?.type === 'Identifier' &&
-          node.object.property.name === 'subscription') {
+      if (
+        node.object.object?.type === 'Identifier' &&
+        node.object.object.name === 'base' &&
+        node.object.property?.type === 'Identifier' &&
+        node.object.property.name === 'subscription'
+      ) {
         // This is base.subscription.something
         const methodName = node.property?.type === 'Identifier' ? node.property.name : '';
         const allowedSubscriptionMethods = ['subscribe', 'getStatus'];
@@ -326,15 +328,16 @@ export class CodeSanitizer {
         return;
       }
     }
-    
+
     // Handle simple member expressions (e.g., console.log, base.pay)
     if (node.object.type === 'Identifier') {
       const objectName = node.object.name;
-      const propertyName = node.property?.type === 'Identifier' && !node.computed 
-        ? node.property.name 
-        : node.property?.type === 'Literal' 
-        ? String(node.property.value)
-        : '';
+      const propertyName =
+        node.property?.type === 'Identifier' && !node.computed
+          ? node.property.name
+          : node.property?.type === 'Literal'
+            ? String(node.property.value)
+            : '';
 
       // Only validate if the object is in our whitelist or disallowed list
       if (objectName && objectName in WHITELIST.allowedObjects) {
