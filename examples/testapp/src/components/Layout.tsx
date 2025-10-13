@@ -1,21 +1,21 @@
 import { CheckIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import {
-  Box,
-  Button,
-  Container,
-  Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerHeader,
-  DrawerOverlay,
-  Flex,
-  Heading,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  useBreakpointValue,
-  useDisclosure,
+    Box,
+    Button,
+    Container,
+    Drawer,
+    DrawerBody,
+    DrawerContent,
+    DrawerHeader,
+    DrawerOverlay,
+    Flex,
+    Heading,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuList,
+    useBreakpointValue,
+    useDisclosure,
 } from '@chakra-ui/react';
 import NextLink from 'next/link';
 import React, { useMemo } from 'react';
@@ -35,6 +35,7 @@ const PAGES = [
   '/auto-sub-account',
   '/payment',
   '/pay-playground',
+  '/subscribe-playground',
 ];
 
 export function Layout({ children }: LayoutProps) {
