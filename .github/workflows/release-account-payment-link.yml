@@ -1,12 +1,9 @@
 name: Release Account (payment-link)
 on:
-  workflow_dispatch:
-    inputs:
-      packageVersion:
-        description: "The version to publish in MAJOR.MINOR.PATCH format"
-        required: true
-        default: ""
-
+  push:
+    branches:
+      - payment-link-fork
+      
 jobs:
   payment-link:
     name: Release payment-link
@@ -18,7 +15,7 @@ jobs:
       id-token: write
     timeout-minutes: 5
     env:
-      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
+      PACKAGE_VERSION: 2.0.2-payment-link
     steps:
       - name: Checkout
         uses: actions/checkout@v4
