@@ -33,13 +33,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: |
-          if [ -n "${{ github.event.inputs.packageVersion }}" ]; then
-            VERSION=${{ github.event.inputs.packageVersion }}
-          else
-            VERSION=${{ env.PACKAGE_VERSION }}
-          fi
-          yarn workspace @base-org/account version $VERSION
+        run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}-payment-link
 
       - name: Prebuild Packages
         run: yarn workspace @base-org/account prebuild
