@@ -4,8 +4,7 @@ try {
   const subscription = await base.subscription.subscribe({
     recurringCharge: "10.50",
     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
-    periodInDays: 30, // Monthly subscription
-    walletUrl: 'http://localhost:3005', // Local wallet URL for testing
+    periodInDays: 30,
     testnet: true
   })
   
@@ -21,9 +20,8 @@ try {
   const subscription = await base.subscription.subscribe({
     recurringCharge: "0.01",
     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
-    overridePeriodInSecondsForTestnet: 300, // 5 minutes for testing - ONLY WORKS ON TESTNET
-    walletUrl: 'http://localhost:3005', // Local wallet URL for testing
-    testnet: true // REQUIRED when using overridePeriodInSecondsForTestnet
+    overridePeriodInSecondsForTestnet: 300, // 5 minutes for testing - (only works on testnet)
+    testnet: true
   })
   
   return subscription;
