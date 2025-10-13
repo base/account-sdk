@@ -30,6 +30,23 @@ try {
   throw error;
 }`;
 
+export const SUBSCRIBE_CODE_WITH_MINIMUM_BALANCE_FALSE = `import { base } from '@base-org/account'
+
+try {
+  const subscription = await base.subscription.subscribe({
+    recurringCharge: "10.50",
+    subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
+    periodInDays: 30,
+    minimumBalance: false, // Don't require minimum balance check
+    testnet: true
+  })
+  
+  return subscription;
+} catch (error) {
+  console.error('Subscription failed:', error.message);
+  throw error;
+}`;
+
 export const DEFAULT_GET_SUBSCRIPTION_STATUS_CODE = `import { base } from '@base-org/account'
 
 try {

@@ -4,6 +4,7 @@ import {
   DEFAULT_GET_SUBSCRIPTION_STATUS_CODE,
   DEFAULT_SUBSCRIBE_CODE,
   GET_SUBSCRIPTION_STATUS_QUICK_TIPS,
+  SUBSCRIBE_CODE_WITH_MINIMUM_BALANCE_FALSE,
   SUBSCRIBE_CODE_WITH_TEST_PERIOD,
   SUBSCRIBE_QUICK_TIPS,
 } from './constants';
@@ -11,7 +12,9 @@ import { useCodeExecution } from './hooks';
 import styles from './styles/Home.module.css';
 
 function SubscribePlayground() {
-  const [subscribeVariant, setSubscribeVariant] = useState<'default' | 'test'>('default');
+  const [subscribeVariant, setSubscribeVariant] = useState<'default' | 'test' | 'minimumBalance'>(
+    'default'
+  );
   const [subscribeCode, setSubscribeCode] = useState(DEFAULT_SUBSCRIBE_CODE);
   const [getSubscriptionStatusCode, setGetSubscriptionStatusCode] = useState(
     DEFAULT_GET_SUBSCRIPTION_STATUS_CODE
@@ -30,11 +33,13 @@ function SubscribePlayground() {
     subscribeExecution.reset();
   };
 
-  const handleSubscribeVariantChange = (variant: 'default' | 'test') => {
+  const handleSubscribeVariantChange = (variant: 'default' | 'test' | 'minimumBalance') => {
     setSubscribeVariant(variant);
     let newCode = DEFAULT_SUBSCRIBE_CODE;
     if (variant === 'test') {
       newCode = SUBSCRIBE_CODE_WITH_TEST_PERIOD;
+    } else if (variant === 'minimumBalance') {
+      newCode = SUBSCRIBE_CODE_WITH_MINIMUM_BALANCE_FALSE;
     }
     setSubscribeCode(newCode);
     subscribeExecution.reset();
@@ -104,6 +109,16 @@ try {
                 onChange={() => handleSubscribeVariantChange('test')}
               />
               Test Mode (5-minute period)
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="subscribeVariant"
+                value="minimumBalance"
+                checked={subscribeVariant === 'minimumBalance'}
+                onChange={() => handleSubscribeVariantChange('minimumBalance')}
+              />
+              No Balance Check
             </label>
           </div>
 
