@@ -122,9 +122,9 @@ const requestSpendPermissionFn = async (
     };
 
     signature = signResult.signature;
-    permissionHash = await getHash({ 
-      permission: signResult.signedData.message, 
-      chainId 
+    permissionHash = await getHash({
+      permission: signResult.signedData.message,
+      chainId,
     });
   } else {
     // Use the original eth_signTypedData_v4 method

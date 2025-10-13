@@ -2,15 +2,15 @@ import { ProviderInterface } from ':core/provider/interface.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-    SpendPermissionTypedData,
-    createSpendPermissionTypedData,
-    dateToTimestampInSeconds,
+  SpendPermissionTypedData,
+  createSpendPermissionTypedData,
+  dateToTimestampInSeconds,
 } from '../utils.js';
 import { getHash } from './getHash.js';
 import {
-    RequestSpendPermissionType,
-    WalletSignCapabilities,
-    requestSpendPermission,
+  RequestSpendPermissionType,
+  WalletSignCapabilities,
+  requestSpendPermission,
 } from './requestSpendPermission.js';
 
 vi.mock('../utils.js', () => ({
