@@ -22,6 +22,166 @@ vi.mock('../public-utilities/spend-permission/index.js', () => ({
   getHash: vi.fn(() => Promise.resolve('0xmockhash')),
 }));
 
+describe('subscribe with requireBalance capability', () => {
+  it('should include capabilities when requireBalance is true', async () => {
+    const options: SubscriptionOptions = {
+      recurringCharge: '10.00',
+      subscriptionOwner: '0x1234567890123456789012345678901234567890',
+      periodInDays: 30,
+      testnet: true,
+      requireBalance: true, // Enable balance check
+    };
+
+    // Mock the provider response
+    const mockProvider = {
+      request: vi.fn().mockResolvedValue({
+        signature: '0xsignature',
+        signedData: {
+          message: {
+            account: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+            spender: '0x1234567890123456789012345678901234567890',
+            token: '0xtoken',
+            allowance: '10000000',
+            period: 2592000, // 30 days in seconds
+            start: 1234567890,
+            end: 999999999,
+            salt: '0xsalt',
+            extraData: '0x',
+          },
+        },
+      }),
+      disconnect: vi.fn(),
+    };
+
+    const { createEphemeralSDK } = await import('./utils/sdkManager.js');
+    vi.mocked(createEphemeralSDK).mockReturnValue({
+      getProvider: () => mockProvider as any,
+    } as any);
+
+    await subscribe(options);
+
+    // Verify wallet_sign was called with capabilities
+    expect(mockProvider.request).toHaveBeenCalledWith({
+      method: 'wallet_sign',
+      params: [
+        expect.objectContaining({
+          version: '1.0',
+          request: expect.any(Object),
+          mutableData: expect.any(Object),
+          capabilities: {
+            spendPermission: {
+              requireBalance: true,
+            },
+          },
+        }),
+      ],
+    });
+  });
+
+  it('should not include capabilities when requireBalance is false', async () => {
+    const options: SubscriptionOptions = {
+      recurringCharge: '10.00',
+      subscriptionOwner: '0x1234567890123456789012345678901234567890',
+      periodInDays: 30,
+      testnet: true,
+      requireBalance: false, // Explicitly disable
+    };
+
+    // Mock the provider response
+    const mockProvider = {
+      request: vi.fn().mockResolvedValue({
+        signature: '0xsignature',
+        signedData: {
+          message: {
+            account: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+            spender: '0x1234567890123456789012345678901234567890',
+            token: '0xtoken',
+            allowance: '10000000',
+            period: 2592000, // 30 days in seconds
+            start: 1234567890,
+            end: 999999999,
+            salt: '0xsalt',
+            extraData: '0x',
+          },
+        },
+      }),
+      disconnect: vi.fn(),
+    };
+
+    const { createEphemeralSDK } = await import('./utils/sdkManager.js');
+    vi.mocked(createEphemeralSDK).mockReturnValue({
+      getProvider: () => mockProvider as any,
+    } as any);
+
+    await subscribe(options);
+
+    // Verify wallet_sign was called without capabilities
+    expect(mockProvider.request).toHaveBeenCalledWith({
+      method: 'wallet_sign',
+      params: [
+        expect.not.objectContaining({
+          capabilities: expect.anything(),
+        }),
+      ],
+    });
+  });
+
+  it('should include capabilities by default when requireBalance is undefined', async () => {
+    const options: SubscriptionOptions = {
+      recurringCharge: '10.00',
+      subscriptionOwner: '0x1234567890123456789012345678901234567890',
+      periodInDays: 30,
+      testnet: true,
+      // requireBalance not specified - should default to true
+    };
+
+    // Mock the provider response
+    const mockProvider = {
+      request: vi.fn().mockResolvedValue({
+        signature: '0xsignature',
+        signedData: {
+          message: {
+            account: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+            spender: '0x1234567890123456789012345678901234567890',
+            token: '0xtoken',
+            allowance: '10000000',
+            period: 2592000, // 30 days in seconds
+            start: 1234567890,
+            end: 999999999,
+            salt: '0xsalt',
+            extraData: '0x',
+          },
+        },
+      }),
+      disconnect: vi.fn(),
+    };
+
+    const { createEphemeralSDK } = await import('./utils/sdkManager.js');
+    vi.mocked(createEphemeralSDK).mockReturnValue({
+      getProvider: () => mockProvider as any,
+    } as any);
+
+    await subscribe(options);
+
+    // Verify wallet_sign was called with capabilities (default behavior)
+    expect(mockProvider.request).toHaveBeenCalledWith({
+      method: 'wallet_sign',
+      params: [
+        expect.objectContaining({
+          version: '1.0',
+          request: expect.any(Object),
+          mutableData: expect.any(Object),
+          capabilities: {
+            spendPermission: {
+              requireBalance: true,
+            },
+          },
+        }),
+      ],
+    });
+  });
+});
+
 describe('subscribe with overridePeriodInSecondsForTestnet', () => {
   it('should throw error when overridePeriodInSecondsForTestnet is used without testnet', async () => {
     const options = {

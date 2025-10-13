@@ -5,6 +5,12 @@ import { createSpendPermissionTypedData, dateToTimestampInSeconds } from '../uti
 import { withTelemetry } from '../withTelemetry.js';
 import { getHash } from './getHash.js';
 
+export type WalletSignCapabilities = {
+  spendPermission?: {
+    requireBalance?: boolean;
+  };
+};
+
 export type RequestSpendPermissionType = {
   account: string;
   spender: string;
@@ -16,6 +22,7 @@ export type RequestSpendPermissionType = {
   end?: Date; // default to never
   salt?: string; // default to a random value by crypto.getRandomValues
   extraData?: string; // default to '0x'
+  capabilities?: WalletSignCapabilities; // optional capabilities for wallet_sign
 };
 
 /**
@@ -64,17 +71,71 @@ export type RequestSpendPermissionType = {
 const requestSpendPermissionFn = async (
   request: RequestSpendPermissionType & { provider: ProviderInterface }
 ): Promise<SpendPermission> => {
-  const { provider, account, chainId } = request;
+  const { provider, account, chainId, capabilities } = request;
 
   const typedData = createSpendPermissionTypedData(request);
 
-  const [signature, permissionHash] = await Promise.all([
-    provider.request({
-      method: 'eth_signTypedData_v4',
-      params: [account, typedData],
-    }) as Promise<string>,
-    getHash({ permission: typedData.message, chainId }),
-  ]);
+  // Check if we should use wallet_sign (when capabilities are provided) or eth_signTypedData_v4
+  let signature: string;
+  let permissionHash: string;
+
+  if (capabilities) {
+    // Use wallet_sign with capabilities
+    const signParams = {
+      version: '1.0',
+      request: {
+        type: '0x01' as const, // EIP-712 Typed Data
+        data: typedData,
+      },
+      mutableData: {
+        fields: ['message.account'],
+      },
+      capabilities,
+    };
+
+    const result = await provider.request({
+      method: 'wallet_sign',
+      params: [signParams],
+    });
+
+    // Type guard and validation for the result
+    if (!result || typeof result !== 'object') {
+      throw new Error(
+        `Invalid response from wallet_sign: expected object but got ${typeof result}`
+      );
+    }
+
+    // Check for expected properties
+    const hasSignature = 'signature' in result;
+    const hasSignedData = 'signedData' in result;
+
+    if (!hasSignature || !hasSignedData) {
+      throw new Error(
+        `Invalid response from wallet_sign: missing ${!hasSignature ? 'signature' : ''} ${!hasSignedData ? 'signedData' : ''}`
+      );
+    }
+
+    // Cast to expected response type
+    const signResult = result as {
+      signature: `0x${string}`;
+      signedData: typeof typedData;
+    };
+
+    signature = signResult.signature;
+    permissionHash = await getHash({ 
+      permission: signResult.signedData.message, 
+      chainId 
+    });
+  } else {
+    // Use the original eth_signTypedData_v4 method
+    [signature, permissionHash] = await Promise.all([
+      provider.request({
+        method: 'eth_signTypedData_v4',
+        params: [account, typedData],
+      }) as Promise<string>,
+      getHash({ permission: typedData.message, chainId }),
+    ]);
+  }
 
   const permission: SpendPermission = {
     createdAt: dateToTimestampInSeconds(new Date()),
