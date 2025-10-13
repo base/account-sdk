@@ -55,9 +55,6 @@ export const SUBSCRIBE_QUICK_TIPS = [
 
 export const GET_SUBSCRIPTION_STATUS_QUICK_TIPS = [
   'Use the subscription ID returned from the subscribe function',
-  'isSubscribed indicates if the subscription is active (not revoked)',
   'remainingChargeInPeriod shows how much can still be charged this period',
-  'nextPeriodStart shows when the next billing period begins',
-  'currentPeriodStart shows when the current billing period started',
   'Make sure to use the same testnet setting as the original subscription',
 ];
