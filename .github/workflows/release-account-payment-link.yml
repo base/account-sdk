@@ -1,11 +1,14 @@
 name: Release Account (payment-link)
 on:
+  push:
+    branches:
+      - arjun/payment-link-fork
   workflow_dispatch:
     inputs:
       packageVersion:
         description: "The version to publish in MAJOR.MINOR.PATCH format"
         required: true
-        default: ""
+
 jobs:
   payment-link:
     name: Release payment-link
@@ -17,20 +20,27 @@ jobs:
       id-token: write
     timeout-minutes: 5
     env:
-      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
+      PACKAGE_VERSION: 2.0.2-payment-link
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          ref: arjun/payment-link-fork
           submodules: recursive
 
       - name: 'Setup'
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}-payment-link
+        run: |
+          if [ -n "${{ github.event.inputs.packageVersion }}" ]; then
+            VERSION=${{ github.event.inputs.packageVersion }}
+          else
+            VERSION=${{ env.PACKAGE_VERSION }}
+          fi
+          yarn workspace @base-org/account version $VERSION
 
-      # Build the package
       - name: Prebuild Packages
         run: yarn workspace @base-org/account prebuild
 
