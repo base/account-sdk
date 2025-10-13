@@ -1,4 +1,9 @@
-import type { PaymentResult, PaymentStatus, SubscriptionResult, SubscriptionStatus } from '@base-org/account';
+import type {
+  PaymentResult,
+  PaymentStatus,
+  SubscriptionResult,
+  SubscriptionStatus,
+} from '@base-org/account';
 import styles from './Output.module.css';
 
 interface OutputProps {
@@ -20,12 +25,22 @@ const isPaymentStatus = (result: unknown): result is PaymentStatus => {
 
 // Type guard to check if result is SubscriptionResult
 const isSubscriptionResult = (result: unknown): result is SubscriptionResult => {
-  return result !== null && typeof result === 'object' && 'subscriptionOwner' in result && 'subscriptionPayer' in result;
+  return (
+    result !== null &&
+    typeof result === 'object' &&
+    'subscriptionOwner' in result &&
+    'subscriptionPayer' in result
+  );
 };
 
 // Type guard to check if result is SubscriptionStatus
 const isSubscriptionStatus = (result: unknown): result is SubscriptionStatus => {
-  return result !== null && typeof result === 'object' && 'isSubscribed' in result && 'recurringCharge' in result;
+  return (
+    result !== null &&
+    typeof result === 'object' &&
+    'isSubscribed' in result &&
+    'recurringCharge' in result
+  );
 };
 
 export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps) => {
@@ -361,7 +376,9 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
         )}
 
         {result && isSubscriptionStatus(result) && (
-          <div className={`${styles.resultCard} ${result.isSubscribed ? styles.success : styles.info}`}>
+          <div
+            className={`${styles.resultCard} ${result.isSubscribed ? styles.success : styles.info}`}
+          >
             <div className={styles.resultHeader}>
               {result.isSubscribed ? (
                 <>
@@ -398,7 +415,9 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
             <div className={styles.resultBody}>
               <div className={styles.resultRow}>
                 <span className={styles.resultLabel}>Status</span>
-                <span className={styles.resultValue}>{result.isSubscribed ? 'Active' : 'Inactive'}</span>
+                <span className={styles.resultValue}>
+                  {result.isSubscribed ? 'Active' : 'Inactive'}
+                </span>
               </div>
               <div className={styles.resultRow}>
                 <span className={styles.resultLabel}>Recurring Charge</span>
@@ -413,13 +432,17 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
               {result.currentPeriodStart && (
                 <div className={styles.resultRow}>
                   <span className={styles.resultLabel}>Current Period Start</span>
-                  <span className={styles.resultValue}>{new Date(result.currentPeriodStart).toLocaleDateString()}</span>
+                  <span className={styles.resultValue}>
+                    {new Date(result.currentPeriodStart).toLocaleDateString()}
+                  </span>
                 </div>
               )}
               {result.nextPeriodStart && (
                 <div className={styles.resultRow}>
                   <span className={styles.resultLabel}>Next Period Start</span>
-                  <span className={styles.resultValue}>{new Date(result.nextPeriodStart).toLocaleDateString()}</span>
+                  <span className={styles.resultValue}>
+                    {new Date(result.nextPeriodStart).toLocaleDateString()}
+                  </span>
                 </div>
               )}
             </div>
