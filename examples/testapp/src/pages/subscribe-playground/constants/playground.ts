@@ -34,7 +34,7 @@ export const DEFAULT_GET_SUBSCRIPTION_STATUS_CODE = `import { base } from '@base
 
 try {
   const result = await base.subscription.getStatus({
-    id: '0x...', // Automatically filled with your recent subscription
+    id: '0x...', // Replace with a subscription ID
     testnet: true
   })
   
