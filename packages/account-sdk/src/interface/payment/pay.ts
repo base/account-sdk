@@ -16,6 +16,8 @@ import { normalizeAddress, validateStringAmount } from './utils/validation.js';
  * @param options.to - Ethereum address to send payment to
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.payerInfo - Optional payer information configuration for data callbacks
+ * @param options.walletUrl - Optional wallet URL to use
+ * @param options.telemetry - Whether to enable telemetry logging (default: true)
  * @returns Promise<PaymentResult> - Result of the payment transaction
  * @throws Error if the payment fails
  *
