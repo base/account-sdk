@@ -35,32 +35,58 @@ export function convertCredentialToJSON({
   };
 }
 
+
 export function asn1EncodeSignature(r: bigint, s: bigint): Uint8Array {
-  // Convert r and s to byte arrays and remove any leading zeros
-  const rBytes = hexToBytes(trim(numberToHex(r)));
-  const sBytes = hexToBytes(trim(numberToHex(s)));
+  // Convert to bytes with proper encoding (prevent negative integers in ASN.1)
+  const encodeInteger = (value: bigint): Uint8Array => {
+    let bytes = hexToBytes(trim(numberToHex(value)));
+    
+    // ASN.1 requires positive integers - if MSB is set, prepend 0x00
+    if (bytes[0] & 0x80) {
+      const newBytes = new Uint8Array(bytes.length + 1);
+      newBytes[0] = 0x00;
+      newBytes.set(bytes, 1);
+      return newBytes;
+    }
+    return bytes;
+  };
 
-  // Calculate lengths
-  const rLength = rBytes.length;
-  const sLength = sBytes.length;
-  const totalLength = rLength + sLength + 4; // 4 additional bytes for type and length fields
+  const rBytes = encodeInteger(r);
+  const sBytes = encodeInteger(s);
 
-  // Create the signature buffer
-  const signature = new Uint8Array(totalLength + 2); // +2 for sequence header
+  // Validate lengths
+  if (rBytes.length > 255 || sBytes.length > 255) {
+    throw new Error('Integer too long for ASN.1 encoding');
+  }
 
-  // Sequence header
-  signature[0] = 0x30; // ASN.1 sequence tag
-  signature[1] = totalLength;
+  // Calculate component lengths
+  const rComponentLength = 2 + rBytes.length; // tag + length + data
+  const sComponentLength = 2 + sBytes.length; // tag + length + data
+  const totalLength = rComponentLength + sComponentLength;
 
-  // Encode r value
-  signature[2] = 0x02; // ASN.1 integer tag
-  signature[3] = rLength;
-  signature.set(rBytes, 4);
+  // Validate total length
+  if (totalLength > 255) {
+    throw new Error('ASN.1 sequence too long');
+  }
 
-  // Encode s value
-  signature[rLength + 4] = 0x02; // ASN.1 integer tag
-  signature[rLength + 5] = sLength;
-  signature.set(sBytes, rLength + 6);
+  // Create result buffer
+  const result = new Uint8Array(2 + totalLength); // sequence tag + length + components
+  
+  // Encode sequence header
+  let offset = 0;
+  result[offset++] = 0x30; // SEQUENCE tag
+  result[offset++] = totalLength; // sequence length
 
-  return signature;
+  // Encode r component
+  result[offset++] = 0x02; // INTEGER tag
+  result[offset++] = rBytes.length; // r length
+  result.set(rBytes, offset);
+  offset += rBytes.length;
+
+  // Encode s component  
+  result[offset++] = 0x02; // INTEGER tag
+  result[offset++] = sBytes.length; // s length
+  result.set(sBytes, offset);
+
+  return result;
 }
