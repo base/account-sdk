@@ -1,4 +1,6 @@
 import { ProviderInterface } from ':core/provider/interface.js';
+import { logGetInjectedProviderError } from ':core/telemetry/events/provider';
+import { parseErrorMessageFromAny } from ':core/telemetry/utils';
 
 declare global {
   interface Window {
@@ -13,11 +15,18 @@ type InjectedProvider = ProviderInterface & {
 };
 
 export function getInjectedProvider(): InjectedProvider | null {
-  const injectedProvider = window.top?.ethereum ?? window.ethereum;
+  try {
+    const injectedProvider = window.top?.ethereum ?? window.ethereum;
 
-  if (injectedProvider?.[TBA_PROVIDER_IDENTIFIER]) {
-    return injectedProvider;
+    if (injectedProvider?.[TBA_PROVIDER_IDENTIFIER]) {
+      return injectedProvider;
+    }
+
+    return null;
+  } catch (error) {
+    logGetInjectedProviderError({
+      errorMessage: parseErrorMessageFromAny(error),
+    });
+    return null;
   }
-
-  return null;
 }
