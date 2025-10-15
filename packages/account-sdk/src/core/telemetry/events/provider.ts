@@ -62,3 +62,21 @@ export const logRequestResponded = ({
     AnalyticsEventImportance.high
   );
 };
+
+export const logGetInjectedProviderError = ({
+  errorMessage,
+}: {
+  errorMessage: string;
+}) => {
+  logEvent(
+    'provider.getInjectedProvider.error',
+    {
+      action: ActionType.error,
+      componentType: ComponentType.unknown,
+      method: 'getInjectedProvider',
+      signerType: 'base-account',
+      errorMessage,
+    },
+    AnalyticsEventImportance.high
+  );
+};
