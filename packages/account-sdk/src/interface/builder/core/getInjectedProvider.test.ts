@@ -1,8 +1,8 @@
-import { logGetInjectedProviderError } from ':core/telemetry/events/provider';
+import { logGetInjectedProviderError } from ':core/telemetry/events/provider.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getInjectedProvider } from './getInjectedProvider.js';
 
-vi.mock(':core/telemetry/events/provider', () => ({
+vi.mock(':core/telemetry/events/provider.js', () => ({
   logGetInjectedProviderError: vi.fn(),
 }));
 

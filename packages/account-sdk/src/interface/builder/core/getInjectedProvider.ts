@@ -1,6 +1,6 @@
 import { ProviderInterface } from ':core/provider/interface.js';
-import { logGetInjectedProviderError } from ':core/telemetry/events/provider';
-import { parseErrorMessageFromAny } from ':core/telemetry/utils';
+import { logGetInjectedProviderError } from ':core/telemetry/events/provider.js';
+import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 
 declare global {
   interface Window {
