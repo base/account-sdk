@@ -175,4 +175,3 @@ export type ProlinkDecoded = {
   chainId?: number;
   capabilities?: Record<string, unknown>;
 };
-

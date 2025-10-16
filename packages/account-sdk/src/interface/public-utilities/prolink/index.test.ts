@@ -248,13 +248,11 @@ describe('prolink end-to-end', () => {
           {
             version: '1.0',
             chainId: '0x1',
-            calls: Array(50)
-              .fill(null)
-              .map((_, i) => ({
-                to: `0x${'1'.repeat(40)}`,
-                data: `0x${'ab'.repeat(100)}`,
-                value: '0x0',
-              })),
+            calls: new Array(50).fill(null).map((_, _i) => ({
+              to: `0x${'1'.repeat(40)}`,
+              data: `0x${'ab'.repeat(100)}`,
+              value: '0x0',
+            })),
           },
         ],
       };
@@ -302,10 +300,7 @@ describe('prolink end-to-end', () => {
 
       const params = (decoded.params as Array<{ version?: string; from?: string }>)[0];
       expect(params.version).toBe('2.0');
-      expect(params.from?.toLowerCase()).toBe(
-        request.params[0].from.toLowerCase()
-      );
+      expect(params.from?.toLowerCase()).toBe(request.params[0].from.toLowerCase());
     });
   });
 });
-

@@ -1,31 +1,31 @@
 import { decodeProlink, encodeProlink, showProlinkDialog } from '@base-org/account';
 import {
-    Accordion,
-    AccordionButton,
-    AccordionIcon,
-    AccordionItem,
-    AccordionPanel,
-    Box,
-    Button,
-    Code,
-    Container,
-    Divider,
-    FormControl,
-    FormLabel,
-    HStack,
-    Heading,
-    Input,
-    Select,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Tabs,
-    Text,
-    Textarea,
-    VStack,
-    useColorModeValue,
-    useToast,
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  Box,
+  Button,
+  Code,
+  Container,
+  Divider,
+  FormControl,
+  FormLabel,
+  HStack,
+  Heading,
+  Input,
+  Select,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Text,
+  Textarea,
+  VStack,
+  useColorModeValue,
+  useToast,
 } from '@chakra-ui/react';
 import { useState } from 'react';
 
@@ -197,7 +197,9 @@ export default function ProlinkPlayground() {
         try {
           request.capabilities = JSON.parse(capabilitiesJson);
         } catch (e) {
-          throw new Error(`Invalid capabilities JSON: ${e instanceof Error ? e.message : 'unknown'}`);
+          throw new Error(
+            `Invalid capabilities JSON: ${e instanceof Error ? e.message : 'unknown'}`
+          );
         }
       }
 
@@ -591,4 +593,3 @@ export default function ProlinkPlayground() {
     </Container>
   );
 }
-

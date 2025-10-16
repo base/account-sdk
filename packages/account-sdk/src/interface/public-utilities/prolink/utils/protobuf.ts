@@ -6,17 +6,17 @@
  */
 
 import type {
-    Call,
-    Erc20Transfer,
-    GenericCalls,
-    GenericJsonRpc,
-    GenericTypedData,
-    NativeTransfer,
-    ReceiveWithAuthorization,
-    RpcLinkPayload,
-    SpendPermission,
-    WalletSendCalls,
-    WalletSign,
+  Call,
+  Erc20Transfer,
+  GenericCalls,
+  GenericJsonRpc,
+  GenericTypedData,
+  NativeTransfer,
+  ReceiveWithAuthorization,
+  RpcLinkPayload,
+  SpendPermission,
+  WalletSendCalls,
+  WalletSign,
 } from '../types.js';
 import { SendCallsType, SignType } from '../types.js';
 
@@ -371,7 +371,9 @@ export function decodeRpcLinkPayload(buffer: Uint8Array): RpcLinkPayload {
 /**
  * Parse protobuf fields from buffer
  */
-function parseFields(buffer: Uint8Array): Map<number, bigint | Uint8Array | Map<string, Uint8Array>> {
+function parseFields(
+  buffer: Uint8Array
+): Map<number, bigint | Uint8Array | Map<string, Uint8Array>> {
   const fields = new Map<number, bigint | Uint8Array | Map<string, Uint8Array>>();
   let offset = 0;
 
@@ -627,4 +629,3 @@ function decodeGenericTypedData(buffer: Uint8Array): GenericTypedData {
     typedDataJson: (fields.get(1) as Uint8Array) || new Uint8Array(),
   };
 }
-

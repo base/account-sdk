@@ -46,4 +46,3 @@ export function decodeGenericRpc(payload: GenericJsonRpc): { method: string; par
     params,
   };
 }
-

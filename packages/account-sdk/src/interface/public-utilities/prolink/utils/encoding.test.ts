@@ -2,15 +2,15 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-    bytesToHex,
-    decodeAddress,
-    decodeAmount,
-    decodeCapabilities,
-    encodeAddress,
-    encodeAmount,
-    encodeCapabilities,
-    hexToBytes,
-    pad32,
+  bytesToHex,
+  decodeAddress,
+  decodeAmount,
+  decodeCapabilities,
+  encodeAddress,
+  encodeAmount,
+  encodeCapabilities,
+  hexToBytes,
+  pad32,
 } from './encoding.js';
 
 describe('encoding', () => {
@@ -207,10 +207,14 @@ describe('encoding', () => {
     it('should roundtrip correctly with leading zeros handled', () => {
       const original = new Uint8Array([1, 2, 255, 254, 253]);
       const hex = bytesToHex(original);
-      const result = hexToBytes(hex);
       // bytesToHex strips leading zeros, so we need to compare values
-      expect(BigInt(hex)).toBe(BigInt('0x' + Array.from(original).map(b => b.toString(16).padStart(2, '0')).join('')));
+      expect(BigInt(hex)).toBe(
+        BigInt(
+          `0x${Array.from(original)
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('')}`
+        )
+      );
     });
   });
 });
-

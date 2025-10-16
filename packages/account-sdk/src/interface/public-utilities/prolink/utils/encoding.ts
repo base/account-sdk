@@ -13,7 +13,7 @@
 export function encodeAddress(address: string): Uint8Array {
   // Remove 0x prefix if present and normalize to lowercase
   const normalized = address.toLowerCase().replace(/^0x/, '');
-  
+
   if (normalized.length !== 40) {
     throw new Error(`Invalid address length: expected 40 hex chars, got ${normalized.length}`);
   }
@@ -75,7 +75,7 @@ export function encodeAmount(value: bigint | string): Uint8Array {
   // Convert to minimal big-endian bytes
   const hex = bigintValue.toString(16);
   const bytes = new Uint8Array(Math.ceil(hex.length / 2));
-  
+
   for (let i = 0; i < bytes.length; i++) {
     const offset = hex.length - (bytes.length - i) * 2;
     const byteHex = offset < 0 ? hex[0] : hex.slice(offset, offset + 2);
@@ -208,11 +208,10 @@ export function bytesToHex(bytes: Uint8Array): string {
 export function hexToBytes(hex: string): Uint8Array {
   const normalized = hex.toLowerCase().replace(/^0x/, '');
   const bytes = new Uint8Array(normalized.length / 2);
-  
+
   for (let i = 0; i < bytes.length; i++) {
     bytes[i] = Number.parseInt(normalized.slice(i * 2, i * 2 + 2), 16);
   }
-  
+
   return bytes;
 }
-

@@ -19,7 +19,7 @@ export function encodeBase64url(data: Uint8Array): string {
     binary += String.fromCharCode(data[i]);
   }
   const base64 = btoa(binary);
-  
+
   // Convert base64 to base64url (replace + with -, / with _)
   // Remove padding (=)
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -60,7 +60,7 @@ export function decodeBase64url(payload: string): Uint8Array {
 
   // Convert base64url to standard base64
   let base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-  
+
   // Add padding if needed (base64 requires padding for decoding)
   const paddingNeeded = (4 - (base64.length % 4)) % 4;
   base64 += '='.repeat(paddingNeeded);
@@ -74,7 +74,8 @@ export function decodeBase64url(payload: string): Uint8Array {
     }
     return bytes;
   } catch (error) {
-    throw new Error(`Failed to decode Base64url: ${error instanceof Error ? error.message : 'unknown error'}`);
+    throw new Error(
+      `Failed to decode Base64url: ${error instanceof Error ? error.message : 'unknown error'}`
+    );
   }
 }
-

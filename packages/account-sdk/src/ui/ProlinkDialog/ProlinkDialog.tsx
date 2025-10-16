@@ -56,11 +56,7 @@ export const ProlinkDialog: FunctionComponent<ProlinkDialogProps> = ({
           <div class="-base-acc-sdk-prolink-dialog-error">{error}</div>
         ) : qrDataUrl ? (
           <div class="-base-acc-sdk-prolink-dialog-qr-container">
-            <img
-              src={qrDataUrl}
-              alt="QR Code"
-              class="-base-acc-sdk-prolink-dialog-qr-image"
-            />
+            <img src={qrDataUrl} alt="QR Code" class="-base-acc-sdk-prolink-dialog-qr-image" />
           </div>
         ) : (
           <div class="-base-acc-sdk-prolink-dialog-loading">Generating QR code...</div>
@@ -311,4 +307,3 @@ const modalStyles = `
   }
 }
 `;
-

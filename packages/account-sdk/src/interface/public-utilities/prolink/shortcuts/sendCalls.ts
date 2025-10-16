@@ -8,12 +8,12 @@
 import type { WalletSendCalls } from '../types.js';
 import { SendCallsType } from '../types.js';
 import {
-    bytesToHex,
-    decodeAddress,
-    encodeAddress,
-    encodeAmount,
-    hexToBytes,
-    pad32
+  bytesToHex,
+  decodeAddress,
+  encodeAddress,
+  encodeAmount,
+  hexToBytes,
+  pad32,
 } from '../utils/encoding.js';
 
 // ERC20 transfer(address,uint256) selector
@@ -57,11 +57,11 @@ function detectErc20Transfer(
 
   // Extract recipient (bytes 4-35, i.e., chars 8-71)
   const recipientPadded = dataNoPrefix.slice(8, 72);
-  const recipient = '0x' + recipientPadded.slice(24); // Last 20 bytes (40 chars)
+  const recipient = `0x${recipientPadded.slice(24)}`; // Last 20 bytes (40 chars)
 
   // Extract amount (bytes 36-67, i.e., chars 72-135)
   const amountHex = dataNoPrefix.slice(72, 136);
-  const amount = BigInt('0x' + amountHex);
+  const amount = BigInt(`0x${amountHex}`);
 
   return {
     token: call.to,
@@ -160,10 +160,7 @@ export function encodeWalletSendCalls(params: SendCallsParams): WalletSendCalls 
  * @param chainId - Chain ID from top-level payload
  * @returns EIP-5792 wallet_sendCalls parameters
  */
-export function decodeWalletSendCalls(
-  payload: WalletSendCalls,
-  chainId: number
-): SendCallsParams {
+export function decodeWalletSendCalls(payload: WalletSendCalls, chainId: number): SendCallsParams {
   const result: SendCallsParams = {
     version: payload.version || '1.0',
     chainId: `0x${chainId.toString(16)}`,
@@ -217,4 +214,3 @@ export function decodeWalletSendCalls(
 
   return result;
 }
-

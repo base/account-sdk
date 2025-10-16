@@ -8,11 +8,11 @@
 import type { WalletSign } from '../types.js';
 import { SignType } from '../types.js';
 import {
-    bytesToHex,
-    decodeAddress,
-    encodeAddress,
-    encodeAmount,
-    hexToBytes
+  bytesToHex,
+  decodeAddress,
+  encodeAddress,
+  encodeAmount,
+  hexToBytes,
 } from '../utils/encoding.js';
 
 type TypedData = {
@@ -50,8 +50,7 @@ function normalizeType(type?: string | number): string {
  */
 function detectSpendPermission(typedData: TypedData): boolean {
   return (
-    typedData.primaryType === 'SpendPermission' &&
-    typedData.domain.verifyingContract !== undefined
+    typedData.primaryType === 'SpendPermission' && typedData.domain.verifyingContract !== undefined
   );
 }
 
@@ -86,9 +85,7 @@ export function encodeWalletSign(params: WalletSignParams): WalletSign {
       : BigInt(params.data.domain.chainId || 0);
 
   if (paramsChainId !== domainChainId) {
-    throw new Error(
-      `Chain ID mismatch: params has ${paramsChainId}, domain has ${domainChainId}`
-    );
+    throw new Error(`Chain ID mismatch: params has ${paramsChainId}, domain has ${domainChainId}`);
   }
 
   // Detect signature type
@@ -286,4 +283,3 @@ export function decodeWalletSign(payload: WalletSign, chainId: number): WalletSi
 
   throw new Error('Unknown signature data type');
 }
-

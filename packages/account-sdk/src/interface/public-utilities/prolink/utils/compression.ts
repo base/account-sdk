@@ -24,11 +24,8 @@ async function ensureBrotliInitialized(): Promise<void> {
     // Detect environment
     if (typeof process !== 'undefined' && process.versions?.node) {
       // Node.js environment - use zlib
-      // Use Function constructor to hide from webpack's static analysis
       try {
-        // biome-ignore lint/security/noGlobalEval: Required to hide node: imports from webpack
-        const dynamicImport = new Function('specifier', 'return import(specifier)');
-        const zlib = await dynamicImport('node:zlib');
+        const zlib = await import('node:zlib');
 
         brotliModule = {
           compress: (data, options) => {
@@ -121,7 +118,7 @@ export async function decompressPayload(data: Uint8Array): Promise<Uint8Array> {
     if (!brotliModule) {
       throw new Error('Brotli module not initialized');
     }
-    
+
     try {
       const decompressed = brotliModule.decompress(payload);
       return decompressed;
@@ -134,4 +131,3 @@ export async function decompressPayload(data: Uint8Array): Promise<Uint8Array> {
 
   throw new Error(`Unknown compression flag: 0x${flag.toString(16).padStart(2, '0')}`);
 }
-

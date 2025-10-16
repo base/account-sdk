@@ -48,7 +48,9 @@ export async function encodeProlink(request: ProlinkRequest): Promise<string> {
     }
     const chainId = Number.parseInt(chainIdHex, 16);
 
-    const walletSendCalls = encodeWalletSendCalls(params as Parameters<typeof encodeWalletSendCalls>[0]);
+    const walletSendCalls = encodeWalletSendCalls(
+      params as Parameters<typeof encodeWalletSendCalls>[0]
+    );
 
     payload = {
       protocolVersion: PROTOCOL_VERSION,
@@ -208,4 +210,3 @@ export async function decodeProlink(payload: string): Promise<ProlinkDecoded> {
 
 // Re-export types
 export type { ProlinkDecoded, ProlinkRequest } from './types.js';
-

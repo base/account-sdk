@@ -197,7 +197,7 @@ describe('sendCalls shortcut', () => {
 
       // Normalize addresses for comparison
       expect(decoded.calls[0].to.toLowerCase()).toBe(params.calls[0].to.toLowerCase());
-      expect(decoded.calls[0].data.toLowerCase()).toBe(params.calls[0].data.toLowerCase());
+      expect(decoded.calls[0].data?.toLowerCase()).toBe(params.calls[0].data.toLowerCase());
       expect(decoded.calls[0].value).toBe(params.calls[0].value);
     });
   });
@@ -224,7 +224,7 @@ describe('sendCalls shortcut', () => {
       expect(decoded.calls.length).toBe(1);
       expect(decoded.calls[0].to.toLowerCase()).toBe(params.calls[0].to.toLowerCase());
       expect(decoded.calls[0].data).toBe(params.calls[0].data);
-      expect(decoded.calls[0].value.toLowerCase()).toBe(params.calls[0].value.toLowerCase());
+      expect(decoded.calls[0].value?.toLowerCase()).toBe(params.calls[0].value.toLowerCase());
     });
   });
 
@@ -256,4 +256,3 @@ describe('sendCalls shortcut', () => {
     });
   });
 });
-
