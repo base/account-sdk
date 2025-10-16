@@ -24,11 +24,11 @@ async function ensureBrotliInitialized(): Promise<void> {
     // Detect environment
     if (typeof process !== 'undefined' && process.versions?.node) {
       // Node.js environment - use zlib
+      // Use Function constructor to hide from webpack's static analysis
       try {
-        const zlib = await import('node:zlib');
-        const { promisify } = await import('node:util');
-        const brotliCompressAsync = promisify(zlib.brotliCompress);
-        const brotliDecompressAsync = promisify(zlib.brotliDecompress);
+        // biome-ignore lint/security/noGlobalEval: Required to hide node: imports from webpack
+        const dynamicImport = new Function('specifier', 'return import(specifier)');
+        const zlib = await dynamicImport('node:zlib');
 
         brotliModule = {
           compress: (data, options) => {

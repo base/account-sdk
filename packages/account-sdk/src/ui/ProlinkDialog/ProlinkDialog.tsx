@@ -1,10 +1,8 @@
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { FunctionComponent } from 'preact';
+import { FunctionComponent, render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import QRCode from 'qrcode';
-
-import { Dialog, type DialogProps } from ':ui/Dialog/Dialog.js';
 
 export type ProlinkDialogProps = {
   payload: string;
@@ -19,7 +17,7 @@ export type ProlinkDialogProps = {
 export const ProlinkDialog: FunctionComponent<ProlinkDialogProps> = ({
   payload,
   title = 'Scan to Connect',
-  message = 'Scan this QR code with your wallet app to complete the transaction.',
+  message = 'Scan this QR code with a prolink compatible wallet to complete the transaction.',
   onClose,
 }) => {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
@@ -67,10 +65,6 @@ export const ProlinkDialog: FunctionComponent<ProlinkDialogProps> = ({
         ) : (
           <div class="-base-acc-sdk-prolink-dialog-loading">Generating QR code...</div>
         )}
-        <div class="-base-acc-sdk-prolink-dialog-payload-preview">
-          <div class="-base-acc-sdk-prolink-dialog-payload-label">Payload:</div>
-          <div class="-base-acc-sdk-prolink-dialog-payload-text">{payload.slice(0, 40)}...</div>
-        </div>
       </div>
       {onClose && (
         <div class="-base-acc-sdk-prolink-dialog-actions">
@@ -200,7 +194,7 @@ const styles = `
 }
 `;
 
-let dialogInstance: Dialog | null = null;
+let dialogRoot: HTMLDivElement | null = null;
 
 /**
  * Show a prolink dialog with QR code
@@ -211,24 +205,110 @@ export function showProlinkDialog(
   payload: string,
   options?: { title?: string; message?: string }
 ): void {
-  if (!dialogInstance) {
-    dialogInstance = new Dialog();
-    dialogInstance.attach(document.body);
+  // Create root element if it doesn't exist
+  if (!dialogRoot) {
+    dialogRoot = document.createElement('div');
+    dialogRoot.className = '-base-acc-sdk-prolink-modal-root';
+    document.body.appendChild(dialogRoot);
   }
 
-  const dialogProps: DialogProps = {
-    title: options?.title || 'Scan to Connect',
-    message: options?.message || 'Scan this QR code with your wallet app.',
-    onClose: () => {
-      dialogInstance?.clear();
-    },
+  // Create backdrop and wrapper
+  const handleClose = () => {
+    if (dialogRoot) {
+      render(null, dialogRoot);
+    }
   };
 
-  // We need to integrate the QR code into the existing Dialog system
-  // For now, we'll use the message field to render the QR code
-  // In a production implementation, you'd extend the Dialog component
-  // to support custom content
-  
-  dialogInstance.presentItem(dialogProps);
+  render(
+    <div class="-base-acc-sdk-prolink-modal-container">
+      <style>{modalStyles}</style>
+      <div class="-base-acc-sdk-prolink-modal-backdrop" onClick={handleClose}>
+        <div class="-base-acc-sdk-prolink-modal-content" onClick={(e) => e.stopPropagation()}>
+          <ProlinkDialog
+            payload={payload}
+            title={options?.title}
+            message={options?.message}
+            onClose={handleClose}
+          />
+        </div>
+      </div>
+    </div>,
+    dialogRoot
+  );
 }
+
+const modalStyles = `
+.-base-acc-sdk-prolink-modal-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999999;
+  pointer-events: none;
+}
+
+.-base-acc-sdk-prolink-modal-root > * {
+  pointer-events: all;
+}
+
+.-base-acc-sdk-prolink-modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999999;
+}
+
+.-base-acc-sdk-prolink-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.-base-acc-sdk-prolink-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .-base-acc-sdk-prolink-modal-content {
+    max-width: 95%;
+    max-height: 95%;
+  }
+}
+`;
 
