@@ -141,6 +141,8 @@ interface BaseSubscriptionOptions {
   walletUrl?: string;
   /** Whether to enable telemetry logging. Defaults to true */
   telemetry?: boolean;
+  /** Whether to require the user has sufficient balance before creating the subscription. Defaults to true */
+  requireBalance?: boolean;
 }
 
 /**
