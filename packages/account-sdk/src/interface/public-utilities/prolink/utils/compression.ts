@@ -23,7 +23,7 @@ async function ensureBrotliInitialized(): Promise<void> {
   if (!brotliModule) {
     // Detect environment - check for browser first (more reliable)
     const isBrowser = typeof window !== 'undefined' || typeof globalThis.document !== 'undefined';
-    
+
     if (!isBrowser && typeof process !== 'undefined' && process.versions?.node) {
       // Node.js environment - use zlib
       try {
@@ -42,7 +42,7 @@ async function ensureBrotliInitialized(): Promise<void> {
             return new Uint8Array(zlib.brotliDecompressSync(data));
           },
         };
-      } catch (error) {
+      } catch (_error) {
         // If node:zlib import fails (e.g., in bundled browser code), fall back to brotli-wasm
         const brotliPromise = await import('brotli-wasm');
         brotliModule = (await brotliPromise.default) as BrotliModule;

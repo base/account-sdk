@@ -16,7 +16,7 @@ export default {
         ...config.resolve.fallback,
         zlib: false,
       };
-      
+
       // Ignore node:zlib imports in client-side code
       config.plugins.push(
         new webpack.IgnorePlugin({
