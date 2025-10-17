@@ -21,8 +21,10 @@ let brotliModule: BrotliModule | null = null;
  */
 async function ensureBrotliInitialized(): Promise<void> {
   if (!brotliModule) {
-    // Detect environment
-    if (typeof process !== 'undefined' && process.versions?.node) {
+    // Detect environment - check for browser first (more reliable)
+    const isBrowser = typeof window !== 'undefined' || typeof globalThis.document !== 'undefined';
+    
+    if (!isBrowser && typeof process !== 'undefined' && process.versions?.node) {
       // Node.js environment - use zlib
       try {
         const zlib = await import('node:zlib');
@@ -41,9 +43,9 @@ async function ensureBrotliInitialized(): Promise<void> {
           },
         };
       } catch (error) {
-        throw new Error(
-          `Failed to initialize Node.js brotli: ${error instanceof Error ? error.message : 'unknown error'}`
-        );
+        // If node:zlib import fails (e.g., in bundled browser code), fall back to brotli-wasm
+        const brotliPromise = await import('brotli-wasm');
+        brotliModule = (await brotliPromise.default) as BrotliModule;
       }
     } else {
       // Browser environment - use brotli-wasm

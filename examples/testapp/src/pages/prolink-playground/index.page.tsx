@@ -1,31 +1,31 @@
-import { decodeProlink, encodeProlink, showProlinkDialog } from '@base-org/account';
+import { decodeProlink, encodeProlink } from '@base-org/account';
 import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Box,
-  Button,
-  Code,
-  Container,
-  Divider,
-  FormControl,
-  FormLabel,
-  HStack,
-  Heading,
-  Input,
-  Select,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
-  Text,
-  Textarea,
-  VStack,
-  useColorModeValue,
-  useToast,
+    Accordion,
+    AccordionButton,
+    AccordionIcon,
+    AccordionItem,
+    AccordionPanel,
+    Box,
+    Button,
+    Code,
+    Container,
+    Divider,
+    FormControl,
+    FormLabel,
+    HStack,
+    Heading,
+    Input,
+    Select,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
+    Text,
+    Textarea,
+    VStack,
+    useColorModeValue,
+    useToast,
 } from '@chakra-ui/react';
 import { useState } from 'react';
 
@@ -210,11 +210,6 @@ export default function ProlinkPlayground() {
       // Decode to verify
       const decoded = await decodeProlink(payload);
       setDecodedResult(decoded);
-
-      // Show the SDK modal with QR code
-      showProlinkDialog(payload, {
-        title: 'Scan to Connect',
-      });
 
       toast({
         title: 'Prolink generated!',
@@ -554,17 +549,6 @@ export default function ProlinkPlayground() {
                           <Text>{encodedPayload.length} characters</Text>
                           <Button size="sm" onClick={copyToClipboard}>
                             Copy
-                          </Button>
-                          <Button
-                            size="sm"
-                            colorScheme="blue"
-                            onClick={() => {
-                              showProlinkDialog(encodedPayload, {
-                                title: 'Scan to Connect',
-                              });
-                            }}
-                          >
-                            Show QR Code
                           </Button>
                         </HStack>
                         <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">

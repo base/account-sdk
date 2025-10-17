@@ -1,6 +1,6 @@
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { FunctionComponent, render } from 'preact';
+import { FunctionComponent } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import QRCode from 'qrcode';
 
@@ -16,7 +16,7 @@ export type ProlinkDialogProps = {
  */
 export const ProlinkDialog: FunctionComponent<ProlinkDialogProps> = ({
   payload,
-  title = 'Scan to Connect',
+  title = 'Scan to Complete Transaction',
   message = 'Scan this QR code with a prolink compatible wallet to complete the transaction.',
   onClose,
 }) => {
@@ -186,124 +186,6 @@ const styles = `
   .-base-acc-sdk-prolink-dialog-qr-image {
     width: 250px;
     height: 250px;
-  }
-}
-`;
-
-let dialogRoot: HTMLDivElement | null = null;
-
-/**
- * Show a prolink dialog with QR code
- * @param payload - Base64url-encoded prolink payload
- * @param options - Optional title and message
- */
-export function showProlinkDialog(
-  payload: string,
-  options?: { title?: string; message?: string }
-): void {
-  // Create root element if it doesn't exist
-  if (!dialogRoot) {
-    dialogRoot = document.createElement('div');
-    dialogRoot.className = '-base-acc-sdk-prolink-modal-root';
-    document.body.appendChild(dialogRoot);
-  }
-
-  // Create backdrop and wrapper
-  const handleClose = () => {
-    if (dialogRoot) {
-      render(null, dialogRoot);
-    }
-  };
-
-  render(
-    <div class="-base-acc-sdk-prolink-modal-container">
-      <style>{modalStyles}</style>
-      <div class="-base-acc-sdk-prolink-modal-backdrop" onClick={handleClose}>
-        <div class="-base-acc-sdk-prolink-modal-content" onClick={(e) => e.stopPropagation()}>
-          <ProlinkDialog
-            payload={payload}
-            title={options?.title}
-            message={options?.message}
-            onClose={handleClose}
-          />
-        </div>
-      </div>
-    </div>,
-    dialogRoot
-  );
-}
-
-const modalStyles = `
-.-base-acc-sdk-prolink-modal-root {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 999999;
-  pointer-events: none;
-}
-
-.-base-acc-sdk-prolink-modal-root > * {
-  pointer-events: all;
-}
-
-.-base-acc-sdk-prolink-modal-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 999999;
-}
-
-.-base-acc-sdk-prolink-modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.-base-acc-sdk-prolink-modal-content {
-  background: #fff;
-  border-radius: 16px;
-  max-width: 90%;
-  max-height: 90%;
-  overflow: auto;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
-  animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@media (max-width: 600px) {
-  .-base-acc-sdk-prolink-modal-content {
-    max-width: 95%;
-    max-height: 95%;
   }
 }
 `;
