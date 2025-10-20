@@ -21,11 +21,11 @@ let brotliModule: BrotliModule | null = null;
  */
 async function ensureBrotliInitialized(): Promise<void> {
   if (!brotliModule) {
-    // Detect environment - check for browser first (more reliable)
-    const isBrowser = typeof window !== 'undefined' || typeof globalThis.document !== 'undefined';
+    // Detect environment - prioritize Node.js if available (even with jsdom)
+    const isNodeJs = typeof process !== 'undefined' && process.versions?.node;
 
-    if (!isBrowser && typeof process !== 'undefined' && process.versions?.node) {
-      // Node.js environment - use zlib
+    if (isNodeJs) {
+      // Node.js environment - use zlib (including test environments with jsdom)
       try {
         const zlib = await import('node:zlib');
 
