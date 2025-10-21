@@ -1,5 +1,7 @@
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
+import { Bytes, Hex } from 'ox';
+
 /**
  * Field encoding helpers for canonical encoding
  */
@@ -11,16 +13,18 @@
  * @throws Error if address is not 20 bytes
  */
 export function encodeAddress(address: string): Uint8Array {
-  // Remove 0x prefix if present and normalize to lowercase
-  const normalized = address.toLowerCase().replace(/^0x/, '');
-
-  if (normalized.length !== 40) {
-    throw new Error(`Invalid address length: expected 40 hex chars, got ${normalized.length}`);
+  // Normalize to ensure 0x prefix
+  const normalized = address.startsWith('0x') ? address : `0x${address}`;
+  
+  // Validate length (0x + 40 hex chars)
+  if (normalized.length !== 42) {
+    throw new Error(`Invalid address length: expected 40 hex chars, got ${normalized.length - 2}`);
   }
 
-  const bytes = new Uint8Array(20);
-  for (let i = 0; i < 20; i++) {
-    bytes[i] = Number.parseInt(normalized.slice(i * 2, i * 2 + 2), 16);
+  const bytes = Bytes.fromHex(normalized as Hex.Hex);
+  
+  if (bytes.length !== 20) {
+    throw new Error(`Invalid address length: expected 20 bytes, got ${bytes.length}`);
   }
 
   return bytes;
@@ -36,11 +40,7 @@ export function decodeAddress(bytes: Uint8Array): string {
     throw new Error(`Invalid address length: expected 20 bytes, got ${bytes.length}`);
   }
 
-  let hex = '0x';
-  for (let i = 0; i < bytes.length; i++) {
-    hex += bytes[i].toString(16).padStart(2, '0');
-  }
-  return hex;
+  return Hex.fromBytes(bytes);
 }
 
 /**
@@ -72,17 +72,11 @@ export function encodeAmount(value: bigint | string): Uint8Array {
     throw new Error('Cannot encode negative amounts');
   }
 
-  // Convert to minimal big-endian bytes
+  // Convert to minimal big-endian bytes using Ox
   const hex = bigintValue.toString(16);
-  const bytes = new Uint8Array(Math.ceil(hex.length / 2));
-
-  for (let i = 0; i < bytes.length; i++) {
-    const offset = hex.length - (bytes.length - i) * 2;
-    const byteHex = offset < 0 ? hex[0] : hex.slice(offset, offset + 2);
-    bytes[i] = Number.parseInt(byteHex, 16);
-  }
-
-  return bytes;
+  // Pad to even length if needed (for proper byte conversion)
+  const paddedHex = hex.length % 2 === 0 ? hex : `0${hex}`;
+  return Bytes.fromHex(`0x${paddedHex}` as Hex.Hex);
 }
 
 /**
@@ -100,12 +94,8 @@ export function decodeAmount(bytes: Uint8Array): bigint {
     throw new Error('Invalid amount encoding: leading zeros not allowed');
   }
 
-  let hex = '';
-  for (let i = 0; i < bytes.length; i++) {
-    hex += bytes[i].toString(16).padStart(2, '0');
-  }
-
-  return BigInt(`0x${hex}`);
+  const hex = Hex.fromBytes(bytes);
+  return BigInt(hex);
 }
 
 /**
@@ -179,22 +169,16 @@ export function bytesToHex(bytes: Uint8Array): string {
     return '0x0';
   }
 
-  let hex = '0x';
-  let foundNonZero = false;
-
-  for (let i = 0; i < bytes.length; i++) {
-    // Skip leading zero bytes (but keep the last byte even if it's zero)
-    if (!foundNonZero && bytes[i] === 0 && i < bytes.length - 1) {
-      continue;
-    }
-    foundNonZero = true;
-
-    // For the first non-zero byte, don't pad if it's a single digit
-    if (foundNonZero && hex === '0x' && bytes[i] < 16) {
-      hex += bytes[i].toString(16);
-    } else {
-      hex += bytes[i].toString(16).padStart(2, '0');
-    }
+  // Use Ox to convert bytes to hex
+  const fullHex = Hex.fromBytes(bytes);
+  
+  // Strip leading zeros for minimal encoding
+  // Keep at least one character (for 0x0)
+  let hex = fullHex.replace(/^0x0+/, '0x') || '0x0';
+  
+  // Ensure we don't end up with just '0x'
+  if (hex === '0x') {
+    hex = '0x0';
   }
 
   return hex;
@@ -206,12 +190,9 @@ export function bytesToHex(bytes: Uint8Array): string {
  * @returns Bytes
  */
 export function hexToBytes(hex: string): Uint8Array {
-  const normalized = hex.toLowerCase().replace(/^0x/, '');
-  const bytes = new Uint8Array(normalized.length / 2);
-
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = Number.parseInt(normalized.slice(i * 2, i * 2 + 2), 16);
-  }
-
-  return bytes;
+  // Normalize to ensure 0x prefix
+  const normalized = hex.startsWith('0x') ? hex : `0x${hex}`;
+  
+  // Use Ox's Bytes.fromHex which properly handles odd-length hex strings
+  return Bytes.fromHex(normalized as Hex.Hex);
 }
