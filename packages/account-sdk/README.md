@@ -2,8 +2,8 @@
 
 ## Base Account SDK allows dapps to connect to Base Account
 
-1. [Base Account](https://account.base.org/)
-   - [Docs](https://www.base.org/builders/smart-wallet)
+1. [Base Account](https://www.base.org/build/base-account)
+   - [Docs](https://docs.base.org/base-account/overview/what-is-base-account)
 
 ### Installing Base Account SDK
 
