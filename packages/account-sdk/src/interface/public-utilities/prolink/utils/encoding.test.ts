@@ -2,15 +2,15 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-    bytesToHex,
-    decodeAddress,
-    decodeAmount,
-    decodeCapabilities,
-    encodeAddress,
-    encodeAmount,
-    encodeCapabilities,
-    hexToBytes,
-    pad32,
+  bytesToHex,
+  decodeAddress,
+  decodeAmount,
+  decodeCapabilities,
+  encodeAddress,
+  encodeAmount,
+  encodeCapabilities,
+  hexToBytes,
+  pad32,
 } from './encoding.js';
 
 describe('encoding', () => {

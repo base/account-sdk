@@ -15,14 +15,14 @@ import { Bytes, Hex } from 'ox';
 export function encodeAddress(address: string): Uint8Array {
   // Normalize to ensure 0x prefix
   const normalized = address.startsWith('0x') ? address : `0x${address}`;
-  
+
   // Validate length (0x + 40 hex chars)
   if (normalized.length !== 42) {
     throw new Error(`Invalid address length: expected 40 hex chars, got ${normalized.length - 2}`);
   }
 
   const bytes = Bytes.fromHex(normalized as Hex.Hex);
-  
+
   if (bytes.length !== 20) {
     throw new Error(`Invalid address length: expected 20 bytes, got ${bytes.length}`);
   }
@@ -171,11 +171,11 @@ export function bytesToHex(bytes: Uint8Array): string {
 
   // Use Ox to convert bytes to hex
   const fullHex = Hex.fromBytes(bytes);
-  
+
   // Strip leading zeros for minimal encoding
   // Keep at least one character (for 0x0)
   let hex = fullHex.replace(/^0x0+/, '0x') || '0x0';
-  
+
   // Ensure we don't end up with just '0x'
   if (hex === '0x') {
     hex = '0x0';
@@ -192,7 +192,7 @@ export function bytesToHex(bytes: Uint8Array): string {
 export function hexToBytes(hex: string): Uint8Array {
   // Normalize to ensure 0x prefix
   const normalized = hex.startsWith('0x') ? hex : `0x${hex}`;
-  
+
   // Use Ox's Bytes.fromHex which properly handles odd-length hex strings
   return Bytes.fromHex(normalized as Hex.Hex);
 }
