@@ -2,15 +2,15 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-  bytesToHex,
-  decodeAddress,
-  decodeAmount,
-  decodeCapabilities,
-  encodeAddress,
-  encodeAmount,
-  encodeCapabilities,
-  hexToBytes,
-  pad32,
+    bytesToHex,
+    decodeAddress,
+    decodeAmount,
+    decodeCapabilities,
+    encodeAddress,
+    encodeAmount,
+    encodeCapabilities,
+    hexToBytes,
+    pad32,
 } from './encoding.js';
 
 describe('encoding', () => {
@@ -215,6 +215,33 @@ describe('encoding', () => {
             .join('')}`
         )
       );
+    });
+
+    it('should handle odd-length hex strings correctly', () => {
+      // Bug fix: 0x123 should be parsed as 0x0123, not lose data
+      const hex = '0x123';
+      const bytes = hexToBytes(hex);
+      expect(bytes).toEqual(new Uint8Array([0x01, 0x23]));
+    });
+
+    it('should handle odd-length hex without 0x prefix', () => {
+      const hex = '123';
+      const bytes = hexToBytes(hex);
+      expect(bytes).toEqual(new Uint8Array([0x01, 0x23]));
+    });
+
+    it('should handle single hex digit', () => {
+      const hex = '0xa';
+      const bytes = hexToBytes(hex);
+      expect(bytes).toEqual(new Uint8Array([0x0a]));
+    });
+
+    it('should roundtrip odd-length hex correctly', () => {
+      const hex = '0xabc';
+      const bytes = hexToBytes(hex);
+      const roundtrip = bytesToHex(bytes);
+      // bytesToHex does minimal encoding, so it strips leading zeros
+      expect(roundtrip).toBe('0xabc');
     });
   });
 });
