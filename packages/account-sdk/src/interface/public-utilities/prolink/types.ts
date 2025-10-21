@@ -175,3 +175,12 @@ export type ProlinkDecoded = {
   chainId?: number;
   capabilities?: Record<string, unknown>;
 };
+
+/**
+ * Re-export utility types from utils.ts
+ */
+export type {
+  CreateProlinkForCallsOptions,
+  CreateProlinkForPaymentOptions,
+  CreateProlinkForSignOptions,
+} from './utils.js';

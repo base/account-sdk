@@ -208,5 +208,18 @@ export async function decodeProlink(payload: string): Promise<ProlinkDecoded> {
   throw new Error(`Unsupported shortcut ID: ${rpcPayload.shortcutId}`);
 }
 
+// Re-export utility functions
+export {
+  createProlinkForCalls,
+  createProlinkForPayment,
+  createProlinkForSign,
+} from './utils.js';
+
 // Re-export types
-export type { ProlinkDecoded, ProlinkRequest } from './types.js';
+export type {
+  CreateProlinkForCallsOptions,
+  CreateProlinkForPaymentOptions,
+  CreateProlinkForSignOptions,
+  ProlinkDecoded,
+  ProlinkRequest,
+} from './types.js';
