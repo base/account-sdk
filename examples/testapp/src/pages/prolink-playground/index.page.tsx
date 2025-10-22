@@ -108,6 +108,12 @@ export default function ProlinkPlayground() {
   const [error, setError] = useState<string | null>(null);
   const [decodedResult, setDecodedResult] = useState<unknown>(null);
 
+  // Decode section
+  const [decodeInput, setDecodeInput] = useState('');
+  const [decodeLoading, setDecodeLoading] = useState(false);
+  const [decodeError, setDecodeError] = useState<string | null>(null);
+  const [decodeResult, setDecodeResult] = useState<unknown>(null);
+
   const generateProlink = async () => {
     setLoading(true);
     setError(null);
@@ -241,338 +247,497 @@ export default function ProlinkPlayground() {
     });
   };
 
+  const decodePayload = async () => {
+    setDecodeLoading(true);
+    setDecodeError(null);
+    setDecodeResult(null);
+
+    try {
+      const decoded = await decodeProlink(decodeInput.trim());
+      setDecodeResult(decoded);
+
+      toast({
+        title: 'Prolink decoded!',
+        description: `Method: ${decoded.method}`,
+        status: 'success',
+        duration: 3000,
+      });
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+      setDecodeError(errorMessage);
+      toast({
+        title: 'Error decoding prolink',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+      });
+    } finally {
+      setDecodeLoading(false);
+    }
+  };
+
+  const copyDecodedToClipboard = () => {
+    navigator.clipboard.writeText(JSON.stringify(decodeResult, null, 2));
+    toast({
+      title: 'Copied!',
+      description: 'Decoded result copied to clipboard',
+      status: 'success',
+      duration: 2000,
+    });
+  };
+
   return (
     <Container maxW="container.xl" py={8}>
       <VStack spacing={8} align="stretch">
-        <Heading>Prolink URI Generator</Heading>
+        <Heading>Prolink Playground</Heading>
         <Text color="gray.600">
-          Generate compressed, URL-safe payloads for wallet_sendCalls, wallet_sign, and generic
-          JSON-RPC requests
+          Encode and decode compressed, URL-safe payloads for wallet_sendCalls, wallet_sign, and
+          generic JSON-RPC requests
         </Text>
 
-        {/* Method Selection */}
-        <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
-          <VStack spacing={6} align="stretch">
-            <FormControl>
-              <FormLabel>Method Type</FormLabel>
-              <Select
-                value={methodType}
-                onChange={(e) =>
-                  setMethodType(e.target.value as 'wallet_sendCalls' | 'wallet_sign' | 'generic')
-                }
-                size="lg"
-              >
-                <option value="wallet_sendCalls">wallet_sendCalls (EIP-5792)</option>
-                <option value="wallet_sign">wallet_sign (EIP-7871)</option>
-                <option value="generic">Generic JSON-RPC</option>
-              </Select>
-            </FormControl>
+        <Tabs variant="enclosed" colorScheme="blue">
+          <TabList>
+            <Tab>Encode</Tab>
+            <Tab>Decode</Tab>
+          </TabList>
 
-            <Divider />
-
-            {/* Method-specific fields */}
-            {methodType === 'wallet_sendCalls' && (
-              <VStack spacing={4} align="stretch">
-                <Heading size="sm">wallet_sendCalls Parameters</Heading>
-                <FormControl>
-                  <FormLabel>Chain ID</FormLabel>
-                  <Select value={chainId} onChange={(e) => setChainId(e.target.value)}>
-                    <option value="8453">Base (8453)</option>
-                    <option value="84532">Base Sepolia (84532)</option>
-                    <option value="1">Ethereum (1)</option>
-                  </Select>
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Version</FormLabel>
-                  <Input value={callsVersion} onChange={(e) => setCallsVersion(e.target.value)} />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>To Address</FormLabel>
-                  <Input
-                    fontFamily="mono"
-                    value={callsTo}
-                    onChange={(e) => setCallsTo(e.target.value)}
-                    placeholder="0x..."
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Data (hex)</FormLabel>
-                  <Textarea
-                    fontFamily="mono"
-                    value={callsData}
-                    onChange={(e) => setCallsData(e.target.value)}
-                    placeholder="0x..."
-                    rows={3}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Value (hex)</FormLabel>
-                  <Input
-                    fontFamily="mono"
-                    value={callsValue}
-                    onChange={(e) => setCallsValue(e.target.value)}
-                    placeholder="0x0"
-                  />
-                </FormControl>
-              </VStack>
-            )}
-
-            {methodType === 'wallet_sign' && (
-              <VStack spacing={4} align="stretch">
-                <Heading size="sm">wallet_sign Parameters (SpendPermission)</Heading>
-                <HStack spacing={4}>
+          <TabPanels>
+            {/* Encode Tab */}
+            <TabPanel px={0}>
+              {/* Method Selection */}
+              <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
+                <VStack spacing={6} align="stretch">
                   <FormControl>
-                    <FormLabel>Chain ID</FormLabel>
-                    <Select value={signChainId} onChange={(e) => setSignChainId(e.target.value)}>
-                      <option value="84532">Base Sepolia (84532)</option>
-                      <option value="8453">Base (8453)</option>
+                    <FormLabel>Method Type</FormLabel>
+                    <Select
+                      value={methodType}
+                      onChange={(e) =>
+                        setMethodType(
+                          e.target.value as 'wallet_sendCalls' | 'wallet_sign' | 'generic'
+                        )
+                      }
+                      size="lg"
+                    >
+                      <option value="wallet_sendCalls">wallet_sendCalls (EIP-5792)</option>
+                      <option value="wallet_sign">wallet_sign (EIP-7871)</option>
+                      <option value="generic">Generic JSON-RPC</option>
                     </Select>
                   </FormControl>
-                  <FormControl>
-                    <FormLabel>Version</FormLabel>
-                    <Input value={signVersion} onChange={(e) => setSignVersion(e.target.value)} />
-                  </FormControl>
-                </HStack>
 
-                <Accordion allowToggle>
-                  <AccordionItem>
-                    <h2>
-                      <AccordionButton>
-                        <Box flex="1" textAlign="left" fontWeight="semibold">
-                          SpendPermission Fields
-                        </Box>
-                        <AccordionIcon />
-                      </AccordionButton>
-                    </h2>
-                    <AccordionPanel pb={4}>
-                      <VStack spacing={3} align="stretch">
-                        <FormControl>
-                          <FormLabel fontSize="sm">Account</FormLabel>
-                          <Input
-                            size="sm"
-                            fontFamily="mono"
-                            value={spAccount}
-                            onChange={(e) => setSpAccount(e.target.value)}
-                          />
-                        </FormControl>
-                        <FormControl>
-                          <FormLabel fontSize="sm">Spender</FormLabel>
-                          <Input
-                            size="sm"
-                            fontFamily="mono"
-                            value={spSpender}
-                            onChange={(e) => setSpSpender(e.target.value)}
-                          />
-                        </FormControl>
-                        <FormControl>
-                          <FormLabel fontSize="sm">Token</FormLabel>
-                          <Input
-                            size="sm"
-                            fontFamily="mono"
-                            value={spToken}
-                            onChange={(e) => setSpToken(e.target.value)}
-                          />
-                        </FormControl>
-                        <FormControl>
-                          <FormLabel fontSize="sm">Allowance (hex)</FormLabel>
-                          <Input
-                            size="sm"
-                            fontFamily="mono"
-                            value={spAllowance}
-                            onChange={(e) => setSpAllowance(e.target.value)}
-                          />
-                        </FormControl>
-                        <HStack>
-                          <FormControl>
-                            <FormLabel fontSize="sm">Period</FormLabel>
-                            <Input
-                              size="sm"
-                              value={spPeriod}
-                              onChange={(e) => setSpPeriod(e.target.value)}
-                            />
-                          </FormControl>
-                          <FormControl>
-                            <FormLabel fontSize="sm">Start</FormLabel>
-                            <Input
-                              size="sm"
-                              value={spStart}
-                              onChange={(e) => setSpStart(e.target.value)}
-                            />
-                          </FormControl>
-                          <FormControl>
-                            <FormLabel fontSize="sm">End</FormLabel>
-                            <Input
-                              size="sm"
-                              value={spEnd}
-                              onChange={(e) => setSpEnd(e.target.value)}
-                            />
-                          </FormControl>
-                        </HStack>
-                        <FormControl>
-                          <FormLabel fontSize="sm">Salt</FormLabel>
-                          <Input
-                            size="sm"
-                            fontFamily="mono"
-                            value={spSalt}
-                            onChange={(e) => setSpSalt(e.target.value)}
-                          />
-                        </FormControl>
-                        <FormControl>
-                          <FormLabel fontSize="sm">Verifying Contract</FormLabel>
-                          <Input
-                            size="sm"
-                            fontFamily="mono"
-                            value={spVerifyingContract}
-                            onChange={(e) => setSpVerifyingContract(e.target.value)}
-                          />
-                        </FormControl>
-                      </VStack>
-                    </AccordionPanel>
-                  </AccordionItem>
-                </Accordion>
-              </VStack>
-            )}
+                  <Divider />
 
-            {methodType === 'generic' && (
-              <VStack spacing={4} align="stretch">
-                <Heading size="sm">Generic JSON-RPC Parameters</Heading>
-                <FormControl>
-                  <FormLabel>Chain ID</FormLabel>
-                  <Input
-                    type="number"
-                    value={chainId}
-                    onChange={(e) => setChainId(e.target.value)}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Method</FormLabel>
-                  <Input
-                    value={genericMethod}
-                    onChange={(e) => setGenericMethod(e.target.value)}
-                    placeholder="eth_sendTransaction"
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Params (JSON)</FormLabel>
-                  <Textarea
-                    fontFamily="mono"
-                    value={genericParams}
-                    onChange={(e) => setGenericParams(e.target.value)}
-                    rows={10}
-                    placeholder='[{ "from": "0x...", "to": "0x...", "value": "0x100" }]'
-                  />
-                </FormControl>
-              </VStack>
-            )}
-
-            <Divider />
-
-            {/* Capabilities */}
-            <Accordion allowToggle>
-              <AccordionItem>
-                <h2>
-                  <AccordionButton>
-                    <Box flex="1" textAlign="left" fontWeight="semibold">
-                      Capabilities (Optional)
-                    </Box>
-                    <AccordionIcon />
-                  </AccordionButton>
-                </h2>
-                <AccordionPanel pb={4}>
-                  <VStack spacing={4} align="stretch">
-                    <FormControl display="flex" alignItems="center">
-                      <FormLabel mb="0">Include Capabilities</FormLabel>
-                      <input
-                        type="checkbox"
-                        checked={useCapabilities}
-                        onChange={(e) => setUseCapabilities(e.target.checked)}
-                      />
-                    </FormControl>
-                    {useCapabilities && (
+                  {/* Method-specific fields */}
+                  {methodType === 'wallet_sendCalls' && (
+                    <VStack spacing={4} align="stretch">
+                      <Heading size="sm">wallet_sendCalls Parameters</Heading>
                       <FormControl>
-                        <FormLabel>Capabilities JSON</FormLabel>
-                        <Textarea
-                          fontFamily="mono"
-                          value={capabilitiesJson}
-                          onChange={(e) => setCapabilitiesJson(e.target.value)}
-                          rows={8}
+                        <FormLabel>Chain ID</FormLabel>
+                        <Select value={chainId} onChange={(e) => setChainId(e.target.value)}>
+                          <option value="8453">Base (8453)</option>
+                          <option value="84532">Base Sepolia (84532)</option>
+                          <option value="1">Ethereum (1)</option>
+                        </Select>
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel>Version</FormLabel>
+                        <Input
+                          value={callsVersion}
+                          onChange={(e) => setCallsVersion(e.target.value)}
                         />
                       </FormControl>
+                      <FormControl>
+                        <FormLabel>To Address</FormLabel>
+                        <Input
+                          fontFamily="mono"
+                          value={callsTo}
+                          onChange={(e) => setCallsTo(e.target.value)}
+                          placeholder="0x..."
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel>Data (hex)</FormLabel>
+                        <Textarea
+                          fontFamily="mono"
+                          value={callsData}
+                          onChange={(e) => setCallsData(e.target.value)}
+                          placeholder="0x..."
+                          rows={3}
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel>Value (hex)</FormLabel>
+                        <Input
+                          fontFamily="mono"
+                          value={callsValue}
+                          onChange={(e) => setCallsValue(e.target.value)}
+                          placeholder="0x0"
+                        />
+                      </FormControl>
+                    </VStack>
+                  )}
+
+                  {methodType === 'wallet_sign' && (
+                    <VStack spacing={4} align="stretch">
+                      <Heading size="sm">wallet_sign Parameters (SpendPermission)</Heading>
+                      <HStack spacing={4}>
+                        <FormControl>
+                          <FormLabel>Chain ID</FormLabel>
+                          <Select
+                            value={signChainId}
+                            onChange={(e) => setSignChainId(e.target.value)}
+                          >
+                            <option value="84532">Base Sepolia (84532)</option>
+                            <option value="8453">Base (8453)</option>
+                          </Select>
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel>Version</FormLabel>
+                          <Input
+                            value={signVersion}
+                            onChange={(e) => setSignVersion(e.target.value)}
+                          />
+                        </FormControl>
+                      </HStack>
+
+                      <Accordion allowToggle>
+                        <AccordionItem>
+                          <h2>
+                            <AccordionButton>
+                              <Box flex="1" textAlign="left" fontWeight="semibold">
+                                SpendPermission Fields
+                              </Box>
+                              <AccordionIcon />
+                            </AccordionButton>
+                          </h2>
+                          <AccordionPanel pb={4}>
+                            <VStack spacing={3} align="stretch">
+                              <FormControl>
+                                <FormLabel fontSize="sm">Account</FormLabel>
+                                <Input
+                                  size="sm"
+                                  fontFamily="mono"
+                                  value={spAccount}
+                                  onChange={(e) => setSpAccount(e.target.value)}
+                                />
+                              </FormControl>
+                              <FormControl>
+                                <FormLabel fontSize="sm">Spender</FormLabel>
+                                <Input
+                                  size="sm"
+                                  fontFamily="mono"
+                                  value={spSpender}
+                                  onChange={(e) => setSpSpender(e.target.value)}
+                                />
+                              </FormControl>
+                              <FormControl>
+                                <FormLabel fontSize="sm">Token</FormLabel>
+                                <Input
+                                  size="sm"
+                                  fontFamily="mono"
+                                  value={spToken}
+                                  onChange={(e) => setSpToken(e.target.value)}
+                                />
+                              </FormControl>
+                              <FormControl>
+                                <FormLabel fontSize="sm">Allowance (hex)</FormLabel>
+                                <Input
+                                  size="sm"
+                                  fontFamily="mono"
+                                  value={spAllowance}
+                                  onChange={(e) => setSpAllowance(e.target.value)}
+                                />
+                              </FormControl>
+                              <HStack>
+                                <FormControl>
+                                  <FormLabel fontSize="sm">Period</FormLabel>
+                                  <Input
+                                    size="sm"
+                                    value={spPeriod}
+                                    onChange={(e) => setSpPeriod(e.target.value)}
+                                  />
+                                </FormControl>
+                                <FormControl>
+                                  <FormLabel fontSize="sm">Start</FormLabel>
+                                  <Input
+                                    size="sm"
+                                    value={spStart}
+                                    onChange={(e) => setSpStart(e.target.value)}
+                                  />
+                                </FormControl>
+                                <FormControl>
+                                  <FormLabel fontSize="sm">End</FormLabel>
+                                  <Input
+                                    size="sm"
+                                    value={spEnd}
+                                    onChange={(e) => setSpEnd(e.target.value)}
+                                  />
+                                </FormControl>
+                              </HStack>
+                              <FormControl>
+                                <FormLabel fontSize="sm">Salt</FormLabel>
+                                <Input
+                                  size="sm"
+                                  fontFamily="mono"
+                                  value={spSalt}
+                                  onChange={(e) => setSpSalt(e.target.value)}
+                                />
+                              </FormControl>
+                              <FormControl>
+                                <FormLabel fontSize="sm">Verifying Contract</FormLabel>
+                                <Input
+                                  size="sm"
+                                  fontFamily="mono"
+                                  value={spVerifyingContract}
+                                  onChange={(e) => setSpVerifyingContract(e.target.value)}
+                                />
+                              </FormControl>
+                            </VStack>
+                          </AccordionPanel>
+                        </AccordionItem>
+                      </Accordion>
+                    </VStack>
+                  )}
+
+                  {methodType === 'generic' && (
+                    <VStack spacing={4} align="stretch">
+                      <Heading size="sm">Generic JSON-RPC Parameters</Heading>
+                      <FormControl>
+                        <FormLabel>Chain ID</FormLabel>
+                        <Input
+                          type="number"
+                          value={chainId}
+                          onChange={(e) => setChainId(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel>Method</FormLabel>
+                        <Input
+                          value={genericMethod}
+                          onChange={(e) => setGenericMethod(e.target.value)}
+                          placeholder="eth_sendTransaction"
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel>Params (JSON)</FormLabel>
+                        <Textarea
+                          fontFamily="mono"
+                          value={genericParams}
+                          onChange={(e) => setGenericParams(e.target.value)}
+                          rows={10}
+                          placeholder='[{ "from": "0x...", "to": "0x...", "value": "0x100" }]'
+                        />
+                      </FormControl>
+                    </VStack>
+                  )}
+
+                  <Divider />
+
+                  {/* Capabilities */}
+                  <Accordion allowToggle>
+                    <AccordionItem>
+                      <h2>
+                        <AccordionButton>
+                          <Box flex="1" textAlign="left" fontWeight="semibold">
+                            Capabilities (Optional)
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel pb={4}>
+                        <VStack spacing={4} align="stretch">
+                          <FormControl display="flex" alignItems="center">
+                            <FormLabel mb="0">Include Capabilities</FormLabel>
+                            <input
+                              type="checkbox"
+                              checked={useCapabilities}
+                              onChange={(e) => setUseCapabilities(e.target.checked)}
+                            />
+                          </FormControl>
+                          {useCapabilities && (
+                            <FormControl>
+                              <FormLabel>Capabilities JSON</FormLabel>
+                              <Textarea
+                                fontFamily="mono"
+                                value={capabilitiesJson}
+                                onChange={(e) => setCapabilitiesJson(e.target.value)}
+                                rows={8}
+                              />
+                            </FormControl>
+                          )}
+                        </VStack>
+                      </AccordionPanel>
+                    </AccordionItem>
+                  </Accordion>
+
+                  <Button
+                    colorScheme="blue"
+                    size="lg"
+                    onClick={generateProlink}
+                    isLoading={loading}
+                    loadingText="Generating..."
+                  >
+                    Generate Prolink
+                  </Button>
+                </VStack>
+              </Box>
+
+              {/* Results */}
+              {(encodedPayload || error) && (
+                <Box
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  p={6}
+                  mt={6}
+                  bg={bgColor}
+                  borderColor={borderColor}
+                >
+                  <VStack spacing={6} align="stretch">
+                    <Heading size="md">Results</Heading>
+
+                    {error && (
+                      <Box
+                        p={4}
+                        bg="red.50"
+                        borderRadius="md"
+                        borderColor="red.200"
+                        borderWidth="1px"
+                      >
+                        <Text color="red.700" fontWeight="bold">
+                          Error:
+                        </Text>
+                        <Text color="red.600" mt={2}>
+                          {error}
+                        </Text>
+                      </Box>
+                    )}
+
+                    {encodedPayload && (
+                      <Tabs>
+                        <TabList>
+                          <Tab>Encoded Payload</Tab>
+                          <Tab>Decoded Result</Tab>
+                        </TabList>
+
+                        <TabPanels>
+                          {/* Encoded Payload Tab */}
+                          <TabPanel>
+                            <VStack spacing={4} align="stretch">
+                              <HStack>
+                                <Text fontWeight="bold">Payload Length:</Text>
+                                <Text>{encodedPayload.length} characters</Text>
+                                <Button size="sm" onClick={copyToClipboard}>
+                                  Copy
+                                </Button>
+                              </HStack>
+                              <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
+                                <Code display="block" whiteSpace="pre-wrap" wordBreak="break-all">
+                                  {encodedPayload}
+                                </Code>
+                              </Box>
+                            </VStack>
+                          </TabPanel>
+
+                          {/* Decoded Result Tab */}
+                          <TabPanel>
+                            <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
+                              <Code display="block" whiteSpace="pre" fontSize="sm">
+                                {JSON.stringify(decodedResult, null, 2)}
+                              </Code>
+                            </Box>
+                          </TabPanel>
+                        </TabPanels>
+                      </Tabs>
                     )}
                   </VStack>
-                </AccordionPanel>
-              </AccordionItem>
-            </Accordion>
-
-            <Button
-              colorScheme="blue"
-              size="lg"
-              onClick={generateProlink}
-              isLoading={loading}
-              loadingText="Generating..."
-            >
-              Generate Prolink
-            </Button>
-          </VStack>
-        </Box>
-
-        {/* Results */}
-        {(encodedPayload || error) && (
-          <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
-            <VStack spacing={6} align="stretch">
-              <Heading size="md">Results</Heading>
-
-              {error && (
-                <Box p={4} bg="red.50" borderRadius="md" borderColor="red.200" borderWidth="1px">
-                  <Text color="red.700" fontWeight="bold">
-                    Error:
-                  </Text>
-                  <Text color="red.600" mt={2}>
-                    {error}
-                  </Text>
                 </Box>
               )}
+            </TabPanel>
 
-              {encodedPayload && (
-                <Tabs>
-                  <TabList>
-                    <Tab>Encoded Payload</Tab>
-                    <Tab>Decoded Result</Tab>
-                  </TabList>
+            {/* Decode Tab */}
+            <TabPanel px={0}>
+              <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
+                <VStack spacing={6} align="stretch">
+                  <Heading size="md">Decode Prolink</Heading>
+                  <Text color="gray.600">
+                    Paste an encoded prolink payload to decode and inspect its contents
+                  </Text>
 
-                  <TabPanels>
-                    {/* Encoded Payload Tab */}
-                    <TabPanel>
-                      <VStack spacing={4} align="stretch">
+                  <FormControl>
+                    <FormLabel>Encoded Prolink Payload</FormLabel>
+                    <Textarea
+                      fontFamily="mono"
+                      value={decodeInput}
+                      onChange={(e) => setDecodeInput(e.target.value)}
+                      placeholder="Paste base64url-encoded prolink payload here..."
+                      rows={6}
+                    />
+                  </FormControl>
+
+                  <Button
+                    colorScheme="blue"
+                    size="lg"
+                    onClick={decodePayload}
+                    isLoading={decodeLoading}
+                    loadingText="Decoding..."
+                    isDisabled={!decodeInput.trim()}
+                  >
+                    Decode Prolink
+                  </Button>
+                </VStack>
+              </Box>
+
+              {/* Decode Results */}
+              {(decodeResult || decodeError) && (
+                <Box
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  p={6}
+                  mt={6}
+                  bg={bgColor}
+                  borderColor={borderColor}
+                >
+                  <VStack spacing={6} align="stretch">
+                    <Heading size="md">Decoded Result</Heading>
+
+                    {decodeError && (
+                      <Box
+                        p={4}
+                        bg="red.50"
+                        borderRadius="md"
+                        borderColor="red.200"
+                        borderWidth="1px"
+                      >
+                        <Text color="red.700" fontWeight="bold">
+                          Error:
+                        </Text>
+                        <Text color="red.600" mt={2}>
+                          {decodeError}
+                        </Text>
+                      </Box>
+                    )}
+
+                    {decodeResult && (
+                      <>
                         <HStack>
-                          <Text fontWeight="bold">Payload Length:</Text>
-                          <Text>{encodedPayload.length} characters</Text>
-                          <Button size="sm" onClick={copyToClipboard}>
-                            Copy
+                          <Text fontWeight="bold">Method:</Text>
+                          <Text>{(decodeResult as { method: string }).method}</Text>
+                          <Button size="sm" onClick={copyDecodedToClipboard}>
+                            Copy JSON
                           </Button>
                         </HStack>
                         <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
-                          <Code display="block" whiteSpace="pre-wrap" wordBreak="break-all">
-                            {encodedPayload}
+                          <Code display="block" whiteSpace="pre" fontSize="sm">
+                            {JSON.stringify(decodeResult, null, 2)}
                           </Code>
                         </Box>
-                      </VStack>
-                    </TabPanel>
-
-                    {/* Decoded Result Tab */}
-                    <TabPanel>
-                      <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
-                        <Code display="block" whiteSpace="pre" fontSize="sm">
-                          {JSON.stringify(decodedResult, null, 2)}
-                        </Code>
-                      </Box>
-                    </TabPanel>
-                  </TabPanels>
-                </Tabs>
+                      </>
+                    )}
+                  </VStack>
+                </Box>
               )}
-            </VStack>
-          </Box>
-        )}
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
       </VStack>
     </Container>
   );
