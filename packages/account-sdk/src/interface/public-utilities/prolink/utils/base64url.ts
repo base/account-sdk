@@ -13,7 +13,6 @@ const BASE64URL_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
  * @returns Base64url encoded string without padding
  */
 export function encodeBase64url(data: Uint8Array): string {
-  // Use browser's built-in btoa for base64 encoding
   let binary = '';
   for (let i = 0; i < data.length; i++) {
     binary += String.fromCharCode(data[i]);
@@ -66,7 +65,6 @@ export function decodeBase64url(payload: string): Uint8Array {
   base64 += '='.repeat(paddingNeeded);
 
   try {
-    // Use browser's built-in atob for base64 decoding
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {

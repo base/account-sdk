@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
 import { describe, expect, it } from 'vitest';
-import { decodeProlink, encodeProlink } from './index.js';
+import { decodeProlink, encodeProlink } from './index.node.js';
 
 describe('prolink end-to-end', () => {
   describe('wallet_sendCalls', () => {

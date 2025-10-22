@@ -1,9 +1,9 @@
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
 /**
- * Brotli compression wrapper - Browser version
+ * Brotli compression wrapper - Node.js version
  * Handles compression and decompression with flag byte prefix
- * Uses brotli-wasm only (no Node.js dependencies)
+ * Uses Node.js zlib with fallback to brotli-wasm
  */
 
 const COMPRESSION_FLAG_NONE = 0x00;
@@ -18,17 +18,30 @@ let brotliModule: BrotliModule | null = null;
 
 /**
  * Initialize brotli module (idempotent)
- * Browser version - uses brotli-wasm
+ * Node.js version - uses zlib with fallback to brotli-wasm
  */
 async function ensureBrotliInitialized(): Promise<void> {
   if (!brotliModule) {
+    // Try Node.js zlib first (more reliable in Node/test environments)
     try {
+      const zlib = await import('node:zlib');
+
+      brotliModule = {
+        compress: (data, options) => {
+          const params = {
+            [zlib.constants.BROTLI_PARAM_QUALITY]: options?.quality || 5,
+            [zlib.constants.BROTLI_PARAM_LGWIN]: options?.lgwin || 22,
+          };
+          return new Uint8Array(zlib.brotliCompressSync(data, { params }));
+        },
+        decompress: (data) => {
+          return new Uint8Array(zlib.brotliDecompressSync(data));
+        },
+      };
+    } catch (_error) {
+      // Fall back to brotli-wasm if node:zlib fails
       const brotliPromise = await import('brotli-wasm');
       brotliModule = (await brotliPromise.default) as BrotliModule;
-    } catch (error) {
-      throw new Error(
-        `Failed to initialize brotli-wasm: ${error instanceof Error ? error.message : 'unknown error'}`
-      );
     }
   }
 }
