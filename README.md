@@ -2,44 +2,136 @@
 
 [![npm](https://img.shields.io/npm/v/@base-org/account.svg)](https://www.npmjs.com/package/@base-org/account)
 
-## Base Account SDK allows apps to connect to Base Account
+## Overview
+
+The Base Account SDK provides two distinct sets of functionality:
+
+### 1. **Base Pay & Base Subscriptions** (Standalone Functions)
+Purely functional payment and subscription APIs that work immediately without any SDK setup or wallet connection.
+
+### 2. **Base Account SDK** (Full SDK)
+Complete SDK for connecting to Base Account wallets and interacting with the Ethereum blockchain.
+
+---
+
+## Base Pay - Quick Start
+
+**Base Pay allows you to accept USDC payments with just 3 lines of code.** No SDK instantiation or wallet connection required.
+
+### Installation
+
+```bash
+# npm
+npm install @base-org/account
+
+# yarn
+yarn add @base-org/account
+```
+
+### Accept a Payment
+
+```typescript
+import { pay } from '@base-org/account';
+
+// That's it! Just call the pay function directly
+const payment = await pay({
+  amount: "10.50",                                    // Amount in USDC
+  to: "0xYourWalletAddress",                         // Your wallet address
+  testnet: true                                       // Use testnet for testing
+});
+
+console.log(`Payment successful! ID: ${payment.id}`);
+```
+
+### Check Payment Status
+
+```typescript
+import { getPaymentStatus } from '@base-org/account';
+
+const status = await getPaymentStatus({
+  id: payment.id,
+  testnet: true
+});
+
+console.log(`Payment status: ${status.status}`);
+```
+
+---
+
+## Base Subscriptions - Quick Start
+
+**Base Subscriptions lets you create recurring USDC payments**
+
+### Create a Subscription
+
+```typescript
+import { subscribe } from '@base-org/account';
+
+// Create a monthly subscription - that's all!
+const subscription = await subscribe({
+  recurringCharge: "9.99",                           // Amount to charge per period
+  subscriptionOwner: "0xYourAppAddress",             // Your app's address
+  periodInDays: 30,                                  // Billing period
+  testnet: true                                       // Use testnet for testing
+});
+
+console.log(`Subscription created! ID: ${subscription.id}`);
+```
+
+### Check Subscription Status
+
+```typescript
+import { getSubscriptionStatus } from '@base-org/account';
+
+const status = await getSubscriptionStatus({
+  id: subscription.id,
+  testnet: true
+});
+
+console.log(`Active: ${status.isSubscribed}`);
+console.log(`Next charge: ${status.nextPeriodStart}`);
+```
+
+### Charge a Subscription
+
+```typescript
+import { base } from '@base-org/account';
+
+// Prepare the charge (get the transaction data)
+const chargeCalls = await base.subscription.prepareCharge({
+  id: subscription.id,
+  amount: '9.99',        // or 'max-remaining-charge'
+  testnet: true
+});
+
+// Execute the charge using your wallet provider
+// (This step requires your app's wallet to execute the transaction)
+```
+
+
+
+## Base Account SDK (Full SDK)
+
+For applications that need full wallet connectivity and blockchain interactions beyond payments:
 
 1. [Base Account](https://account.base.app)
    - [Docs](https://docs.base.org/base-account/quickstart/web)
 
-### Installing Base Account SDK
+### Installing the SDK
 
-1. Check available versions:
+```bash
+# npm
+npm install @base-org/account
 
-   ```shell
-     # yarn
-     yarn info @base-org/account versions
+# yarn
+yarn add @base-org/account
+```
 
-     # npm
-     npm view @base-org/account versions
-   ```
+### SDK Setup and Usage
 
-2. Install latest version:
+> **Note:** The following sections apply only to the full Base Account SDK functionality. For payments and subscriptions, use the standalone functions shown above.
 
-   ```shell
-   # yarn
-   yarn add @base-org/account
-
-   # npm
-   npm install @base-org/account
-   ```
-
-3. Check installed version:
-
-   ```shell
-   # yarn
-   yarn list @base-org/account
-
-   # npm
-   npm list @base-org/account
-   ```
-
-### Upgrading Base Account SDK
+#### Upgrading the SDK
 
 1. Compare the installed version with the latest:
 
@@ -61,9 +153,9 @@
    npm update @base-org/account
    ```
 
-### Basic Usage
+#### Basic SDK Usage
 
-1. Initialize Base Account SDK
+1. Initialize the SDK
 
    ```js
    const sdk = createBaseAccountSDK({

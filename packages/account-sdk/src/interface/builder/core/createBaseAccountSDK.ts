@@ -19,7 +19,7 @@ import { getInjectedProvider } from './getInjectedProvider.js';
 
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;
-  subAccounts?: Omit<SubAccountOptions, 'enableAutoSubAccounts'>;
+  subAccounts?: SubAccountOptions;
   paymasterUrls?: Record<number, string>;
 };
 
@@ -49,8 +49,9 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
 
   store.subAccountsConfig.set({
     toOwnerAccount: params.subAccounts?.toOwnerAccount,
-    // @ts-expect-error - enableSubAccounts is not officially supported yet
-    enableAutoSubAccounts: params.subAccounts?.enableAutoSubAccounts,
+    creation: params.subAccounts?.creation ?? 'manual',
+    defaultAccount: params.subAccounts?.defaultAccount ?? 'universal',
+    funding: params.subAccounts?.funding ?? 'spend-permissions',
   });
 
   //  ====================================================================

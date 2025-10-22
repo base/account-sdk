@@ -1,5 +1,10 @@
+import { logGetInjectedProviderError } from ':core/telemetry/events/provider.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getInjectedProvider } from './getInjectedProvider.js';
+
+vi.mock(':core/telemetry/events/provider.js', () => ({
+  logGetInjectedProviderError: vi.fn(),
+}));
 
 // Mock the global window object
 const mockWindow = {
@@ -19,7 +24,9 @@ describe('getInjectedProvider', () => {
 
     // Reset the mock window state
     mockWindow.ethereum = undefined;
-    mockWindow.top.ethereum = undefined;
+    mockWindow.top = {
+      ethereum: undefined as any,
+    };
 
     // Set up the global window mock
     global.window = mockWindow as any;
@@ -190,6 +197,25 @@ describe('getInjectedProvider', () => {
       const result = getInjectedProvider();
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('error handling', () => {
+    it('should return null and log error when accessing window.ethereum throws', () => {
+      // Mock window.ethereum as a getter that throws
+      Object.defineProperty(mockWindow, 'ethereum', {
+        get: () => {
+          throw new Error('Access denied');
+        },
+        configurable: true,
+      });
+
+      const result = getInjectedProvider();
+
+      expect(result).toBeNull();
+      expect(vi.mocked(logGetInjectedProviderError)).toHaveBeenCalledWith({
+        errorMessage: 'Access denied',
+      });
     });
   });
 });

@@ -130,5 +130,244 @@ export interface PaymentStatus {
 }
 
 /**
+ * Base subscription options shared across all subscription types
+ */
+interface BaseSubscriptionOptions {
+  /** Amount of USDC to charge per period as a string (e.g., "10.50") */
+  recurringCharge: string;
+  /** Ethereum address that will be the spender (your application's address) */
+  subscriptionOwner: string;
+  /** Optional wallet URL to use */
+  walletUrl?: string;
+  /** Whether to enable telemetry logging. Defaults to true */
+  telemetry?: boolean;
+}
+
+/**
+ * Mainnet subscription options with period in days
+ */
+interface MainnetSubscriptionOptions extends BaseSubscriptionOptions {
+  /** The period in days for the subscription (e.g., 30 for monthly) */
+  periodInDays?: number;
+  /** Mainnet mode (production) */
+  testnet?: false;
+}
+
+/**
+ * Testnet subscription options with period in days
+ */
+interface TestnetSubscriptionWithDays extends BaseSubscriptionOptions {
+  /** The period in days for the subscription (e.g., 30 for monthly) */
+  periodInDays?: number;
+  /** Testnet mode (Base Sepolia) */
+  testnet: true;
+  /**
+   * Optional override for testing: period in seconds.
+   * When provided, this overrides periodInDays for faster testing cycles.
+   * ⚠️ WARNING: Only works on testnet.
+   * @testOnly
+   */
+  overridePeriodInSecondsForTestnet?: never;
+}
+
+/**
+ * Testnet subscription options with period in seconds for testing
+ */
+interface TestnetSubscriptionWithSeconds extends BaseSubscriptionOptions {
+  /**
+   * Required when using seconds: ignored but kept for API consistency.
+   * The actual period will be determined by overridePeriodInSecondsForTestnet.
+   */
+  periodInDays?: number;
+  /** Testnet mode (Base Sepolia) - required when using period in seconds */
+  testnet: true;
+  /**
+   * Override period in seconds for faster testing cycles on testnet.
+   * ⚠️ WARNING: Only works on testnet. When provided, this overrides periodInDays.
+   * @testOnly
+   */
+  overridePeriodInSecondsForTestnet: number;
+}
+
+/**
+ * Options for creating a subscription.
+ *
+ * @example
+ * ```typescript
+ * // Mainnet subscription (30-day period)
+ * await subscribe({
+ *   recurringCharge: "10.50",
+ *   subscriptionOwner: "0x...",
+ *   periodInDays: 30
+ * });
+ *
+ * // Testnet subscription with days
+ * await subscribe({
+ *   recurringCharge: "10.50",
+ *   subscriptionOwner: "0x...",
+ *   periodInDays: 30,
+ *   testnet: true
+ * });
+ *
+ * // Testnet subscription with seconds override for testing
+ * await subscribe({
+ *   recurringCharge: "0.01",
+ *   subscriptionOwner: "0x...",
+ *   periodInDays: 30, // ignored but can be provided for consistency
+ *   testnet: true,
+ *   overridePeriodInSecondsForTestnet: 300 // 5 minutes
+ * });
+ * ```
+ */
+export type SubscriptionOptions =
+  | MainnetSubscriptionOptions
+  | TestnetSubscriptionWithDays
+  | TestnetSubscriptionWithSeconds;
+
+/**
+ * Successful subscription result
+ */
+export interface SubscriptionResult {
+  /** The subscription ID (permission hash) */
+  id: string;
+  /** The address that owns/controls the subscription (your application) */
+  subscriptionOwner: Address;
+  /** The address that will be charged (the user's wallet) */
+  subscriptionPayer: Address;
+  /** The recurring charge amount (USD denoted e.g. "9.99") */
+  recurringCharge: string;
+  /** The period in days for the subscription */
+  periodInDays: number;
+  /**
+   * TEST ONLY: The actual period in seconds if overridden on testnet
+   * Only present when using overridePeriodInSecondsForTestnet on testnet
+   */
+  overridePeriodInSecondsForTestnet?: number;
+}
+
+/**
+ * Options for checking subscription status
+ */
+export interface SubscriptionStatusOptions {
+  /** The subscription ID (permission hash) to check status for */
+  id: string;
+  /** Whether to check on testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+}
+
+/**
+ * Subscription status information
+ */
+export interface SubscriptionStatus {
+  /** Whether the user has an active (non-revoked) subscription */
+  isSubscribed: boolean;
+  /** The recurring charge amount in USD (e.g., "9.99") */
+  recurringCharge: string;
+  /** Remaining amount that can be charged in the current period in USD */
+  remainingChargeInPeriod?: string;
+  /** Start of the current period */
+  currentPeriodStart?: Date;
+  /** Start date of the next payment period (only available if subscription is active) */
+  nextPeriodStart?: Date;
+  /** The subscription period in days */
+  periodInDays?: number;
+  /** The wallet address of the account that owns this subscription */
+  subscriptionOwner?: string;
+}
+
+/**
+ * Options for preparing subscription charge call data
+ */
+export interface PrepareChargeOptions {
+  /** The subscription ID (permission hash) */
+  id: string;
+  /** Amount of USDC to charge as a string (e.g., "10.50") or 'max-remaining-charge' */
+  amount: string | 'max-remaining-charge';
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+  /** Optional recipient address to receive the charged USDC */
+  recipient?: Address;
+}
+
+/**
+ * Call data for approving and/or spending from a subscription
+ */
+export interface PrepareChargeCall {
+  /** The address to call */
+  to: Address;
+  /** The encoded call data */
+  data: Hex;
+  /** The value to send (always 0n for spend permissions) */
+  value: bigint;
+}
+
+/**
+ * Result of preparing subscription charge call data
+ */
+export type PrepareChargeResult = PrepareChargeCall[];
+
+/**
+ * Options for getting or creating a subscription owner smart account
+ */
+export interface GetOrCreateSubscriptionOwnerWalletOptions {
+  /** CDP API key ID. Falls back to CDP_API_KEY_ID env var */
+  cdpApiKeyId?: string;
+  /** CDP API key secret. Falls back to CDP_API_KEY_SECRET env var */
+  cdpApiKeySecret?: string;
+  /** CDP wallet secret. Falls back to CDP_WALLET_SECRET env var */
+  cdpWalletSecret?: string;
+  /** Custom wallet name. Defaults to "subscription owner" */
+  walletName?: string;
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+}
+
+/**
+ * Result from getting or creating a subscription owner smart account
+ */
+export interface GetOrCreateSubscriptionOwnerWalletResult {
+  /** The Ethereum address of the subscription owner smart account */
+  address: Address;
+  /** The name of the wallet */
+  walletName: string;
+  /** The EOA address that owns the smart account (for reference) */
+  eoaAddress?: Address;
+}
+
+/**
+ * Options for charging a subscription
+ */
+export interface ChargeOptions extends PrepareChargeOptions {
+  /** CDP API key ID. Falls back to CDP_API_KEY_ID env var */
+  cdpApiKeyId?: string;
+  /** CDP API key secret. Falls back to CDP_API_KEY_SECRET env var */
+  cdpApiKeySecret?: string;
+  /** CDP wallet secret. Falls back to CDP_WALLET_SECRET env var */
+  cdpWalletSecret?: string;
+  /** Custom wallet name. Defaults to "subscription owner" */
+  walletName?: string;
+  /** Paymaster URL for transaction sponsorship. Falls back to PAYMASTER_URL env var */
+  paymasterUrl?: string;
+}
+
+/**
+ * Result of charging a subscription
+ */
+export interface ChargeResult {
+  /** Whether the charge was successful */
+  success: true;
+  /** Transaction ID (hash) of the charge */
+  id: string;
+  /** The subscription ID that was charged */
+  subscriptionId: string;
+  /** The amount that was charged */
+  amount: string;
+  /** The address that executed the charge (subscription owner) */
+  subscriptionOwner: Address;
+  /** The recipient address that received the USDC (if specified) */
+  recipient?: Address;
+}
+
+/**
  * Internal type for payment execution result
  */

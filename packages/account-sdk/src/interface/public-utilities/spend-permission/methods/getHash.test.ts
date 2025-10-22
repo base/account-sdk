@@ -2,7 +2,7 @@ import {
   spendPermissionManagerAbi,
   spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
-import { getClient } from ':store/chain-clients/utils.js';
+import { createClients, getClient } from ':store/chain-clients/utils.js';
 import { createPublicClient, http } from 'viem';
 import { readContract } from 'viem/actions';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,6 +11,7 @@ import { getHash } from './getHash.js';
 
 vi.mock(':store/chain-clients/utils.js', () => ({
   getClient: vi.fn(),
+  createClients: vi.fn(),
 }));
 
 vi.mock('viem/actions', () => ({
@@ -51,6 +52,7 @@ describe('getHash', () => {
 
       expect(result).toBe(mockHash);
       expect(getClient).toHaveBeenCalledWith(8453);
+      expect(createClients).not.toHaveBeenCalled();
       expect(readContract).toHaveBeenCalledWith(mockClient, {
         address: spendPermissionManagerAddress,
         abi: spendPermissionManagerAbi,
@@ -79,12 +81,25 @@ describe('getHash', () => {
 
       for (const chainId of testChainIds) {
         (getClient as Mock).mockClear();
+        (createClients as Mock).mockClear();
         (readContract as Mock).mockClear();
 
         await getHash({ permission: mockPermission, chainId });
 
         expect(getClient).toHaveBeenCalledWith(chainId);
       }
+    });
+
+    it('should work with supported fallback client when getClient returns one', async () => {
+      // With the curated supported chains list, getClient will automatically create a fallback client
+      // if one doesn't exist in storage and the chain is in the supported list
+      (getClient as Mock).mockReturnValue(mockClient);
+      (readContract as Mock).mockResolvedValue(mockHash);
+
+      await getHash({ permission: mockPermission, chainId: 8453 });
+
+      expect(getClient).toHaveBeenCalledWith(8453);
+      expect(readContract).toHaveBeenCalledWith(mockClient, expect.any(Object));
     });
   });
 
@@ -182,13 +197,15 @@ describe('getHash', () => {
 
   describe('error handling', () => {
     it('should throw error when no client is found', async () => {
-      (getClient as Mock).mockReturnValue(null);
+      // getClient returns undefined when chain is not in the supported list or has no RPC URL
+      (getClient as Mock).mockReturnValue(undefined);
 
-      await expect(getHash({ permission: mockPermission, chainId: 8453 })).rejects.toThrow(
-        'No client found for chain ID 8453. Please ensure SDK is in connected state'
+      await expect(getHash({ permission: mockPermission, chainId: 999999 })).rejects.toThrow(
+        'No client found for chain ID 999999. Chain not supported or RPC URL not available'
       );
 
-      expect(getClient).toHaveBeenCalledWith(8453);
+      expect(getClient).toHaveBeenCalledWith(999999);
+      expect(createClients).not.toHaveBeenCalled();
       expect(readContract).not.toHaveBeenCalled();
     });
 

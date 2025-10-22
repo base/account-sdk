@@ -97,14 +97,31 @@ export class Dialog {
   }
 }
 
-export const DialogContainer: FunctionComponent = ({ children }) => {
-  const handleDismiss = useCallback(() => {
-    // Find the dialog instance and trigger its close handler
-    const closeButton = document.querySelector(
-      '.-base-acc-sdk-dialog-instance-header-close'
-    ) as HTMLElement;
-    if (closeButton) {
-      closeButton.click();
+export const DialogContainer: FunctionComponent = (props) => {
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startY, setStartY] = useState(0);
+
+  // Touch event handlers for drag-to-dismiss (entire dialog area)
+  const handleTouchStart = (e: JSX.TargetedTouchEvent<HTMLDivElement>) => {
+    // Only enable drag on mobile portrait mode
+    if (!isPhonePortrait()) return;
+
+    const touch = e.touches[0];
+    setStartY(touch.clientY);
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: JSX.TargetedTouchEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+
+    const touch = e.touches[0];
+    const deltaY = touch.clientY - startY;
+
+    // Only allow dragging down (positive deltaY)
+    if (deltaY > 0) {
+      setDragY(deltaY);
+      e.preventDefault(); // Prevent scrolling
     }
   }, []);
 

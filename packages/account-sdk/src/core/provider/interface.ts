@@ -85,9 +85,32 @@ export type Preference = {
   telemetry?: boolean;
 } & Record<string, unknown>;
 
+export type SubAccountCreationMode = 'on-connect' | 'manual';
+export type SubAccountDefaultAccount = 'sub' | 'universal';
+export type SubAccountFundingMode = 'spend-permissions' | 'manual';
+
 export type SubAccountOptions = {
-  /* Automatically create a subaccount for the user and use it for all transactions. */
-  enableAutoSubAccounts?: boolean;
+  /**
+   * Controls when sub accounts are created.
+   * - 'on-connect': Sub account is automatically created when connecting to the wallet
+   * - 'manual': Sub account must be manually created via wallet_addSubAccount
+   * @default 'manual'
+   */
+  creation?: SubAccountCreationMode;
+  /**
+   * Controls which account is used by default when no account is specified.
+   * - 'sub': Sub account is the default (first in accounts list)
+   * - 'universal': Universal account is the default (first in accounts list)
+   * @default 'universal'
+   */
+  defaultAccount?: SubAccountDefaultAccount;
+  /**
+   * Controls how sub accounts are funded.
+   * - 'spend-permissions': Routes through global account if no spend permissions exist, handles insufficient balance errors
+   * - 'manual': Direct execution from sub account without automatic fallbacks
+   * @default 'spend-permissions'
+   */
+  funding?: SubAccountFundingMode;
   /**
    * @returns The owner account that will be used to sign the subaccount transactions.
    */

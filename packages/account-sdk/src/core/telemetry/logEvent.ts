@@ -63,11 +63,14 @@ type CCAEventData = {
   errorMessage?: string;
   dialogContext?: string;
   dialogAction?: string;
-  enableAutoSubAccounts?: boolean;
+  subAccountCreation?: 'on-connect' | 'manual';
+  subAccountDefaultAccount?: 'sub' | 'universal';
+  subAccountFunding?: 'spend-permissions' | 'manual';
   // Payment-specific attributes
   amount?: string;
   testnet?: boolean;
   status?: string;
+  periodInDays?: number;
 };
 
 type AnalyticsEventData = {
@@ -87,7 +90,8 @@ export function logEvent(
   event: CCAEventData,
   importance: AnalyticsEventImportance | undefined
 ) {
-  if (window.ClientAnalytics) {
+  // ClientAnalytics only works in the browser environment
+  if (typeof window !== 'undefined' && window.ClientAnalytics) {
     window.ClientAnalytics?.logEvent(
       name,
       {

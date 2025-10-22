@@ -1,6 +1,6 @@
 {
   "name": "@base-org/account",
-  "version": "2.0.0",
+  "version": "2.4.0",
   "description": "Base Account SDK",
   "keywords": [
     "base",
@@ -18,18 +18,71 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "browser": {
+        "import": "./dist/index.js",
+        "require": "./dist/index.js"
+      },
+      "node": {
+        "import": "./dist/index.node.js",
+        "require": "./dist/index.node.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
     },
-    "./payment": {
+    "./node": {
+      "types": "./dist/index.node.d.ts",
+      "import": "./dist/index.node.js",
+      "require": "./dist/index.node.js"
+    },
+    "./payment/browser": {
       "types": "./dist/interface/payment/index.d.ts",
       "import": "./dist/interface/payment/index.js",
       "require": "./dist/interface/payment/index.js"
     },
-    "./spend-permission": {
+    "./payment/node": {
+      "types": "./dist/interface/payment/index.node.d.ts",
+      "import": "./dist/interface/payment/index.node.js",
+      "require": "./dist/interface/payment/index.node.js"
+    },
+    "./payment": {
+      "types": "./dist/interface/payment/index.d.ts",
+      "browser": {
+        "types": "./dist/interface/payment/index.d.ts",
+        "import": "./dist/interface/payment/index.js",
+        "require": "./dist/interface/payment/index.js"
+      },
+      "node": {
+        "types": "./dist/interface/payment/index.node.d.ts",
+        "import": "./dist/interface/payment/index.node.js",
+        "require": "./dist/interface/payment/index.node.js"
+      }
+    },
+    "./spend-permission/browser": {
       "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
       "import": "./dist/interface/public-utilities/spend-permission/index.js",
       "require": "./dist/interface/public-utilities/spend-permission/index.js"
+    },
+    "./spend-permission/node": {
+      "types": "./dist/interface/public-utilities/spend-permission/index.node.d.ts",
+      "import": "./dist/interface/public-utilities/spend-permission/index.node.js",
+      "require": "./dist/interface/public-utilities/spend-permission/index.node.js"
+    },
+    "./spend-permission": {
+      "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
+      "browser": {
+        "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
+        "import": "./dist/interface/public-utilities/spend-permission/index.js",
+        "require": "./dist/interface/public-utilities/spend-permission/index.js"
+      },
+      "node": {
+        "types": "./dist/interface/public-utilities/spend-permission/index.node.d.ts",
+        "import": "./dist/interface/public-utilities/spend-permission/index.node.js",
+        "require": "./dist/interface/public-utilities/spend-permission/index.node.js"
+      }
     },
     "./ui-assets": {
       "types": "./dist/ui/assets/index.d.ts",
@@ -63,6 +116,7 @@
     "size": "size-limit"
   },
   "dependencies": {
+    "@coinbase/cdp-sdk": "^1.0.0",
     "@noble/hashes": "1.4.0",
     "clsx": "1.2.1",
     "eventemitter3": "5.0.1",

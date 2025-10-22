@@ -52,7 +52,7 @@ const getHashFn = async ({
 
   if (!client) {
     throw new Error(
-      `No client found for chain ID ${chainId}. Please ensure SDK is in connected state`
+      `No client found for chain ID ${chainId}. Chain not supported or RPC URL not available`
     );
   }
 

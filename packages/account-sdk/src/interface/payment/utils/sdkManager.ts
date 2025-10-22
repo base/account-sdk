@@ -55,6 +55,10 @@ export function createEphemeralSDK(chainId: number, walletUrl?: string, telemetr
     },
   });
 
+  // Chain clients will be automatically created when needed by getClient
+  // This ensures that the chain client is available for operations like getHash
+  // even when the wallet hasn't been connected yet
+
   return sdk;
 }
 

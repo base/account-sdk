@@ -49,7 +49,9 @@ describe('EIP1193ProviderContextProvider', () => {
       setScwUrlAndSave: vi.fn(),
       setConfig: vi.fn(),
       subAccountsConfig: {
-        enableAutoSubAccounts: true,
+        creation: 'on-connect',
+        defaultAccount: 'sub',
+        funding: 'spend-permissions',
       },
       setSubAccountsConfig: vi.fn(),
     });
@@ -88,7 +90,9 @@ describe('EIP1193ProviderContextProvider', () => {
         walletUrl: 'https://keys-dev.coinbase.com/connect',
       },
       subAccounts: {
-        enableAutoSubAccounts: true,
+        creation: 'on-connect',
+        defaultAccount: 'sub',
+        funding: 'spend-permissions',
       },
     });
     expect(screen.getByTestId('sdk-exists')).toBeTruthy();
@@ -103,7 +107,9 @@ describe('EIP1193ProviderContextProvider', () => {
       scwUrl: 'https://keys-dev.coinbase.com/connect',
       config: { attribution: { dataSuffix: '0xtestattribution' } },
       subAccountsConfig: {
-        enableAutoSubAccounts: true,
+        creation: 'on-connect',
+        defaultAccount: 'sub',
+        funding: 'spend-permissions',
       },
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
@@ -125,7 +131,9 @@ describe('EIP1193ProviderContextProvider', () => {
         walletUrl: 'https://keys-dev.coinbase.com/connect',
       },
       subAccounts: {
-        enableAutoSubAccounts: true,
+        creation: 'on-connect',
+        defaultAccount: 'sub',
+        funding: 'spend-permissions',
       },
     });
   });

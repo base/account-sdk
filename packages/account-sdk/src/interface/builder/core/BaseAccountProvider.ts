@@ -99,6 +99,13 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
             const result = await this.signer.request(args); // send diffie-hellman encrypted request
             return result as T;
           }
+          case 'wallet_switchEthereumChain': {
+            // wallet_switchEthereumChain does not need to be sent to the popup
+            // it is handled by the base account signer
+            // so we just return the result
+            const result = await this.signer.request(args);
+            return result as T;
+          }
           case 'wallet_sendCalls':
           case 'wallet_sign': {
             try {

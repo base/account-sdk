@@ -4,14 +4,24 @@ import {
   spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
+import { PublicClient } from 'viem';
 import { readContract } from 'viem/actions';
 import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
+import { getPublicClientFromChainId } from '../utils.node.js';
 import { withTelemetry } from '../withTelemetry.js';
 
 export type GetPermissionStatusResponseType = {
   remainingSpend: bigint;
   nextPeriodStart: Date;
+  isRevoked: boolean;
+  isExpired: boolean;
   isActive: boolean;
+  isApprovedOnchain: boolean;
+  currentPeriod: {
+    start: number;
+    end: number;
+    spend: bigint;
+  };
 };
 
 /**
@@ -39,7 +49,9 @@ export type GetPermissionStatusResponseType = {
  * const status = await getPermissionStatus(permission);
  *
  * console.log(`Remaining spend: ${status.remainingSpend} wei`);
- * console.log(`Next period starts: ${new Date(parseInt(status.nextPeriodStart) * 1000)}`);
+ * console.log(`Next period starts: ${status.nextPeriodStart}`);
+ * console.log(`Is revoked: ${status.isRevoked}`);
+ * console.log(`Is expired: ${status.isExpired}`);
  * console.log(`Is active: ${status.isActive}`);
  *
  * if (status.isActive && status.remainingSpend > BigInt(0)) {
@@ -56,11 +68,15 @@ const getPermissionStatusFn = async (
     throw new Error('chainId is missing in the spend permission');
   }
 
-  const client = getClient(chainId);
+  // Try to get client from store first (browser environment with connected SDK)
+  let client: PublicClient | undefined = getClient(chainId);
+
+  // If no client in store, create one using the node utility (node environment or disconnected SDK)
   if (!client) {
-    throw new Error(
-      `No client available for chain ID ${chainId}. Make sure the SDK is in connected state.`
-    );
+    client = getPublicClientFromChainId(chainId);
+    if (!client) {
+      throw new Error(`No client available for chain ID ${chainId}. Chain is not supported.`);
+    }
   }
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
@@ -95,13 +111,24 @@ const getPermissionStatusFn = async (
   // Next period starts immediately after current period ends
   const nextPeriodStart = (Number(currentPeriod.end) + 1).toString();
 
-  // Permission is active if it's not revoked and is still valid
-  const isActive = !isRevoked && isValid;
+  // Check if permission is expired
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+  const isExpired = currentTimestamp > permission.permission.end;
+
+  // Permission is active if it's not revoked and not expired
+  const isActive = !isRevoked && !isExpired;
+
+  // isApprovedOnchain indicates if the permission has been approved on the blockchain and is not revoked
+  const isApprovedOnchain = isValid;
 
   return {
     remainingSpend,
     nextPeriodStart: timestampInSecondsToDate(Number(nextPeriodStart)),
+    isRevoked,
+    isExpired,
     isActive,
+    isApprovedOnchain,
+    currentPeriod,
   };
 };
 

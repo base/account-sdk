@@ -14,6 +14,7 @@ import {
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
+  isSendCallsParams,
   prependWithoutDuplicates,
   requestHasCapability,
 } from './utils.js';
@@ -265,12 +266,89 @@ describe('injectRequestCapabilities', () => {
 
     expect(() => injectRequestCapabilities(request, capabilities)).toThrow();
   });
+
+  it('should inject addSubAccount capability when not present in request', () => {
+    const request = {
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+        },
+      ],
+    };
+
+    const result = injectRequestCapabilities(request, capabilities);
+    expect(result).toEqual({
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: {
+            addSubAccount: capabilities.addSubAccount,
+          },
+        },
+      ],
+    });
+  });
+
+  it('should not override addSubAccount capability if already present in request', () => {
+    const customAddSubAccount = {
+      account: {
+        type: 'import',
+        keys: [{ type: 'webauthn-p256', publicKey: '0xabc' }],
+      },
+    };
+
+    const request = {
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: {
+            addSubAccount: customAddSubAccount,
+          },
+        },
+      ],
+    };
+
+    const result = injectRequestCapabilities(request, capabilities);
+    expect(result).toEqual({
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: {
+            addSubAccount: customAddSubAccount, // Request's version takes precedence
+          },
+        },
+      ],
+    });
+  });
+
+  it('should inject addSubAccount capability when params is empty array', () => {
+    const request = {
+      method: 'wallet_connect',
+      params: [],
+    };
+
+    const result = injectRequestCapabilities(request, capabilities);
+    expect(result).toEqual({
+      method: 'wallet_connect',
+      params: [
+        {
+          capabilities: {
+            addSubAccount: capabilities.addSubAccount,
+          },
+        },
+      ],
+    });
+  });
 });
 
 describe('initSubAccountConfig', () => {
   it('should initialize the sub account config', async () => {
     store.subAccountsConfig.set({
-      enableAutoSubAccounts: true,
+      creation: 'on-connect',
       toOwnerAccount: vi.fn().mockResolvedValue({
         account: {
           address: '0x123',
@@ -492,6 +570,61 @@ describe('appendWithoutDuplicates', () => {
 
   it('should move an existing item to the end of the array', () => {
     expect(appendWithoutDuplicates(['1', '2', '3'], '2')).toEqual(['1', '3', '2']);
+  });
+});
+
+describe('isSendCallsParams', () => {
+  it('should return true for valid wallet_sendCalls params', () => {
+    const validParams = [
+      {
+        version: '1.0',
+        calls: [
+          {
+            to: '0x123',
+            data: '0x456',
+            value: '0x0',
+          },
+        ],
+        chainId: '0x1',
+        from: '0x789',
+      },
+    ];
+    expect(isSendCallsParams(validParams)).toBe(true);
+  });
+
+  it('should return false for null or undefined params', () => {
+    expect(isSendCallsParams(null)).toBe(false);
+    expect(isSendCallsParams(undefined)).toBe(false);
+  });
+
+  it('should return false for non-array params', () => {
+    expect(isSendCallsParams({})).toBe(false);
+    expect(isSendCallsParams('string')).toBe(false);
+    expect(isSendCallsParams(123)).toBe(false);
+  });
+
+  it('should return false for empty array', () => {
+    expect(isSendCallsParams([])).toBe(false);
+  });
+
+  it('should return false for params without calls property', () => {
+    const paramsWithoutCalls = [
+      {
+        version: '1.0',
+        chainId: '0x1',
+        from: '0x789',
+      },
+    ];
+    expect(isSendCallsParams(paramsWithoutCalls)).toBe(false);
+  });
+
+  it('should return false for params with null first element', () => {
+    expect(isSendCallsParams([null])).toBe(false);
+  });
+
+  it('should return false for params with non-object first element', () => {
+    expect(isSendCallsParams(['string'])).toBe(false);
+    expect(isSendCallsParams([123])).toBe(false);
   });
 });
 
