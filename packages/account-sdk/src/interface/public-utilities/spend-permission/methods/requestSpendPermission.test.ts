@@ -7,7 +7,11 @@ import {
   dateToTimestampInSeconds,
 } from '../utils.js';
 import { getHash } from './getHash.js';
-import { RequestSpendPermissionType, requestSpendPermission } from './requestSpendPermission.js';
+import {
+  RequestSpendPermissionType,
+  WalletSignCapabilities,
+  requestSpendPermission,
+} from './requestSpendPermission.js';
 
 vi.mock('../utils.js', () => ({
   createSpendPermissionTypedData: vi.fn(),
@@ -266,6 +270,125 @@ describe('requestSpendPermission', () => {
       await expect(requestSpendPermission(mockRequestData)).rejects.toThrow();
 
       expect(createSpendPermissionTypedData).toHaveBeenCalledWith(mockRequestData);
+    });
+  });
+
+  describe('capabilities support', () => {
+    it('should use wallet_sign when capabilities are provided', async () => {
+      const capabilities: WalletSignCapabilities = {
+        spendPermission: {
+          requireBalance: true,
+        },
+      };
+
+      const mockWalletSignResponse = {
+        signature: mockSignature,
+        signedData: mockTypedData,
+      };
+
+      (createSpendPermissionTypedData as Mock).mockReturnValue(mockTypedData);
+      (mockProviderRequest as Mock).mockResolvedValue(mockWalletSignResponse);
+      (getHash as Mock).mockResolvedValue(mockPermissionHash);
+
+      const requestWithCapabilities = {
+        ...mockRequestData,
+        capabilities,
+      };
+
+      const result = await requestSpendPermission(requestWithCapabilities);
+
+      expect(createSpendPermissionTypedData).toHaveBeenCalledWith(requestWithCapabilities);
+      expect(mockProviderRequest).toHaveBeenCalledWith({
+        method: 'wallet_sign',
+        params: [
+          {
+            version: '1.0',
+            request: {
+              type: '0x01',
+              data: mockTypedData,
+            },
+            mutableData: {
+              fields: ['message.account'],
+            },
+            capabilities,
+          },
+        ],
+      });
+      expect(getHash).toHaveBeenCalledWith({
+        permission: mockTypedData.message,
+        chainId: mockRequestData.chainId,
+      });
+      expect(result).toEqual<SpendPermission>({
+        createdAt: mockTimestamp,
+        permissionHash: mockPermissionHash,
+        signature: mockSignature,
+        chainId: mockRequestData.chainId,
+        permission: mockTypedData.message,
+      });
+    });
+
+    it('should handle invalid wallet_sign response', async () => {
+      const capabilities: WalletSignCapabilities = {
+        spendPermission: {
+          requireBalance: true,
+        },
+      };
+
+      (createSpendPermissionTypedData as Mock).mockReturnValue(mockTypedData);
+      (mockProviderRequest as Mock).mockResolvedValue('invalid response');
+
+      const requestWithCapabilities = {
+        ...mockRequestData,
+        capabilities,
+      };
+
+      await expect(requestSpendPermission(requestWithCapabilities)).rejects.toThrow(
+        'Invalid response from wallet_sign: expected object but got string'
+      );
+    });
+
+    it('should handle missing signature in wallet_sign response', async () => {
+      const capabilities: WalletSignCapabilities = {
+        spendPermission: {
+          requireBalance: true,
+        },
+      };
+
+      const invalidResponse = {
+        signedData: mockTypedData,
+        // missing signature
+      };
+
+      (createSpendPermissionTypedData as Mock).mockReturnValue(mockTypedData);
+      (mockProviderRequest as Mock).mockResolvedValue(invalidResponse);
+
+      const requestWithCapabilities = {
+        ...mockRequestData,
+        capabilities,
+      };
+
+      await expect(requestSpendPermission(requestWithCapabilities)).rejects.toThrow(
+        'Invalid response from wallet_sign: missing signature'
+      );
+    });
+
+    it('should use eth_signTypedData_v4 when capabilities are not provided', async () => {
+      (createSpendPermissionTypedData as Mock).mockReturnValue(mockTypedData);
+      (mockProviderRequest as Mock).mockResolvedValue(mockSignature);
+      (getHash as Mock).mockResolvedValue(mockPermissionHash);
+
+      const result = await requestSpendPermission(mockRequestData);
+
+      expect(mockProviderRequest).toHaveBeenCalledWith({
+        method: 'eth_signTypedData_v4',
+        params: [mockRequestData.account, mockTypedData],
+      });
+      expect(mockProviderRequest).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          method: 'wallet_sign',
+        })
+      );
+      expect(result.signature).toBe(mockSignature);
     });
   });
 

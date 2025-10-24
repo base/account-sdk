@@ -30,6 +30,7 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.walletUrl - Optional wallet URL to use
  * @param options.telemetry - Whether to enable telemetry logging (default: true)
+ * @param options.requireBalance - Whether to require the user has sufficient balance before creating the subscription (default: true)
  * @returns Promise<SubscriptionResult> - Simplified result with subscription details
  * @throws Error if the subscription fails
  *
@@ -78,6 +79,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     testnet = false,
     walletUrl,
     telemetry = true,
+    requireBalance = true,
   } = options;
 
   // Check if overridePeriodInSecondsForTestnet is present in options
@@ -155,6 +157,11 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     const provider = sdk.getProvider();
 
     try {
+      // Build capabilities if requireBalance is set
+      const capabilities = requireBalance
+        ? { spendPermissions: { requireBalance: true } }
+        : undefined;
+
       // Define the wallet_sign parameters with mutable data
       // This allows the wallet to replace PLACEHOLDER_ADDRESS with the actual account
       const signParams = {
@@ -166,6 +173,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
         mutableData: {
           fields: ['message.account'],
         },
+        ...(capabilities && { capabilities }),
       };
 
       // Request signature from wallet
