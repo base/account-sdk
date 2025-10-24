@@ -1,3 +1,4 @@
+import { type Hex, numberToHex } from 'viem';
 import { RpcRequestInput } from './RpcRequestInput';
 
 const ethRequestAccounts: RpcRequestInput = {
@@ -18,15 +19,31 @@ const walletConnect: RpcRequestInput = {
       required: true,
     },
     {
+      key: 'chainIds',
+    },
+    {
       key: 'capabilities',
     },
   ],
-  format: (data: Record<string, string>) => [
-    {
-      version: data.version,
-      capabilities: data.capabilities,
-    },
-  ],
+  format: (data: Record<string, string>) => {
+    const chainIds = (data.chainIds ?? '')
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => v.length > 0)
+      .map((v) => {
+        try {
+          return numberToHex(BigInt(v));
+        } catch (_) {
+          return undefined;
+        }
+      })
+      .filter((v): v is Hex => Boolean(v));
+
+    const payload: Record<string, unknown> = { version: data.version };
+    if (chainIds.length > 0) payload.chainIds = chainIds;
+    if (data.capabilities) payload.capabilities = data.capabilities;
+    return [payload];
+  },
 };
 
 export const connectionMethods = [ethRequestAccounts, ethAccounts, walletConnect];
