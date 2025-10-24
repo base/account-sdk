@@ -88,7 +88,11 @@ export default function SubAccounts() {
           </>
         ) : (
           <>
-            <DeploySubAccount sdk={sdk} subAccount={subAccount} />
+            <DeploySubAccount
+              sdk={sdk}
+              subAccount={subAccount}
+              onDeployed={() => setDeployed(true)}
+            />
             <AddSubAccountUndeployed sdk={sdk} subAccount={subAccount} />
           </>
         )}
