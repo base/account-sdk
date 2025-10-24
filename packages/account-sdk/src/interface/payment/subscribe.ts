@@ -159,7 +159,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     try {
       // Build capabilities if requireBalance is set
       const capabilities = requireBalance
-        ? { spendPermission: { requireBalance: true } }
+        ? { spendPermissions: { requireBalance: true } }
         : undefined;
 
       // Define the wallet_sign parameters with mutable data

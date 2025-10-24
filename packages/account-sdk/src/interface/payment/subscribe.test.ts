@@ -69,7 +69,7 @@ describe('subscribe with requireBalance capability', () => {
           request: expect.any(Object),
           mutableData: expect.any(Object),
           capabilities: {
-            spendPermission: {
+            spendPermissions: {
               requireBalance: true,
             },
           },
@@ -172,7 +172,7 @@ describe('subscribe with requireBalance capability', () => {
           request: expect.any(Object),
           mutableData: expect.any(Object),
           capabilities: {
-            spendPermission: {
+            spendPermissions: {
               requireBalance: true,
             },
           },
