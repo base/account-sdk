@@ -39,3 +39,6 @@ export type {
   SubscriptionStatus,
   SubscriptionStatusOptions,
 } from './interface/payment/index.js';
+
+export { decodeProlink, encodeProlink } from './interface/public-utilities/prolink/index.js';
+export type { ProlinkDecoded, ProlinkRequest } from './interface/public-utilities/prolink/index.js';

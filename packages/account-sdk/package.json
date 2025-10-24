@@ -84,6 +84,24 @@
         "require": "./dist/interface/public-utilities/spend-permission/index.node.js"
       }
     },
+    "./prolink": {
+      "types": "./dist/interface/public-utilities/prolink/index.d.ts",
+      "browser": {
+        "types": "./dist/interface/public-utilities/prolink/index.d.ts",
+        "import": "./dist/interface/public-utilities/prolink/index.js",
+        "require": "./dist/interface/public-utilities/prolink/index.js"
+      },
+      "node": {
+        "types": "./dist/interface/public-utilities/prolink/index.node.d.ts",
+        "import": "./dist/interface/public-utilities/prolink/index.node.js",
+        "require": "./dist/interface/public-utilities/prolink/index.node.js"
+      },
+      "default": {
+        "types": "./dist/interface/public-utilities/prolink/index.d.ts",
+        "import": "./dist/interface/public-utilities/prolink/index.js",
+        "require": "./dist/interface/public-utilities/prolink/index.js"
+      }
+    },
     "./ui-assets": {
       "types": "./dist/ui/assets/index.d.ts",
       "import": "./dist/ui/assets/index.js",
@@ -117,7 +135,7 @@
   },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.0.0",
-    "@noble/hashes": "1.4.0",
+    "brotli-wasm": "^3.0.0",
     "clsx": "1.2.1",
     "eventemitter3": "5.0.1",
     "idb-keyval": "6.2.1",
