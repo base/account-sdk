@@ -28,6 +28,8 @@ npm install @base-org/account
 yarn add @base-org/account
 ```
 
+> **⚠️ Production Note:** Remember to set `testnet: false` (or omit it) when deploying to production!
+
 ### Accept a Payment
 
 ```typescript
@@ -56,11 +58,32 @@ const status = await getPaymentStatus({
 console.log(`Payment status: ${status.status}`);
 ```
 
+### Error Handling
+
+Always wrap payment operations in try-catch blocks:
+
+```typescript
+import { pay } from '@base-org/account';
+
+try {
+  const payment = await pay({
+    amount: "10.50",
+    to: "0xYourWalletAddress",
+    testnet: true
+  });
+  
+  console.log(`Payment successful! ID: ${payment.id}`);
+} catch (error) {
+  console.error('Payment failed:', error.message);
+  // Handle the error appropriately
+}
+```
+
 ---
 
 ## Base Subscriptions - Quick Start
 
-**Base Subscriptions lets you create recurring USDC payments**
+**Base Subscriptions let you create recurring USDC payments**
 
 ### Create a Subscription
 
@@ -105,9 +128,35 @@ const chargeCalls = await base.subscription.prepareCharge({
 });
 
 // Execute the charge using your wallet provider
-// (This step requires your app's wallet to execute the transaction)
-```
+// Option 1: Using ethers.js
+import { ethers } from 'ethers';
 
+const provider = new ethers.BrowserProvider(window.ethereum);
+const signer = await provider.getSigner();
+
+for (const call of chargeCalls) {
+  const tx = await signer.sendTransaction({
+    to: call.to,
+    data: call.data,
+    value: call.value || 0,
+  });
+  await tx.wait();
+  console.log(`Transaction confirmed: ${tx.hash}`);
+}
+
+// Option 2: Using Base Account SDK provider
+const sdk = createBaseAccountSDK({ appName: 'Your App' });
+const sdkProvider = sdk.getProvider();
+
+for (const call of chargeCalls) {
+  const txHash = await sdkProvider.request('eth_sendTransaction', [{
+    to: call.to,
+    data: call.data,
+    value: call.value || 0,
+  }]);
+  console.log(`Transaction sent: ${txHash}`);
+}
+```
 
 
 ## Base Account SDK (Full SDK)
@@ -172,7 +221,7 @@ yarn add @base-org/account
 3. Request accounts to initialize a connection to wallet
 
    ```js
-   const addresses = provider.request({
+   const addresses = await provider.request({
      method: 'eth_requestAccounts',
    });
    ```
@@ -180,8 +229,15 @@ yarn add @base-org/account
 4. Make more requests
 
    ```js
-   provider.request('personal_sign', [
-     `0x${Buffer.from('test message', 'utf8').toString('hex')}`,
+   // Helper function to convert string to hex (browser-compatible)
+   function stringToHex(str) {
+     return '0x' + Array.from(new TextEncoder().encode(str))
+       .map(b => b.toString(16).padStart(2, '0'))
+       .join('');
+   }
+
+   const signature = await provider.request('personal_sign', [
+     stringToHex('test message'),
      addresses[0],
    ]);
    ```
