@@ -8,16 +8,21 @@ import { baseSepolia } from 'viem/chains';
 export function DeploySubAccount({
   sdk,
   subAccount,
+  onDeployed,
 }: {
   sdk: ReturnType<typeof createBaseAccountSDK>;
   subAccount: SmartAccount;
+  onDeployed?: () => void;
 }) {
   const [state, setState] = useState<string>();
+  const [isDeploying, setIsDeploying] = useState(false);
 
   const handleDeploySubAccount = useCallback(async () => {
-    if (!sdk) {
+    if (!sdk || isDeploying) {
       return;
     }
+
+    setIsDeploying(true);
 
     try {
       const client = createPublicClient({
@@ -43,18 +48,32 @@ export function DeploySubAccount({
         calls: [],
       });
 
-      console.info('response', hash);
-      setState(hash as string);
+      console.info('deployment userOp hash:', hash);
+      setState(`Deploying... UserOp: ${hash}`);
+
+      // Wait for deployment and check if deployed
+      const isDeployed = await subAccount.isDeployed();
+      if (isDeployed) {
+        setState(`Deployed! UserOp: ${hash}`);
+        onDeployed?.();
+      } else {
+        setState(`Deployment pending... UserOp: ${hash}`);
+      }
     } catch (e) {
       console.error('error', e);
+      setState(`Error: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    } finally {
+      setIsDeploying(false);
     }
-  }, [sdk, subAccount]);
+  }, [sdk, subAccount, onDeployed, isDeploying]);
 
   return (
     <>
       <Button
         w="full"
         onClick={handleDeploySubAccount}
+        isLoading={isDeploying}
+        loadingText="Deploying..."
         bg="blue.500"
         color="white"
         border="1px solid"

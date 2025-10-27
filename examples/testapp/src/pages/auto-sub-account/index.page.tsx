@@ -10,6 +10,7 @@ import {
   Input,
   Radio,
   RadioGroup,
+  Select,
   Stack,
   Text,
   VStack,
@@ -25,7 +26,7 @@ import {
   toHex,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { baseSepolia } from 'viem/chains';
+import * as chains from 'viem/chains';
 import { useConfig } from '../../context/ConfigContextProvider';
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
 import { unsafe_generateOrLoadPrivateKey } from '../../utils/unsafe_generateOrLoadPrivateKey';
@@ -38,6 +39,7 @@ interface WalletConnectResponse {
     address: string;
     capabilities?: Record<string, unknown>;
   }>;
+  chainIds?: string[];
 }
 
 const LOCAL_STORAGE_KEY = 'ba-playground:config';
@@ -53,6 +55,8 @@ export default function AutoSubAccount() {
     siwe: false,
     addSubAccount: false,
   });
+  const [availableChains, setAvailableChains] = useState<string[]>([]);
+  const [currentChainId, setCurrentChainId] = useState<string>('');
   const { subAccountsConfig, setSubAccountsConfig, config, setConfig } = useConfig();
   const { provider } = useEIP1193Provider();
 
@@ -125,6 +129,31 @@ export default function AutoSubAccount() {
     setSubAccountsConfig((prev) => ({ ...prev, toOwnerAccount: getSigner }));
   }, [signerType, setSubAccountsConfig]);
 
+  const getPublicClient = async () => {
+    if (!provider) throw new Error('Provider not initialized');
+
+    // Get current chain ID if not already set
+    const chainId =
+      currentChainId ||
+      ((await provider.request({
+        method: 'eth_chainId',
+        params: [],
+      })) as string);
+
+    const chainIdDecimal = Number.parseInt(chainId, 16);
+
+    // Find the chain in viem/chains
+    const chain = Object.values(chains).find((c) => c.id === chainIdDecimal);
+    if (!chain) {
+      throw new Error(`Chain with ID ${chainIdDecimal} (${chainId}) not found in viem/chains`);
+    }
+
+    return createPublicClient({
+      chain,
+      transport: http(),
+    });
+  };
+
   const handleRequestAccounts = async () => {
     if (!provider) return;
 
@@ -191,10 +220,7 @@ export default function AutoSubAccount() {
         params: [hexMessage, accounts[0]],
       });
 
-      const publicClient = createPublicClient({
-        chain: baseSepolia,
-        transport: http(),
-      });
+      const publicClient = await getPublicClient();
 
       const isValid = await publicClient.verifyMessage({
         address: accounts[0] as `0x${string}`,
@@ -213,6 +239,9 @@ export default function AutoSubAccount() {
     if (!provider || !accounts.length) return;
 
     try {
+      const publicClient = await getPublicClient();
+      const chainIdDecimal = publicClient.chain.id;
+
       const typedData = {
         types: {
           EIP712Domain: [
@@ -230,7 +259,7 @@ export default function AutoSubAccount() {
         domain: {
           name: 'Test Domain',
           version: '1',
-          chainId: baseSepolia.id,
+          chainId: chainIdDecimal,
           verifyingContract: '0x0000000000000000000000000000000000000000' as `0x${string}`,
         },
         message: {
@@ -242,11 +271,6 @@ export default function AutoSubAccount() {
       const response = await provider.request({
         method: 'eth_signTypedData_v4',
         params: [accounts[0], JSON.stringify(typedData)],
-      });
-
-      const publicClient = createPublicClient({
-        chain: baseSepolia,
-        transport: http(),
       });
 
       const isValid = await publicClient.verifyTypedData({
@@ -311,7 +335,58 @@ export default function AutoSubAccount() {
         method: 'wallet_connect',
         params,
       })) as WalletConnectResponse;
-      setLastResult(JSON.stringify(response, null, 2));
+
+      // Verify SIWE signature if present
+      let verificationResult = '';
+      if (response.accounts && response.accounts.length > 0) {
+        const account = response.accounts[0];
+        if (account.capabilities && 'signInWithEthereum' in account.capabilities) {
+          const siweCapability = account.capabilities.signInWithEthereum as {
+            message: string;
+            signature: string;
+          };
+
+          try {
+            // Parse chain ID from SIWE message
+            const chainIdMatch = siweCapability.message.match(/Chain ID: (\d+)/);
+            if (!chainIdMatch) {
+              throw new Error('Could not extract chain ID from SIWE message');
+            }
+            const siweChainId = Number.parseInt(chainIdMatch[1], 10);
+
+            // Find the chain in viem/chains
+            const chain = Object.values(chains).find((c) => c.id === siweChainId);
+            if (!chain) {
+              throw new Error(`Chain with ID ${siweChainId} not found in viem/chains`);
+            }
+
+            // Create a public client for the SIWE chain
+            const publicClient = createPublicClient({
+              chain,
+              transport: http(),
+            });
+
+            // Verify the SIWE signature
+            const isValid = await publicClient.verifyMessage({
+              address: account.address as `0x${string}`,
+              message: siweCapability.message,
+              signature: siweCapability.signature as `0x${string}`,
+            });
+
+            verificationResult = `SIWE Signature Verification: ${isValid ? '✓ VALID' : '✗ INVALID'} (Chain ID: ${siweChainId})\n\n`;
+          } catch (verifyError) {
+            console.error('SIWE verification error:', verifyError);
+            verificationResult = `SIWE Signature Verification: ERROR - ${verifyError instanceof Error ? verifyError.message : String(verifyError)}\n\n`;
+          }
+        }
+      }
+
+      setLastResult(verificationResult + JSON.stringify(response, null, 2));
+
+      // Extract available chains from response
+      if (response.chainIds && response.chainIds.length > 0) {
+        setAvailableChains(response.chainIds);
+      }
 
       // Call eth_accounts to get and set the accounts after successful connection
       const accountsResponse = await provider.request({
@@ -319,6 +394,29 @@ export default function AutoSubAccount() {
         params: [],
       });
       setAccounts(accountsResponse as string[]);
+
+      // Get current chain ID
+      const chainId = await provider.request({
+        method: 'eth_chainId',
+        params: [],
+      });
+      setCurrentChainId(chainId as string);
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    }
+  };
+
+  const handleSwitchChain = async (chainId: string) => {
+    if (!provider) return;
+
+    try {
+      await provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId }],
+      });
+      setCurrentChainId(chainId);
+      setLastResult(`Switched to chain: ${chainId}`);
     } catch (e) {
       console.error('error', e);
       setLastResult(JSON.stringify(e, null, 2));
@@ -347,13 +445,21 @@ export default function AutoSubAccount() {
           ],
         });
       } else {
+        // Get current chain ID if not already set
+        const chainId =
+          currentChainId ||
+          ((await provider.request({
+            method: 'eth_chainId',
+            params: [],
+          })) as string);
+
         // wallet_sendCalls with paymaster support
         response = await provider.request({
           method: 'wallet_sendCalls',
           params: [
             {
               version: '1.0',
-              chainId: numberToHex(baseSepolia.id),
+              chainId: chainId,
               from: accounts[0],
               calls: [
                 {
@@ -381,11 +487,31 @@ export default function AutoSubAccount() {
   };
 
   const handleUsdcSend = async (amount: string) => {
-    if (!provider || accounts.length < 2) return;
+    if (!provider || !accounts.length) return;
 
     try {
       setSendingUsdcAmounts((prev) => ({ ...prev, [amount]: true }));
-      const usdcAddress = '0x036cbd53842c5426634e7929541ec2318f3dcf7e';
+
+      // Get current chain ID if not already set
+      const chainId =
+        currentChainId ||
+        ((await provider.request({
+          method: 'eth_chainId',
+          params: [],
+        })) as string);
+      const chainIdDecimal = Number.parseInt(chainId, 16);
+
+      // USDC contract addresses by chain ID
+      const usdcAddresses: Record<number, string> = {
+        8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base mainnet
+        84532: '0x036cbd53842c5426634e7929541ec2318f3dcf7e', // Base Sepolia
+      };
+
+      const usdcAddress = usdcAddresses[chainIdDecimal];
+      if (!usdcAddress) {
+        throw new Error(`USDC not supported on chain ID ${chainIdDecimal}`);
+      }
+
       const to = '0x8d25687829d6b85d9e0020b8c89e3ca24de20a89';
       const value = parseUnits(amount, 6); // USDC has 6 decimals
 
@@ -406,17 +532,44 @@ export default function AutoSubAccount() {
         args: [to, value],
       });
 
-      const response = await provider.request({
-        method: 'eth_sendTransaction',
-        params: [
-          {
-            from: accounts[0],
-            to: usdcAddress,
-            value: '0x0',
-            data,
-          },
-        ],
-      });
+      let response;
+      if (sendMethod === 'eth_sendTransaction') {
+        response = await provider.request({
+          method: 'eth_sendTransaction',
+          params: [
+            {
+              from: accounts[0],
+              to: usdcAddress,
+              value: '0x0',
+              data,
+            },
+          ],
+        });
+      } else {
+        // wallet_sendCalls with paymaster support
+        response = await provider.request({
+          method: 'wallet_sendCalls',
+          params: [
+            {
+              version: '1.0',
+              chainId: chainId,
+              from: accounts[0],
+              calls: [
+                {
+                  to: usdcAddress,
+                  value: '0x0',
+                  data,
+                },
+              ],
+              capabilities: {
+                paymasterService: {
+                  url: 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+                },
+              },
+            },
+          ],
+        });
+      }
       setLastResult(JSON.stringify(response, null, 2));
     } catch (e) {
       console.error('error', e);
@@ -598,6 +751,31 @@ export default function AutoSubAccount() {
             </VStack>
           </Box>
         )}
+        {availableChains.length > 0 && (
+          <FormControl>
+            <FormLabel>Available Chains</FormLabel>
+            <Select
+              value={currentChainId}
+              onChange={(e) => handleSwitchChain(e.target.value)}
+              placeholder="Select chain"
+            >
+              {availableChains.map((chainId) => (
+                <option key={chainId} value={chainId}>
+                  Chain ID: {chainId}{' '}
+                  {Number.parseInt(chainId, 16) ? `(${Number.parseInt(chainId, 16)})` : ''}
+                </option>
+              ))}
+            </Select>
+            {currentChainId && (
+              <Text mt={2} fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
+                Current Chain: {currentChainId}{' '}
+                {Number.parseInt(currentChainId, 16)
+                  ? `(${Number.parseInt(currentChainId, 16)})`
+                  : ''}
+              </Text>
+            )}
+          </FormControl>
+        )}
         <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
           RPCs
         </Box>
@@ -741,12 +919,12 @@ export default function AutoSubAccount() {
           Send USDC
         </Box>
         <HStack w="full" spacing={4}>
-          {['0.01', '0.1', '1'].map((amount) => (
+          {['0.001', '0.01', '0.1', '1'].map((amount) => (
             <Button
               key={amount}
               flex={1}
               onClick={() => handleUsdcSend(amount)}
-              isDisabled={accounts.length < 2 || sendingUsdcAmounts[amount]}
+              isDisabled={!accounts.length || sendingUsdcAmounts[amount]}
               isLoading={sendingUsdcAmounts[amount]}
               loadingText="Sending..."
               size="lg"
