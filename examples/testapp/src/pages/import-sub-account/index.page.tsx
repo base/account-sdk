@@ -6,6 +6,7 @@ import { SmartAccount, toCoinbaseSmartAccount } from 'viem/account-abstraction';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 
+import { useConfig } from '../../context/ConfigContextProvider';
 import { unsafe_generateOrLoadPrivateKey } from '../../utils/unsafe_generateOrLoadPrivateKey';
 import { AddGlobalOwner } from './components/AddGlobalOwner';
 import { AddSubAccountDeployed } from './components/AddSubAccountDeployed';
@@ -16,6 +17,7 @@ import { PersonalSign } from './components/PersonalSign';
 import { SendCalls } from './components/SendCalls';
 
 export default function SubAccounts() {
+  const { scwUrl } = useConfig();
   const [sdk, setSDK] = useState<ReturnType<typeof createBaseAccountSDK>>();
   const [subAccount, setSubAccount] = useState<SmartAccount>();
   const [deployed, setDeployed] = useState<boolean>(false);
@@ -44,7 +46,7 @@ export default function SubAccounts() {
     const sdk = createBaseAccountSDK({
       appName: 'CryptoPlayground',
       preference: {
-        walletUrl: 'http://localhost:3005/connect',
+        walletUrl: scwUrl,
         options: 'smartWalletOnly',
       },
       subAccounts: {
@@ -70,7 +72,7 @@ export default function SubAccounts() {
     provider.on('accountsChanged', (accounts) => {
       console.info('accountsChanged', accounts);
     });
-  }, []);
+  }, [scwUrl]);
 
   return (
     <Container mb={16}>
