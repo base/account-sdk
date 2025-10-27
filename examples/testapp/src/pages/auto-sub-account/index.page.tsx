@@ -133,10 +133,12 @@ export default function AutoSubAccount() {
     if (!provider) throw new Error('Provider not initialized');
 
     // Get current chain ID if not already set
-    const chainId = currentChainId || (await provider.request({
-      method: 'eth_chainId',
-      params: [],
-    })) as string;
+    const chainId =
+      currentChainId ||
+      ((await provider.request({
+        method: 'eth_chainId',
+        params: [],
+      })) as string);
 
     const chainIdDecimal = Number.parseInt(chainId, 16);
 
@@ -343,7 +345,7 @@ export default function AutoSubAccount() {
             message: string;
             signature: string;
           };
-          
+
           try {
             // Parse chain ID from SIWE message
             const chainIdMatch = siweCapability.message.match(/Chain ID: (\d+)/);
@@ -444,10 +446,12 @@ export default function AutoSubAccount() {
         });
       } else {
         // Get current chain ID if not already set
-        const chainId = currentChainId || (await provider.request({
-          method: 'eth_chainId',
-          params: [],
-        })) as string;
+        const chainId =
+          currentChainId ||
+          ((await provider.request({
+            method: 'eth_chainId',
+            params: [],
+          })) as string);
 
         // wallet_sendCalls with paymaster support
         response = await provider.request({
@@ -487,25 +491,27 @@ export default function AutoSubAccount() {
 
     try {
       setSendingUsdcAmounts((prev) => ({ ...prev, [amount]: true }));
-      
+
       // Get current chain ID if not already set
-      const chainId = currentChainId || (await provider.request({
-        method: 'eth_chainId',
-        params: [],
-      })) as string;
+      const chainId =
+        currentChainId ||
+        ((await provider.request({
+          method: 'eth_chainId',
+          params: [],
+        })) as string);
       const chainIdDecimal = Number.parseInt(chainId, 16);
-      
+
       // USDC contract addresses by chain ID
       const usdcAddresses: Record<number, string> = {
         8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base mainnet
         84532: '0x036cbd53842c5426634e7929541ec2318f3dcf7e', // Base Sepolia
       };
-      
+
       const usdcAddress = usdcAddresses[chainIdDecimal];
       if (!usdcAddress) {
         throw new Error(`USDC not supported on chain ID ${chainIdDecimal}`);
       }
-      
+
       const to = '0x8d25687829d6b85d9e0020b8c89e3ca24de20a89';
       const value = parseUnits(amount, 6); // USDC has 6 decimals
 
@@ -755,13 +761,17 @@ export default function AutoSubAccount() {
             >
               {availableChains.map((chainId) => (
                 <option key={chainId} value={chainId}>
-                  Chain ID: {chainId} {Number.parseInt(chainId, 16) ? `(${Number.parseInt(chainId, 16)})` : ''}
+                  Chain ID: {chainId}{' '}
+                  {Number.parseInt(chainId, 16) ? `(${Number.parseInt(chainId, 16)})` : ''}
                 </option>
               ))}
             </Select>
             {currentChainId && (
               <Text mt={2} fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
-                Current Chain: {currentChainId} {Number.parseInt(currentChainId, 16) ? `(${Number.parseInt(currentChainId, 16)})` : ''}
+                Current Chain: {currentChainId}{' '}
+                {Number.parseInt(currentChainId, 16)
+                  ? `(${Number.parseInt(currentChainId, 16)})`
+                  : ''}
               </Text>
             )}
           </FormControl>
