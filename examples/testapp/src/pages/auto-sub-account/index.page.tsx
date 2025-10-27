@@ -333,7 +333,53 @@ export default function AutoSubAccount() {
         method: 'wallet_connect',
         params,
       })) as WalletConnectResponse;
-      setLastResult(JSON.stringify(response, null, 2));
+
+      // Verify SIWE signature if present
+      let verificationResult = '';
+      if (response.accounts && response.accounts.length > 0) {
+        const account = response.accounts[0];
+        if (account.capabilities && 'signInWithEthereum' in account.capabilities) {
+          const siweCapability = account.capabilities.signInWithEthereum as {
+            message: string;
+            signature: string;
+          };
+          
+          try {
+            // Parse chain ID from SIWE message
+            const chainIdMatch = siweCapability.message.match(/Chain ID: (\d+)/);
+            if (!chainIdMatch) {
+              throw new Error('Could not extract chain ID from SIWE message');
+            }
+            const siweChainId = Number.parseInt(chainIdMatch[1], 10);
+
+            // Find the chain in viem/chains
+            const chain = Object.values(chains).find((c) => c.id === siweChainId);
+            if (!chain) {
+              throw new Error(`Chain with ID ${siweChainId} not found in viem/chains`);
+            }
+
+            // Create a public client for the SIWE chain
+            const publicClient = createPublicClient({
+              chain,
+              transport: http(),
+            });
+
+            // Verify the SIWE signature
+            const isValid = await publicClient.verifyMessage({
+              address: account.address as `0x${string}`,
+              message: siweCapability.message,
+              signature: siweCapability.signature as `0x${string}`,
+            });
+
+            verificationResult = `SIWE Signature Verification: ${isValid ? '✓ VALID' : '✗ INVALID'} (Chain ID: ${siweChainId})\n\n`;
+          } catch (verifyError) {
+            console.error('SIWE verification error:', verifyError);
+            verificationResult = `SIWE Signature Verification: ERROR - ${verifyError instanceof Error ? verifyError.message : String(verifyError)}\n\n`;
+          }
+        }
+      }
+
+      setLastResult(verificationResult + JSON.stringify(response, null, 2));
 
       // Extract available chains from response
       if (response.chainIds && response.chainIds.length > 0) {
