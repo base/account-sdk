@@ -1,6 +1,6 @@
 import {
-    fetchPermission,
-    prepareRevokeCallData,
+  fetchPermission,
+  prepareRevokeCallData,
 } from '../public-utilities/spend-permission/index.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { PrepareRevokeOptions, PrepareRevokeResult } from './types.js';
@@ -92,5 +92,3 @@ export async function prepareRevoke(options: PrepareRevokeOptions): Promise<Prep
 
   return callData;
 }
-
-

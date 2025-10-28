@@ -179,5 +179,3 @@ export async function revoke(options: RevokeOptions): Promise<RevokeResult> {
     subscriptionOwner: smartWallet.address as Address,
   };
 }
-
-

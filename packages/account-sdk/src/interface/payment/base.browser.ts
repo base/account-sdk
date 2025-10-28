@@ -6,18 +6,18 @@ import { prepareCharge } from './prepareCharge.js';
 import { prepareRevoke } from './prepareRevoke.js';
 import { subscribe } from './subscribe.js';
 import type {
-    PaymentOptions,
-    PaymentResult,
-    PaymentStatus,
-    PaymentStatusOptions,
-    PrepareChargeOptions,
-    PrepareChargeResult,
-    PrepareRevokeOptions,
-    PrepareRevokeResult,
-    SubscriptionOptions,
-    SubscriptionResult,
-    SubscriptionStatus,
-    SubscriptionStatusOptions,
+  PaymentOptions,
+  PaymentResult,
+  PaymentStatus,
+  PaymentStatusOptions,
+  PrepareChargeOptions,
+  PrepareChargeResult,
+  PrepareRevokeOptions,
+  PrepareRevokeResult,
+  SubscriptionOptions,
+  SubscriptionResult,
+  SubscriptionStatus,
+  SubscriptionStatusOptions,
 } from './types.js';
 
 /**
@@ -52,5 +52,3 @@ export const base = {
     SubscriptionStatusOptions: SubscriptionStatusOptions;
   },
 };
-
-

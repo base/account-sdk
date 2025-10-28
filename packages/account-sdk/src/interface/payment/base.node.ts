@@ -9,24 +9,24 @@ import { prepareRevoke } from './prepareRevoke.js';
 import { revoke } from './revoke.js';
 import { subscribe } from './subscribe.js';
 import type {
-    ChargeOptions,
-    ChargeResult,
-    GetOrCreateSubscriptionOwnerWalletOptions,
-    GetOrCreateSubscriptionOwnerWalletResult,
-    PaymentOptions,
-    PaymentResult,
-    PaymentStatus,
-    PaymentStatusOptions,
-    PrepareChargeOptions,
-    PrepareChargeResult,
-    PrepareRevokeOptions,
-    PrepareRevokeResult,
-    RevokeOptions,
-    RevokeResult,
-    SubscriptionOptions,
-    SubscriptionResult,
-    SubscriptionStatus,
-    SubscriptionStatusOptions,
+  ChargeOptions,
+  ChargeResult,
+  GetOrCreateSubscriptionOwnerWalletOptions,
+  GetOrCreateSubscriptionOwnerWalletResult,
+  PaymentOptions,
+  PaymentResult,
+  PaymentStatus,
+  PaymentStatusOptions,
+  PrepareChargeOptions,
+  PrepareChargeResult,
+  PrepareRevokeOptions,
+  PrepareRevokeResult,
+  RevokeOptions,
+  RevokeResult,
+  SubscriptionOptions,
+  SubscriptionResult,
+  SubscriptionStatus,
+  SubscriptionStatusOptions,
 } from './types.js';
 
 /**
@@ -70,5 +70,3 @@ export const base = {
     GetOrCreateSubscriptionOwnerWalletResult: GetOrCreateSubscriptionOwnerWalletResult;
   },
 };
-
-
