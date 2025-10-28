@@ -44,10 +44,10 @@ export function AddGlobalOwner({
         transport: http(
           'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
         ),
-        paymaster: paymasterClient,
-      });
-      // @ts-expect-error
-      const hash = await bundlerClient.sendUserOperation({
+      paymaster: paymasterClient,
+    });
+    // @ts-expect-error - Type instantiation is excessively deep
+    const hash = await bundlerClient.sendUserOperation({
         calls: [
           {
             to: subAccount.address,
