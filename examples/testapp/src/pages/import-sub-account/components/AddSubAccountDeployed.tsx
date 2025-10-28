@@ -1,5 +1,5 @@
 import { createBaseAccountSDK } from '@base-org/account';
-import { Box, Button } from '@chakra-ui/react';
+import { Box, Button, Input, VStack, FormControl, FormLabel } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { numberToHex } from 'viem';
 import { SmartAccount } from 'viem/account-abstraction';
@@ -12,6 +12,7 @@ type AddSubAccountProps = {
 
 export function AddSubAccountDeployed({ sdk, subAccount }: AddSubAccountProps) {
   const [subAccountAddress, setSubAccountAddress] = useState<string | null>(null);
+  const [customLabel, setCustomLabel] = useState<string>('');
 
   const handleAddSubAccount = useCallback(async () => {
     if (!sdk) {
@@ -32,6 +33,7 @@ export function AddSubAccountDeployed({ sdk, subAccount }: AddSubAccountProps) {
             type: 'deployed',
             address: subAccount.address,
             chainId: baseSepolia.id,
+            ...(customLabel && { label: customLabel }),
           },
         },
       ],
@@ -39,10 +41,22 @@ export function AddSubAccountDeployed({ sdk, subAccount }: AddSubAccountProps) {
 
     console.info('response', response);
     setSubAccountAddress(response.address);
-  }, [sdk, subAccount]);
+  }, [sdk, subAccount, customLabel]);
 
   return (
-    <>
+    <VStack w="full" spacing={2}>
+      <FormControl>
+        <FormLabel fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
+          Custom Label (optional)
+        </FormLabel>
+        <Input
+          placeholder="e.g., Trading Account, Savings Wallet"
+          value={customLabel}
+          onChange={(e) => setCustomLabel(e.target.value)}
+          bg="white"
+          _dark={{ bg: 'gray.800' }}
+        />
+      </FormControl>
       <Button
         w="full"
         onClick={handleAddSubAccount}
@@ -74,6 +88,6 @@ export function AddSubAccountDeployed({ sdk, subAccount }: AddSubAccountProps) {
           {subAccountAddress}
         </Box>
       )}
-    </>
+    </VStack>
   );
 }
