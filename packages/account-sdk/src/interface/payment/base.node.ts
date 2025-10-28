@@ -70,3 +70,5 @@ export const base = {
     GetOrCreateSubscriptionOwnerWalletResult: GetOrCreateSubscriptionOwnerWalletResult;
   },
 };
+
+

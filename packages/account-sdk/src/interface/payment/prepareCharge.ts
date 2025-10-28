@@ -3,7 +3,8 @@ import {
   fetchPermission,
   prepareSpendCallData,
 } from '../public-utilities/spend-permission/index.js';
-import { CHAIN_IDS, TOKENS } from './constants.js';
+import { TOKENS } from './constants.js';
+import { validateUSDCBasePermission } from './shared.js';
 import type { PrepareChargeOptions, PrepareChargeResult } from './types.js';
 
 /**
@@ -76,36 +77,7 @@ export async function prepareCharge(options: PrepareChargeOptions): Promise<Prep
   }
 
   // Validate this is a USDC permission on the correct network
-  const expectedChainId = testnet ? CHAIN_IDS.baseSepolia : CHAIN_IDS.base;
-  const expectedTokenAddress = testnet
-    ? TOKENS.USDC.addresses.baseSepolia.toLowerCase()
-    : TOKENS.USDC.addresses.base.toLowerCase();
-
-  if (permission.chainId !== expectedChainId) {
-    // Determine if the subscription is on mainnet or testnet
-    const isSubscriptionOnMainnet = permission.chainId === CHAIN_IDS.base;
-    const isSubscriptionOnTestnet = permission.chainId === CHAIN_IDS.baseSepolia;
-
-    let errorMessage: string;
-    if (testnet && isSubscriptionOnMainnet) {
-      errorMessage =
-        'The subscription was requested on testnet but is actually a mainnet subscription';
-    } else if (!testnet && isSubscriptionOnTestnet) {
-      errorMessage =
-        'The subscription was requested on mainnet but is actually a testnet subscription';
-    } else {
-      // Fallback for unexpected chain IDs
-      errorMessage = `Subscription is on chain ${permission.chainId}, expected ${expectedChainId} (${testnet ? 'Base Sepolia' : 'Base'})`;
-    }
-
-    throw new Error(errorMessage);
-  }
-
-  if (permission.permission.token.toLowerCase() !== expectedTokenAddress) {
-    throw new Error(
-      `Subscription is not for USDC token. Got ${permission.permission.token}, expected ${expectedTokenAddress}`
-    );
-  }
+  validateUSDCBasePermission(permission, testnet);
 
   // Determine the amount to pass to prepareSpendCallData
   let spendAmount: bigint | 'max-remaining-allowance';
