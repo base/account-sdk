@@ -1026,7 +1026,9 @@ describe('Signer', () => {
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
 
       // Test with eth_requestAccounts as well
-      const requestedAccounts = await signer.request({ method: 'eth_requestAccounts' });
+      const requestedAccounts = await signer.request({
+        method: 'eth_requestAccounts',
+      });
       expect(requestedAccounts).toEqual([subAccountAddress, globalAccountAddress]);
     });
   });
@@ -1262,8 +1264,156 @@ describe('Signer', () => {
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
 
       // eth_requestAccounts will also order based on defaultAccount
-      const requestedAccounts = await signer.request({ method: 'eth_requestAccounts' });
+      const requestedAccounts = await signer.request({
+        method: 'eth_requestAccounts',
+      });
       expect(requestedAccounts).toEqual([subAccountAddress, globalAccountAddress]);
+    });
+
+    it('should return cached sub account when requested address matches', async () => {
+      await signer.cleanup();
+
+      // Setup initial connection
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [{ address: globalAccountAddress, capabilities: {} }],
+          },
+        },
+      });
+      await signer.request({ method: 'wallet_connect', params: [] });
+
+      // Cache a sub account
+      store.subAccounts.set({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      // Request same address (isAddressEqual handles case-insensitive comparison)
+      const result = await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'deployed',
+              address: subAccountAddress,
+              chainId: '0x14a34',
+            },
+          },
+        ],
+      });
+
+      // Should return cached without calling backend
+      expect(result.address).toBe(subAccountAddress);
+      expect(decryptContent).toHaveBeenCalledTimes(2); // Only handshake + connect, not addSubAccount
+    });
+
+    it('should fetch from backend when requested address differs from cached', async () => {
+      await signer.cleanup();
+
+      const secondSubAccountAddress = '0x9999999999999999999999999999999999999999';
+
+      // Setup initial connection
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [{ address: globalAccountAddress, capabilities: {} }],
+          },
+        },
+      });
+      await signer.request({ method: 'wallet_connect', params: [] });
+
+      // Cache a sub account
+      store.subAccounts.set({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      // Request different address
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: secondSubAccountAddress,
+            factory: globalAccountAddress,
+            factoryData: '0x123',
+          },
+        },
+      });
+
+      const result = await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'deployed',
+              address: secondSubAccountAddress,
+              chainId: '0x14a34',
+            },
+          },
+        ],
+      });
+
+      // Should call backend and return new sub account
+      expect(result.address).toBe(secondSubAccountAddress);
+      expect(decryptContent).toHaveBeenCalledTimes(3); // handshake + connect + addSubAccount
+    });
+
+    it('should return cached sub account for create type (no address specified)', async () => {
+      await signer.cleanup();
+
+      // Setup initial connection
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [{ address: globalAccountAddress, capabilities: {} }],
+          },
+        },
+      });
+      await signer.request({ method: 'wallet_connect', params: [] });
+
+      // Cache a sub account
+      store.subAccounts.set({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      // Request create type (no specific address)
+      const result = await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'create',
+              keys: [{ publicKey: '0x123', type: 'p256' }],
+            },
+          },
+        ],
+      });
+
+      // Should return cached without calling backend
+      expect(result.address).toBe(subAccountAddress);
+      expect(decryptContent).toHaveBeenCalledTimes(2); // Only handshake + connect, not addSubAccount
     });
   });
 
@@ -1856,7 +2006,10 @@ describe('Signer', () => {
       });
 
       // Set the chain to match the mocked client
-      signer['chain'] = { id: 84532, rpcUrl: 'https://eth-rpc.example.com/84532' };
+      signer['chain'] = {
+        id: 84532,
+        rpcUrl: 'https://eth-rpc.example.com/84532',
+      };
       signer['accounts'] = [globalAccountAddress];
 
       // Setup basic handshake
@@ -2144,7 +2297,10 @@ describe('Signer', () => {
       });
 
       // Set the chain to match the mocked client
-      signer['chain'] = { id: 84532, rpcUrl: 'https://eth-rpc.example.com/84532' };
+      signer['chain'] = {
+        id: 84532,
+        rpcUrl: 'https://eth-rpc.example.com/84532',
+      };
       signer['accounts'] = [globalAccountAddress];
 
       // Mock decryptContent for wallet_connect to set up accounts
