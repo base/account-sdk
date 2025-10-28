@@ -36,6 +36,7 @@ const PAGES = [
   '/payment',
   '/pay-playground',
   '/subscribe-playground',
+  '/prolink-playground',
 ];
 
 export function Layout({ children }: LayoutProps) {

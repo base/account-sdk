@@ -262,7 +262,6 @@ __metadata:
   resolution: "@base-org/account@workspace:packages/account-sdk"
   dependencies:
     "@coinbase/cdp-sdk": "npm:^1.0.0"
-    "@noble/hashes": "npm:1.4.0"
     "@rollup/plugin-commonjs": "npm:^25.0.7"
     "@rollup/plugin-json": "npm:^6.1.0"
     "@rollup/plugin-node-resolve": "npm:^15.2.3"
@@ -274,6 +273,7 @@ __metadata:
     "@types/node": "npm:^14.18.54"
     "@vitest/coverage-v8": "npm:2.1.2"
     "@vitest/web-worker": "npm:3.2.1"
+    brotli-wasm: "npm:^3.0.0"
     clsx: "npm:1.2.1"
     eventemitter3: "npm:5.0.1"
     fake-indexeddb: "npm:^6.0.0"
@@ -4646,6 +4646,13 @@ __metadata:
   dependencies:
     fill-range: "npm:^7.1.1"
   checksum: 10/fad11a0d4697a27162840b02b1fad249c1683cbc510cd5bf1a471f2f8085c046d41094308c577a50a03a579dd99d5a6b3724c4b5e8b14df2c4443844cfcda2c6
+  languageName: node
+  linkType: hard
+
+"brotli-wasm@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "brotli-wasm@npm:3.0.1"
+  checksum: 10/8d400459eea945cd66008ced3298efb24f65490d9cfd4953bfed088f4212aae0ff52bb3bd53970728b2cb29953ba25de02a2862d76f4fe74ba37befe265c5402
   languageName: node
   linkType: hard
 
