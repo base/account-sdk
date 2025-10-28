@@ -5,22 +5,28 @@ import { getPaymentStatus } from './getPaymentStatus.js';
 import { getSubscriptionStatus } from './getSubscriptionStatus.js';
 import { pay } from './pay.js';
 import { prepareCharge } from './prepareCharge.js';
+import { prepareRevoke } from './prepareRevoke.js';
+import { revoke } from './revoke.js';
 import { subscribe } from './subscribe.js';
 import type {
-  ChargeOptions,
-  ChargeResult,
-  GetOrCreateSubscriptionOwnerWalletOptions,
-  GetOrCreateSubscriptionOwnerWalletResult,
-  PaymentOptions,
-  PaymentResult,
-  PaymentStatus,
-  PaymentStatusOptions,
-  PrepareChargeOptions,
-  PrepareChargeResult,
-  SubscriptionOptions,
-  SubscriptionResult,
-  SubscriptionStatus,
-  SubscriptionStatusOptions,
+    ChargeOptions,
+    ChargeResult,
+    GetOrCreateSubscriptionOwnerWalletOptions,
+    GetOrCreateSubscriptionOwnerWalletResult,
+    PaymentOptions,
+    PaymentResult,
+    PaymentStatus,
+    PaymentStatusOptions,
+    PrepareChargeOptions,
+    PrepareChargeResult,
+    PrepareRevokeOptions,
+    PrepareRevokeResult,
+    RevokeOptions,
+    RevokeResult,
+    SubscriptionOptions,
+    SubscriptionResult,
+    SubscriptionStatus,
+    SubscriptionStatusOptions,
 } from './types.js';
 
 /**
@@ -35,6 +41,8 @@ export const base = {
     getStatus: getSubscriptionStatus,
     prepareCharge,
     charge,
+    prepareRevoke,
+    revoke,
     getOrCreateSubscriptionOwnerWallet,
   },
   constants: {
@@ -50,6 +58,10 @@ export const base = {
     PrepareChargeResult: PrepareChargeResult;
     ChargeOptions: ChargeOptions;
     ChargeResult: ChargeResult;
+    PrepareRevokeOptions: PrepareRevokeOptions;
+    PrepareRevokeResult: PrepareRevokeResult;
+    RevokeOptions: RevokeOptions;
+    RevokeResult: RevokeResult;
     SubscriptionOptions: SubscriptionOptions;
     SubscriptionResult: SubscriptionResult;
     SubscriptionStatus: SubscriptionStatus;
@@ -58,3 +70,5 @@ export const base = {
     GetOrCreateSubscriptionOwnerWalletResult: GetOrCreateSubscriptionOwnerWalletResult;
   },
 };
+
+

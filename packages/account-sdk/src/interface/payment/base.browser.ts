@@ -3,18 +3,21 @@ import { getPaymentStatus } from './getPaymentStatus.js';
 import { getSubscriptionStatus } from './getSubscriptionStatus.js';
 import { pay } from './pay.js';
 import { prepareCharge } from './prepareCharge.js';
+import { prepareRevoke } from './prepareRevoke.js';
 import { subscribe } from './subscribe.js';
 import type {
-  PaymentOptions,
-  PaymentResult,
-  PaymentStatus,
-  PaymentStatusOptions,
-  PrepareChargeOptions,
-  PrepareChargeResult,
-  SubscriptionOptions,
-  SubscriptionResult,
-  SubscriptionStatus,
-  SubscriptionStatusOptions,
+    PaymentOptions,
+    PaymentResult,
+    PaymentStatus,
+    PaymentStatusOptions,
+    PrepareChargeOptions,
+    PrepareChargeResult,
+    PrepareRevokeOptions,
+    PrepareRevokeResult,
+    SubscriptionOptions,
+    SubscriptionResult,
+    SubscriptionStatus,
+    SubscriptionStatusOptions,
 } from './types.js';
 
 /**
@@ -28,6 +31,7 @@ export const base = {
     subscribe,
     getStatus: getSubscriptionStatus,
     prepareCharge,
+    prepareRevoke,
   },
   constants: {
     CHAIN_IDS,
@@ -40,9 +44,13 @@ export const base = {
     PaymentStatus: PaymentStatus;
     PrepareChargeOptions: PrepareChargeOptions;
     PrepareChargeResult: PrepareChargeResult;
+    PrepareRevokeOptions: PrepareRevokeOptions;
+    PrepareRevokeResult: PrepareRevokeResult;
     SubscriptionOptions: SubscriptionOptions;
     SubscriptionResult: SubscriptionResult;
     SubscriptionStatus: SubscriptionStatus;
     SubscriptionStatusOptions: SubscriptionStatusOptions;
   },
 };
+
+
