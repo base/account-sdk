@@ -16,7 +16,7 @@ describe('getExistingSmartWalletOrThrow', () => {
 
     mockSmartWallet = {
       address: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
-    } as EvmSmartAccount;
+    } as unknown as EvmSmartAccount;
 
     mockCdpClient = {
       evm: {

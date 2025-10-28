@@ -6,6 +6,7 @@ import { validateUSDCBasePermission } from './validateUSDCBasePermission.js';
 describe('validateUSDCBasePermission', () => {
   const mockPermission: SpendPermission = {
     chainId: CHAIN_IDS.base,
+    signature: '0x',
     permission: {
       token: TOKENS.USDC.addresses.base,
       account: '0x1234567890123456789012345678901234567890',
@@ -17,11 +18,6 @@ describe('validateUSDCBasePermission', () => {
       salt: '0',
       extraData: '0x',
     },
-    approvedAmount: '0',
-    availableAmount: '0',
-    startTime: 0,
-    endTime: 0,
-    lastUsedTime: 0,
   };
 
   describe('mainnet validation (testnet=false)', () => {
