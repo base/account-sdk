@@ -1,12 +1,9 @@
 import { type Address } from 'viem';
 import { prepareRevoke } from './prepareRevoke.js';
-import {
-  createCdpClientOrThrow,
-  getExistingSmartWalletOrThrow,
-  getNetworkFor,
-  sendUserOpAndWait,
-} from './shared.js';
 import type { RevokeOptions, RevokeResult } from './types.js';
+import { createCdpClientOrThrow } from './utils/createCdpClientOrThrow.js';
+import { getExistingSmartWalletOrThrow } from './utils/getExistingSmartWalletOrThrow.js';
+import { sendUserOpAndWait } from './utils/sendUserOpAndWait.js';
 
 /**
  * Prepares and executes a revoke for a given spend permission.
@@ -90,23 +87,14 @@ export async function revoke(options: RevokeOptions): Promise<RevokeResult> {
   const revokeCall = await prepareRevoke({ id, testnet });
 
   // Step 4: Get the network-scoped smart wallet
-  const network = getNetworkFor(testnet);
+  const network = testnet ? 'base-sepolia' : 'base';
   const networkSmartWallet = await smartWallet.useNetwork(network);
 
   // Step 5: Execute the revoke transaction using the smart wallet
   // Smart wallets can batch multiple calls and use paymasters for gas sponsorship
-  // Build the calls array for the smart wallet
-  const calls = [
-    {
-      to: revokeCall.to,
-      data: revokeCall.data,
-      value: revokeCall.value,
-    },
-  ];
-
   const transactionHash = await sendUserOpAndWait(
     networkSmartWallet,
-    calls,
+    [revokeCall],
     paymasterUrl,
     60, // Wait up to 60 seconds for the operation to complete
     'revoke'

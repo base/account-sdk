@@ -1,12 +1,9 @@
 import { type Address } from 'viem';
 import { prepareCharge } from './prepareCharge.js';
-import {
-  createCdpClientOrThrow,
-  getExistingSmartWalletOrThrow,
-  getNetworkFor,
-  sendUserOpAndWait,
-} from './shared.js';
 import type { ChargeOptions, ChargeResult } from './types.js';
+import { createCdpClientOrThrow } from './utils/createCdpClientOrThrow.js';
+import { getExistingSmartWalletOrThrow } from './utils/getExistingSmartWalletOrThrow.js';
+import { sendUserOpAndWait } from './utils/sendUserOpAndWait.js';
 
 /**
  * Prepares and executes a charge for a given spend permission.
@@ -105,23 +102,16 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
   const chargeCalls = await prepareCharge({ id, amount, testnet, recipient });
 
   // Step 4: Get the network-scoped smart wallet
-  const network = getNetworkFor(testnet);
+  const network = testnet ? 'base-sepolia' : 'base';
   const networkSmartWallet = await smartWallet.useNetwork(network);
 
   // Step 5: Execute the charge transaction(s) using the smart wallet
   // Smart wallets can batch multiple calls and use paymasters for gas sponsorship
-  // Build the calls array for the smart wallet
-  const calls = chargeCalls.map((call) => ({
-    to: call.to,
-    data: call.data,
-    value: call.value,
-  }));
-
   // For smart wallets, we can send all calls in a single user operation
   // This is more efficient and allows for better paymaster integration
   const transactionHash = await sendUserOpAndWait(
     networkSmartWallet,
-    calls,
+    chargeCalls,
     paymasterUrl,
     60, // Wait up to 60 seconds for the operation to complete
     'charge'

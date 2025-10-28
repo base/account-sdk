@@ -2,8 +2,8 @@ import {
   fetchPermission,
   prepareRevokeCallData,
 } from '../public-utilities/spend-permission/index.js';
-import { validateUSDCBasePermission } from './shared.js';
 import type { PrepareRevokeOptions, PrepareRevokeResult } from './types.js';
+import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.js';
 
 /**
  * Prepares call data for revoking a subscription.

@@ -4,8 +4,8 @@ import {
   prepareSpendCallData,
 } from '../public-utilities/spend-permission/index.js';
 import { TOKENS } from './constants.js';
-import { validateUSDCBasePermission } from './shared.js';
 import type { PrepareChargeOptions, PrepareChargeResult } from './types.js';
+import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.js';
 
 /**
  * Prepares call data for charging a subscription.
