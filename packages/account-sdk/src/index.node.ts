@@ -44,5 +44,3 @@ export type {
   SubscriptionStatus,
   SubscriptionStatusOptions,
 } from './interface/payment/index.node.js';
-
-

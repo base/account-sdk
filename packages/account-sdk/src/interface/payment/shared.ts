@@ -171,10 +171,7 @@ export async function sendUserOpAndWait(
  * @param testnet - Whether this should be testnet (Base Sepolia) or mainnet (Base)
  * @throws Error if chainId or token address doesn't match expected values
  */
-export function validateUSDCBasePermission(
-  permission: SpendPermission,
-  testnet: boolean
-): void {
+export function validateUSDCBasePermission(permission: SpendPermission, testnet: boolean): void {
   // Validate this is a USDC permission on the correct network
   const expectedChainId = testnet ? CHAIN_IDS.baseSepolia : CHAIN_IDS.base;
   const expectedTokenAddress = testnet
@@ -207,4 +204,3 @@ export function validateUSDCBasePermission(
     );
   }
 }
-
