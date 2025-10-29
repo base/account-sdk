@@ -371,5 +371,62 @@ export interface ChargeResult {
 }
 
 /**
+ * Options for preparing subscription revoke call data
+ */
+export interface PrepareRevokeOptions {
+  /** The subscription ID (permission hash) */
+  id: string;
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+}
+
+/**
+ * Call data for revoking a subscription
+ */
+export interface PrepareRevokeCall {
+  /** The address to call */
+  to: Address;
+  /** The encoded call data */
+  data: Hex;
+  /** The value to send (always 0n for spend permissions) */
+  value: bigint;
+}
+
+/**
+ * Result of preparing subscription revoke call data
+ */
+export type PrepareRevokeResult = PrepareRevokeCall;
+
+/**
+ * Options for revoking a subscription
+ */
+export interface RevokeOptions extends PrepareRevokeOptions {
+  /** CDP API key ID. Falls back to CDP_API_KEY_ID env var */
+  cdpApiKeyId?: string;
+  /** CDP API key secret. Falls back to CDP_API_KEY_SECRET env var */
+  cdpApiKeySecret?: string;
+  /** CDP wallet secret. Falls back to CDP_WALLET_SECRET env var */
+  cdpWalletSecret?: string;
+  /** Custom wallet name. Defaults to "subscription owner" */
+  walletName?: string;
+  /** Paymaster URL for transaction sponsorship. Falls back to PAYMASTER_URL env var */
+  paymasterUrl?: string;
+}
+
+/**
+ * Result of revoking a subscription
+ */
+export interface RevokeResult {
+  /** Whether the revoke was successful */
+  success: true;
+  /** Transaction ID (hash) of the revoke */
+  id: string;
+  /** The subscription ID that was revoked */
+  subscriptionId: string;
+  /** The address that executed the revoke (subscription owner) */
+  subscriptionOwner: Address;
+}
+
+/**
  * Internal type for payment execution result
  */

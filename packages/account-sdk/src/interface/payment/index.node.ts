@@ -9,6 +9,8 @@ export { getPaymentStatus } from './getPaymentStatus.js';
 export { getSubscriptionStatus } from './getSubscriptionStatus.js';
 export { pay } from './pay.js';
 export { prepareCharge } from './prepareCharge.js';
+export { prepareRevoke } from './prepareRevoke.js';
+export { revoke } from './revoke.js';
 export { subscribe } from './subscribe.js';
 
 // Export types
@@ -29,6 +31,11 @@ export type {
   PrepareChargeCall,
   PrepareChargeOptions,
   PrepareChargeResult,
+  PrepareRevokeCall,
+  PrepareRevokeOptions,
+  PrepareRevokeResult,
+  RevokeOptions,
+  RevokeResult,
   SubscriptionOptions,
   SubscriptionResult,
   SubscriptionStatus,
