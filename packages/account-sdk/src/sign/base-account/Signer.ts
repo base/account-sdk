@@ -603,15 +603,32 @@ export class Signer {
     factoryData?: Hex;
   }> {
     const state = store.getState();
-    const subAccount = state.subAccount;
+    const cachedSubAccount = state.subAccount;
     const subAccountsConfig = store.subAccountsConfig.get();
-    if (subAccount?.address) {
-      this.accounts =
-        subAccountsConfig?.defaultAccount === 'sub'
-          ? prependWithoutDuplicates(this.accounts, subAccount.address)
-          : appendWithoutDuplicates(this.accounts, subAccount.address);
-      this.callback?.('accountsChanged', this.accounts);
-      return subAccount;
+
+    // Extract requested address from params (for deployed/undeployed types)
+    const requestedAddress =
+      Array.isArray(request.params) &&
+      request.params.length > 0 &&
+      request.params[0]?.account?.address
+        ? request.params[0].account.address
+        : undefined;
+
+    // Only return cached if:
+    // 1. Cache exists AND
+    // 2. No specific address requested (create type) OR requested address matches cached
+    if (cachedSubAccount?.address) {
+      const shouldUseCache =
+        !requestedAddress || isAddressEqual(requestedAddress, cachedSubAccount.address);
+
+      if (shouldUseCache) {
+        this.accounts =
+          subAccountsConfig?.defaultAccount === 'sub'
+            ? prependWithoutDuplicates(this.accounts, cachedSubAccount.address)
+            : appendWithoutDuplicates(this.accounts, cachedSubAccount.address);
+        this.callback?.('accountsChanged', this.accounts);
+        return cachedSubAccount;
+      }
     }
 
     // Wait for the popup to be loaded before sending the request
