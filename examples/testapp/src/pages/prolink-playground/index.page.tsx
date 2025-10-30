@@ -681,8 +681,9 @@ export default function ProlinkPlayground() {
                               {!baseDeeplink ? (
                                 <Box>
                                   <Text mb={4} color="gray.600">
-                                    Generate a Base App deeplink to use this prolink in the Base mobile
-                                    app. The deeplink will include the encoded prolink as a URL parameter.
+                                    Generate a Base App deeplink to use this prolink in the Base
+                                    mobile app. The deeplink will include the encoded prolink as a
+                                    URL parameter.
                                   </Text>
                                   <Button
                                     colorScheme="blue"
@@ -702,7 +703,11 @@ export default function ProlinkPlayground() {
                                       </Button>
                                     </HStack>
                                     <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
-                                      <Code display="block" whiteSpace="pre-wrap" wordBreak="break-all">
+                                      <Code
+                                        display="block"
+                                        whiteSpace="pre-wrap"
+                                        wordBreak="break-all"
+                                      >
                                         {baseDeeplink}
                                       </Code>
                                     </Box>
@@ -724,7 +729,8 @@ export default function ProlinkPlayground() {
                                       <QRCodeSVG value={baseDeeplink} size={256} />
                                     </Box>
                                     <Text fontSize="sm" color="gray.600" mt={2} textAlign="center">
-                                      Scan this QR code with the Base mobile app to execute the prolink
+                                      Scan this QR code with the Base mobile app to execute the
+                                      prolink
                                     </Text>
                                   </Box>
 
