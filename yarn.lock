@@ -3626,6 +3626,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/qrcode.react@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@types/qrcode.react@npm:3.0.0"
+  dependencies:
+    qrcode.react: "npm:*"
+  checksum: 10/8ce11d0455fca9a898f6e9d499529526671c5e398f44cf2bc507ad84e1e4982ff0f384261e52b16b933bdd1d6db6bef27b437f90bb804a039ddfe21112d19da5
+  languageName: node
+  linkType: hard
+
 "@types/react@npm:18.2.15":
   version: 18.2.15
   resolution: "@types/react@npm:18.2.15"
@@ -8241,6 +8250,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"qrcode.react@npm:*, qrcode.react@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "qrcode.react@npm:4.2.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10/665036d88b160e6d5de4e24d101bc63bd2b76712802e874bbffe56c6b6e5fe50c63f02c3cba2975b2e2b555c1f1e112cbb42987f8cb3a626ce2d17023cfde6ac
+  languageName: node
+  linkType: hard
+
 "queue-lit@npm:^1.5.1":
   version: 1.5.2
   resolution: "queue-lit@npm:1.5.2"
@@ -8867,10 +8885,12 @@ __metadata:
     "@metamask/eth-sig-util": "npm:^7.0.0"
     "@testing-library/react": "npm:^16.2.0"
     "@types/acorn": "npm:^4.0.6"
+    "@types/qrcode.react": "npm:^3.0.0"
     "@types/react": "npm:18.2.15"
     acorn: "npm:^8.15.0"
     framer-motion: "npm:^10.13.1"
     next: "npm:^14.2.10"
+    qrcode.react: "npm:^4.2.0"
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
     react-hook-form: "npm:7.45.2"

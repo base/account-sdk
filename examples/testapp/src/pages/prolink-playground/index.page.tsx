@@ -27,6 +27,7 @@ import {
   useColorModeValue,
   useToast,
 } from '@chakra-ui/react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 
 export default function ProlinkPlayground() {
@@ -117,12 +118,16 @@ export default function ProlinkPlayground() {
 
   // Link with Prolink section
   const [urlForLinkWithProlink, setUrlForLinkWithProlink] = useState('https://base.app/base-pay');
+  
+  // Base deeplink section
+  const [baseDeeplink, setBaseDeeplink] = useState<string | null>(null);
 
   const generateProlink = async () => {
     setLoading(true);
     setError(null);
     setEncodedPayload('');
     setDecodedResult(null);
+    setBaseDeeplink(null);
 
     try {
       let request: {
@@ -286,6 +291,30 @@ export default function ProlinkPlayground() {
       duration: 2000,
     });
   };
+
+  const generateBaseDeeplink = () => {
+    const deeplink = `https://base.app/base-pay?p=${encodedPayload}`;
+    setBaseDeeplink(deeplink);
+    toast({
+      title: 'Base Deeplink Generated!',
+      description: 'Scan the QR code or copy the link to use it',
+      status: 'success',
+      duration: 3000,
+    });
+  };
+
+  const copyDeeplinkToClipboard = () => {
+    if (baseDeeplink) {
+      navigator.clipboard.writeText(baseDeeplink);
+      toast({
+        title: 'Copied!',
+        description: 'Base deeplink copied to clipboard',
+        status: 'success',
+        duration: 2000,
+      });
+    }
+  };
+
 
   const decodePayload = async () => {
     setDecodeLoading(true);
@@ -658,6 +687,7 @@ export default function ProlinkPlayground() {
                           <Tab>Encoded Payload</Tab>
                           <Tab>Decoded Result</Tab>
                           <Tab>Link with Prolink</Tab>
+                          <Tab>Base Deeplink & QR Code</Tab>
                         </TabList>
 
                         <TabPanels>
@@ -706,6 +736,71 @@ export default function ProlinkPlayground() {
                                 transaction. See the "Link with Prolink" tab for customization
                                 options.
                               </Text>
+                            </VStack>
+                          </TabPanel>
+
+                          {/* Base Deeplink & QR Code Tab */}
+                          <TabPanel>
+                            <VStack spacing={6} align="stretch">
+                              {!baseDeeplink ? (
+                                <Box>
+                                  <Text mb={4} color="gray.600">
+                                    Generate a Base App deeplink to use this prolink in the Base mobile
+                                    app. The deeplink will include the encoded prolink as a URL parameter.
+                                  </Text>
+                                  <Button
+                                    colorScheme="blue"
+                                    onClick={generateBaseDeeplink}
+                                    size="lg"
+                                  >
+                                    Generate Base Deeplink
+                                  </Button>
+                                </Box>
+                              ) : (
+                                <>
+                                  <Box>
+                                    <HStack mb={2}>
+                                      <Text fontWeight="bold">Base Deeplink URL:</Text>
+                                      <Button size="sm" onClick={copyDeeplinkToClipboard}>
+                                        Copy
+                                      </Button>
+                                    </HStack>
+                                    <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
+                                      <Code display="block" whiteSpace="pre-wrap" wordBreak="break-all">
+                                        {baseDeeplink}
+                                      </Code>
+                                    </Box>
+                                  </Box>
+
+                                  <Box>
+                                    <Text fontWeight="bold" mb={4}>
+                                      QR Code:
+                                    </Text>
+                                    <Box
+                                      display="flex"
+                                      justifyContent="center"
+                                      p={6}
+                                      bg="white"
+                                      borderRadius="md"
+                                      borderWidth="1px"
+                                      borderColor={borderColor}
+                                    >
+                                      <QRCodeSVG value={baseDeeplink} size={256} />
+                                    </Box>
+                                    <Text fontSize="sm" color="gray.600" mt={2} textAlign="center">
+                                      Scan this QR code with the Base mobile app to execute the prolink
+                                    </Text>
+                                  </Box>
+
+                                  <Button
+                                    colorScheme="blue"
+                                    variant="outline"
+                                    onClick={generateBaseDeeplink}
+                                  >
+                                    Regenerate
+                                  </Button>
+                                </>
+                              )}
                             </VStack>
                           </TabPanel>
                         </TabPanels>
