@@ -208,5 +208,9 @@ export async function decodeProlink(payload: string): Promise<ProlinkDecoded> {
   throw new Error(`Unsupported shortcut ID: ${rpcPayload.shortcutId}`);
 }
 
+// Re-export universal link utilities
+export { BASE_APP_URLS, prolinkToUniversalLink } from './universalLink.js';
+export type { BaseAppEnvironment } from './universalLink.js';
+
 // Re-export types
 export type { ProlinkDecoded, ProlinkRequest } from './types.js';
