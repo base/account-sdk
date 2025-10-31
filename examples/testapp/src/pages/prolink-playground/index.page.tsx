@@ -1,8 +1,4 @@
-import {
-  createProlinkUrl,
-  decodeProlink,
-  encodeProlink,
-} from '@base-org/account';
+import { createProlinkUrl, decodeProlink, encodeProlink } from '@base-org/account';
 import {
   Accordion,
   AccordionButton,
@@ -556,10 +552,10 @@ export default function ProlinkPlayground() {
                   <FormControl>
                     <FormLabel>Base URL</FormLabel>
                     <Input
-                          type="url"
-                          value={baseUrl}
-                          onChange={(e) => setBaseUrl(e.target.value)}
-                          placeholder="https://base.app/base-pay"
+                      type="url"
+                      value={baseUrl}
+                      onChange={(e) => setBaseUrl(e.target.value)}
+                      placeholder="https://base.app/base-pay"
                     />
                   </FormControl>
 
@@ -685,8 +681,8 @@ export default function ProlinkPlayground() {
                                 </Code>
                               </Box>
                               <Text fontSize="sm" color="gray.600">
-                                This link with the prolink can be opened in the Base App to execute the
-                                transaction.
+                                This link with the prolink can be opened in the Base App to execute
+                                the transaction.
                               </Text>
                             </VStack>
                           </TabPanel>

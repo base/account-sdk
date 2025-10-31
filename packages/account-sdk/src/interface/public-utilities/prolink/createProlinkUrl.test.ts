@@ -201,9 +201,7 @@ describe('createProlinkUrl', () => {
     });
 
     it('should throw on whitespace-only baseUrl', () => {
-      expect(() => createProlinkUrl(EXAMPLE_PROLINK, '   ')).toThrow(
-        'baseUrl cannot be empty'
-      );
+      expect(() => createProlinkUrl(EXAMPLE_PROLINK, '   ')).toThrow('baseUrl cannot be empty');
     });
 
     it('should throw on invalid baseUrl', () => {
@@ -240,10 +238,7 @@ describe('createProlinkUrl', () => {
     });
 
     it('should handle base URLs with existing query params', () => {
-      const result = createProlinkUrl(
-        EXAMPLE_PROLINK,
-        'https://base.app/base-pay?existing=param'
-      );
+      const result = createProlinkUrl(EXAMPLE_PROLINK, 'https://base.app/base-pay?existing=param');
       const url = new URL(result.link);
       expect(url.searchParams.get('existing')).toBe('param');
       expect(url.searchParams.get('p')).toBe(EXAMPLE_PROLINK);

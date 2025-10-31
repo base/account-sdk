@@ -28,8 +28,8 @@
 export function createProlinkUrl(
   prolink: string,
   baseUrl: string = 'https://base.app/base-pay',
-  additionalQueryParams?: Record<string, string>,
-): { link: string} {
+  additionalQueryParams?: Record<string, string>
+): { link: string } {
   if (!prolink || prolink.trim().length === 0) {
     throw new Error('Prolink cannot be empty');
   }
@@ -41,7 +41,7 @@ export function createProlinkUrl(
   url.searchParams.set('p', prolink);
   Object.entries(additionalQueryParams ?? {}).forEach(([key, value]) => {
     url.searchParams.set(key, value);
-  })
+  });
 
   return { link: url.toString() };
 }
