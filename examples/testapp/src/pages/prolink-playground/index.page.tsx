@@ -1,4 +1,4 @@
-import { decodeProlink, encodeProlink } from '@base-org/account';
+import { createProlinkUrl, decodeProlink, encodeProlink } from '@base-org/account';
 import {
   Accordion,
   AccordionButton,
@@ -107,6 +107,8 @@ export default function ProlinkPlayground() {
   const [encodedPayload, setEncodedPayload] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [decodedResult, setDecodedResult] = useState<unknown>(null);
+  const [urlWithProlink, setUrlWithProlink] = useState('');
+  const [baseUrl, setBaseUrl] = useState('https://base.app/base-pay');
 
   // Decode section
   const [decodeInput, setDecodeInput] = useState('');
@@ -213,6 +215,10 @@ export default function ProlinkPlayground() {
       const payload = await encodeProlink(request);
       setEncodedPayload(payload);
 
+      // Generate universal link
+      const { link } = createProlinkUrl(payload, baseUrl);
+      setUrlWithProlink(link);
+
       // Decode to verify
       const decoded = await decodeProlink(payload);
       setDecodedResult(decoded);
@@ -242,6 +248,16 @@ export default function ProlinkPlayground() {
     toast({
       title: 'Copied!',
       description: 'Payload copied to clipboard',
+      status: 'success',
+      duration: 2000,
+    });
+  };
+
+  const copyUniversalLinkToClipboard = () => {
+    navigator.clipboard.writeText(urlWithProlink);
+    toast({
+      title: 'Copied!',
+      description: 'Universal link copied to clipboard',
       status: 'success',
       duration: 2000,
     });
@@ -532,6 +548,19 @@ export default function ProlinkPlayground() {
 
                   <Divider />
 
+                  {/* Base App Environment */}
+                  <FormControl>
+                    <FormLabel>Base URL</FormLabel>
+                    <Input
+                      type="url"
+                      value={baseUrl}
+                      onChange={(e) => setBaseUrl(e.target.value)}
+                      placeholder="https://base.app/base-pay"
+                    />
+                  </FormControl>
+
+                  <Divider />
+
                   {/* Capabilities */}
                   <Accordion allowToggle>
                     <AccordionItem>
@@ -615,6 +644,7 @@ export default function ProlinkPlayground() {
                       <Tabs>
                         <TabList>
                           <Tab>Encoded Payload</Tab>
+                          <Tab>Universal Link</Tab>
                           <Tab>Decoded Result</Tab>
                         </TabList>
 
@@ -634,6 +664,26 @@ export default function ProlinkPlayground() {
                                   {encodedPayload}
                                 </Code>
                               </Box>
+                            </VStack>
+                          </TabPanel>
+
+                          {/* Universal Link Tab */}
+                          <TabPanel>
+                            <VStack spacing={4} align="stretch">
+                              <HStack>
+                                <Button size="sm" onClick={copyUniversalLinkToClipboard}>
+                                  Copy Link
+                                </Button>
+                              </HStack>
+                              <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
+                                <Code display="block" whiteSpace="pre-wrap" wordBreak="break-all">
+                                  {urlWithProlink}
+                                </Code>
+                              </Box>
+                              <Text fontSize="sm" color="gray.600">
+                                This link with the prolink can be opened in the Base App to execute
+                                the transaction.
+                              </Text>
                             </VStack>
                           </TabPanel>
 
@@ -720,7 +770,15 @@ export default function ProlinkPlayground() {
                       <>
                         <HStack>
                           <Text fontWeight="bold">Method:</Text>
-                          <Text>{(decodeResult as { method: string }).method}</Text>
+                          <Text>
+                            {
+                              (
+                                decodeResult as {
+                                  method: string;
+                                }
+                              ).method
+                            }
+                          </Text>
                           <Button size="sm" onClick={copyDecodedToClipboard}>
                             Copy JSON
                           </Button>
