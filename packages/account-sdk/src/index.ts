@@ -2,14 +2,14 @@
 export type {
   AppMetadata,
   Preference,
-  ProviderInterface,
+  ProviderInterface
 } from ':core/provider/interface.js';
 
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
 
 export {
   getCryptoKeyAccount,
-  removeCryptoKey,
+  removeCryptoKey
 } from './kms/crypto-key/index.js';
 
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
@@ -22,7 +22,7 @@ export {
   pay,
   prepareCharge,
   subscribe,
-  TOKENS,
+  TOKENS
 } from './interface/payment/index.js';
 export type {
   ChargeOptions,
@@ -44,17 +44,14 @@ export type {
   SubscriptionOptions,
   SubscriptionResult,
   SubscriptionStatus,
-  SubscriptionStatusOptions,
+  SubscriptionStatusOptions
 } from './interface/payment/index.js';
 
 export {
-  BASE_APP_URLS,
-  decodeProlink,
-  encodeProlink,
-  prolinkToUniversalLink,
+  createProlinkUrl, decodeProlink,
+  encodeProlink
 } from './interface/public-utilities/prolink/index.js';
 export type {
-  BaseAppEnvironment,
   ProlinkDecoded,
-  ProlinkRequest,
+  ProlinkRequest
 } from './interface/public-utilities/prolink/index.js';

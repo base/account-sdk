@@ -209,8 +209,7 @@ export async function decodeProlink(payload: string): Promise<ProlinkDecoded> {
 }
 
 // Re-export universal link utilities
-export { BASE_APP_URLS, prolinkToUniversalLink } from './universalLink.js';
-export type { BaseAppEnvironment } from './universalLink.js';
+export { createProlinkUrl } from './createProlinkUrl.js';
 
 // Re-export types
 export type { ProlinkDecoded, ProlinkRequest } from './types.js';
