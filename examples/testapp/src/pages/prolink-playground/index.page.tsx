@@ -108,13 +108,17 @@ export default function ProlinkPlayground() {
   const [error, setError] = useState<string | null>(null);
   const [decodedResult, setDecodedResult] = useState<unknown>(null);
   const [urlWithProlink, setUrlWithProlink] = useState('');
-  const [baseUrl, setBaseUrl] = useState('https://base.app/base-pay');
 
   // Decode section
   const [decodeInput, setDecodeInput] = useState('');
   const [decodeLoading, setDecodeLoading] = useState(false);
   const [decodeError, setDecodeError] = useState<string | null>(null);
   const [decodeResult, setDecodeResult] = useState<unknown>(null);
+
+  // Link with Prolink section
+  const [urlForLinkWithProlink, setUrlForLinkWithProlink] = useState(
+    'https://base.app/base-pay'
+  );
 
   const generateProlink = async () => {
     setLoading(true);
@@ -216,7 +220,7 @@ export default function ProlinkPlayground() {
       setEncodedPayload(payload);
 
       // Generate link with prolink
-      const urlWithProlink = createProlinkUrl(payload, baseUrl);
+      const urlWithProlink = createProlinkUrl(payload, urlForLinkWithProlink);
       setUrlWithProlink(urlWithProlink);
 
       // Decode to verify
@@ -243,6 +247,28 @@ export default function ProlinkPlayground() {
     }
   };
 
+  const generateLinkWithProlink = () => {
+    setLoading(true);
+    setError(null);
+    setUrlWithProlink('');
+
+    try {
+      const urlWithProlink = createProlinkUrl(encodedPayload, urlForLinkWithProlink);
+      setUrlWithProlink(urlWithProlink);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMessage);
+      toast({
+        title: 'Error generating link with prolink',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(encodedPayload);
     toast({
@@ -253,7 +279,7 @@ export default function ProlinkPlayground() {
     });
   };
 
-  const copyUniversalLinkToClipboard = () => {
+  const copyLinkWithProlinkToClipboard = () => {
     navigator.clipboard.writeText(urlWithProlink);
     toast({
       title: 'Copied!',
@@ -315,6 +341,7 @@ export default function ProlinkPlayground() {
           <TabList>
             <Tab>Encode</Tab>
             <Tab>Decode</Tab>
+            <Tab>Link with Prolink</Tab>
           </TabList>
 
           <TabPanels>
@@ -548,19 +575,6 @@ export default function ProlinkPlayground() {
 
                   <Divider />
 
-                  {/* Base App Environment */}
-                  <FormControl>
-                    <FormLabel>Base URL</FormLabel>
-                    <Input
-                      type="url"
-                      value={baseUrl}
-                      onChange={(e) => setBaseUrl(e.target.value)}
-                      placeholder="https://base.app/base-pay"
-                    />
-                  </FormControl>
-
-                  <Divider />
-
                   {/* Capabilities */}
                   <Accordion allowToggle>
                     <AccordionItem>
@@ -644,8 +658,8 @@ export default function ProlinkPlayground() {
                       <Tabs>
                         <TabList>
                           <Tab>Encoded Payload</Tab>
-                          <Tab>Link with Prolink</Tab>
                           <Tab>Decoded Result</Tab>
+                          <Tab>Link with Prolink</Tab>
                         </TabList>
 
                         <TabPanels>
@@ -667,26 +681,6 @@ export default function ProlinkPlayground() {
                             </VStack>
                           </TabPanel>
 
-                          {/* Link with Prolink Tab */}
-                          <TabPanel>
-                            <VStack spacing={4} align="stretch">
-                              <HStack>
-                                <Button size="sm" onClick={copyUniversalLinkToClipboard}>
-                                  Copy Link
-                                </Button>
-                              </HStack>
-                              <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
-                                <Code display="block" whiteSpace="pre-wrap" wordBreak="break-all">
-                                  {urlWithProlink}
-                                </Code>
-                              </Box>
-                              <Text fontSize="sm" color="gray.600">
-                                This link with the prolink can be opened in the Base App to execute
-                                the transaction.
-                              </Text>
-                            </VStack>
-                          </TabPanel>
-
                           {/* Decoded Result Tab */}
                           <TabPanel>
                             <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
@@ -694,6 +688,27 @@ export default function ProlinkPlayground() {
                                 {JSON.stringify(decodedResult, null, 2)}
                               </Code>
                             </Box>
+                          </TabPanel>
+
+                          {/* Link with Prolink Tab */}
+                          <TabPanel>
+                            <VStack spacing={4} align="stretch">
+                              <HStack>
+                                <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
+                                  <Code display="block" whiteSpace="pre-wrap" wordBreak="break-all">
+                                    {urlWithProlink}
+                                  </Code>
+                                </Box>
+                                <Button size="sm" onClick={copyLinkWithProlinkToClipboard}>
+                                  Copy Link
+                                </Button>
+                              </HStack>
+                              <Text fontSize="sm" color="gray.600">
+                                This link with prolink can be opened in the Base App to execute the
+                                transaction. See the "Link with Prolink" tab for customization
+                                options.
+                              </Text>
+                            </VStack>
                           </TabPanel>
                         </TabPanels>
                       </Tabs>
@@ -789,6 +804,95 @@ export default function ProlinkPlayground() {
                           </Code>
                         </Box>
                       </>
+                    )}
+                  </VStack>
+                </Box>
+              )}
+            </TabPanel>
+
+            {/* Link with Prolink Tab */}
+            <TabPanel px={0}>
+              <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
+                <VStack spacing={6} align="stretch">
+                  <FormControl>
+                    <FormLabel>Prolink Payload</FormLabel>
+                    <Input
+                      type="text"
+                      value={encodedPayload}
+                      onChange={(e) => setEncodedPayload(e.target.value)}
+                      placeholder="Paste encoded prolink payload here..."
+                    />
+                    <Text fontSize="sm" color="gray.600">
+                      See the "Encode" tab to generate a prolink payload.
+                    </Text>
+                  </FormControl>
+
+                  {/* URL for the link with the prolink */}
+                  <FormControl>
+                    <FormLabel>URL</FormLabel>
+                    <Input
+                      type="url"
+                      value={urlForLinkWithProlink}
+                      onChange={(e) => setUrlForLinkWithProlink(e.target.value)}
+                      placeholder="https://base.app/base-pay"
+                    />
+                  </FormControl>
+
+                  <Divider />
+
+                  <Button
+                    colorScheme="blue"
+                    size="lg"
+                    onClick={generateLinkWithProlink}
+                    isLoading={loading}
+                    loadingText="Generating..."
+                  >
+                    Generate Link
+                  </Button>
+                </VStack>
+              </Box>
+
+              {/* Results */}
+              {(urlWithProlink || error) && (
+                <Box
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  p={6}
+                  mt={6}
+                  bg={bgColor}
+                  borderColor={borderColor}
+                >
+                  <VStack spacing={6} align="stretch">
+                    <Heading size="md">Results</Heading>
+
+                    {error && (
+                      <Box
+                        p={4}
+                        bg="red.50"
+                        borderRadius="md"
+                        borderColor="red.200"
+                        borderWidth="1px"
+                      >
+                        <Text color="red.700" fontWeight="bold">
+                          Error:
+                        </Text>
+                        <Text color="red.600" mt={2}>
+                          {error}
+                        </Text>
+                      </Box>
+                    )}
+
+                    {urlWithProlink && (
+                      <HStack>
+                        <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
+                          <Code display="block" whiteSpace="pre-wrap" wordBreak="break-all">
+                            {urlWithProlink}
+                          </Code>
+                        </Box>
+                        <Button size="sm" onClick={copyLinkWithProlinkToClipboard}>
+                          Copy Link
+                        </Button>
+                      </HStack>
                     )}
                   </VStack>
                 </Box>
