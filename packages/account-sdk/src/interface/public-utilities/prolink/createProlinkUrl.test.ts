@@ -10,17 +10,17 @@ describe('createProlinkUrl', () => {
   describe('basic functionality', () => {
     it('should create URL with default base URL', () => {
       const result = createProlinkUrl(EXAMPLE_PROLINK);
-      expect(result.link).toBe(`https://base.app/base-pay?p=${EXAMPLE_PROLINK}`);
+      expect(result).toBe(`https://base.app/base-pay?p=${EXAMPLE_PROLINK}`);
     });
 
     it('should create URL with custom base URL', () => {
       const result = createProlinkUrl(EXAMPLE_PROLINK, 'https://custom.com/pay');
-      expect(result.link).toBe(`https://custom.com/pay?p=${EXAMPLE_PROLINK}`);
+      expect(result).toBe(`https://custom.com/pay?p=${EXAMPLE_PROLINK}`);
     });
 
     it('should work with deeplink URLs', () => {
       const result = createProlinkUrl(EXAMPLE_PROLINK, 'myapp://pay');
-      expect(result.link).toBe(`myapp://pay?p=${EXAMPLE_PROLINK}`);
+      expect(result).toBe(`myapp://pay?p=${EXAMPLE_PROLINK}`);
     });
   });
 
@@ -30,7 +30,7 @@ describe('createProlinkUrl', () => {
         ref: 'promo',
         utm_source: 'email',
       });
-      const url = new URL(result.link);
+      const url = new URL(result);
       expect(url.searchParams.get('p')).toBe(EXAMPLE_PROLINK);
       expect(url.searchParams.get('ref')).toBe('promo');
       expect(url.searchParams.get('utm_source')).toBe('email');
@@ -40,7 +40,7 @@ describe('createProlinkUrl', () => {
       const result = createProlinkUrl(EXAMPLE_PROLINK, 'https://custom.com/pay', {
         campaign: 'summer',
       });
-      const url = new URL(result.link);
+      const url = new URL(result);
       expect(url.hostname).toBe('custom.com');
       expect(url.searchParams.get('p')).toBe(EXAMPLE_PROLINK);
       expect(url.searchParams.get('campaign')).toBe('summer');
@@ -48,7 +48,7 @@ describe('createProlinkUrl', () => {
 
     it('should handle empty additional params object', () => {
       const result = createProlinkUrl(EXAMPLE_PROLINK, undefined, {});
-      expect(result.link).toBe(`https://base.app/base-pay?p=${EXAMPLE_PROLINK}`);
+      expect(result).toBe(`https://base.app/base-pay?p=${EXAMPLE_PROLINK}`);
     });
   });
 
@@ -58,14 +58,14 @@ describe('createProlinkUrl', () => {
       const prolinkWithSpecialChars =
         'CAEQ-_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       const result = createProlinkUrl(prolinkWithSpecialChars);
-      expect(result.link).toBe(`https://base.app/base-pay?p=${prolinkWithSpecialChars}`);
+      expect(result).toBe(`https://base.app/base-pay?p=${prolinkWithSpecialChars}`);
       // Verify it's a valid URL
-      expect(() => new URL(result.link)).not.toThrow();
+      expect(() => new URL(result)).not.toThrow();
     });
 
     it('should create valid URL object', () => {
       const result = createProlinkUrl(EXAMPLE_PROLINK);
-      const url = new URL(result.link);
+      const url = new URL(result);
       expect(url.protocol).toBe('https:');
       expect(url.hostname).toBe('base.app');
       expect(url.pathname).toBe('/base-pay');
@@ -77,7 +77,7 @@ describe('createProlinkUrl', () => {
         message: 'hello world',
         special: 'a&b=c',
       });
-      const url = new URL(result.link);
+      const url = new URL(result);
       expect(url.searchParams.get('message')).toBe('hello world');
       expect(url.searchParams.get('special')).toBe('a&b=c');
     });
@@ -105,11 +105,11 @@ describe('createProlinkUrl', () => {
       const prolink = await encodeProlink(request);
       const result = createProlinkUrl(prolink);
 
-      expect(result.link).toContain('https://base.app/base-pay?p=');
-      expect(result.link).toContain(prolink);
+      expect(result).toContain('https://base.app/base-pay?p=');
+      expect(result).toContain(prolink);
 
       // Verify the URL is valid
-      const url = new URL(result.link);
+      const url = new URL(result);
       expect(url.searchParams.get('p')).toBe(prolink);
     });
 
@@ -161,8 +161,8 @@ describe('createProlinkUrl', () => {
       const prolink = await encodeProlink(request);
       const result = createProlinkUrl(prolink, 'https://base-staging.coinbase.com/base-pay');
 
-      expect(result.link).toContain('https://base-staging.coinbase.com/base-pay?p=');
-      expect(result.link).toContain(prolink);
+      expect(result).toContain('https://base-staging.coinbase.com/base-pay?p=');
+      expect(result).toContain(prolink);
     });
 
     it('should create URL from encoded generic RPC', async () => {
@@ -182,29 +182,29 @@ describe('createProlinkUrl', () => {
       const prolink = await encodeProlink(request);
       const result = createProlinkUrl(prolink);
 
-      expect(result.link).toContain('https://base.app/base-pay?p=');
-      expect(result.link).toContain(prolink);
+      expect(result).toContain('https://base.app/base-pay?p=');
+      expect(result).toContain(prolink);
     });
   });
 
   describe('error handling', () => {
     it('should throw on empty prolink string', () => {
-      expect(() => createProlinkUrl('')).toThrow('Prolink cannot be empty');
+      expect(() => createProlinkUrl('')).toThrow('prolink cannot be empty');
     });
 
     it('should throw on whitespace-only prolink string', () => {
-      expect(() => createProlinkUrl('   ')).toThrow('Prolink cannot be empty');
+      expect(() => createProlinkUrl('   ')).toThrow('prolink cannot be empty');
     });
 
-    it('should throw on empty baseUrl', () => {
-      expect(() => createProlinkUrl(EXAMPLE_PROLINK, '')).toThrow('baseUrl cannot be empty');
+    it('should throw on empty url', () => {
+      expect(() => createProlinkUrl(EXAMPLE_PROLINK, '')).toThrow('url cannot be empty');
     });
 
-    it('should throw on whitespace-only baseUrl', () => {
-      expect(() => createProlinkUrl(EXAMPLE_PROLINK, '   ')).toThrow('baseUrl cannot be empty');
+    it('should throw on whitespace-only url', () => {
+      expect(() => createProlinkUrl(EXAMPLE_PROLINK, '   ')).toThrow('url cannot be empty');
     });
 
-    it('should throw on invalid baseUrl', () => {
+    it('should throw on invalid url', () => {
       expect(() => createProlinkUrl(EXAMPLE_PROLINK, 'not a url')).toThrow();
     });
   });
@@ -214,10 +214,10 @@ describe('createProlinkUrl', () => {
       // Simulate a very long prolink (e.g., from a large transaction)
       const longProlink = 'A'.repeat(1000);
       const result = createProlinkUrl(longProlink);
-      expect(result.link).toContain('https://base.app/base-pay?p=');
-      expect(result.link).toContain(longProlink);
+      expect(result).toContain('https://base.app/base-pay?p=');
+      expect(result).toContain(longProlink);
       // Verify it's still a valid URL
-      expect(() => new URL(result.link)).not.toThrow();
+      expect(() => new URL(result)).not.toThrow();
     });
 
     it('should preserve exact prolink value in query param', () => {
@@ -232,37 +232,24 @@ describe('createProlinkUrl', () => {
 
       for (const prolink of testCases) {
         const result = createProlinkUrl(prolink);
-        const url = new URL(result.link);
+        const url = new URL(result);
         expect(url.searchParams.get('p')).toBe(prolink);
       }
     });
 
     it('should handle base URLs with existing query params', () => {
       const result = createProlinkUrl(EXAMPLE_PROLINK, 'https://base.app/base-pay?existing=param');
-      const url = new URL(result.link);
+      const url = new URL(result);
       expect(url.searchParams.get('existing')).toBe('param');
       expect(url.searchParams.get('p')).toBe(EXAMPLE_PROLINK);
     });
 
     it('should handle base URLs with paths and fragments', () => {
       const result = createProlinkUrl(EXAMPLE_PROLINK, 'https://example.com/path/to/pay#section');
-      const url = new URL(result.link);
+      const url = new URL(result);
       expect(url.pathname).toBe('/path/to/pay');
       expect(url.hash).toBe('#section');
       expect(url.searchParams.get('p')).toBe(EXAMPLE_PROLINK);
-    });
-  });
-
-  describe('return value structure', () => {
-    it('should return object with link property', () => {
-      const result = createProlinkUrl(EXAMPLE_PROLINK);
-      expect(result).toHaveProperty('link');
-      expect(typeof result.link).toBe('string');
-    });
-
-    it('should only have link property in return object', () => {
-      const result = createProlinkUrl(EXAMPLE_PROLINK);
-      expect(Object.keys(result)).toEqual(['link']);
     });
   });
 });

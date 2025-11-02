@@ -8,7 +8,7 @@
  * Create a link with an encoded prolink query parameter and additional query parameters
  *
  * @param prolink - Base64url-encoded prolink payload
- * @param baseUrl - Base URL to use for the link, defaults to https://base.app/base-pay
+ * @param url - URL to use for the link, defaults to https://base.app/base-pay
  * @param additionalQueryParams - Additional query parameters to add to the link
  * @returns { link: string } - Object containing the full link
  *
@@ -27,21 +27,21 @@
  */
 export function createProlinkUrl(
   prolink: string,
-  baseUrl: string = 'https://base.app/base-pay',
+  url: string = 'https://base.app/base-pay',
   additionalQueryParams?: Record<string, string>
-): { link: string } {
+): string {
   if (!prolink || prolink.trim().length === 0) {
-    throw new Error('Prolink cannot be empty');
+    throw new Error('prolink cannot be empty');
   }
-  if (!baseUrl || baseUrl.trim().length === 0) {
-    throw new Error('baseUrl cannot be empty');
+  if (!url || url.trim().length === 0) {
+    throw new Error('url cannot be empty');
   }
 
-  const url = new URL(baseUrl);
-  url.searchParams.set('p', prolink);
+  const link = new URL(url);
+  link.searchParams.set('p', prolink);
   Object.entries(additionalQueryParams ?? {}).forEach(([key, value]) => {
-    url.searchParams.set(key, value);
+    link.searchParams.set(key, value);
   });
 
-  return { link: url.toString() };
+  return link.toString();
 }
