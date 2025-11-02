@@ -215,9 +215,9 @@ export default function ProlinkPlayground() {
       const payload = await encodeProlink(request);
       setEncodedPayload(payload);
 
-      // Generate universal link
-      const { link } = createProlinkUrl(payload, baseUrl);
-      setUrlWithProlink(link);
+      // Generate link with prolink
+      const urlWithProlink = createProlinkUrl(payload, baseUrl);
+      setUrlWithProlink(urlWithProlink);
 
       // Decode to verify
       const decoded = await decodeProlink(payload);
@@ -257,7 +257,7 @@ export default function ProlinkPlayground() {
     navigator.clipboard.writeText(urlWithProlink);
     toast({
       title: 'Copied!',
-      description: 'Universal link copied to clipboard',
+      description: 'Link copied to clipboard',
       status: 'success',
       duration: 2000,
     });
@@ -644,7 +644,7 @@ export default function ProlinkPlayground() {
                       <Tabs>
                         <TabList>
                           <Tab>Encoded Payload</Tab>
-                          <Tab>Universal Link</Tab>
+                          <Tab>Link with Prolink</Tab>
                           <Tab>Decoded Result</Tab>
                         </TabList>
 
@@ -667,7 +667,7 @@ export default function ProlinkPlayground() {
                             </VStack>
                           </TabPanel>
 
-                          {/* Universal Link Tab */}
+                          {/* Link with Prolink Tab */}
                           <TabPanel>
                             <VStack spacing={4} align="stretch">
                               <HStack>
