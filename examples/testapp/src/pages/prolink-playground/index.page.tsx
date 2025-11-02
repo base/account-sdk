@@ -116,9 +116,7 @@ export default function ProlinkPlayground() {
   const [decodeResult, setDecodeResult] = useState<unknown>(null);
 
   // Link with Prolink section
-  const [urlForLinkWithProlink, setUrlForLinkWithProlink] = useState(
-    'https://base.app/base-pay'
-  );
+  const [urlForLinkWithProlink, setUrlForLinkWithProlink] = useState('https://base.app/base-pay');
 
   const generateProlink = async () => {
     setLoading(true);
