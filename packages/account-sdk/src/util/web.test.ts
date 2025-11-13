@@ -3,7 +3,6 @@ import { Mock, vi } from 'vitest';
 
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { externalCorrelationIds } from ':store/external-correlation-id/store.js';
-import { store } from ':store/store.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 import { closePopup, openPopup } from './web.js';
 
