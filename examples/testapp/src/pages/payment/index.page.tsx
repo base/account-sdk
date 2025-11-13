@@ -114,9 +114,15 @@ export default function Payment() {
         amount: payAmount,
         to: payTo,
         testnet: useTestnet,
-        walletUrl: customWalletUrl || scwUrl, // Use custom URL if provided, otherwise default
         telemetry: enableTelemetry,
         ...(payerInfo && { payerInfo }),
+        ...(customWalletUrl && {
+          sdkConfig: {
+            preference: {
+              walletUrl: customWalletUrl,
+            },
+          },
+        }),
       });
 
       setPayResult(result);
