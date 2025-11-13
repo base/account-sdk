@@ -1,7 +1,7 @@
 import type { Hex } from 'viem';
 import { createBaseAccountSDK } from '../../builder/core/createBaseAccountSDK.js';
 import { CHAIN_IDS } from '../constants.js';
-import type { PayerInfoResponses } from '../types.js';
+import type { PayerInfoResponses, PaymentSDKConfig } from '../types.js';
 
 /**
  * Type for wallet_sendCalls request parameters
@@ -39,20 +39,31 @@ export interface PaymentExecutionResult {
 /**
  * Creates an ephemeral SDK instance configured for payments
  * @param chainId - The chain ID to use
- * @param walletUrl - Optional wallet URL to use
  * @param telemetry - Whether to enable telemetry (defaults to true)
+ * @param sdkConfig - Optional advanced SDK configuration
  * @returns The configured SDK instance
  */
-export function createEphemeralSDK(chainId: number, walletUrl?: string, telemetry: boolean = true) {
+export function createEphemeralSDK(
+  chainId: number,
+  telemetry: boolean = true,
+  sdkConfig?: PaymentSDKConfig
+) {
   const appName = typeof window !== 'undefined' ? window.location.origin : 'Base Pay SDK';
 
+  // Merge sdkConfig with default settings
+  // sdkConfig takes precedence over individual parameters
   const sdk = createBaseAccountSDK({
-    appName: appName,
-    appChainIds: [chainId],
+    appName: sdkConfig?.appName || appName,
+    appLogoUrl: sdkConfig?.appLogoUrl,
+    appChainIds: sdkConfig?.appChainIds || [chainId],
     preference: {
-      telemetry: telemetry,
-      walletUrl,
+      telemetry: sdkConfig?.preference?.telemetry ?? telemetry,
+      walletUrl: sdkConfig?.preference?.walletUrl,
+      mode: sdkConfig?.preference?.mode,
+      attribution: sdkConfig?.preference?.attribution,
+      ...sdkConfig?.preference,
     },
+    paymasterUrls: sdkConfig?.paymasterUrls,
   });
 
   return sdk;
@@ -112,20 +123,20 @@ export async function executePayment(
  * Manages the complete payment flow with SDK lifecycle
  * @param requestParams - The wallet_sendCalls request parameters
  * @param testnet - Whether to use testnet
- * @param walletUrl - Optional wallet URL to use
  * @param telemetry - Whether to enable telemetry (defaults to true)
+ * @param sdkConfig - Optional advanced SDK configuration
  * @returns The payment execution result
  */
 export async function executePaymentWithSDK(
   requestParams: WalletSendCallsRequestParams,
   testnet: boolean,
-  walletUrl?: string,
-  telemetry: boolean = true
+  telemetry: boolean = true,
+  sdkConfig?: PaymentSDKConfig
 ): Promise<PaymentExecutionResult> {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
 
-  const sdk = createEphemeralSDK(chainId, walletUrl, telemetry);
+  const sdk = createEphemeralSDK(chainId, telemetry, sdkConfig);
   const provider = sdk.getProvider();
 
   try {
