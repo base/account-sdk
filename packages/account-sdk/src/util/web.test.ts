@@ -2,6 +2,7 @@ import { waitFor } from '@testing-library/preact';
 import { Mock, vi } from 'vitest';
 
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
+import { externalCorrelationIds } from ':store/external-correlation-id/store.js';
 import { store } from ':store/store.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 import { closePopup, openPopup } from './web.js';
@@ -100,10 +101,7 @@ describe('PopupManager', () => {
 
   it('should include externalCorrelationId in URL when present in store config', async () => {
     const externalCorrelationId = 'external_correlation_id_12345';
-    (store.config.get as Mock).mockReturnValue({
-      metadata: { appName: 'Test App' },
-      externalCorrelationId,
-    });
+    (externalCorrelationIds.get as Mock).mockReturnValueOnce(externalCorrelationId);
 
     const url = new URL('https://example.com');
     (window.open as Mock).mockReturnValue({ focus: vi.fn() });
