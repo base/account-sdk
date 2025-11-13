@@ -20,7 +20,7 @@ jobs:
       id-token: write
     timeout-minutes: 5
     env:
-      PACKAGE_VERSION: 2.0.3-payment-link
+      PACKAGE_VERSION: 2.0.4-payment-link
     steps:
       - name: Checkout
         uses: actions/checkout@v4
