@@ -52,7 +52,7 @@ const SUBSCRIPTION_DATA = {
   domain: {
     name: 'Spend Permission Manager',
     version: '1',
-    chainId: 1,
+    chainId: 8453,
     verifyingContract: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad',
   },
   types: {
