@@ -186,6 +186,7 @@ export class Signer {
           );
           return this.sendRequestToPopup(modifiedRequest);
         }
+        case 'experimental_requestInfo': 
         case 'wallet_sendCalls':
         case 'wallet_sign': {
           return this.sendRequestToPopup(request);
@@ -210,6 +211,11 @@ export class Signer {
         });
         throw error;
       }
+    }
+
+    // Handle all experimental methods
+    if (request.method.startsWith('experimental_')) {
+      return this.sendRequestToPopup(request);
     }
 
     switch (request.method) {

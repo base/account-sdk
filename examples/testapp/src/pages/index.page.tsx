@@ -6,6 +6,7 @@ import { WIDTH_2XL } from '../components/Layout';
 import { MethodsSection } from '../components/MethodsSection/MethodsSection';
 import { connectionMethods } from '../components/RpcMethods/method/connectionMethods';
 import { ephemeralMethods } from '../components/RpcMethods/method/ephemeralMethods';
+import { experimentalMethods } from '../components/RpcMethods/method/experimentalMethods';
 import { multiChainMethods } from '../components/RpcMethods/method/multiChainMethods';
 import { readonlyJsonRpcMethods } from '../components/RpcMethods/method/readonlyJsonRpcMethods';
 import { sendMethods } from '../components/RpcMethods/method/sendMethods';
@@ -13,6 +14,7 @@ import { signMessageMethods } from '../components/RpcMethods/method/signMessageM
 import { walletTxMethods } from '../components/RpcMethods/method/walletTxMethods';
 import { connectionMethodShortcutsMap } from '../components/RpcMethods/shortcut/connectionMethodShortcuts';
 import { ephemeralMethodShortcutsMap } from '../components/RpcMethods/shortcut/ephemeralMethodShortcuts';
+import { baseProfileShortcutsMap } from '../components/RpcMethods/shortcut/experimentalShortcuts';
 import { multiChainShortcutsMap } from '../components/RpcMethods/shortcut/multipleChainShortcuts';
 import { readonlyJsonRpcShortcutsMap } from '../components/RpcMethods/shortcut/readonlyJsonRpcShortcuts';
 import { sendShortcutsMap } from '../components/RpcMethods/shortcut/sendShortcuts';
@@ -82,6 +84,11 @@ export default function Home() {
         title="Ephemeral Methods"
         methods={ephemeralMethods}
         shortcutsMap={ephemeralMethodShortcutsMap}
+      />
+      <MethodsSection
+        title="Base Profile"
+        methods={experimentalMethods}
+        shortcutsMap={baseProfileShortcutsMap}
       />
       {shouldShowMethodsRequiringConnection && (
         <>
