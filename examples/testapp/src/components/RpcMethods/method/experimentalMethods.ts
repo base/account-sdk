@@ -6,12 +6,12 @@ const baseRequestInfo: RpcRequestInput = {
     {
       key: 'requests',
       required: true,
-    }
+    },
   ],
   format: (data: Record<string, string>) => [
     {
       requests: data.requests,
-    }
+    },
   ],
 };
 
