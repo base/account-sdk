@@ -186,7 +186,7 @@ export class Signer {
           );
           return this.sendRequestToPopup(modifiedRequest);
         }
-        case 'experimental_requestInfo': 
+        case 'experimental_requestInfo':
         case 'wallet_sendCalls':
         case 'wallet_sign': {
           return this.sendRequestToPopup(request);
