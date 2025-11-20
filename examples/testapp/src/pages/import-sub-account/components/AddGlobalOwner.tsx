@@ -9,26 +9,31 @@ import { abi } from '../../../constants';
 export function AddGlobalOwner({
   sdk,
   subAccount,
+  onOwnerAdded,
 }: {
   sdk: ReturnType<typeof createBaseAccountSDK>;
   subAccount: SmartAccount;
+  onOwnerAdded?: () => void;
 }) {
   const [state, setState] = useState<string>();
+  const [isAdding, setIsAdding] = useState(false);
 
   const handleAddGlobalOwner = useCallback(async () => {
-    if (!sdk) {
+    if (!sdk || isAdding) {
       return;
     }
 
-    const provider = sdk.getProvider();
-    const accounts = await provider.request({
-      method: 'eth_accounts',
-    });
-
-    // biome-ignore lint/suspicious/noConsole: internal logging
-    console.log('customlogs: accounts', accounts);
+    setIsAdding(true);
 
     try {
+      const provider = sdk.getProvider();
+      const accounts = await provider.request({
+        method: 'eth_accounts',
+      });
+
+      // biome-ignore lint/suspicious/noConsole: internal logging
+      console.log('customlogs: accounts', accounts);
+
       const client = createPublicClient({
         chain: baseSepolia,
         transport: http(),
@@ -46,7 +51,7 @@ export function AddGlobalOwner({
         ),
         paymaster: paymasterClient,
       });
-      // @ts-expect-error
+      // @ts-ignore
       const hash = await bundlerClient.sendUserOperation({
         calls: [
           {
@@ -62,26 +67,37 @@ export function AddGlobalOwner({
       });
 
       console.info('response', hash);
-      setState(hash as string);
+      setState(`Adding owner... UserOp: ${hash as string}`);
+
+      // Wait a bit for the transaction to be processed
+      setTimeout(() => {
+        setState(`Owner added! UserOp: ${hash as string}`);
+        onOwnerAdded?.();
+      }, 2000);
     } catch (e) {
       console.error('error', e);
+      setState(`Error: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    } finally {
+      setIsAdding(false);
     }
-  }, [sdk, subAccount]);
+  }, [sdk, subAccount, onOwnerAdded, isAdding]);
 
   return (
     <>
       <Button
         w="full"
         onClick={handleAddGlobalOwner}
-        bg="blue.500"
+        isLoading={isAdding}
+        loadingText="Adding Owner..."
+        bg="orange.500"
         color="white"
         border="1px solid"
-        borderColor="blue.500"
-        _hover={{ bg: 'blue.600', borderColor: 'blue.600' }}
+        borderColor="orange.500"
+        _hover={{ bg: 'orange.600', borderColor: 'orange.600' }}
         _dark={{
-          bg: 'blue.600',
-          borderColor: 'blue.600',
-          _hover: { bg: 'blue.700', borderColor: 'blue.700' },
+          bg: 'orange.600',
+          borderColor: 'orange.600',
+          _hover: { bg: 'orange.700', borderColor: 'orange.700' },
         }}
       >
         Add Global Owner

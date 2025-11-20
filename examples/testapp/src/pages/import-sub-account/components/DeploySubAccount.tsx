@@ -51,13 +51,18 @@ export function DeploySubAccount({
       console.info('deployment userOp hash:', hash);
       setState(`Deploying... UserOp: ${hash}`);
 
-      // Wait for deployment and check if deployed
-      const isDeployed = await subAccount.isDeployed();
-      if (isDeployed) {
+      // Wait for the UserOperation to be included in a block
+      const receipt = await bundlerClient.waitForUserOperationReceipt({
+        hash,
+      });
+
+      console.info('deployment receipt:', receipt);
+
+      if (receipt.success) {
         setState(`Deployed! UserOp: ${hash}`);
         onDeployed?.();
       } else {
-        setState(`Deployment pending... UserOp: ${hash}`);
+        setState(`Deployment failed. UserOp: ${hash}`);
       }
     } catch (e) {
       console.error('error', e);
