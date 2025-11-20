@@ -1,5 +1,5 @@
 import { createBaseAccountSDK } from '@base-org/account';
-import { DeleteIcon } from '@chakra-ui/icons';
+import { CopyIcon, DeleteIcon } from '@chakra-ui/icons';
 import {
   Badge,
   Box,
@@ -243,6 +243,19 @@ export function AccountsList({
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
+  const handleCopyAddress = useCallback(
+    (address: string) => {
+      navigator.clipboard.writeText(address);
+      toast({
+        title: 'Address copied',
+        description: address,
+        status: 'success',
+        duration: 2000,
+      });
+    },
+    [toast]
+  );
+
   return (
     <VStack w="full" spacing={4} align="stretch">
       <HStack justify="space-between">
@@ -295,9 +308,18 @@ export function AccountsList({
                 <Text fontSize="xs" color="gray.600" _dark={{ color: 'gray.400' }}>
                   Address
                 </Text>
-                <Text fontSize="sm" fontFamily="mono">
-                  {truncateAddress(account.smartAccount.address)}
-                </Text>
+                <HStack spacing={2}>
+                  <Text fontSize="sm" fontFamily="mono">
+                    {truncateAddress(account.smartAccount.address)}
+                  </Text>
+                  <IconButton
+                    aria-label="Copy address"
+                    icon={<CopyIcon />}
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => handleCopyAddress(account.smartAccount.address)}
+                  />
+                </HStack>
               </Box>
 
               <Box>
