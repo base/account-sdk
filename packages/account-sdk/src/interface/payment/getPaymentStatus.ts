@@ -6,22 +6,27 @@ import {
   logPaymentStatusCheckError,
   logPaymentStatusCheckStarted,
 } from ':core/telemetry/events/payment.js';
-import { ERC20_TRANSFER_ABI, TOKENS } from './constants.js';
+import { CHAIN_IDS, ERC20_TRANSFER_ABI } from './constants.js';
 import type { PaymentStatus, PaymentStatusOptions } from './types.js';
+import { decodePaymentId, getBundlerUrl } from './utils/erc3770.js';
+import { getStablecoinMetadataByAddress } from './utils/tokenRegistry.js';
 
 /**
  * Check the status of a payment transaction using its transaction ID (userOp hash)
  *
  * @param options - Payment status check options
+ * @param options.id - Payment ID. For `payWithToken()`, this is ERC-3770 encoded (e.g., "base:0x1234...5678").
+ *                     For `pay()`, this is a plain transaction hash (e.g., "0x1234...5678").
+ * @param options.testnet - Whether to use testnet (only used for legacy format from `pay()`)
  * @returns Promise<PaymentStatus> - Status information about the payment
  * @throws Error if unable to connect to the RPC endpoint or if the RPC request fails
  *
  * @example
  * ```typescript
+ * // ERC-3770 encoded ID from payWithToken()
  * try {
  *   const status = await getPaymentStatus({
- *     id: "0x1234...5678",
- *     testnet: true
+ *     id: "base:0x1234...5678"
  *   })
  *
  *   if (status.status === 'failed') {
@@ -32,7 +37,21 @@ import type { PaymentStatus, PaymentStatusOptions } from './types.js';
  * }
  * ```
  *
- * @note The id is the userOp hash returned from the pay function
+ * @example
+ * ```typescript
+ * // Legacy format from pay() - requires testnet flag
+ * try {
+ *   const status = await getPaymentStatus({
+ *     id: "0x1234...5678",
+ *     testnet: true
+ *   })
+ * } catch (error) {
+ *   console.error('Unable to check payment status:', error.message)
+ * }
+ * ```
+ *
+ * @note For `payWithToken()`, the ID is automatically encoded with chain information using ERC-3770 format.
+ *       For `pay()`, the ID is a plain hash and requires the `testnet` flag to determine the chain.
  */
 export async function getPaymentStatus(options: PaymentStatusOptions): Promise<PaymentStatus> {
   const { id, testnet = false, telemetry = true } = options;
@@ -40,17 +59,47 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
   // Generate correlation ID for this status check
   const correlationId = crypto.randomUUID();
 
+  // Decode payment ID to extract chainId and transactionHash
+  // If ERC-3770 format, extract chainId; otherwise use legacy format with testnet flag
+  const decoded = decodePaymentId(id);
+  let chainId: number;
+  let transactionHash: string;
+  let bundlerUrl: string | null;
+
+  if (decoded) {
+    // ERC-3770 encoded format: extract chainId and transactionHash
+    chainId = decoded.chainId;
+    transactionHash = decoded.transactionHash;
+    bundlerUrl = getBundlerUrl(chainId);
+
+    if (!bundlerUrl) {
+      throw new Error(
+        `Bundler URL not available for chain ID ${chainId}. Payment status checking is not supported for this chain.`
+      );
+    }
+  } else {
+    // Legacy format: use testnet flag to determine Base network
+    transactionHash = id;
+    chainId = testnet ? CHAIN_IDS.baseSepolia : CHAIN_IDS.base;
+    bundlerUrl = getBundlerUrl(chainId);
+
+    if (!bundlerUrl) {
+      // Fallback to hardcoded URLs for backward compatibility
+      bundlerUrl = testnet
+        ? 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
+        : 'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O';
+    }
+  }
+
+  // Determine testnet status from chainId for telemetry
+  const isTestnet = chainId === CHAIN_IDS.baseSepolia || chainId === CHAIN_IDS.sepolia;
+
   // Log status check started
   if (telemetry) {
-    logPaymentStatusCheckStarted({ testnet, correlationId });
+    logPaymentStatusCheckStarted({ testnet: isTestnet, correlationId });
   }
 
   try {
-    // Get the bundler URL based on network
-    const bundlerUrl = testnet
-      ? 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
-      : 'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O';
-
     // Call eth_getUserOperationReceipt via the bundler
     const receipt = await fetch(bundlerUrl, {
       method: 'POST',
@@ -61,7 +110,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         jsonrpc: '2.0',
         id: 1,
         method: 'eth_getUserOperationReceipt',
-        params: [id],
+        params: [transactionHash],
       }),
     }).then((res) => res.json());
 
@@ -70,7 +119,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       console.error('[getPaymentStatus] RPC error:', receipt.error);
       const errorMessage = receipt.error.message || 'Network error';
       if (telemetry) {
-        logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
+        logPaymentStatusCheckError({ testnet: isTestnet, correlationId, errorMessage });
       }
       // Re-throw error for RPC failures
       throw new Error(`RPC error: ${errorMessage}`);
@@ -88,18 +137,18 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
           jsonrpc: '2.0',
           id: 2,
           method: 'eth_getUserOperationByHash',
-          params: [id],
+          params: [transactionHash],
         }),
       }).then((res) => res.json());
 
       if (userOpResponse.result) {
         // UserOp exists but no receipt yet - it's pending
         if (telemetry) {
-          logPaymentStatusCheckCompleted({ testnet, status: 'pending', correlationId });
+          logPaymentStatusCheckCompleted({ testnet: isTestnet, status: 'pending', correlationId });
         }
         const result = {
           status: 'pending' as const,
-          id: id as Hex,
+          id: transactionHash as Hex,
           message: 'Your payment is being processed. This usually takes a few seconds.',
           sender: userOpResponse.result.sender,
         };
@@ -108,11 +157,11 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
       // Not found at all
       if (telemetry) {
-        logPaymentStatusCheckCompleted({ testnet, status: 'not_found', correlationId });
+        logPaymentStatusCheckCompleted({ testnet: isTestnet, status: 'not_found', correlationId });
       }
       const result = {
         status: 'not_found' as const,
-        id: id as Hex,
+        id: transactionHash as Hex,
         message: 'Payment not found. Please check your transaction ID.',
       };
       return result;
@@ -123,107 +172,104 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
     // Determine status based on success flag
     if (success) {
-      // Parse USDC amount from logs
+      // Parse token transfer details from logs
       let amount: string | undefined;
+      let tokenAmount: string | undefined;
+      let tokenAddress: string | undefined;
+      let tokenSymbol: string | undefined;
       let recipient: string | undefined;
 
       if (txReceipt?.logs) {
-        const network = testnet ? 'baseSepolia' : 'base';
-        const usdcAddress = TOKENS.USDC.addresses[network].toLowerCase();
-        // Normalize sender address for comparison
         const senderAddress: Address | undefined = receipt.result.sender
           ? getAddress(receipt.result.sender)
           : undefined;
 
-        // Collect all USDC transfers
-        const usdcTransfers: Array<{
-          from: string;
-          to: string;
+        const tokenTransfers: Array<{
+          from: Address;
+          to: Address;
           value: bigint;
-          formattedAmount: string;
-          logIndex: number;
+          contract: Address;
         }> = [];
 
-        for (let i = 0; i < txReceipt.logs.length; i++) {
-          const log = txReceipt.logs[i];
+        for (const log of txReceipt.logs) {
+          if (!log.address) {
+            continue;
+          }
 
-          // Check if this is a USDC log
-          const logAddressLower = log.address?.toLowerCase();
-          const isUsdcLog = logAddressLower === usdcAddress;
+          try {
+            const decoded = decodeEventLog({
+              abi: ERC20_TRANSFER_ABI,
+              data: log.data,
+              topics: log.topics,
+            });
 
-          if (isUsdcLog) {
-            try {
-              const decoded = decodeEventLog({
-                abi: ERC20_TRANSFER_ABI,
-                data: log.data,
-                topics: log.topics,
-              });
-
-              if (decoded.eventName === 'Transfer' && decoded.args) {
-                const args = decoded.args as { from: string; to: string; value: bigint };
-
-                if (args.value && args.to && args.from) {
-                  const formattedAmount = formatUnits(args.value, 6);
-
-                  usdcTransfers.push({
-                    from: args.from,
-                    to: args.to,
-                    value: args.value,
-                    formattedAmount,
-                    logIndex: i,
-                  });
-                }
+            if (decoded.eventName === 'Transfer' && decoded.args) {
+              const args = decoded.args as { from: string; to: string; value: bigint };
+              if (args.value && args.to && args.from) {
+                tokenTransfers.push({
+                  from: getAddress(args.from),
+                  to: getAddress(args.to),
+                  value: args.value,
+                  contract: getAddress(log.address as Address),
+                });
               }
-            } catch (_e) {
-              // Do not fail here - fail when we can't find a single valid transfer
             }
+          } catch (_e) {
+            // Ignore non ERC-20 logs
           }
         }
 
-        // Now select the correct transfer
-        // Strategy: Find the transfer from the sender (smart wallet) address
-        if (usdcTransfers.length > 0 && senderAddress) {
-          // Look for transfers from the sender address (smart wallet)
-          // Compare checksummed addresses for consistency
-          const senderTransfers = usdcTransfers.filter((t) => {
+        if (tokenTransfers.length > 0 && senderAddress) {
+          const senderTransfers = tokenTransfers.filter((t) => {
             try {
-              return isAddressEqual(t.from as Address, senderAddress!);
+              return isAddressEqual(t.from, senderAddress);
             } catch {
               return false;
             }
           });
 
           if (senderTransfers.length === 0) {
-            // No transfer from the sender wallet was found
             throw new Error(
-              `Unable to find USDC transfer from sender wallet ${receipt.result.sender}. ` +
-                `Found ${usdcTransfers.length} USDC transfer(s) but none originated from the sender wallet.`
+              `Unable to find token transfer from sender wallet ${receipt.result.sender}. ` +
+                `Found ${tokenTransfers.length} transfer(s) but none originated from the sender wallet.`
             );
           }
+
           if (senderTransfers.length > 1) {
-            // Multiple transfers from the sender wallet found
             const transferDetails = senderTransfers
-              .map((t) => `${t.formattedAmount} USDC to ${t.to}`)
+              .map((t) => `${t.value.toString()} wei to ${t.to}`)
               .join(', ');
             throw new Error(
-              `Found multiple USDC transfers from sender wallet ${receipt.result.sender}: ${transferDetails}. Expected exactly one transfer.`
+              `Found multiple token transfers from sender wallet ${receipt.result.sender}: ${transferDetails}. Expected exactly one transfer.`
             );
           }
-          // Exactly one transfer from sender found
-          amount = senderTransfers[0].formattedAmount;
-          recipient = senderTransfers[0].to;
+
+          const transfer = senderTransfers[0];
+          const stablecoinMetadata = getStablecoinMetadataByAddress(transfer.contract);
+
+          tokenAmount = transfer.value.toString();
+          tokenAddress = transfer.contract as Address;
+          tokenSymbol = stablecoinMetadata?.symbol;
+          recipient = transfer.to;
+
+          if (stablecoinMetadata) {
+            amount = formatUnits(transfer.value, stablecoinMetadata.decimals);
+          }
         }
       }
 
       if (telemetry) {
-        logPaymentStatusCheckCompleted({ testnet, status: 'completed', correlationId });
+        logPaymentStatusCheckCompleted({ testnet: isTestnet, status: 'completed', correlationId });
       }
       const result = {
         status: 'completed' as const,
-        id: id as Hex,
+        id: transactionHash as Hex,
         message: 'Payment completed successfully',
         sender: receipt.result.sender,
         amount,
+        tokenAmount,
+        tokenAddress,
+        tokenSymbol,
         recipient,
       };
       return result;
@@ -240,11 +286,11 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
     }
 
     if (telemetry) {
-      logPaymentStatusCheckCompleted({ testnet, status: 'failed', correlationId });
+      logPaymentStatusCheckCompleted({ testnet: isTestnet, status: 'failed', correlationId });
     }
     const result = {
       status: 'failed' as const,
-      id: id as Hex,
+      id: transactionHash as Hex,
       message: 'Payment failed',
       sender: receipt.result.sender,
       reason: userFriendlyReason,
@@ -255,7 +301,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
     const errorMessage = error instanceof Error ? error.message : 'Connection error';
     if (telemetry) {
-      logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
+      logPaymentStatusCheckError({ testnet: isTestnet, correlationId, errorMessage });
     }
 
     // Re-throw the error

@@ -3,11 +3,12 @@ import * as acorn from 'acorn';
 // Define the whitelist of allowed operations
 export const WHITELIST = {
   // Allowed SDK functions
-  allowedFunctions: ['pay', 'getPaymentStatus'],
+  allowedFunctions: ['pay', 'getPaymentStatus', 'payWithToken', 'swap', 'getSwapQuote', 'getSwapStatus'],
 
   // Allowed object properties and methods
   allowedObjects: {
-    base: ['pay', 'getPaymentStatus'],
+    base: ['pay', 'getPaymentStatus', 'payWithToken'],
+    trade: ['swap', 'getSwapQuote', 'getSwapStatus'],
     console: ['log', 'error', 'warn', 'info'],
     Promise: ['resolve', 'reject', 'all', 'race'],
     Object: ['keys', 'values', 'entries', 'assign'],

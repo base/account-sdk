@@ -1,16 +1,50 @@
-import type { PaymentResult, PaymentStatus } from '@base-org/account';
+import type { PaymentResult, PaymentStatus, TokenPaymentSuccess } from '@base-org/account';
+import { formatUnits } from 'viem';
 import styles from './Output.module.css';
 
 interface OutputProps {
-  result: PaymentResult | PaymentStatus | null;
+  result: PaymentResult | TokenPaymentSuccess | PaymentStatus | null;
   error: string | null;
   consoleOutput: string[];
   isLoading: boolean;
 }
 
-// Type guard to check if result is PaymentResult
+// Token configuration for formatting
+const TOKEN_CONFIG: Record<string, { symbol: string; decimals: number }> = {
+  '0xac1bd2486aaf3b5c0fc3fd868558b082a531b2b4': { symbol: 'USDC', decimals: 6 }, // Base Sepolia USDC
+  '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913': { symbol: 'USDC', decimals: 6 }, // Base mainnet USDC
+};
+
+function getTokenInfo(tokenAddress: string) {
+  const lowerAddress = tokenAddress.toLowerCase();
+  return TOKEN_CONFIG[lowerAddress] || { symbol: 'Token', decimals: 18 };
+}
+
+function stripChainPrefix(txHash: string): string {
+  // Remove chain prefix if present (e.g., "base:0x..." -> "0x...")
+  return txHash.includes(':') ? txHash.split(':')[1] : txHash;
+}
+
+// Type guard to check if result is TokenPaymentSuccess
+const isTokenPaymentResult = (result: unknown): result is TokenPaymentSuccess => {
+  return (
+    result !== null &&
+    typeof result === 'object' &&
+    'success' in result &&
+    'tokenAmount' in result &&
+    'tokenAddress' in result
+  );
+};
+
+// Type guard to check if result is PaymentResult (USDC payment)
 const isPaymentResult = (result: unknown): result is PaymentResult => {
-  return result !== null && typeof result === 'object' && 'success' in result;
+  return (
+    result !== null &&
+    typeof result === 'object' &&
+    'success' in result &&
+    'amount' in result &&
+    !('tokenAmount' in result)
+  );
 };
 
 // Type guard to check if result is PaymentStatus
@@ -86,7 +120,7 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
               {result.success && result.id && (
                 <div className={styles.resultRow}>
                   <span className={styles.resultLabel}>Transaction ID</span>
-                  <code className={styles.resultValue}>{result.id}</code>
+                  <code className={styles.resultValue}>{stripChainPrefix(result.id)}</code>
                 </div>
               )}
               {!result.success && 'error' in result && (result as { error?: string }).error && (
@@ -95,6 +129,154 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                   <span className={styles.errorMessage}>
                     {(result as { error?: string }).error}
                   </span>
+                </div>
+              )}
+            </div>
+
+            {result.success && result.payerInfoResponses && (
+              <div className={styles.userDataSection}>
+                <div className={styles.userDataHeader}>
+                  <svg
+                    className={styles.userDataIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <span>User Info</span>
+                </div>
+                <div className={styles.userDataBody}>
+                  {result.payerInfoResponses.name && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>Name</span>
+                      <span className={styles.userDataValue}>
+                        {(() => {
+                          const name = result.payerInfoResponses.name as unknown as {
+                            firstName: string;
+                            familyName: string;
+                          };
+                          return `${name.firstName} ${name.familyName}`;
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                  {result.payerInfoResponses.email && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>Email</span>
+                      <span className={styles.userDataValue}>
+                        {result.payerInfoResponses.email}
+                      </span>
+                    </div>
+                  )}
+                  {result.payerInfoResponses.phoneNumber && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>Phone</span>
+                      <span className={styles.userDataValue}>
+                        {result.payerInfoResponses.phoneNumber.number} (
+                        {result.payerInfoResponses.phoneNumber.country})
+                      </span>
+                    </div>
+                  )}
+                  {result.payerInfoResponses.physicalAddress && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>Address</span>
+                      <span className={styles.userDataValue}>
+                        {(() => {
+                          const addr = result.payerInfoResponses.physicalAddress as unknown as {
+                            address1: string;
+                            address2?: string;
+                            city: string;
+                            state: string;
+                            postalCode: string;
+                            countryCode: string;
+                            name?: {
+                              firstName: string;
+                              familyName: string;
+                            };
+                          };
+                          const parts = [
+                            addr.name ? `${addr.name.firstName} ${addr.name.familyName}` : null,
+                            addr.address1,
+                            addr.address2,
+                            `${addr.city}, ${addr.state} ${addr.postalCode}`,
+                            addr.countryCode,
+                          ].filter(Boolean);
+                          return parts.join(', ');
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                  {result.payerInfoResponses.onchainAddress && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>On-chain Address</span>
+                      <span className={styles.userDataValue}>
+                        {result.payerInfoResponses.onchainAddress}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {result && isTokenPaymentResult(result) && (
+          <div className={`${styles.resultCard} ${result.success ? styles.success : styles.error}`}>
+            <div className={styles.resultHeader}>
+              {result.success ? (
+                <>
+                  <svg
+                    className={styles.resultIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <span className={styles.resultTitle}>Payment Successful!</span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    className={styles.resultIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  <span className={styles.resultTitle}>Payment Failed</span>
+                </>
+              )}
+            </div>
+
+            <div className={styles.resultBody}>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Amount</span>
+                <span className={styles.resultValue}>
+                  {formatUnits(
+                    BigInt(result.tokenAmount),
+                    getTokenInfo(result.tokenAddress).decimals
+                  )}{' '}
+                  {result.token || getTokenInfo(result.tokenAddress).symbol}
+                </span>
+              </div>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Recipient</span>
+                <code className={styles.resultValue}>{result.to}</code>
+              </div>
+              {result.success && result.id && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Transaction ID</span>
+                  <code className={styles.resultValue}>{stripChainPrefix(result.id)}</code>
                 </div>
               )}
             </div>
@@ -273,7 +455,7 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
               </div>
               <div className={styles.resultRow}>
                 <span className={styles.resultLabel}>Transaction ID</span>
-                <code className={styles.resultValue}>{result.id}</code>
+                <code className={styles.resultValue}>{stripChainPrefix(result.id)}</code>
               </div>
               <div className={styles.resultRow}>
                 <span className={styles.resultLabel}>Message</span>

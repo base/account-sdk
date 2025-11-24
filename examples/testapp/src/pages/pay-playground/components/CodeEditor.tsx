@@ -1,4 +1,11 @@
+import React from 'react';
 import styles from './CodeEditor.module.css';
+
+export interface Preset {
+  name: string;
+  description: string;
+  code: string;
+}
 
 interface CodeEditorProps {
   code: string;
@@ -9,6 +16,12 @@ interface CodeEditorProps {
   includePayerInfo: boolean;
   onPayerInfoToggle: (checked: boolean) => void;
   showPayerInfoToggle?: boolean;
+  presets?: Preset[];
+  transformPresetCode?: (code: string, includePayerInfo: boolean) => string;
+  paymasterUrl?: string;
+  onPaymasterUrlChange?: (url: string) => void;
+  showPaymasterUrl?: boolean;
+  onPresetChange?: (code: string) => void;
 }
 
 export const CodeEditor = ({
@@ -20,7 +33,42 @@ export const CodeEditor = ({
   includePayerInfo,
   onPayerInfoToggle,
   showPayerInfoToggle = true,
+  presets,
+  transformPresetCode,
+  paymasterUrl,
+  onPaymasterUrlChange,
+  showPaymasterUrl = false,
+  onPresetChange,
 }: CodeEditorProps) => {
+  const presetSelectRef = React.useRef<HTMLSelectElement>(null);
+
+  const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedPreset = presets?.find((p) => p.name === e.target.value);
+    if (selectedPreset) {
+      let presetCode = selectedPreset.code;
+      // Apply payerInfo transformation if toggle is enabled and transform function is provided
+      if (includePayerInfo && transformPresetCode) {
+        presetCode = transformPresetCode(presetCode, includePayerInfo);
+      }
+      // Use onPresetChange if provided, otherwise use onChange
+      // onPresetChange will apply the current paymasterUrl to the preset code
+      if (onPresetChange) {
+        onPresetChange(presetCode);
+      } else {
+        onChange(presetCode);
+      }
+      // Presets don't control payer info toggle - it's independent
+      // Paymaster URL stays intact when switching presets
+    }
+  };
+
+  const handleReset = () => {
+    if (presetSelectRef.current) {
+      presetSelectRef.current.value = '';
+    }
+    onReset();
+  };
+
   return (
     <div className={styles.editorPanel}>
       <div className={styles.panelHeader}>
@@ -40,7 +88,7 @@ export const CodeEditor = ({
           </svg>
           Code Editor
         </h2>
-        <button onClick={onReset} className={styles.resetButton} disabled={isLoading}>
+        <button onClick={handleReset} className={styles.resetButton} disabled={isLoading}>
           <svg
             className={styles.buttonIcon}
             viewBox="0 0 24 24"
@@ -54,6 +102,69 @@ export const CodeEditor = ({
           Reset
         </button>
       </div>
+
+      {showPaymasterUrl && (
+        <div className={styles.presetContainer}>
+          <label htmlFor="paymaster-url" className={styles.presetLabel}>
+            <svg
+              className={styles.presetIcon}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+            Paymaster URL:
+          </label>
+          <input
+            id="paymaster-url"
+            type="text"
+            value={paymasterUrl || ''}
+            onChange={(e) => onPaymasterUrlChange?.(e.target.value)}
+            disabled={isLoading}
+            className={styles.presetSelect}
+          />
+        </div>
+      )}
+
+      {presets && presets.length > 0 && (
+        <div className={styles.presetContainer}>
+          <label htmlFor="preset-select" className={styles.presetLabel}>
+            <svg
+              className={styles.presetIcon}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+            Preset:
+          </label>
+          <select
+            ref={presetSelectRef}
+            id="preset-select"
+            className={styles.presetSelect}
+            onChange={handlePresetChange}
+            disabled={isLoading}
+            defaultValue=""
+          >
+            <option value="">Select a preset...</option>
+            {presets.map((preset) => (
+              <option key={preset.name} value={preset.name}>
+                {preset.name} - {preset.description}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {showPayerInfoToggle && (
         <div className={styles.checkboxContainer}>

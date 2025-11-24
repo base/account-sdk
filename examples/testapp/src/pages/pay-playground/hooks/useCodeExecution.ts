@@ -1,12 +1,16 @@
-import type { PaymentResult, PaymentStatus } from '@base-org/account';
-import { getPaymentStatus, pay } from '@base-org/account';
+import type { PaymentResult, PaymentStatus, PayWithTokenResult } from '@base-org/account';
+import { getPaymentStatus, pay, payWithToken } from '@base-org/account';
+// @ts-ignore - trade module types
+import type { SwapResult, SwapQuote, SwapStatus } from '@base-org/account/trade';
+// @ts-ignore - trade module
+import { swap, getSwapQuote, getSwapStatus } from '@base-org/account/trade';
 import { useCallback, useState } from 'react';
 import { transformAndSanitizeCode } from '../utils/codeTransform';
 import { useConsoleCapture } from './useConsoleCapture';
 
 export const useCodeExecution = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<PaymentResult | PaymentStatus | null>(null);
+  const [result, setResult] = useState<PaymentResult | PaymentStatus | PayWithTokenResult | SwapResult | SwapQuote | SwapStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
   const { captureConsole } = useConsoleCapture();
@@ -49,10 +53,21 @@ export const useCodeExecution = () => {
           // Individual functions for direct access
           pay,
           getPaymentStatus,
+          payWithToken,
+          swap,
+          getSwapQuote,
+          getSwapStatus,
           // Namespaced access via base object
           base: {
             pay,
             getPaymentStatus,
+            payWithToken,
+          },
+          // Namespaced access via trade object
+          trade: {
+            swap,
+            getSwapQuote,
+            getSwapStatus,
           },
         };
 

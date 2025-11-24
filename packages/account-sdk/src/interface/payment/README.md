@@ -21,17 +21,54 @@ if (payment.success) {
 }
 ```
 
+## Token Payments (`payWithToken`)
+
+Use `payWithToken` to send any ERC20 token (or native ETH via the `0xEeee…` placeholder) by specifying the chain, token, and paymaster configuration.
+
+```typescript
+import { payWithToken } from '@base-org/account';
+
+const payment = await payWithToken({
+  amount: '1000000',          // base units (wei)
+  token: 'USDC',              // symbol or contract address
+  chainId: '0x2105',          // Base mainnet
+  to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+  paymaster: {
+    url: 'https://paymaster.example.com',
+  },
+  payerInfo: {
+    requests: [{ type: 'email' }],
+  },
+});
+
+console.log(`Token payment sent! Chain-specific ID: ${payment.id}`);
+```
+
+**Token payment notes**
+
+- `amount` must be provided in the token’s smallest unit (e.g., wei).
+- `token` can be an address or a supported symbol (USDC, USDT, DAI). Symbols are validated against the `chainId` you provide.
+- `paymaster` is required. Provide either a `url` for a paymaster service or a precomputed `paymasterAndData`.
+- The returned `payment.id` uses the [ERC-3770](https://eips.ethereum.org/EIPS/eip-3770) `shortName:hash` format (for example, `base:0x1234…`). Pass this ID directly to `getPaymentStatus`—it already contains the chain context, so you do **not** need to supply `testnet`.
+
 ## Checking Payment Status
 
-You can check the status of a payment using the transaction ID returned from the pay function:
+You can check the status of a payment using the ID returned from either `pay()` or `payWithToken()`:
 
 ```typescript
 import { getPaymentStatus } from '@base/account-sdk';
 
-// Check payment status
-const status = await getPaymentStatus({
-  id: payment.id,
-  testnet: true
+// Assume tokenPayment/usdcPayment are the results from the examples above.
+
+// Token payments (ERC-3770 encoded IDs). No testnet flag needed.
+const tokenStatus = await getPaymentStatus({
+  id: tokenPayment.id, // e.g., "base:0x1234..."
+});
+
+// USDC payments via pay() still require a testnet flag.
+const usdcStatus = await getPaymentStatus({
+  id: usdcPayment.id,
+  testnet: true,
 });
 
 switch (status.status) {
@@ -49,6 +86,11 @@ switch (status.status) {
     break;
 }
 ```
+
+The status object now includes:
+
+- `tokenAmount`, `tokenAddress`, and `tokenSymbol` for any detected ERC20 transfer.
+- `amount` (human-readable) when the token is a whitelisted stablecoin (USDC/USDT/DAI).
 
 ## Information Requests (Data Callbacks)
 
@@ -144,10 +186,8 @@ The payment result is always a successful payment (errors are thrown as exceptio
 
 ### `getPaymentStatus(options: PaymentStatusOptions): Promise<PaymentStatus>`
 
-#### PaymentStatusOptions
-
-- `id: string` - Transaction ID (userOp hash) to check status for
-- `testnet?: boolean` - Whether to check on testnet (Base Sepolia). Defaults to false (mainnet)
+- `id: string` - Payment ID to check. For `payWithToken()` this is an ERC-3770 value (`shortName:0x…`). For `pay()` this is a plain transaction hash.
+- `testnet?: boolean` - Only used for plain hashes returned by `pay()`. Ignored when the ID already encodes the chain (ERC-3770 format).
 - `telemetry?: boolean` - Whether to enable telemetry logging (default: true)
 
 #### PaymentStatus

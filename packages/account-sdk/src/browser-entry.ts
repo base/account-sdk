@@ -9,6 +9,7 @@ import { base } from './interface/payment/base.browser.js';
 import { CHAIN_IDS, TOKENS } from './interface/payment/constants.js';
 import { getPaymentStatus } from './interface/payment/getPaymentStatus.js';
 import { pay } from './interface/payment/pay.js';
+import { payWithToken } from './interface/payment/payWithToken.js';
 import { subscribe } from './interface/payment/subscribe.js';
 import type {
   InfoRequest,
@@ -17,6 +18,8 @@ import type {
   PaymentResult,
   PaymentStatus,
   PaymentStatusOptions,
+  PayWithTokenOptions,
+  PayWithTokenResult,
   SubscriptionOptions,
   SubscriptionResult,
 } from './interface/payment/types.js';
@@ -50,7 +53,7 @@ export type {
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
 export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js';
-export { base, CHAIN_IDS, getPaymentStatus, pay, subscribe, TOKENS };
+export { base, CHAIN_IDS, getPaymentStatus, pay, payWithToken, subscribe, TOKENS };
 export type {
   InfoRequest,
   PayerInfo,
@@ -58,6 +61,8 @@ export type {
   PaymentResult,
   PaymentStatus,
   PaymentStatusOptions,
+  PayWithTokenOptions,
+  PayWithTokenResult,
   SubscriptionOptions,
   SubscriptionResult,
 };

@@ -6,7 +6,7 @@ import type { PayerInfoResponses, PaymentSDKConfig } from '../types.js';
 /**
  * Type for wallet_sendCalls request parameters
  */
-type WalletSendCallsRequestParams = {
+export type WalletSendCallsRequestParams = {
   version: string;
   chainId: number;
   calls: Array<{
@@ -131,15 +131,12 @@ export async function executePayment(
  * @param sdkConfig - Optional advanced SDK configuration
  * @returns The payment execution result
  */
-export async function executePaymentWithSDK(
+export async function executePaymentOnChain(
   requestParams: WalletSendCallsRequestParams,
-  testnet: boolean,
+  chainId: number,
   telemetry: boolean = true,
   sdkConfig?: PaymentSDKConfig
 ): Promise<PaymentExecutionResult> {
-  const network = testnet ? 'baseSepolia' : 'base';
-  const chainId = CHAIN_IDS[network];
-
   const sdk = createEphemeralSDK(chainId, telemetry, sdkConfig);
   const provider = sdk.getProvider();
 
@@ -150,4 +147,19 @@ export async function executePaymentWithSDK(
     // Clean up provider state for subsequent payments
     await provider.disconnect();
   }
+}
+
+/**
+ * Legacy wrapper that derives the chain ID from the Base / Base Sepolia flag
+ */
+export async function executePaymentWithSDK(
+  requestParams: WalletSendCallsRequestParams,
+  testnet: boolean,
+  telemetry: boolean = true,
+  sdkConfig?: PaymentSDKConfig
+): Promise<PaymentExecutionResult> {
+  const network = testnet ? 'baseSepolia' : 'base';
+  const chainId = CHAIN_IDS[network];
+
+  return executePaymentOnChain(requestParams, chainId, telemetry, sdkConfig);
 }

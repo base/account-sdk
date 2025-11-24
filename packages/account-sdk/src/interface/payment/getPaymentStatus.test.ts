@@ -63,6 +63,9 @@ describe('getPaymentStatus', () => {
       message: 'Payment completed successfully',
       sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
       amount: '10',
+      tokenAmount: '10000000',
+      tokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      tokenSymbol: 'USDC',
       recipient: '0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336',
     });
 
@@ -76,6 +79,45 @@ describe('getPaymentStatus', () => {
           id: 1,
           method: 'eth_getUserOperationReceipt',
           params: ['0x123456'],
+        }),
+      })
+    );
+  });
+
+  it('should decode ERC-3770 encoded IDs and ignore the legacy testnet flag', async () => {
+    const transactionHash =
+      '0xabc1230000000000000000000000000000000000000000000000000000000000';
+    const mockReceipt = {
+      jsonrpc: '2.0',
+      id: 1,
+      result: {
+        success: true,
+        receipt: {
+          transactionHash,
+          logs: [],
+        },
+        sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
+      },
+    };
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => mockReceipt,
+    } as Response);
+
+    const status = await getPaymentStatus({
+      id: `base:${transactionHash}`,
+      testnet: true,
+    });
+
+    expect(status.id).toBe(transactionHash);
+    expect(fetch).toHaveBeenCalledWith(
+      'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+      expect.objectContaining({
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'eth_getUserOperationReceipt',
+          params: [transactionHash],
         }),
       })
     );
@@ -282,6 +324,8 @@ describe('getPaymentStatus', () => {
     });
 
     expect(status.amount).toBe('10');
+    expect(status.tokenAmount).toBe('10000000');
+    expect(status.tokenSymbol).toBe('USDC');
     expect(status.recipient).toBe('0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336');
   });
 
@@ -320,7 +364,7 @@ describe('getPaymentStatus', () => {
         testnet: false,
       })
     ).rejects.toThrow(
-      'Unable to find USDC transfer from sender wallet 0x4A7c6899cdcB379e284fBFd045462e751da4C7ce'
+      'Unable to find token transfer from sender wallet 0x4A7c6899cdcB379e284fBFd045462e751da4C7ce'
     );
   });
 
@@ -367,7 +411,7 @@ describe('getPaymentStatus', () => {
         testnet: false,
       })
     ).rejects.toThrow(
-      /Found multiple USDC transfers from sender wallet.*Expected exactly one transfer/
+      /Found multiple token transfers from sender wallet.*Expected exactly one transfer/
     );
   });
 
@@ -421,6 +465,9 @@ describe('getPaymentStatus', () => {
       message: 'Payment completed successfully',
       sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
       amount: '1', // Should pick the 1 USDC from sender, not the 4500 USDC gas payment
+      tokenAmount: '1000000',
+      tokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      tokenSymbol: 'USDC',
       recipient: '0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336',
     });
   });
