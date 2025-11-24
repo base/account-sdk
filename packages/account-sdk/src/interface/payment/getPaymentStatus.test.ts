@@ -85,8 +85,7 @@ describe('getPaymentStatus', () => {
   });
 
   it('should decode ERC-3770 encoded IDs and ignore the legacy testnet flag', async () => {
-    const transactionHash =
-      '0xabc1230000000000000000000000000000000000000000000000000000000000';
+    const transactionHash = '0xabc1230000000000000000000000000000000000000000000000000000000000';
     const mockReceipt = {
       jsonrpc: '2.0',
       id: 1,

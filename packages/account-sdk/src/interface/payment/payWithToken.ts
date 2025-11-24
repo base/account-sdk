@@ -1,7 +1,7 @@
 import {
-    logPayWithTokenCompleted,
-    logPayWithTokenError,
-    logPayWithTokenStarted,
+  logPayWithTokenCompleted,
+  logPayWithTokenError,
+  logPayWithTokenStarted,
 } from ':core/telemetry/events/payment.js';
 import { CHAIN_IDS } from './constants.js';
 import type { PayWithTokenOptions, PayWithTokenResult, PaymentSDKConfig } from './types.js';
@@ -114,4 +114,3 @@ export async function payWithToken(options: PayWithTokenOptions): Promise<PayWit
     throw error;
   }
 }
-

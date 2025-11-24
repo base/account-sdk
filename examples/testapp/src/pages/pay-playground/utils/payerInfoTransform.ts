@@ -44,11 +44,12 @@ export function togglePayerInfoInCode(code: string, includePayerInfo: boolean): 
           const afterBrace = code.substring(i);
 
           // Check if we need a comma before payerInfo
-          const needsComma = !beforeBrace.endsWith(',') && 
-                            !beforeBrace.endsWith('{') &&
-                            beforeBrace.length > 0;
+          const needsComma =
+            !beforeBrace.endsWith(',') && !beforeBrace.endsWith('{') && beforeBrace.length > 0;
 
-          return beforeBrace + (needsComma ? payerInfoBlock : payerInfoBlock.substring(1)) + afterBrace;
+          return (
+            beforeBrace + (needsComma ? payerInfoBlock : payerInfoBlock.substring(1)) + afterBrace
+          );
         }
       }
       i++;
@@ -66,8 +67,8 @@ export function togglePayerInfoInCode(code: string, includePayerInfo: boolean): 
 
     // If that didn't work, try a simpler pattern
     if (modifiedCode === code) {
-      // Fallback: match payerInfo property more broadly
-      const fallbackRegex = /,\s*payerInfo\s*:\s*\{[^}]*\{[^}]*\}[^}]*\}/s;
+      // Fallback: match payerInfo property more broadly (using [\s\S] instead of . with s flag)
+      const fallbackRegex = /,\s*payerInfo\s*:\s*\{[^}]*\{[^}]*\}[^}]*\}/;
       modifiedCode = modifiedCode.replace(fallbackRegex, '');
     }
 
@@ -86,4 +87,3 @@ export function togglePayerInfoInCode(code: string, includePayerInfo: boolean): 
 
   return code;
 }
-

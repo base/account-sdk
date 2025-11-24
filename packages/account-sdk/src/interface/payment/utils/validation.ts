@@ -71,7 +71,7 @@ export function validateBaseUnitAmount(amount: string): bigint {
   }
 
   const parsed = BigInt(trimmed);
-  if (parsed <= 0n) {
+  if (parsed <= BigInt(0)) {
     throw new Error('Invalid amount: must be greater than 0');
   }
 

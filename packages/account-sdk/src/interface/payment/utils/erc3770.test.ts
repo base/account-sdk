@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CHAIN_IDS } from '../constants.js';
-import {
-  decodePaymentId,
-  encodePaymentId,
-  getChainShortName,
-  isERC3770Format,
-} from './erc3770.js';
+import { decodePaymentId, encodePaymentId, getChainShortName, isERC3770Format } from './erc3770.js';
 
 describe('ERC-3770 utilities', () => {
   describe('getChainShortName', () => {
@@ -65,5 +60,3 @@ describe('ERC-3770 utilities', () => {
     });
   });
 });
-
-

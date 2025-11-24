@@ -28,8 +28,10 @@ export type ERC3770PaymentId = `${ChainShortName}:${HexString}`;
  * Format: https://api.developer.coinbase.com/rpc/v1/{chain-name}/{api-key}
  */
 const BUNDLER_URLS: Record<number, string> = {
-  [CHAIN_IDS.base]: 'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
-  [CHAIN_IDS.baseSepolia]: 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+  [CHAIN_IDS.base]:
+    'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+  [CHAIN_IDS.baseSepolia]:
+    'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
   // Add more chains as bundler URLs become available
 } as const;
 
@@ -150,4 +152,3 @@ export function encodePaymentId(chainId: number, transactionHash: string): ERC37
 export function isERC3770Format(id: string): boolean {
   return typeof id === 'string' && id.includes(':');
 }
-

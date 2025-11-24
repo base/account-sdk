@@ -53,7 +53,7 @@ export function resolveTokenAddress(token: TokenInput, chainId: number): Resolve
   const normalizedSymbol = trimmed.toUpperCase();
   if (normalizedSymbol in STABLECOIN_WHITELIST) {
     const stablecoin = STABLECOIN_WHITELIST[normalizedSymbol as keyof typeof STABLECOIN_WHITELIST];
-    const address = stablecoin.addresses[chainId];
+    const address = stablecoin.addresses[chainId as keyof typeof stablecoin.addresses];
 
     if (!address) {
       throw new Error(
@@ -86,5 +86,3 @@ export function getStablecoinMetadataByAddress(address?: string) {
 
   return STABLECOIN_ADDRESS_LOOKUP[address.toLowerCase()];
 }
-
-

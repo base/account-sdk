@@ -175,7 +175,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       // Parse token transfer details from logs
       let amount: string | undefined;
       let tokenAmount: string | undefined;
-      let tokenAddress: string | undefined;
+      let tokenAddress: Address | undefined;
       let tokenSymbol: string | undefined;
       let recipient: string | undefined;
 
@@ -248,7 +248,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
           const stablecoinMetadata = getStablecoinMetadataByAddress(transfer.contract);
 
           tokenAmount = transfer.value.toString();
-          tokenAddress = transfer.contract as Address;
+          tokenAddress = transfer.contract;
           tokenSymbol = stablecoinMetadata?.symbol;
           recipient = transfer.to;
 

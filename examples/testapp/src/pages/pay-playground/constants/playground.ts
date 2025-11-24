@@ -117,7 +117,7 @@ export const GET_PAYMENT_STATUS_QUICK_TIPS = [
 ];
 
 export const PAY_WITH_TOKEN_QUICK_TIPS = [
-  'Amount is specified in the token\'s smallest unit (e.g., wei for ETH, or smallest unit for ERC20 tokens)',
+  "Amount is specified in the token's smallest unit (e.g., wei for ETH, or smallest unit for ERC20 tokens)",
   'For USDC (6 decimals), 1 USDC = 1000000',
   'For tokens with 18 decimals, 1 token = 1000000000000000000',
   'Token can be a contract address or a supported symbol (e.g., "USDC", "WETH")',

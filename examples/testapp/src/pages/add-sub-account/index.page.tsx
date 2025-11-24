@@ -90,7 +90,7 @@ export default function SubAccounts() {
           signerFn={getSubAccountSigner}
         />
         <PersonalSign sdk={sdk} subAccountAddress={subAccountAddress} />
-        <SendCalls sdk={sdk} subAccountAddress={subAccountAddress} />
+        <SendCalls />
         <GrantSpendPermission sdk={sdk} subAccountAddress={subAccountAddress} />
         <SpendPermissions sdk={sdk} subAccountAddress={subAccountAddress} />
         <GenerateNewSigner />

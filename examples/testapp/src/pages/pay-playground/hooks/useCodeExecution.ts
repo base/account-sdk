@@ -10,7 +10,9 @@ import { useConsoleCapture } from './useConsoleCapture';
 
 export const useCodeExecution = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<PaymentResult | PaymentStatus | PayWithTokenResult | SwapResult | SwapQuote | SwapStatus | null>(null);
+  const [result, setResult] = useState<
+    PaymentResult | PaymentStatus | PayWithTokenResult | SwapResult | SwapQuote | SwapStatus | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
   const { captureConsole } = useConsoleCapture();

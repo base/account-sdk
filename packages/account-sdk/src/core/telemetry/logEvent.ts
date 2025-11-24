@@ -71,6 +71,8 @@ type CCAEventData = {
   testnet?: boolean;
   status?: string;
   periodInDays?: number;
+  token?: string;
+  chainId?: number;
 };
 
 type AnalyticsEventData = {

@@ -18,7 +18,7 @@ export function extractPaymasterUrl(code: string): string | undefined {
 export function updatePaymasterUrl(code: string, paymasterUrl: string): string {
   // Check if paymaster already exists in the code
   const hasPaymaster = /paymaster\s*:\s*\{/.test(code);
-  
+
   if (!hasPaymaster) {
     // If no paymaster exists, we need to add it
     // Find the payWithToken call and locate where to insert paymaster
@@ -43,16 +43,17 @@ export function updatePaymasterUrl(code: string, paymasterUrl: string): string {
           const afterBrace = code.substring(i);
 
           // Check if we need a comma before paymaster
-          const needsComma = !beforeBrace.endsWith(',') && 
-                            !beforeBrace.endsWith('{') &&
-                            beforeBrace.length > 0;
+          const needsComma =
+            !beforeBrace.endsWith(',') && !beforeBrace.endsWith('{') && beforeBrace.length > 0;
 
           const paymasterBlock = `,
     paymaster: {
       url: '${paymasterUrl}'
     }`;
 
-          return beforeBrace + (needsComma ? paymasterBlock : paymasterBlock.substring(1)) + afterBrace;
+          return (
+            beforeBrace + (needsComma ? paymasterBlock : paymasterBlock.substring(1)) + afterBrace
+          );
         }
       }
       i++;
@@ -68,4 +69,3 @@ export function updatePaymasterUrl(code: string, paymasterUrl: string): string {
 
   return code;
 }
-

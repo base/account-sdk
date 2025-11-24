@@ -1,5 +1,5 @@
 import type { TokenPaymentSuccess } from '@base-org/account';
-import { createBaseAccountSDK, payWithToken } from '@base-org/account';
+import { payWithToken } from '@base-org/account';
 import { CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { Box, Button, Flex, HStack, Icon, Link, Text, VStack } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
@@ -23,22 +23,16 @@ function stripChainPrefix(txHash: string): string {
 
 function getBlockExplorerUrl(chainId: number, txHash: string): string {
   const hash = stripChainPrefix(txHash);
-  
+
   const explorers: Record<number, string> = {
     8453: 'https://basescan.org/tx', // Base mainnet
     84532: 'https://sepolia.basescan.org/tx', // Base Sepolia
   };
-  
+
   return `${explorers[chainId] || 'https://basescan.org/tx'}/${hash}`;
 }
 
-export function SendCalls({
-  sdk,
-  subAccountAddress,
-}: {
-  sdk: ReturnType<typeof createBaseAccountSDK>;
-  subAccountAddress: string;
-}) {
+export function SendCalls() {
   const [paymentResult, setPaymentResult] = useState<TokenPaymentSuccess | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +118,12 @@ export function SendCalls({
           _dark={{ bg: 'green.900', borderColor: 'green.700' }}
         >
           <HStack spacing={3} mb={6}>
-            <Icon as={CheckCircleIcon} boxSize={6} color="green.600" _dark={{ color: 'green.400' }} />
+            <Icon
+              as={CheckCircleIcon}
+              boxSize={6}
+              color="green.600"
+              _dark={{ color: 'green.400' }}
+            />
             <Text fontSize="xl" fontWeight="bold" color="green.800" _dark={{ color: 'green.200' }}>
               Payment Successful!
             </Text>
