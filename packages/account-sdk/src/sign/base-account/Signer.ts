@@ -435,11 +435,15 @@ export class Signer {
     const metadata = store.config.get().metadata;
     await this.keyManager.clear();
 
-    // clear the store
+    // Clear session-specific store data
     store.account.clear();
     store.subAccounts.clear();
     store.spendPermissions.clear();
-    store.chains.clear();
+
+    // NOTE: We intentionally do NOT clear store.chains here.
+    // Chains are shared infrastructure used by ChainClients and may be
+    // needed by other SDK instances or subsequent operations.
+    // Clearing them could cause failures in concurrent or subsequent operations.
 
     // reset the signer
     this.accounts = [];

@@ -23,6 +23,46 @@ export type CreateProviderOptions = Partial<AppMetadata> & {
   paymasterUrls?: Record<number, string>;
 };
 
+//  ====================================================================
+//  One-time initialization tracking
+//  These operations only need to run once per page load
+//  ====================================================================
+
+let globalInitialized = false;
+let rehydrationPromise: Promise<void> | null = null;
+
+/**
+ * Performs one-time global initialization for the SDK.
+ * Safe to call multiple times - will only execute once.
+ */
+function initializeGlobalOnce(telemetryEnabled: boolean): void {
+  if (globalInitialized) return;
+  globalInitialized = true;
+
+  // Check COOP policy once
+  void checkCrossOriginOpenerPolicy();
+
+  // Load telemetry script once if enabled
+  if (telemetryEnabled) {
+    void loadTelemetryScript();
+  }
+
+  // Rehydrate store from localStorage once
+  if (!rehydrationPromise) {
+    const result = store.persist.rehydrate();
+    rehydrationPromise = result instanceof Promise ? result : Promise.resolve();
+  }
+}
+
+/**
+ * Resets the global initialization state.
+ * @internal This is only intended for testing purposes.
+ */
+export function _resetGlobalInitialization(): void {
+  globalInitialized = false;
+  rehydrationPromise = null;
+}
+
 /**
  * Create Base AccountSDK instance with EIP-1193 compliant provider
  * @param params - Options to create a base account SDK instance.
@@ -60,19 +100,13 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
 
   store.config.set(options);
 
-  void store.persist.rehydrate();
-
   //  ====================================================================
-  //  Validation and telemetry
+  //  One-time initialization and validation
   //  ====================================================================
 
-  void checkCrossOriginOpenerPolicy();
+  initializeGlobalOnce(options.preference.telemetry !== false);
 
   validatePreferences(options.preference);
-
-  if (options.preference.telemetry !== false) {
-    void loadTelemetryScript();
-  }
 
   //  ====================================================================
   //  Return the provider
