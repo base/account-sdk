@@ -3,19 +3,25 @@ import { CodeEditor, Header, Output, QuickTips } from './components';
 import {
   DEFAULT_GET_PAYMENT_STATUS_CODE,
   DEFAULT_PAY_CODE,
+  DEFAULT_PAY_WITH_TOKEN_CODE,
   GET_PAYMENT_STATUS_QUICK_TIPS,
   PAY_CODE_WITH_PAYER_INFO,
   PAY_QUICK_TIPS,
+  PAY_WITH_TOKEN_CODE_WITH_PAYER_INFO,
+  PAY_WITH_TOKEN_QUICK_TIPS,
 } from './constants';
 import { useCodeExecution } from './hooks';
 import styles from './styles/Home.module.css';
 
 function PayPlayground() {
   const [includePayerInfo, setIncludePayerInfo] = useState(false);
+  const [includePayWithTokenPayerInfo, setIncludePayWithTokenPayerInfo] = useState(false);
   const [payCode, setPayCode] = useState(DEFAULT_PAY_CODE);
+  const [payWithTokenCode, setPayWithTokenCode] = useState(DEFAULT_PAY_WITH_TOKEN_CODE);
   const [getPaymentStatusCode, setGetPaymentStatusCode] = useState(DEFAULT_GET_PAYMENT_STATUS_CODE);
 
   const payExecution = useCodeExecution();
+  const payWithTokenExecution = useCodeExecution();
   const getPaymentStatusExecution = useCodeExecution();
 
   const handlePayExecute = () => {
@@ -35,6 +41,23 @@ function PayPlayground() {
     payExecution.reset();
   };
 
+  const handlePayWithTokenExecute = () => {
+    payWithTokenExecution.executeCode(payWithTokenCode);
+  };
+
+  const handlePayWithTokenReset = () => {
+    setIncludePayWithTokenPayerInfo(false);
+    setPayWithTokenCode(DEFAULT_PAY_WITH_TOKEN_CODE);
+    payWithTokenExecution.reset();
+  };
+
+  const handlePayWithTokenPayerInfoToggle = (checked: boolean) => {
+    setIncludePayWithTokenPayerInfo(checked);
+    const newCode = checked ? PAY_WITH_TOKEN_CODE_WITH_PAYER_INFO : DEFAULT_PAY_WITH_TOKEN_CODE;
+    setPayWithTokenCode(newCode);
+    payWithTokenExecution.reset();
+  };
+
   const handleGetPaymentStatusExecute = () => {
     getPaymentStatusExecution.executeCode(getPaymentStatusCode);
   };
@@ -46,13 +69,14 @@ function PayPlayground() {
 
   // Watch for successful payment results and update getPaymentStatus code with the transaction ID
   useEffect(() => {
+    const result = payExecution.result || payWithTokenExecution.result;
     if (
-      payExecution.result &&
-      'success' in payExecution.result &&
-      payExecution.result.success &&
-      payExecution.result.id
+      result &&
+      'success' in result &&
+      result.success &&
+      result.id
     ) {
-      const transactionId = payExecution.result.id;
+      const transactionId = result.id;
       const updatedCode = `import { base } from '@base-org/account'
 
 try {
@@ -69,7 +93,7 @@ try {
 }`;
       setGetPaymentStatusCode(updatedCode);
     }
-  }, [payExecution.result]);
+  }, [payExecution.result, payWithTokenExecution.result]);
 
   return (
     <div className={styles.container}>
@@ -102,6 +126,37 @@ try {
                 error={payExecution.error}
                 consoleOutput={payExecution.consoleOutput}
                 isLoading={payExecution.isLoading}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* payWithToken Section */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>payWithToken Function</h2>
+          <p className={styles.sectionDescription}>Send any ERC20 token payment on Base with paymaster sponsorship</p>
+
+          <div className={styles.playground}>
+            <div className={styles.leftColumn}>
+              <CodeEditor
+                code={payWithTokenCode}
+                onChange={setPayWithTokenCode}
+                onExecute={handlePayWithTokenExecute}
+                onReset={handlePayWithTokenReset}
+                isLoading={payWithTokenExecution.isLoading}
+                includePayerInfo={includePayWithTokenPayerInfo}
+                onPayerInfoToggle={handlePayWithTokenPayerInfoToggle}
+                showPayerInfoToggle={true}
+              />
+              <QuickTips tips={PAY_WITH_TOKEN_QUICK_TIPS} />
+            </div>
+
+            <div className={styles.rightColumn}>
+              <Output
+                result={payWithTokenExecution.result}
+                error={payWithTokenExecution.error}
+                consoleOutput={payWithTokenExecution.consoleOutput}
+                isLoading={payWithTokenExecution.isLoading}
               />
             </div>
           </div>

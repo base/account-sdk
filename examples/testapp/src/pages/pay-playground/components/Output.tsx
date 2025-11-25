@@ -1,16 +1,21 @@
-import type { PaymentResult, PaymentStatus } from '@base-org/account';
+import type { PaymentResult, PaymentStatus, PayWithTokenResult } from '@base-org/account';
 import styles from './Output.module.css';
 
 interface OutputProps {
-  result: PaymentResult | PaymentStatus | null;
+  result: PaymentResult | PaymentStatus | PayWithTokenResult | null;
   error: string | null;
   consoleOutput: string[];
   isLoading: boolean;
 }
 
-// Type guard to check if result is PaymentResult
+// Type guard to check if result is PaymentResult (USDC payment)
 const isPaymentResult = (result: unknown): result is PaymentResult => {
-  return result !== null && typeof result === 'object' && 'success' in result;
+  return result !== null && typeof result === 'object' && 'success' in result && 'amount' in result;
+};
+
+// Type guard to check if result is PayWithTokenResult (token payment)
+const isTokenPaymentResult = (result: unknown): result is PayWithTokenResult => {
+  return result !== null && typeof result === 'object' && 'success' in result && 'tokenAmount' in result;
 };
 
 // Type guard to check if result is PaymentStatus
@@ -95,6 +100,156 @@ export const Output = ({ result, error, consoleOutput, isLoading }: OutputProps)
                   <span className={styles.errorMessage}>
                     {(result as { error?: string }).error}
                   </span>
+                </div>
+              )}
+            </div>
+
+            {result.success && result.payerInfoResponses && (
+              <div className={styles.userDataSection}>
+                <div className={styles.userDataHeader}>
+                  <svg
+                    className={styles.userDataIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <span>User Info</span>
+                </div>
+                <div className={styles.userDataBody}>
+                  {result.payerInfoResponses.name && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>Name</span>
+                      <span className={styles.userDataValue}>
+                        {(() => {
+                          const name = result.payerInfoResponses.name as unknown as {
+                            firstName: string;
+                            familyName: string;
+                          };
+                          return `${name.firstName} ${name.familyName}`;
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                  {result.payerInfoResponses.email && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>Email</span>
+                      <span className={styles.userDataValue}>
+                        {result.payerInfoResponses.email}
+                      </span>
+                    </div>
+                  )}
+                  {result.payerInfoResponses.phoneNumber && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>Phone</span>
+                      <span className={styles.userDataValue}>
+                        {result.payerInfoResponses.phoneNumber.number} (
+                        {result.payerInfoResponses.phoneNumber.country})
+                      </span>
+                    </div>
+                  )}
+                  {result.payerInfoResponses.physicalAddress && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>Address</span>
+                      <span className={styles.userDataValue}>
+                        {(() => {
+                          const addr = result.payerInfoResponses.physicalAddress as unknown as {
+                            address1: string;
+                            address2?: string;
+                            city: string;
+                            state: string;
+                            postalCode: string;
+                            countryCode: string;
+                            name?: {
+                              firstName: string;
+                              familyName: string;
+                            };
+                          };
+                          const parts = [
+                            addr.name ? `${addr.name.firstName} ${addr.name.familyName}` : null,
+                            addr.address1,
+                            addr.address2,
+                            `${addr.city}, ${addr.state} ${addr.postalCode}`,
+                            addr.countryCode,
+                          ].filter(Boolean);
+                          return parts.join(', ');
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                  {result.payerInfoResponses.onchainAddress && (
+                    <div className={styles.userDataRow}>
+                      <span className={styles.userDataLabel}>On-chain Address</span>
+                      <span className={styles.userDataValue}>
+                        {result.payerInfoResponses.onchainAddress}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {result && isTokenPaymentResult(result) && (
+          <div className={`${styles.resultCard} ${result.success ? styles.success : styles.error}`}>
+            <div className={styles.resultHeader}>
+              {result.success ? (
+                <>
+                  <svg
+                    className={styles.resultIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <span className={styles.resultTitle}>Token Payment Successful!</span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    className={styles.resultIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  <span className={styles.resultTitle}>Token Payment Failed</span>
+                </>
+              )}
+            </div>
+
+            <div className={styles.resultBody}>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Token</span>
+                <span className={styles.resultValue}>{result.token || 'Unknown'}</span>
+              </div>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Amount (base units)</span>
+                <span className={styles.resultValue}>{result.tokenAmount}</span>
+              </div>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Token Address</span>
+                <code className={styles.resultValue}>{result.tokenAddress}</code>
+              </div>
+              <div className={styles.resultRow}>
+                <span className={styles.resultLabel}>Recipient</span>
+                <code className={styles.resultValue}>{result.to}</code>
+              </div>
+              {result.success && result.id && (
+                <div className={styles.resultRow}>
+                  <span className={styles.resultLabel}>Transaction ID</span>
+                  <code className={styles.resultValue}>{result.id}</code>
                 </div>
               )}
             </div>
