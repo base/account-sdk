@@ -70,12 +70,7 @@ function PayPlayground() {
   // Watch for successful payment results and update getPaymentStatus code with the transaction ID
   useEffect(() => {
     const result = payExecution.result || payWithTokenExecution.result;
-    if (
-      result &&
-      'success' in result &&
-      result.success &&
-      result.id
-    ) {
+    if (result && 'success' in result && result.success && result.id) {
       const transactionId = result.id;
       const updatedCode = `import { base } from '@base-org/account'
 
@@ -134,7 +129,9 @@ try {
         {/* payWithToken Section */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>payWithToken Function</h2>
-          <p className={styles.sectionDescription}>Send any ERC20 token payment on Base with paymaster sponsorship</p>
+          <p className={styles.sectionDescription}>
+            Send any ERC20 token payment on Base with paymaster sponsorship
+          </p>
 
           <div className={styles.playground}>
             <div className={styles.leftColumn}>

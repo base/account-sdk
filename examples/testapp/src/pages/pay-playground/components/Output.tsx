@@ -15,7 +15,9 @@ const isPaymentResult = (result: unknown): result is PaymentResult => {
 
 // Type guard to check if result is PayWithTokenResult (token payment)
 const isTokenPaymentResult = (result: unknown): result is PayWithTokenResult => {
-  return result !== null && typeof result === 'object' && 'success' in result && 'tokenAmount' in result;
+  return (
+    result !== null && typeof result === 'object' && 'success' in result && 'tokenAmount' in result
+  );
 };
 
 // Type guard to check if result is PaymentStatus

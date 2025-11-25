@@ -119,7 +119,7 @@ try {
 
 export const PAY_WITH_TOKEN_QUICK_TIPS = [
   'Get testnet ETH at <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">https://faucet.circle.com/</a> - select "Base Sepolia" as the network',
-  'Amount is in the token\'s base units (e.g., 1 USDC = 1000000 with 6 decimals)',
+  "Amount is in the token's base units (e.g., 1 USDC = 1000000 with 6 decimals)",
   'Token can be a symbol (e.g., "USDC", "WETH") or a contract address',
   'Requires a paymaster for gas sponsorship',
   'Use payerInfo to request user information',
