@@ -258,7 +258,9 @@ describe('encoding', () => {
 
     describe('allowed JSON types', () => {
       it('should encode object values', () => {
-        const caps = { dataCallback: { callbackURL: 'https://example.com', events: ['initiated'] } };
+        const caps = {
+          dataCallback: { callbackURL: 'https://example.com', events: ['initiated'] },
+        };
         const encoded = encodeCapabilities(caps);
         const decoded = decodeCapabilities(encoded);
         expect(decoded).toEqual(caps);
@@ -324,7 +326,10 @@ describe('encoding', () => {
             callbackURL: 'https://example.com/callback',
             events: [
               { type: 'initiated', context: { orderId: 'ORDER-123' } },
-              { type: 'preSign', requests: [{ type: 'email' }, { type: 'physicalAddress', optional: true }] },
+              {
+                type: 'preSign',
+                requests: [{ type: 'email' }, { type: 'physicalAddress', optional: true }],
+              },
               { type: 'postSign' },
             ],
           },

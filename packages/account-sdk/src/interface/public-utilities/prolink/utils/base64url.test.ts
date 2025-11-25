@@ -194,9 +194,13 @@ describe('base64url (EIP-8050 RFC 4648 Compliance)', () => {
     it('should roundtrip protobuf-like binary data', () => {
       // Simulating a small protobuf payload
       const protoData = new Uint8Array([
-        0x08, 0x01, // field 1 = 1
-        0x10, 0xa5, 0x42, // field 2 = 8453
-        0x18, 0x01, // field 3 = 1
+        0x08,
+        0x01, // field 1 = 1
+        0x10,
+        0xa5,
+        0x42, // field 2 = 8453
+        0x18,
+        0x01, // field 3 = 1
       ]);
 
       const encoded = encodeBase64url(protoData);
@@ -208,7 +212,14 @@ describe('base64url (EIP-8050 RFC 4648 Compliance)', () => {
       // Brotli compressed data often contains bytes that would be + or / in base64
       const compressedData = new Uint8Array([
         0x01, // compression flag
-        0x8b, 0x05, 0x80, 0x08, 0x01, 0x10, 0xa5, 0x42, // brotli data
+        0x8b,
+        0x05,
+        0x80,
+        0x08,
+        0x01,
+        0x10,
+        0xa5,
+        0x42, // brotli data
       ]);
 
       const encoded = encodeBase64url(compressedData);

@@ -149,7 +149,9 @@ describe('prolink end-to-end', () => {
 
       const decoded = await decodeProlink(encoded);
       expect(decoded.method).toBe('wallet_sign');
-      const params = (decoded.params as Array<{ chainId: string; data: { primaryType: string } }>)[0];
+      const params = (
+        decoded.params as Array<{ chainId: string; data: { primaryType: string } }>
+      )[0];
       expect(params.chainId).toBe('0x14a34'); // hex string for 84532
       expect(params.data.primaryType).toBe('SpendPermission');
     });
@@ -296,12 +298,14 @@ describe('prolink end-to-end', () => {
       const decoded = await decodeProlink(encoded);
 
       expect(decoded.method).toBe(request.method);
-      const params = (decoded.params as Array<{
-        version?: string;
-        from?: string;
-        chainId: string;
-        capabilities?: Record<string, unknown>;
-      }>)[0];
+      const params = (
+        decoded.params as Array<{
+          version?: string;
+          from?: string;
+          chainId: string;
+          capabilities?: Record<string, unknown>;
+        }>
+      )[0];
       expect(params.chainId).toBe('0x2105'); // hex string for 8453
       expect(params.capabilities).toEqual(request.capabilities);
       expect(params.version).toBe('2.0');

@@ -170,12 +170,19 @@ describe('compression (EIP-8050 Compression Flags)', () => {
     it('should roundtrip binary data', async () => {
       // Simulating protobuf binary data
       const original = new Uint8Array([
-        0x08, 0x01, // field 1 = 1
-        0x10, 0xa5, 0x42, // field 2 = 8453
-        0x18, 0x01, // field 3 = 1
-        0x52, 0x1a, // field 10 = message (26 bytes)
-        0x08, 0x01, // type = 1
-        0x52, 0x14, // erc20 transfer (20 bytes)
+        0x08,
+        0x01, // field 1 = 1
+        0x10,
+        0xa5,
+        0x42, // field 2 = 8453
+        0x18,
+        0x01, // field 3 = 1
+        0x52,
+        0x1a, // field 10 = message (26 bytes)
+        0x08,
+        0x01, // type = 1
+        0x52,
+        0x14, // erc20 transfer (20 bytes)
         ...new Uint8Array(20).fill(0x83), // token address
       ]);
 
@@ -197,19 +204,32 @@ describe('compression (EIP-8050 Compression Flags)', () => {
     it('should achieve good compression on typical protobuf payloads', async () => {
       // Simulate a typical wallet_sendCalls protobuf payload
       const typicalPayload = new Uint8Array([
-        0x08, 0x01, // protocol_version = 1
-        0x10, 0xa5, 0x42, // chain_id = 8453
-        0x18, 0x01, // shortcut_id = 1
-        0x20, 0x00, // shortcut_version = 0
+        0x08,
+        0x01, // protocol_version = 1
+        0x10,
+        0xa5,
+        0x42, // chain_id = 8453
+        0x18,
+        0x01, // shortcut_id = 1
+        0x20,
+        0x00, // shortcut_version = 0
         // wallet_send_calls message
-        0x5a, 0x30, // field 11 (tag 88), length 48
-        0x08, 0x01, // type = ERC20_TRANSFER
-        0x52, 0x2a, // erc20_transfer (42 bytes)
+        0x5a,
+        0x30, // field 11 (tag 88), length 48
+        0x08,
+        0x01, // type = ERC20_TRANSFER
+        0x52,
+        0x2a, // erc20_transfer (42 bytes)
         ...new Uint8Array(20).fill(0x83), // token
         ...new Uint8Array(20).fill(0xfe), // recipient
-        0x4c, 0x4b, 0x40, // amount
-        0x22, 0x03, // version "1.0"
-        0x31, 0x2e, 0x30,
+        0x4c,
+        0x4b,
+        0x40, // amount
+        0x22,
+        0x03, // version "1.0"
+        0x31,
+        0x2e,
+        0x30,
       ]);
 
       const { compressed, flag } = await compressPayload(typicalPayload);
@@ -221,4 +241,3 @@ describe('compression (EIP-8050 Compression Flags)', () => {
     });
   });
 });
-

@@ -562,4 +562,3 @@ function createReceiveWithAuthParams() {
     },
   };
 }
-

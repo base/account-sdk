@@ -234,7 +234,9 @@ describe('generic JSON-RPC shortcut (EIP-8050 Shortcut 0)', () => {
 
     it('should handle large numbers as strings', () => {
       // BigInt values should be passed as strings to avoid precision loss
-      const params = { amount: '115792089237316195423570985008687907853269984665640564039457584007913129639935' };
+      const params = {
+        amount: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      };
       const encoded = encodeGenericRpc('custom_method', params);
       const decoded = decodeGenericRpc(encoded);
 
@@ -250,4 +252,3 @@ describe('generic JSON-RPC shortcut (EIP-8050 Shortcut 0)', () => {
     });
   });
 });
-
