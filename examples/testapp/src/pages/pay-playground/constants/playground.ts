@@ -68,4 +68,61 @@ export const GET_PAYMENT_STATUS_QUICK_TIPS = [
   'Make sure to use the same testnet setting as the original payment',
 ];
 
+export const generatePayWithTokenCode = (
+  paymasterUrl: string,
+  includePayerInfo: boolean
+): string => {
+  const paymasterConfig = paymasterUrl
+    ? `paymaster: {
+      url: '${paymasterUrl}'
+    }`
+    : `paymaster: {
+      // Paymaster configuration for gas sponsorship
+      // url: 'https://your-paymaster.com/api'
+    }`;
+
+  const payerInfoConfig = includePayerInfo
+    ? `,
+    payerInfo: {
+      requests: [
+        { type: 'name'},
+        { type: 'email' },
+        { type: 'phoneNumber', optional: true },
+        { type: 'physicalAddress', optional: true },
+        { type: 'onchainAddress' }
+      ]
+    }`
+    : '';
+
+  return `import { base } from '@base-org/account'
+
+try {
+  const result = await base.payWithToken({
+    amount: '1000000', // Amount in base units (e.g., 1 USDC = 1000000)
+    to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+    token: 'USDC', // Token symbol or contract address
+    testnet: true,
+    ${paymasterConfig}${payerInfoConfig}
+  })
+  
+  return result;
+} catch (error) {
+  console.error('Token payment failed:', error.message);
+  throw error;
+}`;
+};
+
+export const DEFAULT_PAY_WITH_TOKEN_CODE = generatePayWithTokenCode('', false);
+
+export const PAY_WITH_TOKEN_CODE_WITH_PAYER_INFO = generatePayWithTokenCode('', true);
+
+export const PAY_WITH_TOKEN_QUICK_TIPS = [
+  'Get testnet ETH at <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">https://faucet.circle.com/</a> - select "Base Sepolia" as the network',
+  "Amount is in the token's base units (e.g., 1 USDC = 1000000 with 6 decimals)",
+  'Token can be a symbol (e.g., "USDC", "WETH") or a contract address',
+  'Requires a paymaster for gas sponsorship',
+  'Use payerInfo to request user information',
+  'Supports both Base mainnet and Base Sepolia testnet',
+];
+
 export const QUICK_TIPS = PAY_QUICK_TIPS;

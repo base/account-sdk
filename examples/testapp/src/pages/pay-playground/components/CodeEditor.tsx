@@ -9,6 +9,9 @@ interface CodeEditorProps {
   includePayerInfo: boolean;
   onPayerInfoToggle: (checked: boolean) => void;
   showPayerInfoToggle?: boolean;
+  paymasterUrl?: string;
+  onPaymasterUrlChange?: (url: string) => void;
+  showPaymasterUrlInput?: boolean;
 }
 
 export const CodeEditor = ({
@@ -20,6 +23,9 @@ export const CodeEditor = ({
   includePayerInfo,
   onPayerInfoToggle,
   showPayerInfoToggle = true,
+  paymasterUrl = '',
+  onPaymasterUrlChange,
+  showPaymasterUrlInput = false,
 }: CodeEditorProps) => {
   return (
     <div className={styles.editorPanel}>
@@ -66,6 +72,22 @@ export const CodeEditor = ({
               className={styles.checkbox}
             />
             <span className={styles.checkboxText}>Include payer info</span>
+          </label>
+        </div>
+      )}
+
+      {showPaymasterUrlInput && (
+        <div className={styles.inputContainer}>
+          <label className={styles.inputLabel}>
+            <span className={styles.inputLabelText}>Paymaster URL</span>
+            <input
+              type="text"
+              value={paymasterUrl}
+              onChange={(e) => onPaymasterUrlChange?.(e.target.value)}
+              disabled={isLoading}
+              className={styles.textInput}
+              placeholder="https://your-paymaster.com/api"
+            />
           </label>
         </div>
       )}
