@@ -84,7 +84,7 @@ describe('getPaymentStatus', () => {
     );
   });
 
-  it('should decode ERC-3770 encoded IDs and ignore the legacy testnet flag', async () => {
+  it('should use testnet flag to determine network (Base Sepolia when testnet=true)', async () => {
     const transactionHash = '0xabc1230000000000000000000000000000000000000000000000000000000000';
     const mockReceipt = {
       jsonrpc: '2.0',
@@ -104,13 +104,13 @@ describe('getPaymentStatus', () => {
     } as Response);
 
     const status = await getPaymentStatus({
-      id: `base:${transactionHash}`,
+      id: transactionHash,
       testnet: true,
     });
 
     expect(status.id).toBe(transactionHash);
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+      'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
       expect.objectContaining({
         body: JSON.stringify({
           jsonrpc: '2.0',
