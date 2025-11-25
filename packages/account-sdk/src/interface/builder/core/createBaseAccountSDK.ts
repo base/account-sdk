@@ -29,23 +29,19 @@ export type CreateProviderOptions = Partial<AppMetadata> & {
 //  ====================================================================
 
 let globalInitialized = false;
+let telemetryInitialized = false;
 let rehydrationPromise: Promise<void> | null = null;
 
 /**
- * Performs one-time global initialization for the SDK.
+ * Performs one-time global initialization for the SDK (excluding telemetry).
  * Safe to call multiple times - will only execute once.
  */
-function initializeGlobalOnce(telemetryEnabled: boolean): void {
+function initializeGlobalOnce(): void {
   if (globalInitialized) return;
   globalInitialized = true;
 
   // Check COOP policy once
   void checkCrossOriginOpenerPolicy();
-
-  // Load telemetry script once if enabled
-  if (telemetryEnabled) {
-    void loadTelemetryScript();
-  }
 
   // Rehydrate store from localStorage once
   if (!rehydrationPromise) {
@@ -55,11 +51,24 @@ function initializeGlobalOnce(telemetryEnabled: boolean): void {
 }
 
 /**
+ * Initializes telemetry if not already initialized.
+ * Separated from global init so telemetry can be enabled by later SDK instances
+ * even if the first instance had telemetry disabled.
+ */
+function initializeTelemetryOnce(): void {
+  if (telemetryInitialized) return;
+  telemetryInitialized = true;
+
+  void loadTelemetryScript();
+}
+
+/**
  * Resets the global initialization state.
  * @internal This is only intended for testing purposes.
  */
 export function _resetGlobalInitialization(): void {
   globalInitialized = false;
+  telemetryInitialized = false;
   rehydrationPromise = null;
 }
 
@@ -104,7 +113,13 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   //  One-time initialization and validation
   //  ====================================================================
 
-  initializeGlobalOnce(options.preference.telemetry !== false);
+  initializeGlobalOnce();
+
+  // Telemetry is initialized separately so it can be enabled by later SDK instances
+  // even if earlier instances had telemetry disabled
+  if (options.preference.telemetry !== false) {
+    initializeTelemetryOnce();
+  }
 
   validatePreferences(options.preference);
 

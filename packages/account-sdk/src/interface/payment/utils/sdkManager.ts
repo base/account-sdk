@@ -44,18 +44,29 @@ export interface PaymentExecutionResult {
 //  ====================================================================
 
 let ephemeralInitialized = false;
+let ephemeralTelemetryInitialized = false;
 
-function initializeEphemeralOnce(telemetryEnabled: boolean): void {
+/**
+ * Performs one-time global initialization for ephemeral SDKs (excluding telemetry).
+ */
+function initializeEphemeralOnce(): void {
   if (ephemeralInitialized) return;
   ephemeralInitialized = true;
 
   // Check COOP policy once
   void checkCrossOriginOpenerPolicy();
+}
 
-  // Load telemetry script once if enabled
-  if (telemetryEnabled) {
-    void loadTelemetryScript();
-  }
+/**
+ * Initializes telemetry for ephemeral SDKs if not already initialized.
+ * Separated from global init so telemetry can be enabled by later requests
+ * even if earlier requests had telemetry disabled.
+ */
+function initializeEphemeralTelemetryOnce(): void {
+  if (ephemeralTelemetryInitialized) return;
+  ephemeralTelemetryInitialized = true;
+
+  void loadTelemetryScript();
 }
 
 /**
@@ -64,6 +75,7 @@ function initializeEphemeralOnce(telemetryEnabled: boolean): void {
  */
 export function _resetEphemeralInitialization(): void {
   ephemeralInitialized = false;
+  ephemeralTelemetryInitialized = false;
 }
 
 //  ====================================================================
@@ -120,7 +132,13 @@ export function createEphemeralSDK(
   const appName = typeof window !== 'undefined' ? window.location.origin : 'Base Pay SDK';
 
   // Perform one-time initialization
-  initializeEphemeralOnce(telemetry);
+  initializeEphemeralOnce();
+
+  // Telemetry is initialized separately so it can be enabled by later requests
+  // even if earlier requests had telemetry disabled
+  if (telemetry) {
+    initializeEphemeralTelemetryOnce();
+  }
 
   // Create ephemeral provider with isolated state
   const provider = new EphemeralBaseAccountProvider({
