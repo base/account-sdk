@@ -13,6 +13,15 @@ const renderDialogContainer = (props?: Partial<DialogInstanceProps>) =>
   );
 
 describe('DialogContainer', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.spyOn(window, 'setTimeout');
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test('renders with title and message', () => {
     renderDialogContainer();
 
@@ -21,12 +30,13 @@ describe('DialogContainer', () => {
   });
 
   test('renders hidden initially', () => {
-    const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
     renderDialogContainer();
 
     const hiddenClass = document.getElementsByClassName('-base-acc-sdk-dialog-instance-hidden');
     expect(hiddenClass.length).toEqual(1);
-    expect(setTimeoutSpy).toHaveBeenCalled();
+
+    vi.runAllTimers();
+    expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
   test('shows action button when provided', () => {
