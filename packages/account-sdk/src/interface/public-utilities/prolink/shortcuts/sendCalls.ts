@@ -158,14 +158,20 @@ export function encodeWalletSendCalls(params: SendCallsParams): WalletSendCalls 
  * Decode wallet_sendCalls request
  * @param payload - WalletSendCalls message
  * @param chainId - Chain ID from top-level payload
- * @returns EIP-5792 wallet_sendCalls parameters
+ * @param capabilities - Optional capabilities from top-level payload
+ * @returns EIP-5792 wallet_sendCalls parameters (ERC-8050 compliant with capabilities inside)
  */
-export function decodeWalletSendCalls(payload: WalletSendCalls, chainId: number): SendCallsParams {
+export function decodeWalletSendCalls(
+  payload: WalletSendCalls,
+  chainId: number,
+  capabilities?: Record<string, unknown>
+): SendCallsParams {
   const result: SendCallsParams = {
     version: payload.version || '1.0',
     chainId: `0x${chainId.toString(16)}`,
     from: payload.from ? decodeAddress(payload.from) : undefined,
     calls: [],
+    capabilities,
   };
 
   if (payload.transactionData.case === 'erc20Transfer') {
