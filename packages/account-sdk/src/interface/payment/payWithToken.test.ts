@@ -10,7 +10,6 @@ vi.mock(':core/telemetry/events/payment.js', () => ({
 
 vi.mock('./utils/validation.js', () => ({
   normalizeAddress: vi.fn((address: string) => address),
-  normalizeChainId: vi.fn(() => 8453),
   validateBaseUnitAmount: vi.fn(() => BigInt(1000)),
 }));
 
@@ -33,7 +32,7 @@ vi.mock('./utils/translateTokenPayment.js', () => ({
 }));
 
 vi.mock('./utils/sdkManager.js', () => ({
-  executePaymentOnChain: vi.fn(async () => ({
+  executePaymentWithSDK: vi.fn(async () => ({
     transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
     payerInfoResponses: { email: 'test@example.com' },
   })),
@@ -52,17 +51,16 @@ describe('payWithToken', () => {
       amount: '1000',
       to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       token: 'USDC',
-      chainId: '0x2105',
+      testnet: false,
       paymaster: { url: 'https://paymaster.example.com' },
     });
 
     expect(result).toEqual({
       success: true,
-      id: 'base:0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
       token: 'USDC',
       tokenAddress: '0x0000000000000000000000000000000000000001',
       tokenAmount: '1000',
-      chainId: 8453,
       to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       payerInfoResponses: { email: 'test@example.com' },
     });
@@ -79,13 +77,13 @@ describe('payWithToken', () => {
   });
 
   it('should merge walletUrl into sdkConfig and pass it to the executor', async () => {
-    const { executePaymentOnChain } = await import('./utils/sdkManager.js');
+    const { executePaymentWithSDK } = await import('./utils/sdkManager.js');
 
     await payWithToken({
       amount: '500',
       to: '0x0A7c6899cdCb379E284fbFd045462e751dA4C7cE',
       token: 'USDT',
-      chainId: 8453,
+      testnet: false,
       paymaster: { paymasterAndData: '0xdeadbeef' as `0x${string}` },
       walletUrl: 'https://wallet.example.com',
       sdkConfig: {
@@ -95,9 +93,9 @@ describe('payWithToken', () => {
       },
     });
 
-    expect(executePaymentOnChain).toHaveBeenCalledWith(
+    expect(executePaymentWithSDK).toHaveBeenCalledWith(
       expect.any(Object),
-      8453,
+      false,
       true,
       expect.objectContaining({
         preference: expect.objectContaining({
@@ -109,17 +107,17 @@ describe('payWithToken', () => {
   });
 
   it('should propagate errors and log telemetry when execution fails', async () => {
-    const { executePaymentOnChain } = await import('./utils/sdkManager.js');
+    const { executePaymentWithSDK } = await import('./utils/sdkManager.js');
     const { logPayWithTokenError } = await import(':core/telemetry/events/payment.js');
 
-    vi.mocked(executePaymentOnChain).mockRejectedValueOnce(new Error('execution reverted'));
+    vi.mocked(executePaymentWithSDK).mockRejectedValueOnce(new Error('execution reverted'));
 
     await expect(
       payWithToken({
         amount: '1',
         to: '0x000000000000000000000000000000000000dead',
         token: 'USDC',
-        chainId: 8453,
+        testnet: false,
         paymaster: { url: 'https://paymaster.example.com' },
       })
     ).rejects.toThrow('execution reverted');

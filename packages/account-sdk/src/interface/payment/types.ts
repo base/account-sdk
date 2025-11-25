@@ -1,7 +1,5 @@
 import type { Address, Hex } from 'viem';
 
-import type { ERC3770PaymentId } from './utils/erc3770.js';
-
 /**
  * Information request type for payment data callbacks
  */
@@ -131,8 +129,8 @@ export interface PayWithTokenOptions {
   to: string;
   /** Token to transfer (address or whitelisted symbol) */
   token: TokenInput;
-  /** Chain ID where the token transfer will execute. Defaults to Base (8453) */
-  chainId?: number | string;
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
   /** Paymaster configuration (required) */
   paymaster: PaymasterOptions;
   /** Optional payer information configuration for data callbacks */
@@ -175,10 +173,8 @@ export type PaymentResult = PaymentSuccess;
  * Successful payment result for token payments.
  */
 export interface TokenPaymentSuccess extends BasePaymentSuccess {
-  /** Chain-prefixed ERC-3770 payment ID */
-  id: ERC3770PaymentId;
-  /** Chain ID where the payment executed */
-  chainId: number;
+  /** Transaction ID (hash) of the payment */
+  id: string;
   /** Token amount transferred in base units (wei) */
   tokenAmount: string;
   /** Token contract address or native placeholder */

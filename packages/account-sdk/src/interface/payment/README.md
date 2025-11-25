@@ -23,7 +23,7 @@ if (payment.success) {
 
 ## Token Payments (`payWithToken`)
 
-Use `payWithToken` to send any ERC20 token (or native ETH via the `0xEeee…` placeholder) by specifying the chain, token, and paymaster configuration.
+Use `payWithToken` to send any ERC20 token on Base or Base Sepolia by specifying the token and paymaster configuration.
 
 ```typescript
 import { payWithToken } from '@base-org/account';
@@ -31,7 +31,7 @@ import { payWithToken } from '@base-org/account';
 const payment = await payWithToken({
   amount: '1000000',          // base units (wei)
   token: 'USDC',              // symbol or contract address
-  chainId: '0x2105',          // Base mainnet
+  testnet: false,             // Use Base mainnet (false) or Base Sepolia (true)
   to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
   paymaster: {
     url: 'https://paymaster.example.com',
@@ -41,15 +41,16 @@ const payment = await payWithToken({
   },
 });
 
-console.log(`Token payment sent! Chain-specific ID: ${payment.id}`);
+console.log(`Token payment sent! Transaction ID: ${payment.id}`);
 ```
 
 **Token payment notes**
 
-- `amount` must be provided in the token’s smallest unit (e.g., wei).
-- `token` can be an address or a supported symbol (USDC, USDT, DAI). Symbols are validated against the `chainId` you provide.
+- `amount` must be provided in the token's smallest unit (e.g., wei).
+- `token` can be an address or a supported symbol (USDC, USDT, DAI).
+- `testnet` toggles between Base mainnet (false) and Base Sepolia (true). Only Base and Base Sepolia are supported.
 - `paymaster` is required. Provide either a `url` for a paymaster service or a precomputed `paymasterAndData`.
-- The returned `payment.id` uses the [ERC-3770](https://eips.ethereum.org/EIPS/eip-3770) `shortName:hash` format (for example, `base:0x1234…`). Pass this ID directly to `getPaymentStatus`—it already contains the chain context, so you do **not** need to supply `testnet`.
+- The returned `payment.id` is a transaction hash, just like the `pay()` function. Pass this ID to `getPaymentStatus` along with the same `testnet` value.
 
 ## Checking Payment Status
 
@@ -60,9 +61,10 @@ import { getPaymentStatus } from '@base/account-sdk';
 
 // Assume tokenPayment/usdcPayment are the results from the examples above.
 
-// Token payments (ERC-3770 encoded IDs). No testnet flag needed.
+// Token payments - use the same testnet value as the original payment
 const tokenStatus = await getPaymentStatus({
-  id: tokenPayment.id, // e.g., "base:0x1234..."
+  id: tokenPayment.id, // e.g., "0x1234..."
+  testnet: false,      // Same testnet value used in payWithToken
 });
 
 // USDC payments via pay() still require a testnet flag.
@@ -186,8 +188,8 @@ The payment result is always a successful payment (errors are thrown as exceptio
 
 ### `getPaymentStatus(options: PaymentStatusOptions): Promise<PaymentStatus>`
 
-- `id: string` - Payment ID to check. For `payWithToken()` this is an ERC-3770 value (`shortName:0x…`). For `pay()` this is a plain transaction hash.
-- `testnet?: boolean` - Only used for plain hashes returned by `pay()`. Ignored when the ID already encodes the chain (ERC-3770 format).
+- `id: string` - Payment ID to check (transaction hash returned from `pay()` or `payWithToken()`).
+- `testnet?: boolean` - Whether the payment was on testnet (Base Sepolia). Must match the value used in the original payment.
 - `telemetry?: boolean` - Whether to enable telemetry logging (default: true)
 
 #### PaymentStatus

@@ -5,11 +5,10 @@ import {
 } from ':core/telemetry/events/payment.js';
 import { CHAIN_IDS } from './constants.js';
 import type { PayWithTokenOptions, PayWithTokenResult, PaymentSDKConfig } from './types.js';
-import { encodePaymentId } from './utils/erc3770.js';
-import { executePaymentOnChain } from './utils/sdkManager.js';
+import { executePaymentWithSDK } from './utils/sdkManager.js';
 import { resolveTokenAddress } from './utils/tokenRegistry.js';
 import { buildTokenPaymentRequest } from './utils/translateTokenPayment.js';
-import { normalizeAddress, normalizeChainId, validateBaseUnitAmount } from './utils/validation.js';
+import { normalizeAddress, validateBaseUnitAmount } from './utils/validation.js';
 
 function mergeSdkConfig(
   sdkConfig: PaymentSDKConfig | undefined,
@@ -39,7 +38,7 @@ export async function payWithToken(options: PayWithTokenOptions): Promise<PayWit
     amount,
     to,
     token,
-    chainId = CHAIN_IDS.base,
+    testnet = false,
     paymaster,
     payerInfo,
     walletUrl,
@@ -48,16 +47,17 @@ export async function payWithToken(options: PayWithTokenOptions): Promise<PayWit
   } = options;
 
   const correlationId = crypto.randomUUID();
-  const normalizedChainId = normalizeChainId(chainId);
+  const network = testnet ? 'baseSepolia' : 'base';
+  const chainId = CHAIN_IDS[network];
   const normalizedRecipient = normalizeAddress(to);
   const amountInWei = validateBaseUnitAmount(amount);
-  const resolvedToken = resolveTokenAddress(token, normalizedChainId);
+  const resolvedToken = resolveTokenAddress(token, chainId);
   const tokenLabel = resolvedToken.symbol ?? resolvedToken.address;
 
   if (telemetry) {
     logPayWithTokenStarted({
       token: tokenLabel,
-      chainId: normalizedChainId,
+      chainId,
       correlationId,
     });
   }
@@ -68,15 +68,15 @@ export async function payWithToken(options: PayWithTokenOptions): Promise<PayWit
     const requestParams = buildTokenPaymentRequest({
       recipient: normalizedRecipient,
       amount: amountInWei,
-      chainId: normalizedChainId,
+      chainId,
       token: resolvedToken,
       payerInfo,
       paymaster,
     });
 
-    const executionResult = await executePaymentOnChain(
+    const executionResult = await executePaymentWithSDK(
       requestParams,
-      normalizedChainId,
+      testnet,
       telemetry,
       mergedSdkConfig
     );
@@ -84,21 +84,17 @@ export async function payWithToken(options: PayWithTokenOptions): Promise<PayWit
     if (telemetry) {
       logPayWithTokenCompleted({
         token: tokenLabel,
-        chainId: normalizedChainId,
+        chainId,
         correlationId,
       });
     }
 
-    // Encode payment ID with chain ID using ERC-3770 format
-    const encodedId = encodePaymentId(normalizedChainId, executionResult.transactionHash);
-
     return {
       success: true,
-      id: encodedId,
+      id: executionResult.transactionHash,
       token: tokenLabel,
       tokenAddress: resolvedToken.address,
       tokenAmount: amountInWei.toString(),
-      chainId: normalizedChainId,
       to: normalizedRecipient,
       payerInfoResponses: executionResult.payerInfoResponses,
     };
@@ -106,7 +102,7 @@ export async function payWithToken(options: PayWithTokenOptions): Promise<PayWit
     if (telemetry) {
       logPayWithTokenError({
         token: tokenLabel,
-        chainId: normalizedChainId,
+        chainId,
         correlationId,
         errorMessage: error instanceof Error ? error.message : 'Unknown error occurred',
       });
