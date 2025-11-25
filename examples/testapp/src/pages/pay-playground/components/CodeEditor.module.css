@@ -72,6 +72,52 @@
   user-select: none;
 }
 
+.inputContainer {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.inputLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.inputLabelText {
+  font-weight: 500;
+}
+
+.textInput {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+  color: #0f172a;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.textInput:focus {
+  border-color: #0052ff;
+  box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.1);
+}
+
+.textInput:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f1f5f9;
+}
+
+.textInput::placeholder {
+  color: #94a3b8;
+}
+
 .editorWrapper {
   position: relative;
   height: 390px;

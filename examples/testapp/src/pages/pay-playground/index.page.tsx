@@ -4,10 +4,10 @@ import {
   DEFAULT_GET_PAYMENT_STATUS_CODE,
   DEFAULT_PAY_CODE,
   DEFAULT_PAY_WITH_TOKEN_CODE,
+  generatePayWithTokenCode,
   GET_PAYMENT_STATUS_QUICK_TIPS,
   PAY_CODE_WITH_PAYER_INFO,
   PAY_QUICK_TIPS,
-  PAY_WITH_TOKEN_CODE_WITH_PAYER_INFO,
   PAY_WITH_TOKEN_QUICK_TIPS,
 } from './constants';
 import { useCodeExecution } from './hooks';
@@ -16,6 +16,7 @@ import styles from './styles/Home.module.css';
 function PayPlayground() {
   const [includePayerInfo, setIncludePayerInfo] = useState(false);
   const [includePayWithTokenPayerInfo, setIncludePayWithTokenPayerInfo] = useState(false);
+  const [payWithTokenPaymasterUrl, setPayWithTokenPaymasterUrl] = useState('');
   const [payCode, setPayCode] = useState(DEFAULT_PAY_CODE);
   const [payWithTokenCode, setPayWithTokenCode] = useState(DEFAULT_PAY_WITH_TOKEN_CODE);
   const [getPaymentStatusCode, setGetPaymentStatusCode] = useState(DEFAULT_GET_PAYMENT_STATUS_CODE);
@@ -47,15 +48,22 @@ function PayPlayground() {
 
   const handlePayWithTokenReset = () => {
     setIncludePayWithTokenPayerInfo(false);
+    setPayWithTokenPaymasterUrl('');
     setPayWithTokenCode(DEFAULT_PAY_WITH_TOKEN_CODE);
     payWithTokenExecution.reset();
   };
 
   const handlePayWithTokenPayerInfoToggle = (checked: boolean) => {
     setIncludePayWithTokenPayerInfo(checked);
-    const newCode = checked ? PAY_WITH_TOKEN_CODE_WITH_PAYER_INFO : DEFAULT_PAY_WITH_TOKEN_CODE;
+    const newCode = generatePayWithTokenCode(payWithTokenPaymasterUrl, checked);
     setPayWithTokenCode(newCode);
     payWithTokenExecution.reset();
+  };
+
+  const handlePayWithTokenPaymasterUrlChange = (url: string) => {
+    setPayWithTokenPaymasterUrl(url);
+    const newCode = generatePayWithTokenCode(url, includePayWithTokenPayerInfo);
+    setPayWithTokenCode(newCode);
   };
 
   const handleGetPaymentStatusExecute = () => {
@@ -144,6 +152,9 @@ try {
                 includePayerInfo={includePayWithTokenPayerInfo}
                 onPayerInfoToggle={handlePayWithTokenPayerInfoToggle}
                 showPayerInfoToggle={true}
+                paymasterUrl={payWithTokenPaymasterUrl}
+                onPaymasterUrlChange={handlePayWithTokenPaymasterUrlChange}
+                showPaymasterUrlInput={true}
               />
               <QuickTips tips={PAY_WITH_TOKEN_QUICK_TIPS} />
             </div>
