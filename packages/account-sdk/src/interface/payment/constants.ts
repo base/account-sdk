@@ -9,7 +9,8 @@ export const CHAIN_IDS = {
 } as const;
 
 /**
- * Token configuration for legacy USDC-only payment APIs
+ * Token configuration for USDC-only payment APIs (e.g., pay()).
+ * For other stables or arbitrary tokens, use payWithToken.
  */
 export const TOKENS = {
   USDC: {
