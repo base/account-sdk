@@ -76,7 +76,7 @@ describe('payWithToken', () => {
     );
   });
 
-  it('should merge walletUrl into sdkConfig and pass it to the executor', async () => {
+  it('should pass walletUrl to the executor', async () => {
     const { executePaymentWithSDK } = await import('./utils/sdkManager.js');
 
     await payWithToken({
@@ -86,23 +86,13 @@ describe('payWithToken', () => {
       testnet: false,
       paymaster: { paymasterAndData: '0xdeadbeef' as `0x${string}` },
       walletUrl: 'https://wallet.example.com',
-      sdkConfig: {
-        preference: {
-          telemetry: false,
-        },
-      },
     });
 
     expect(executePaymentWithSDK).toHaveBeenCalledWith(
       expect.any(Object),
       false,
-      true,
-      expect.objectContaining({
-        preference: expect.objectContaining({
-          telemetry: false,
-          walletUrl: 'https://wallet.example.com',
-        }),
-      })
+      'https://wallet.example.com',
+      true
     );
   });
 

@@ -54,43 +54,12 @@ export interface PayerInfo {
 }
 
 /**
- * SDK configuration options for payment
- * @internal Undocumented parameter for advanced SDK configuration
- */
-export interface PaymentSDKConfig {
-  /** Optional preference settings (mode, attribution, etc.) */
-  preference?: {
-    /** Mode for the SDK: 'embedded' for iframe, 'popup' for new window */
-    mode?: 'embedded' | 'popup';
-    /** Attribution configuration */
-    attribution?:
-      | {
-          auto: boolean;
-        }
-      | {
-          dataSuffix: `0x${string}`;
-        };
-    /** Wallet URL override */
-    walletUrl?: string;
-    /** Enable/disable telemetry */
-    telemetry?: boolean;
-    [key: string]: unknown;
-  };
-  /** App metadata overrides */
-  appName?: string;
-  appLogoUrl?: string;
-  appChainIds?: number[];
-  /** Paymaster URLs by chain ID */
-  paymasterUrls?: Record<number, string>;
-}
-
-/**
  * Input supported for token parameters. Accepts either a contract address or a supported symbol.
  */
 export type TokenInput = string;
 
 /**
- * Options for making a USDC payment.
+ * Options for making a payment
  */
 export interface PaymentOptions {
   /** Amount of USDC to send as a string (e.g., "10.50") */
@@ -101,10 +70,9 @@ export interface PaymentOptions {
   testnet?: boolean;
   /** Optional payer information configuration for data callbacks */
   payerInfo?: PayerInfo;
+  walletUrl?: string;
   /** Whether to enable telemetry logging. Defaults to true */
   telemetry?: boolean;
-  /** @internal Advanced SDK configuration (undocumented) */
-  sdkConfig?: PaymentSDKConfig;
 }
 
 /**
@@ -139,8 +107,6 @@ export interface PayWithTokenOptions {
   walletUrl?: string;
   /** Whether to enable telemetry logging. Defaults to true */
   telemetry?: boolean;
-  /** @internal Advanced SDK configuration (undocumented) */
-  sdkConfig?: PaymentSDKConfig;
 }
 
 /**

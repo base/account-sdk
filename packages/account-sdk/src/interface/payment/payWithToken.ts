@@ -4,28 +4,11 @@ import {
   logPayWithTokenStarted,
 } from ':core/telemetry/events/payment.js';
 import { CHAIN_IDS } from './constants.js';
-import type { PayWithTokenOptions, PayWithTokenResult, PaymentSDKConfig } from './types.js';
+import type { PayWithTokenOptions, PayWithTokenResult } from './types.js';
 import { executePaymentWithSDK } from './utils/sdkManager.js';
 import { resolveTokenAddress } from './utils/tokenRegistry.js';
 import { buildTokenPaymentRequest } from './utils/translateTokenPayment.js';
 import { normalizeAddress, validateBaseUnitAmount } from './utils/validation.js';
-
-function mergeSdkConfig(
-  sdkConfig: PaymentSDKConfig | undefined,
-  walletUrl?: string
-): PaymentSDKConfig | undefined {
-  if (!walletUrl) {
-    return sdkConfig;
-  }
-
-  return {
-    ...sdkConfig,
-    preference: {
-      ...(sdkConfig?.preference ?? {}),
-      walletUrl,
-    },
-  };
-}
 
 /**
  * Pay a specified address with any ERC20 token using an ephemeral smart wallet.
@@ -43,7 +26,6 @@ export async function payWithToken(options: PayWithTokenOptions): Promise<PayWit
     payerInfo,
     walletUrl,
     telemetry = true,
-    sdkConfig,
   } = options;
 
   const correlationId = crypto.randomUUID();
@@ -62,8 +44,6 @@ export async function payWithToken(options: PayWithTokenOptions): Promise<PayWit
     });
   }
 
-  const mergedSdkConfig = mergeSdkConfig(sdkConfig, walletUrl);
-
   try {
     const requestParams = buildTokenPaymentRequest({
       recipient: normalizedRecipient,
@@ -77,8 +57,8 @@ export async function payWithToken(options: PayWithTokenOptions): Promise<PayWit
     const executionResult = await executePaymentWithSDK(
       requestParams,
       testnet,
-      telemetry,
-      mergedSdkConfig
+      walletUrl,
+      telemetry
     );
 
     if (telemetry) {
