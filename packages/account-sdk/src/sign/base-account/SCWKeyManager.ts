@@ -1,4 +1,4 @@
-import { store } from ':store/store.js';
+import { createStoreHelpers, type StoreInstance } from ':store/store.js';
 import {
   deriveSharedSecret,
   exportKeyToHexString,
@@ -28,6 +28,11 @@ export class SCWKeyManager {
   private ownPublicKey: CryptoKey | null = null;
   private peerPublicKey: CryptoKey | null = null;
   private sharedSecret: CryptoKey | null = null;
+  private readonly storeHelpers: ReturnType<typeof createStoreHelpers>;
+
+  constructor(storeInstance: StoreInstance) {
+    this.storeHelpers = createStoreHelpers(storeInstance);
+  }
 
   async getOwnPublicKey(): Promise<CryptoKey> {
     await this.loadKeysIfNeeded();
@@ -53,7 +58,7 @@ export class SCWKeyManager {
     this.peerPublicKey = null;
     this.sharedSecret = null;
 
-    store.keys.clear();
+    this.storeHelpers.keys.clear();
   }
 
   private async generateKeyPair() {
@@ -89,7 +94,7 @@ export class SCWKeyManager {
 
   // storage methods
   private async loadKey(item: StorageItem): Promise<CryptoKey | null> {
-    const key = store.keys.get(item.storageKey);
+    const key = this.storeHelpers.keys.get(item.storageKey);
     if (!key) return null;
 
     return importKeyFromHexString(item.keyType, key);
@@ -97,6 +102,6 @@ export class SCWKeyManager {
 
   private async storeKey(item: StorageItem, key: CryptoKey) {
     const hexString = await exportKeyToHexString(item.keyType, key);
-    store.keys.set(item.storageKey, hexString);
+    this.storeHelpers.keys.set(item.storageKey, hexString);
   }
 }
