@@ -20,6 +20,13 @@ describe('validateStringAmount', () => {
     );
   });
 
+  it('should reject malformed decimal amounts', () => {
+    expect(() => validateStringAmount('10.', 6)).toThrow('Invalid amount: must be a valid decimal number');
+    expect(() => validateStringAmount('.5', 6)).toThrow('Invalid amount: must be a valid decimal number');
+    expect(() => validateStringAmount('1.2.3', 6)).toThrow('Invalid amount: multiple decimal points not allowed');
+    expect(() => validateStringAmount('10..5', 6)).toThrow('Invalid amount: multiple decimal points not allowed');
+  });
+
   it('should reject non-string amounts', () => {
     expect(() => validateStringAmount(10 as any, 6)).toThrow('Invalid amount: must be a string');
   });

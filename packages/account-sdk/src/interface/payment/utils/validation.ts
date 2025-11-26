@@ -11,6 +11,16 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
     throw new Error('Invalid amount: must be a string');
   }
 
+  // Reject multiple decimal points (e.g., "1.2.3" or "10..5")
+  if ((amount.match(/\./g) || []).length > 1) {
+    throw new Error('Invalid amount: multiple decimal points not allowed');
+  }
+
+  // Reject trailing or leading decimal points (e.g., "10." or ".5")
+  if (amount.startsWith('.') || amount.endsWith('.')) {
+    throw new Error('Invalid amount: must be a valid decimal number');
+  }
+
   const numAmount = parseFloat(amount);
 
   if (isNaN(numAmount)) {
