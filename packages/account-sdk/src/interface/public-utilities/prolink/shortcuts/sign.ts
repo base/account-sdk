@@ -37,10 +37,19 @@ type WalletSignParams = {
 
 /**
  * Normalize type field to canonical EIP-712 indicator
+ * Per EIP-8050: "Encoders MUST accept the following variants as equivalent to EIP-712:
+ *  - String "0x01" (canonical)
+ *  - String "0x1" (no leading zero)
+ *  - Number 1
+ *  - Missing type field (assume EIP-712 if data contains typed data structure)"
  */
 function normalizeType(type?: string | number): string {
   if (type === undefined) return '0x01';
-  if (typeof type === 'number') return `0x${type.toString(16)}`;
+  if (typeof type === 'number') {
+    // Handle numeric 1 as EIP-712
+    if (type === 1) return '0x01';
+    return `0x${type.toString(16)}`;
+  }
   if (type === '0x1') return '0x01';
   return type;
 }
@@ -161,9 +170,14 @@ export function encodeWalletSign(params: WalletSignParams): WalletSign {
  * Decode wallet_sign request
  * @param payload - WalletSign message
  * @param chainId - Chain ID from top-level payload
- * @returns EIP-7871 wallet_sign parameters
+ * @param capabilities - Optional capabilities from top-level payload
+ * @returns EIP-7871 wallet_sign parameters (ERC-8050 compliant with capabilities inside)
  */
-export function decodeWalletSign(payload: WalletSign, chainId: number): WalletSignParams {
+export function decodeWalletSign(
+  payload: WalletSign,
+  chainId: number,
+  capabilities?: Record<string, unknown>
+): WalletSignParams {
   if (payload.signatureData.case === 'spendPermission') {
     const sp = payload.signatureData.value;
 
@@ -212,6 +226,7 @@ export function decodeWalletSign(payload: WalletSign, chainId: number): WalletSi
       chainId: `0x${chainId.toString(16)}`,
       type: '0x01',
       data: typedData,
+      capabilities,
     };
   }
 
@@ -257,6 +272,7 @@ export function decodeWalletSign(payload: WalletSign, chainId: number): WalletSi
       chainId: `0x${chainId.toString(16)}`,
       type: '0x01',
       data: typedData,
+      capabilities,
     };
   }
 
@@ -278,6 +294,7 @@ export function decodeWalletSign(payload: WalletSign, chainId: number): WalletSi
       chainId: `0x${chainId.toString(16)}`,
       type: '0x01',
       data: typedData,
+      capabilities,
     };
   }
 
