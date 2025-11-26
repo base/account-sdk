@@ -120,7 +120,7 @@ export class Signer {
 
   async handshake(args: RequestArguments) {
     const correlationId = correlationIds.get(args);
-    logHandshakeStarted({ method: args.method, correlationId });
+    logHandshakeStarted({ method: args.method, correlationId, isEphemeral: false });
 
     try {
       // Open the popup before constructing the request message.
@@ -150,12 +150,13 @@ export class Signer {
       const decrypted = await this.decryptResponseMessage(response);
 
       this.handleResponse(args, decrypted);
-      logHandshakeCompleted({ method: args.method, correlationId });
+      logHandshakeCompleted({ method: args.method, correlationId, isEphemeral: false });
     } catch (error) {
       logHandshakeError({
         method: args.method,
         correlationId,
         errorMessage: parseErrorMessageFromAny(error),
+        isEphemeral: false,
       });
       throw error;
     }
@@ -163,17 +164,18 @@ export class Signer {
 
   async request(request: RequestArguments) {
     const correlationId = correlationIds.get(request);
-    logRequestStarted({ method: request.method, correlationId });
+    logRequestStarted({ method: request.method, correlationId, isEphemeral: false });
 
     try {
       const result = await this._request(request);
-      logRequestCompleted({ method: request.method, correlationId });
+      logRequestCompleted({ method: request.method, correlationId, isEphemeral: false });
       return result;
     } catch (error) {
       logRequestError({
         method: request.method,
         correlationId,
         errorMessage: parseErrorMessageFromAny(error),
+        isEphemeral: false,
       });
       throw error;
     }
