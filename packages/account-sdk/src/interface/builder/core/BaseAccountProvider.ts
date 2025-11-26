@@ -36,10 +36,13 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
       metadata,
       preference,
     });
+    // Use the global persistent store for BaseAccountProvider
+    // This maintains backwards compatibility and persists state across sessions
     this.signer = new Signer({
       metadata,
       communicator: this.communicator,
       callback: this.emit.bind(this),
+      storeInstance: store,
     });
   }
 

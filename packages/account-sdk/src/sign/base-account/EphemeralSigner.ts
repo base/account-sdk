@@ -14,7 +14,7 @@ import {
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { SDKChain, createClients } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
-import { store } from ':store/store.js';
+import { createStoreHelpers, type StoreInstance } from ':store/store.js';
 import {
   decryptContent,
   encryptContent,
@@ -27,32 +27,37 @@ type ConstructorOptions = {
   metadata: AppMetadata;
   communicator: Communicator;
   callback: ProviderEventCallback | null;
+  storeInstance: StoreInstance;
 };
 
 /**
  * EphemeralSigner is designed for single-use payment flows.
  *
  * Key differences from Signer:
- * 1. Maintains isolated instance state instead of relying on global store
- * 2. Cleanup only clears instance-specific state (key manager)
- * 3. Does NOT clear global store state (chains, accounts, etc.)
+ * 1. Uses its own isolated store instance to prevent race conditions
+ * 2. Cleanup clears the entire instance store (keys, state)
+ * 3. Does NOT pollute global store state used by other SDK instances
  * 4. Optimized for one-shot operations like wallet_sendCalls and wallet_sign
  *
  * This prevents:
  * - Race conditions when multiple ephemeral flows run concurrently
  * - Pollution of global store state by ephemeral operations
- * - Accidental clearing of shared chain client configurations
+ * - KeyManager interference between concurrent ephemeral operations
  */
 export class EphemeralSigner {
   private readonly communicator: Communicator;
   private readonly keyManager: SCWKeyManager;
+  private readonly storeHelpers: ReturnType<typeof createStoreHelpers>;
+  private readonly storeInstance: StoreInstance;
 
-  // Instance-local state (isolated from global store)
+  // Instance-local state (isolated from other signers)
   private readonly chainId: number;
 
   constructor(params: ConstructorOptions) {
     this.communicator = params.communicator;
-    this.keyManager = new SCWKeyManager();
+    this.storeInstance = params.storeInstance;
+    this.storeHelpers = createStoreHelpers(this.storeInstance);
+    this.keyManager = new SCWKeyManager(this.storeInstance);
     // Note: We intentionally don't use the callback for ephemeral operations
     // as we don't need to emit events for one-shot payment flows
 
@@ -60,8 +65,8 @@ export class EphemeralSigner {
     this.chainId = params.metadata.appChainIds?.[0] ?? 1;
 
     // Ensure chain clients exist for this chain
-    // This uses the shared ChainClients store which is fine to share
-    const chains = store.getState().chains;
+    // Chain clients are shared infrastructure and can be safely shared
+    const chains = this.storeInstance.getState().chains;
     if (chains && chains.length > 0) {
       createClients(chains);
     }
@@ -162,19 +167,24 @@ export class EphemeralSigner {
   }
 
   /**
-   * Cleanup only clears instance-specific state.
-   * Does NOT clear global store state to prevent affecting other SDK instances.
+   * Cleanup clears all instance-specific state including the entire ephemeral store.
+   * Since this signer has its own isolated store instance, we can safely clear everything.
+   * This prevents memory leaks and ensures complete isolation between ephemeral operations.
    */
   async cleanup() {
-    // Only clear the key manager (instance-specific cryptographic state)
+    // Clear the key manager (instance-specific cryptographic state)
     await this.keyManager.clear();
 
-    // NOTE: We intentionally do NOT clear:
-    // - store.account
-    // - store.subAccounts
-    // - store.spendPermissions
-    // - store.chains
-    // These are shared global state that other SDK instances may depend on.
+    // Clear all store state - safe because this is an ephemeral store instance
+    // not shared with any other SDK instance
+    this.storeHelpers.account.clear();
+    this.storeHelpers.subAccounts.clear();
+    this.storeHelpers.spendPermissions.clear();
+    this.storeHelpers.chains.clear();
+    this.storeHelpers.subAccountsConfig.clear();
+
+    // Note: The store instance itself will be garbage collected when
+    // the EphemeralSigner is no longer referenced
   }
 
   private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {

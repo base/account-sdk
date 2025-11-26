@@ -18,18 +18,22 @@ import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { EphemeralSigner } from ':sign/base-account/EphemeralSigner.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
+import { createStoreInstance, type StoreInstance } from ':store/store.js';
 import { fetchRPCRequest } from ':util/provider.js';
 
 /**
  * EphemeralBaseAccountProvider is a provider designed for single-use payment flows.
  *
  * Key differences from BaseAccountProvider:
- * 1. Uses EphemeralSigner which maintains isolated state (doesn't pollute global store)
- * 2. Cleanup only clears instance-specific state, not shared global state
- * 3. Optimized for one-shot operations like pay() and subscribe()
+ * 1. Creates its own isolated store instance (no persistence, no global state pollution)
+ * 2. Uses EphemeralSigner with the isolated store to prevent concurrent operation interference
+ * 3. Cleanup clears the entire ephemeral store instance
+ * 4. Optimized for one-shot operations like pay() and subscribe()
  *
- * This prevents race conditions when multiple ephemeral payment flows
- * are executed concurrently.
+ * This prevents:
+ * - Race conditions when multiple ephemeral payment flows run concurrently
+ * - KeyManager interference (each instance has its own isolated keys)
+ * - Memory leaks (store instance is garbage collected after cleanup)
  */
 export class EphemeralBaseAccountProvider
   extends ProviderEventEmitter
@@ -37,6 +41,7 @@ export class EphemeralBaseAccountProvider
 {
   private readonly communicator: Communicator;
   private readonly signer: EphemeralSigner;
+  private readonly ephemeralStore: StoreInstance;
 
   constructor({
     metadata,
@@ -48,10 +53,15 @@ export class EphemeralBaseAccountProvider
       metadata,
       preference,
     });
+    // Create an isolated ephemeral store for this provider instance
+    // persist: false means no localStorage persistence
+    this.ephemeralStore = createStoreInstance({ persist: false });
+    
     this.signer = new EphemeralSigner({
       metadata,
       communicator: this.communicator,
       callback: this.emit.bind(this),
+      storeInstance: this.ephemeralStore,
     });
   }
 
@@ -127,10 +137,10 @@ export class EphemeralBaseAccountProvider
   }
 
   async disconnect() {
-    // Only cleanup ephemeral signer state - don't touch global store
+    // Cleanup ephemeral signer state and its isolated store
     await this.signer.cleanup();
-    // Clear only the correlation IDs for this provider instance
-    // Note: correlationIds is already scoped per-request, so this is safe
+    // Note: The ephemeral store instance will be garbage collected
+    // when this provider instance is no longer referenced
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 

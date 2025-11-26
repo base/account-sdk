@@ -132,136 +132,165 @@ export type StoreState = MergeTypes<
   ]
 >;
 
-export const sdkstore = createStore(
-  persist<StoreState>(
-    (...args) => ({
-      ...createChainSlice(...args),
-      ...createKeysSlice(...args),
-      ...createAccountSlice(...args),
-      ...createSubAccountSlice(...args),
-      ...createSpendPermissionsSlice(...args),
-      ...createConfigSlice(...args),
-      ...createSubAccountConfigSlice(...args),
-    }),
-    {
-      name: 'base-acc-sdk.store',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => {
-        // Explicitly select only the data properties we want to persist
-        // (not the methods)
-        return {
-          chains: state.chains,
-          keys: state.keys,
-          account: state.account,
-          subAccount: state.subAccount,
-          spendPermissions: state.spendPermissions,
-          config: state.config,
-        } as StoreState;
+/**
+ * Factory function to create a store instance.
+ * Allows creating either persistent (for regular SDK) or ephemeral (for payment flows) stores.
+ */
+export function createStoreInstance(options?: {
+  persist?: boolean;
+  storageName?: string;
+}) {
+  const { persist: shouldPersist = true, storageName = 'base-acc-sdk.store' } = options ?? {};
+
+  const storeCreator = (...args: Parameters<StateCreator<StoreState, [], []>>) => ({
+    ...createChainSlice(...args),
+    ...createKeysSlice(...args),
+    ...createAccountSlice(...args),
+    ...createSubAccountSlice(...args),
+    ...createSpendPermissionsSlice(...args),
+    ...createConfigSlice(...args),
+    ...createSubAccountConfigSlice(...args),
+  });
+
+  if (shouldPersist) {
+    return createStore(
+      persist<StoreState>(storeCreator, {
+        name: storageName,
+        storage: createJSONStorage(() => localStorage),
+        partialize: (state) => {
+          // Explicitly select only the data properties we want to persist
+          // (not the methods)
+          return {
+            chains: state.chains,
+            keys: state.keys,
+            account: state.account,
+            subAccount: state.subAccount,
+            spendPermissions: state.spendPermissions,
+            config: state.config,
+          } as StoreState;
+        },
+      })
+    );
+  } else {
+    // Create ephemeral store without persistence
+    return createStore(storeCreator);
+  }
+}
+
+// Global singleton store for backwards compatibility and persistent SDK instances
+export const sdkstore = createStoreInstance({ persist: true });
+
+// Type for store instance returned by createStoreInstance
+export type StoreInstance = ReturnType<typeof createStoreInstance>;
+
+/**
+ * Creates store accessor helpers for a given store instance.
+ * This allows both the global store and ephemeral stores to use the same API.
+ */
+export function createStoreHelpers(storeInstance: StoreInstance) {
+  return {
+    subAccountsConfig: {
+      get: () => storeInstance.getState().subAccountConfig,
+      set: (subAccountConfig: Partial<SubAccountConfig>) => {
+        storeInstance.setState((state) => ({
+          subAccountConfig: { ...state.subAccountConfig, ...subAccountConfig },
+        }));
       },
-    }
-  )
-);
+      clear: () => {
+        storeInstance.setState({
+          subAccountConfig: {},
+        });
+      },
+    },
 
-// Non-persisted subaccount configuration
+    subAccounts: {
+      get: () => storeInstance.getState().subAccount,
+      set: (subAccount: Partial<SubAccount>) => {
+        storeInstance.setState((state) => ({
+          subAccount: state.subAccount
+            ? { ...state.subAccount, ...subAccount }
+            : { address: subAccount.address as Address, ...subAccount },
+        }));
+      },
+      clear: () => {
+        storeInstance.setState({
+          subAccount: undefined,
+        });
+      },
+    },
 
-export const subAccountsConfig = {
-  get: () => sdkstore.getState().subAccountConfig,
-  set: (subAccountConfig: Partial<SubAccountConfig>) => {
-    sdkstore.setState((state) => ({
-      subAccountConfig: { ...state.subAccountConfig, ...subAccountConfig },
-    }));
-  },
-  clear: () => {
-    sdkstore.setState({
-      subAccountConfig: {},
-    });
-  },
-};
+    spendPermissions: {
+      get: () => storeInstance.getState().spendPermissions,
+      set: (spendPermissions: SpendPermission[]) => {
+        storeInstance.setState({ spendPermissions });
+      },
+      clear: () => {
+        storeInstance.setState({
+          spendPermissions: [],
+        });
+      },
+    },
 
-export const subAccounts = {
-  get: () => sdkstore.getState().subAccount,
-  set: (subAccount: Partial<SubAccount>) => {
-    sdkstore.setState((state) => ({
-      subAccount: state.subAccount
-        ? { ...state.subAccount, ...subAccount }
-        : { address: subAccount.address as Address, ...subAccount },
-    }));
-  },
-  clear: () => {
-    sdkstore.setState({
-      subAccount: undefined,
-    });
-  },
-};
+    account: {
+      get: () => storeInstance.getState().account,
+      set: (account: Partial<Account>) => {
+        storeInstance.setState((state) => ({
+          account: { ...state.account, ...account },
+        }));
+      },
+      clear: () => {
+        storeInstance.setState({
+          account: {},
+        });
+      },
+    },
 
-export const spendPermissions = {
-  get: () => sdkstore.getState().spendPermissions,
-  set: (spendPermissions: SpendPermission[]) => {
-    sdkstore.setState({ spendPermissions });
-  },
-  clear: () => {
-    sdkstore.setState({
-      spendPermissions: [],
-    });
-  },
-};
+    chains: {
+      get: () => storeInstance.getState().chains,
+      set: (chains: Chain[]) => {
+        storeInstance.setState({ chains });
+      },
+      clear: () => {
+        storeInstance.setState({
+          chains: [],
+        });
+      },
+    },
 
-export const account = {
-  get: () => sdkstore.getState().account,
-  set: (account: Partial<Account>) => {
-    sdkstore.setState((state) => ({
-      account: { ...state.account, ...account },
-    }));
-  },
-  clear: () => {
-    sdkstore.setState({
-      account: {},
-    });
-  },
-};
+    keys: {
+      get: (key: string) => storeInstance.getState().keys[key],
+      set: (key: string, value: string | null) => {
+        storeInstance.setState((state) => ({ keys: { ...state.keys, [key]: value } }));
+      },
+      clear: () => {
+        storeInstance.setState({
+          keys: {},
+        });
+      },
+    },
 
-export const chains = {
-  get: () => sdkstore.getState().chains,
-  set: (chains: Chain[]) => {
-    sdkstore.setState({ chains });
-  },
-  clear: () => {
-    sdkstore.setState({
-      chains: [],
-    });
-  },
-};
+    config: {
+      get: () => storeInstance.getState().config,
+      set: (config: Partial<Config>) => {
+        storeInstance.setState((state) => ({ config: { ...state.config, ...config } }));
+      },
+    },
+  };
+}
 
-export const keys = {
-  get: (key: string) => sdkstore.getState().keys[key],
-  set: (key: string, value: string | null) => {
-    sdkstore.setState((state) => ({ keys: { ...state.keys, [key]: value } }));
-  },
-  clear: () => {
-    sdkstore.setState({
-      keys: {},
-    });
-  },
-};
+// Global store with helpers for backwards compatibility
+const globalStoreHelpers = createStoreHelpers(sdkstore);
 
-export const config = {
-  get: () => sdkstore.getState().config,
-  set: (config: Partial<Config>) => {
-    sdkstore.setState((state) => ({ config: { ...state.config, ...config } }));
-  },
-};
-
-const actions = {
-  subAccounts,
-  subAccountsConfig,
-  spendPermissions,
-  account,
-  chains,
-  keys,
-  config,
-};
+// Re-export global helpers for backwards compatibility
+export const subAccountsConfig = globalStoreHelpers.subAccountsConfig;
+export const subAccounts = globalStoreHelpers.subAccounts;
+export const spendPermissions = globalStoreHelpers.spendPermissions;
+export const account = globalStoreHelpers.account;
+export const chains = globalStoreHelpers.chains;
+export const keys = globalStoreHelpers.keys;
+export const config = globalStoreHelpers.config;
 
 export const store = {
   ...sdkstore,
-  ...actions,
+  ...globalStoreHelpers,
 };
