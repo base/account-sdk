@@ -56,7 +56,7 @@ export class EphemeralBaseAccountProvider
     // Create an isolated ephemeral store for this provider instance
     // persist: false means no localStorage persistence
     this.ephemeralStore = createStoreInstance({ persist: false });
-    
+
     this.signer = new EphemeralSigner({
       metadata,
       communicator: this.communicator,
@@ -122,8 +122,7 @@ export class EphemeralBaseAccountProvider
         }
         default: {
           throw standardErrors.provider.unauthorized(
-            `Method '${args.method}' is not supported by ephemeral provider. ` +
-              `Ephemeral providers only support: wallet_sendCalls, wallet_sign, wallet_getCallsStatus`
+            `Method '${args.method}' is not supported by ephemeral provider. Ephemeral providers only support: wallet_sendCalls, wallet_sign, wallet_getCallsStatus`
           );
         }
       }

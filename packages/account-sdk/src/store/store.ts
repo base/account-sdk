@@ -171,10 +171,9 @@ export function createStoreInstance(options?: {
         },
       })
     );
-  } else {
-    // Create ephemeral store without persistence
-    return createStore(storeCreator);
   }
+  // Create ephemeral store without persistence
+  return createStore(storeCreator);
 }
 
 // Global singleton store for backwards compatibility and persistent SDK instances
@@ -293,4 +292,5 @@ export const config = globalStoreHelpers.config;
 export const store = {
   ...sdkstore,
   ...globalStoreHelpers,
+  persist: (sdkstore as any).persist,
 };

@@ -37,12 +37,7 @@ import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
-import {
-  createStoreHelpers,
-  spendPermissions,
-  store,
-  type StoreInstance,
-} from ':store/store.js';
+import { createStoreHelpers, spendPermissions, store, type StoreInstance } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import {
@@ -343,7 +338,7 @@ export class Signer {
         const response = (await fetchRPCRequest(
           fetchPermissionRequest,
           CB_WALLET_RPC_URL
-        )        ) as FetchPermissionResponse;
+        )) as FetchPermissionResponse;
 
         // Store the single permission if it has a chainId
         if (response.permission && response.permission.chainId) {
