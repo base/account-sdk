@@ -182,4 +182,31 @@ describe('prepareCharge', () => {
     );
     expect(result).toEqual(mockCallData);
   });
+
+  it('should reject malformed amount with multiple decimal points', async () => {
+    const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
+    vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
+
+    await expect(
+      prepareCharge({ id: '0xhash123', amount: '1.2.3', testnet: false })
+    ).rejects.toThrow('Invalid amount: multiple decimal points not allowed');
+  });
+
+  it('should reject malformed amount with trailing decimal', async () => {
+    const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
+    vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
+
+    await expect(
+      prepareCharge({ id: '0xhash123', amount: '10.', testnet: false })
+    ).rejects.toThrow('Invalid amount: must be a valid decimal number');
+  });
+
+  it('should reject malformed amount with leading decimal', async () => {
+    const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
+    vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
+
+    await expect(
+      prepareCharge({ id: '0xhash123', amount: '.5', testnet: false })
+    ).rejects.toThrow('Invalid amount: must be a valid decimal number');
+  });
 });

@@ -6,6 +6,7 @@ import {
 import { TOKENS } from './constants.js';
 import type { PrepareChargeOptions, PrepareChargeResult } from './types.js';
 import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.js';
+import { validateStringAmount } from './utils/validation.js';
 
 /**
  * Prepares call data for charging a subscription.
@@ -87,6 +88,9 @@ export async function prepareCharge(options: PrepareChargeOptions): Promise<Prep
     // It will handle getting the permission status internally
     spendAmount = 'max-remaining-allowance';
   } else {
+    // Validate amount format before parsing to reject malformed inputs
+    validateStringAmount(amount, TOKENS.USDC.decimals);
+
     // Parse the USD amount string to USDC wei (6 decimals)
     // For example, "10.50" becomes 10500000n (10.50 * 10^6)
     spendAmount = parseUnits(amount, TOKENS.USDC.decimals);
