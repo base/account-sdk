@@ -119,4 +119,3 @@ export function LocalSpenderCard({ address, privateKey, onGenerateNew }: LocalSp
     </Card>
   );
 }
-

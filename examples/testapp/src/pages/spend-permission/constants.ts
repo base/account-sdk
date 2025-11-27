@@ -122,4 +122,3 @@ export const getNativeTokenSymbol = (chainId: number | null | undefined): string
 export const getNetworkByChainId = (chainId: number): Network | undefined => {
   return NETWORKS.find((n) => n.chainId === chainId);
 };
-

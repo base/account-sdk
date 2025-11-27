@@ -66,4 +66,3 @@ export const truncateHash = (hash: string, length = 8): string => {
   if (hash.length <= length * 2 + 3) return hash;
   return `${hash.slice(0, length)}...${hash.slice(-length)}`;
 };
-

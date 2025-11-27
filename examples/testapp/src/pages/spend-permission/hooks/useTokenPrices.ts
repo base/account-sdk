@@ -57,4 +57,3 @@ export function useTokenPrices() {
 
   return { tokenPrices, formatUsd, fetchTokenPrices };
 }
-

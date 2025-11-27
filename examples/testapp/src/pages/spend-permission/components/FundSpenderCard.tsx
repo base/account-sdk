@@ -113,7 +113,12 @@ export function FundSpenderCard({
                 >
                   <Flex align="center" gap={1} mb={1}>
                     <Box w={2} h={2} borderRadius="full" bg={`${bal.color}.400`} flexShrink={0} />
-                    <Text fontSize="xs" fontWeight="medium" color="gray.600" _dark={{ color: 'gray.400' }}>
+                    <Text
+                      fontSize="xs"
+                      fontWeight="medium"
+                      color="gray.600"
+                      _dark={{ color: 'gray.400' }}
+                    >
                       {bal.chainName}
                     </Text>
                   </Flex>
@@ -173,7 +178,9 @@ export function FundSpenderCard({
             <VStack spacing={3} align="stretch">
               <Flex gap={3} align="flex-end" flexWrap="wrap">
                 <FormControl flex="1" minW="120px">
-                  <FormLabel fontSize="xs">Amount ({getNativeTokenSymbol(selectedChainId)})</FormLabel>
+                  <FormLabel fontSize="xs">
+                    Amount ({getNativeTokenSymbol(selectedChainId)})
+                  </FormLabel>
                   <NumberInput
                     value={fundAmount}
                     onChange={(valueString) => onFundAmountChange(valueString)}
@@ -207,4 +214,3 @@ export function FundSpenderCard({
     </Card>
   );
 }
-

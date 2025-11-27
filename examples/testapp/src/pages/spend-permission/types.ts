@@ -48,4 +48,3 @@ export type SpendResult = {
   txHashes?: string[];
   chainId?: number;
 };
-
