@@ -57,13 +57,13 @@ First, ensure that the following are installed globally on your machine:
 Then, from the root folder run:
 
 - `yarn install` to install dependencies
-- `yarn build` to build the package
+- `yarn build:packages` to build the packages
 - `yarn dev` to start the example app and build the package with hot reloading
 - `yarn test` to ensure that the test suite runs correctly
 
 ### Navigating the codebase
 
-The SDK is built using yarn workspaces. 
+The SDK is built using yarn workspaces.
 
 - `packages/account-sdk` - The main package that exports the SDK
 - `examples/test-app` - An example React app that is used to test the SDK in a real browser environment
