@@ -338,8 +338,8 @@ describe('pay', () => {
     expect(sdkManager.executePaymentWithSDK).toHaveBeenCalledWith(
       expect.any(Object),
       false,
-      undefined,
-      false
+      false,
+      undefined
     );
   });
 
@@ -386,8 +386,8 @@ describe('pay', () => {
         }),
       }),
       true,
-      undefined,
-      true
+      true,
+      undefined
     );
   });
 
@@ -549,5 +549,48 @@ describe('pay', () => {
       correlationId: 'mock-correlation-id',
       errorMessage: 'Unknown error occurred',
     });
+  });
+
+  it('should pass sdkConfig to executePaymentWithSDK', async () => {
+    // Setup mocks
+    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+    vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+      version: '2.0.0',
+      chainId: 8453,
+      calls: [
+        {
+          to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          data: '0xabcdef',
+          value: '0x0',
+        },
+      ],
+      capabilities: {},
+    });
+    vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+      transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    });
+
+    const sdkConfig = {
+      preference: {
+        mode: 'embedded' as const,
+        attribution: { auto: true },
+      },
+      appName: 'Test App',
+    };
+
+    await pay({
+      amount: '10.50',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      testnet: false,
+      sdkConfig,
+    });
+
+    // Verify sdkConfig was passed to executePaymentWithSDK
+    expect(sdkManager.executePaymentWithSDK).toHaveBeenCalledWith(
+      expect.any(Object),
+      false,
+      true,
+      sdkConfig
+    );
   });
 });
