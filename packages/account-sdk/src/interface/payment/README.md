@@ -26,7 +26,7 @@ if (payment.success) {
 You can check the status of a payment using the transaction ID returned from the pay function:
 
 ```typescript
-import { getPaymentStatus } from '@base/account-sdk';
+import { getPaymentStatus } from '@base-org/account';
 
 // Check payment status
 const status = await getPaymentStatus({
