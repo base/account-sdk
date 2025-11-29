@@ -75,6 +75,81 @@ export const logPaymentCompleted = ({
   );
 };
 
+export const logPayWithTokenStarted = ({
+  token,
+  chainId,
+  correlationId,
+}: {
+  token: string;
+  chainId: number;
+  correlationId: string | undefined;
+}) => {
+  logEvent(
+    'payment.payWithToken.started',
+    {
+      action: ActionType.process,
+      componentType: ComponentType.unknown,
+      method: 'payWithToken',
+      correlationId,
+      signerType: 'base-account',
+      token,
+      chainId,
+    },
+    AnalyticsEventImportance.high
+  );
+};
+
+export const logPayWithTokenCompleted = ({
+  token,
+  chainId,
+  correlationId,
+}: {
+  token: string;
+  chainId: number;
+  correlationId: string | undefined;
+}) => {
+  logEvent(
+    'payment.payWithToken.completed',
+    {
+      action: ActionType.process,
+      componentType: ComponentType.unknown,
+      method: 'payWithToken',
+      correlationId,
+      signerType: 'base-account',
+      token,
+      chainId,
+    },
+    AnalyticsEventImportance.high
+  );
+};
+
+export const logPayWithTokenError = ({
+  token,
+  chainId,
+  correlationId,
+  errorMessage,
+}: {
+  token: string;
+  chainId: number;
+  correlationId: string | undefined;
+  errorMessage: string;
+}) => {
+  logEvent(
+    'payment.payWithToken.error',
+    {
+      action: ActionType.error,
+      componentType: ComponentType.unknown,
+      method: 'payWithToken',
+      correlationId,
+      signerType: 'base-account',
+      token,
+      chainId,
+      errorMessage,
+    },
+    AnalyticsEventImportance.high
+  );
+};
+
 export const logPaymentStatusCheckStarted = ({
   testnet,
   correlationId,

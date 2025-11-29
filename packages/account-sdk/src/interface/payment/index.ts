@@ -3,6 +3,7 @@ export { base } from './base.browser.js';
 export { getPaymentStatus } from './getPaymentStatus.js';
 export { getSubscriptionStatus } from './getSubscriptionStatus.js';
 export { pay } from './pay.js';
+export { payWithToken } from './payWithToken.js';
 export { prepareCharge } from './prepareCharge.js';
 export { prepareRevoke } from './prepareRevoke.js';
 export { subscribe } from './subscribe.js';
@@ -20,6 +21,9 @@ export type {
   PaymentStatusOptions,
   PaymentStatusType,
   PaymentSuccess,
+  PaymasterOptions,
+  PayWithTokenOptions,
+  PayWithTokenResult,
   PrepareChargeCall,
   PrepareChargeOptions,
   PrepareChargeResult,
@@ -32,6 +36,8 @@ export type {
   SubscriptionResult,
   SubscriptionStatus,
   SubscriptionStatusOptions,
+  TokenPaymentSuccess,
+  TokenInput,
 } from './types.js';
 
 // Export constants
