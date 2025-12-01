@@ -106,4 +106,3 @@ export function truncateHash(hash: string, chars = 10): string {
   }
   return `${hash.slice(0, chars)}...`;
 }
-
