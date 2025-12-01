@@ -33,6 +33,7 @@ const PAGES = [
   '/add-sub-account',
   '/import-sub-account',
   '/auto-sub-account',
+  '/spend-permission',
   '/payment',
   '/pay-playground',
   '/subscribe-playground',
