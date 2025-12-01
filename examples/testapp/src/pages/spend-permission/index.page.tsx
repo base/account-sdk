@@ -46,7 +46,15 @@ import {
 import { privateKeyToAccount } from 'viem/accounts';
 
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
-import { FundSpenderCard, LocalSpenderCard, NetworkSwitcher, StatusItem } from './components';
+import {
+  CopyableText,
+  FundSpenderCard,
+  LocalSpenderCard,
+  NetworkSwitcher,
+  StatusItem,
+  truncateAddress,
+  truncateHash,
+} from './components';
 import {
   EIP7702_DELEGATION_PREFIX,
   IS_OWNER_ADDRESS_ABI,
@@ -844,15 +852,17 @@ export default function SpendPermissionPage() {
                         Connected
                       </Text>
                     </Flex>
-                    <Text
-                      fontFamily="mono"
-                      fontSize={{ base: 'sm', md: 'md' }}
-                      fontWeight="medium"
-                      color="gray.700"
-                      _dark={{ color: 'gray.200' }}
-                    >
-                      {connectedAddress?.slice(0, 6)}...{connectedAddress?.slice(-4)}
-                    </Text>
+                    {connectedAddress && (
+                      <CopyableText
+                        value={connectedAddress}
+                        displayText={truncateAddress(connectedAddress)}
+                        fontSize={{ base: 'sm', md: 'md' }}
+                        fontWeight="medium"
+                        color="gray.700"
+                        _dark={{ color: 'gray.200' }}
+                        tooltipLabel="Click to copy address"
+                      />
+                    )}
                     <Flex align="center" gap={1} mt={1}>
                       <Text fontSize="xs" color="gray.500" _dark={{ color: 'gray.400' }}>
                         Balance:
@@ -1270,9 +1280,14 @@ export default function SpendPermissionPage() {
                           <Text fontSize="xs" color="gray.500">
                             Hash
                           </Text>
-                          <Text fontSize="xs" fontFamily="mono">
-                            {selectedPermission.permissionHash?.slice(0, 10)}...
-                          </Text>
+                          {selectedPermission.permissionHash && (
+                            <CopyableText
+                              value={selectedPermission.permissionHash}
+                              displayText={truncateHash(selectedPermission.permissionHash)}
+                              fontSize="xs"
+                              tooltipLabel="Click to copy hash"
+                            />
+                          )}
                         </Flex>
                       </Grid>
                     </Box>
@@ -1327,9 +1342,15 @@ export default function SpendPermissionPage() {
                                 </Badge>
                               </Td>
                               <Td px={2}>
-                                <Text fontSize="xs" fontFamily="mono" whiteSpace="nowrap">
-                                  {perm.permissionHash?.slice(0, 10)}...
-                                </Text>
+                                {perm.permissionHash && (
+                                  <CopyableText
+                                    value={perm.permissionHash}
+                                    displayText={truncateHash(perm.permissionHash)}
+                                    fontSize="xs"
+                                    whiteSpace="nowrap"
+                                    tooltipLabel="Click to copy hash"
+                                  />
+                                )}
                               </Td>
                               <Td px={2}>
                                 <Text fontSize="xs" whiteSpace="nowrap">
@@ -1482,15 +1503,14 @@ export default function SpendPermissionPage() {
                                       ? `Transaction ${index + 1}`
                                       : 'Transaction Hash'}
                                   </Text>
-                                  <Text
+                                  <CopyableText
+                                    value={txHash}
+                                    displayText={truncateAddress(txHash, 10, 8)}
                                     fontSize="xs"
-                                    fontFamily="mono"
                                     color="gray.700"
                                     _dark={{ color: 'gray.300' }}
-                                    isTruncated
-                                  >
-                                    {txHash}
-                                  </Text>
+                                    tooltipLabel="Click to copy tx hash"
+                                  />
                                 </Box>
                                 {explorerUrl && (
                                   <Link href={explorerUrl} isExternal>
