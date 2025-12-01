@@ -1,4 +1,4 @@
-import { decodeProlink, encodeProlink } from '@base-org/account';
+import { createProlinkUrl, decodeProlink, encodeProlink } from '@base-org/account';
 import {
   Accordion,
   AccordionButton,
@@ -242,36 +242,64 @@ export default function ProlinkPlayground() {
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(encodedPayload);
-    toast({
-      title: 'Copied!',
-      description: 'Payload copied to clipboard',
-      status: 'success',
-      duration: 2000,
-    });
-  };
-
-  const generateBaseDeeplink = () => {
-    const deeplink = `https://base.app/base-pay?p=${encodedPayload}`;
-    setBaseDeeplink(deeplink);
-    toast({
-      title: 'Base Deeplink Generated!',
-      description: 'Scan the QR code or copy the link to use it',
-      status: 'success',
-      duration: 3000,
-    });
-  };
-
-  const copyDeeplinkToClipboard = () => {
-    if (baseDeeplink) {
-      navigator.clipboard.writeText(baseDeeplink);
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(encodedPayload);
       toast({
         title: 'Copied!',
-        description: 'Base deeplink copied to clipboard',
+        description: 'Payload copied to clipboard',
         status: 'success',
         duration: 2000,
       });
+    } catch (_error) {
+      toast({
+        title: 'Failed to copy',
+        description: 'Please copy the payload manually',
+        status: 'error',
+        duration: 3000,
+      });
+    }
+  };
+
+  const generateBaseDeeplink = () => {
+    try {
+      const deeplink = createProlinkUrl(encodedPayload);
+      setBaseDeeplink(deeplink);
+      toast({
+        title: 'Base Deeplink Generated!',
+        description: 'Scan the QR code or copy the link to use it',
+        status: 'success',
+        duration: 3000,
+      });
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+      toast({
+        title: 'Error generating deeplink',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+      });
+    }
+  };
+
+  const copyDeeplinkToClipboard = async () => {
+    if (baseDeeplink) {
+      try {
+        await navigator.clipboard.writeText(baseDeeplink);
+        toast({
+          title: 'Copied!',
+          description: 'Base deeplink copied to clipboard',
+          status: 'success',
+          duration: 2000,
+        });
+      } catch (_error) {
+        toast({
+          title: 'Failed to copy',
+          description: 'Please copy the link manually',
+          status: 'error',
+          duration: 3000,
+        });
+      }
     }
   };
 
@@ -304,14 +332,23 @@ export default function ProlinkPlayground() {
     }
   };
 
-  const copyDecodedToClipboard = () => {
-    navigator.clipboard.writeText(JSON.stringify(decodeResult, null, 2));
-    toast({
-      title: 'Copied!',
-      description: 'Decoded result copied to clipboard',
-      status: 'success',
-      duration: 2000,
-    });
+  const copyDecodedToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(decodeResult, null, 2));
+      toast({
+        title: 'Copied!',
+        description: 'Decoded result copied to clipboard',
+        status: 'success',
+        duration: 2000,
+      });
+    } catch (_error) {
+      toast({
+        title: 'Failed to copy',
+        description: 'Please copy the result manually',
+        status: 'error',
+        duration: 3000,
+      });
+    }
   };
 
   return (
