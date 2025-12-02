@@ -29,10 +29,9 @@ import {
 } from '@chakra-ui/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
-import { encodeFunctionData, type Address } from 'viem';
 
 // Token configuration
-const TOKENS = {
+const _TOKENS = {
   USDC: {
     name: 'USDC',
     decimals: 6,
@@ -54,7 +53,7 @@ const TOKENS = {
 } as const;
 
 // ERC20 transfer ABI
-const ERC20_TRANSFER_ABI = [
+const _ERC20_TRANSFER_ABI = [
   {
     name: 'transfer',
     type: 'function',
@@ -145,7 +144,7 @@ export default function ProlinkPlayground() {
   const [encodedPayload, setEncodedPayload] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [decodedResult, setDecodedResult] = useState<unknown>(null);
-  const [webhookUuid, setWebhookUuid] = useState<string | null>(null);
+  const [_webhookUuid, setWebhookUuid] = useState<string | null>(null);
 
   // Decode section
   const [decodeInput, setDecodeInput] = useState('');
