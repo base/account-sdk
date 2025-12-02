@@ -28,7 +28,44 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { QRCodeSVG } from 'qrcode.react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { encodeFunctionData, type Address } from 'viem';
+
+// Token configuration
+const TOKENS = {
+  USDC: {
+    name: 'USDC',
+    decimals: 6,
+    addresses: {
+      '8453': '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base mainnet
+      '84532': '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Base Sepolia
+      '1': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // Ethereum mainnet
+    },
+  },
+  ETH: {
+    name: 'ETH',
+    decimals: 18,
+    addresses: {
+      '8453': '0x0000000000000000000000000000000000000000',
+      '84532': '0x0000000000000000000000000000000000000000',
+      '1': '0x0000000000000000000000000000000000000000',
+    },
+  },
+} as const;
+
+// ERC20 transfer ABI
+const ERC20_TRANSFER_ABI = [
+  {
+    name: 'transfer',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+] as const;
 
 export default function ProlinkPlayground() {
   const toast = useToast();
@@ -108,6 +145,7 @@ export default function ProlinkPlayground() {
   const [encodedPayload, setEncodedPayload] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [decodedResult, setDecodedResult] = useState<unknown>(null);
+  const [webhookUuid, setWebhookUuid] = useState<string | null>(null);
 
   // Decode section
   const [decodeInput, setDecodeInput] = useState('');
@@ -118,6 +156,53 @@ export default function ProlinkPlayground() {
   // Compute base deeplink from encoded payload
   const baseDeeplink = encodedPayload ? createProlinkUrl(encodedPayload) : null;
 
+  // Auto-generate webhook.site URL when capabilities are enabled
+  useEffect(() => {
+    if (!useCapabilities) return;
+
+    const generateWebhook = async () => {
+      try {
+        // Use CORS proxy to avoid CORS issues in the browser
+        const response = await fetch('https://corsproxy.io/?https://webhook.site/token', {
+          method: 'POST',
+        });
+        const data = await response.json();
+
+        if (data.uuid) {
+          setWebhookUuid(data.uuid);
+
+          // Update capabilities JSON with the webhook URL
+          const capabilities = {
+            dataCallback: {
+              url: `https://webhook.site/${data.uuid}`,
+              events: ['initiated', 'preSigning', 'postSigning'],
+              metadata: {
+                customField: 'customValue',
+              },
+            },
+          };
+          setCapabilitiesJson(JSON.stringify(capabilities, null, 2));
+
+          toast({
+            title: 'Webhook generated!',
+            description: 'A temporary webhook.site URL has been created',
+            status: 'success',
+            duration: 3000,
+          });
+        }
+      } catch (error) {
+        console.error('Error generating webhook:', error);
+        toast({
+          title: 'Failed to generate webhook',
+          description: 'Could not create webhook.site URL',
+          status: 'error',
+          duration: 3000,
+        });
+      }
+    };
+
+    generateWebhook();
+  }, [useCapabilities, toast]);
   const generateProlink = async () => {
     setLoading(true);
     setError(null);
