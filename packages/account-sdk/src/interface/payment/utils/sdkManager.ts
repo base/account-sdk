@@ -6,7 +6,7 @@ import type { PayerInfoResponses } from '../types.js';
 /**
  * Type for wallet_sendCalls request parameters
  */
-type WalletSendCallsRequestParams = {
+export type WalletSendCallsRequestParams = {
   version: string;
   chainId: number;
   calls: Array<{

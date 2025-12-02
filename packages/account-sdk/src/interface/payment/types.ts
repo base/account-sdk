@@ -54,6 +54,11 @@ export interface PayerInfo {
 }
 
 /**
+ * Input supported for token parameters. Accepts either a contract address or a supported symbol.
+ */
+export type TokenInput = string;
+
+/**
  * Options for making a payment
  */
 export interface PaymentOptions {
@@ -71,14 +76,46 @@ export interface PaymentOptions {
 }
 
 /**
- * Successful payment result
+ * Paymaster configuration for token-based payments.
  */
-export interface PaymentSuccess {
+export interface PaymasterOptions {
+  /** URL for the paymaster service (sponsor) */
+  url?: string;
+  /** Optional contextual data to send to the paymaster service */
+  context?: Record<string, unknown>;
+  /** Direct paymasterAndData value for pre-signed operations */
+  paymasterAndData?: Hex;
+}
+
+/**
+ * Options for making a token-denominated payment.
+ */
+export interface PayWithTokenOptions {
+  /** Amount to send in the token's smallest unit (e.g., wei) */
+  amount: string;
+  /** Recipient address */
+  to: string;
+  /** Token to transfer (address or whitelisted symbol) */
+  token: TokenInput;
+  /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
+  testnet?: boolean;
+  /** Paymaster configuration (required) */
+  paymaster: PaymasterOptions;
+  /** Optional payer information configuration for data callbacks */
+  payerInfo?: PayerInfo;
+  /** Optional wallet URL override */
+  walletUrl?: string;
+  /** Whether to enable telemetry logging. Defaults to true */
+  telemetry?: boolean;
+}
+
+/**
+ * Base shape shared by all successful payment responses.
+ */
+export interface BasePaymentSuccess {
   success: true;
   /** Transaction ID (hash) of the payment */
   id: string;
-  /** The amount that was sent */
-  amount: string;
   /** The address that received the payment */
   to: Address;
   /** Optional responses from information requests */
@@ -86,9 +123,33 @@ export interface PaymentSuccess {
 }
 
 /**
+ * Successful payment result for USDC payments.
+ */
+export interface PaymentSuccess extends BasePaymentSuccess {
+  /** The amount that was sent (in USDC) */
+  amount: string;
+}
+
+/**
  * Result of a payment transaction
  */
 export type PaymentResult = PaymentSuccess;
+
+/**
+ * Successful payment result for token payments.
+ */
+export interface TokenPaymentSuccess extends BasePaymentSuccess {
+  /** Transaction ID (hash) of the payment */
+  id: string;
+  /** Token amount transferred in base units (wei) */
+  tokenAmount: string;
+  /** Token contract address or native placeholder */
+  tokenAddress: Address;
+  /** Optional token shorthand (symbol or user-provided value) */
+  token?: string;
+}
+
+export type PayWithTokenResult = TokenPaymentSuccess;
 
 /**
  * Options for checking payment status
@@ -123,6 +184,12 @@ export interface PaymentStatus {
   sender?: string;
   /** Amount sent (present for completed transactions, parsed from logs) */
   amount?: string;
+  /** Token amount in base units (present when transfer is detected) */
+  tokenAmount?: string;
+  /** Token contract address (present when transfer is detected) */
+  tokenAddress?: Address;
+  /** Token shorthand (symbol if recognized, otherwise undefined) */
+  tokenSymbol?: string;
   /** Recipient address (present for completed transactions, parsed from logs) */
   recipient?: string;
   /** Reason for transaction failure (present for failed status - describes why the transaction failed on-chain) */

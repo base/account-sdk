@@ -14,12 +14,14 @@ export {
 
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 
+// Payment interface exports
 export {
   base,
   CHAIN_IDS,
   getPaymentStatus,
   getSubscriptionStatus,
   pay,
+  payWithToken,
   prepareCharge,
   subscribe,
   TOKENS,
@@ -41,10 +43,20 @@ export type {
   PrepareChargeCall,
   PrepareChargeOptions,
   PrepareChargeResult,
+  PrepareRevokeCall,
+  PrepareRevokeOptions,
+  PrepareRevokeResult,
+  RevokeOptions,
+  RevokeResult,
   SubscriptionOptions,
   SubscriptionResult,
   SubscriptionStatus,
   SubscriptionStatusOptions,
+  PayWithTokenOptions,
+  PayWithTokenResult,
+  PaymasterOptions,
+  TokenPaymentSuccess,
+  TokenInput,
 } from './interface/payment/index.js';
 
 export {

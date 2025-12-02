@@ -6,13 +6,16 @@ import {
   logPaymentStatusCheckError,
   logPaymentStatusCheckStarted,
 } from ':core/telemetry/events/payment.js';
-import { ERC20_TRANSFER_ABI, TOKENS } from './constants.js';
+import { ERC20_TRANSFER_ABI } from './constants.js';
 import type { PaymentStatus, PaymentStatusOptions } from './types.js';
+import { getStablecoinMetadataByAddress } from './utils/tokenRegistry.js';
 
 /**
  * Check the status of a payment transaction using its transaction ID (userOp hash)
  *
  * @param options - Payment status check options
+ * @param options.id - Transaction hash from pay() or payWithToken()
+ * @param options.testnet - Whether to use testnet (Base Sepolia). Defaults to false (Base mainnet)
  * @returns Promise<PaymentStatus> - Status information about the payment
  * @throws Error if unable to connect to the RPC endpoint or if the RPC request fails
  *
@@ -31,8 +34,6 @@ import type { PaymentStatus, PaymentStatusOptions } from './types.js';
  *   console.error('Unable to check payment status:', error.message)
  * }
  * ```
- *
- * @note The id is the userOp hash returned from the pay function
  */
 export async function getPaymentStatus(options: PaymentStatusOptions): Promise<PaymentStatus> {
   const { id, testnet = false, telemetry = true } = options;
@@ -40,17 +41,18 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
   // Generate correlation ID for this status check
   const correlationId = crypto.randomUUID();
 
+  // Use testnet flag to determine Base network
+  const transactionHash = id;
+  const bundlerUrl = testnet
+    ? 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
+    : 'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O';
+
   // Log status check started
   if (telemetry) {
     logPaymentStatusCheckStarted({ testnet, correlationId });
   }
 
   try {
-    // Get the bundler URL based on network
-    const bundlerUrl = testnet
-      ? 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
-      : 'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O';
-
     // Call eth_getUserOperationReceipt via the bundler
     const receipt = await fetch(bundlerUrl, {
       method: 'POST',
@@ -61,7 +63,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         jsonrpc: '2.0',
         id: 1,
         method: 'eth_getUserOperationReceipt',
-        params: [id],
+        params: [transactionHash],
       }),
     }).then((res) => res.json());
 
@@ -88,7 +90,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
           jsonrpc: '2.0',
           id: 2,
           method: 'eth_getUserOperationByHash',
-          params: [id],
+          params: [transactionHash],
         }),
       }).then((res) => res.json());
 
@@ -99,7 +101,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         }
         const result = {
           status: 'pending' as const,
-          id: id as Hex,
+          id: transactionHash as Hex,
           message: 'Your payment is being processed. This usually takes a few seconds.',
           sender: userOpResponse.result.sender,
         };
@@ -112,7 +114,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       }
       const result = {
         status: 'not_found' as const,
-        id: id as Hex,
+        id: transactionHash as Hex,
         message: 'Payment not found. Please check your transaction ID.',
       };
       return result;
@@ -123,95 +125,89 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
     // Determine status based on success flag
     if (success) {
-      // Parse USDC amount from logs
+      // Parse token transfer details from logs
       let amount: string | undefined;
+      let tokenAmount: string | undefined;
+      let tokenAddress: Address | undefined;
+      let tokenSymbol: string | undefined;
       let recipient: string | undefined;
 
       if (txReceipt?.logs) {
-        const network = testnet ? 'baseSepolia' : 'base';
-        const usdcAddress = TOKENS.USDC.addresses[network].toLowerCase();
-        // Normalize sender address for comparison
         const senderAddress: Address | undefined = receipt.result.sender
           ? getAddress(receipt.result.sender)
           : undefined;
 
-        // Collect all USDC transfers
-        const usdcTransfers: Array<{
-          from: string;
-          to: string;
+        const tokenTransfers: Array<{
+          from: Address;
+          to: Address;
           value: bigint;
-          formattedAmount: string;
-          logIndex: number;
+          contract: Address;
         }> = [];
 
-        for (let i = 0; i < txReceipt.logs.length; i++) {
-          const log = txReceipt.logs[i];
+        for (const log of txReceipt.logs) {
+          if (!log.address) {
+            continue;
+          }
 
-          // Check if this is a USDC log
-          const logAddressLower = log.address?.toLowerCase();
-          const isUsdcLog = logAddressLower === usdcAddress;
+          try {
+            const decoded = decodeEventLog({
+              abi: ERC20_TRANSFER_ABI,
+              data: log.data,
+              topics: log.topics,
+            });
 
-          if (isUsdcLog) {
-            try {
-              const decoded = decodeEventLog({
-                abi: ERC20_TRANSFER_ABI,
-                data: log.data,
-                topics: log.topics,
-              });
-
-              if (decoded.eventName === 'Transfer' && decoded.args) {
-                const args = decoded.args as { from: string; to: string; value: bigint };
-
-                if (args.value && args.to && args.from) {
-                  const formattedAmount = formatUnits(args.value, 6);
-
-                  usdcTransfers.push({
-                    from: args.from,
-                    to: args.to,
-                    value: args.value,
-                    formattedAmount,
-                    logIndex: i,
-                  });
-                }
+            if (decoded.eventName === 'Transfer' && decoded.args) {
+              const args = decoded.args as { from: string; to: string; value: bigint };
+              if (args.value && args.to && args.from) {
+                tokenTransfers.push({
+                  from: getAddress(args.from),
+                  to: getAddress(args.to),
+                  value: args.value,
+                  contract: getAddress(log.address as Address),
+                });
               }
-            } catch (_e) {
-              // Do not fail here - fail when we can't find a single valid transfer
             }
+          } catch (_e) {
+            // Ignore non ERC-20 logs
           }
         }
 
-        // Now select the correct transfer
-        // Strategy: Find the transfer from the sender (smart wallet) address
-        if (usdcTransfers.length > 0 && senderAddress) {
-          // Look for transfers from the sender address (smart wallet)
-          // Compare checksummed addresses for consistency
-          const senderTransfers = usdcTransfers.filter((t) => {
+        if (tokenTransfers.length > 0 && senderAddress) {
+          const senderTransfers = tokenTransfers.filter((t) => {
             try {
-              return isAddressEqual(t.from as Address, senderAddress!);
+              return isAddressEqual(t.from, senderAddress);
             } catch {
               return false;
             }
           });
 
           if (senderTransfers.length === 0) {
-            // No transfer from the sender wallet was found
             throw new Error(
-              `Unable to find USDC transfer from sender wallet ${receipt.result.sender}. ` +
-                `Found ${usdcTransfers.length} USDC transfer(s) but none originated from the sender wallet.`
+              `Unable to find token transfer from sender wallet ${receipt.result.sender}. ` +
+                `Found ${tokenTransfers.length} transfer(s) but none originated from the sender wallet.`
             );
           }
+
           if (senderTransfers.length > 1) {
-            // Multiple transfers from the sender wallet found
             const transferDetails = senderTransfers
-              .map((t) => `${t.formattedAmount} USDC to ${t.to}`)
+              .map((t) => `${t.value.toString()} wei to ${t.to}`)
               .join(', ');
             throw new Error(
-              `Found multiple USDC transfers from sender wallet ${receipt.result.sender}: ${transferDetails}. Expected exactly one transfer.`
+              `Found multiple token transfers from sender wallet ${receipt.result.sender}: ${transferDetails}. Expected exactly one transfer.`
             );
           }
-          // Exactly one transfer from sender found
-          amount = senderTransfers[0].formattedAmount;
-          recipient = senderTransfers[0].to;
+
+          const transfer = senderTransfers[0];
+          const stablecoinMetadata = getStablecoinMetadataByAddress(transfer.contract);
+
+          tokenAmount = transfer.value.toString();
+          tokenAddress = transfer.contract;
+          tokenSymbol = stablecoinMetadata?.symbol;
+          recipient = transfer.to;
+
+          if (stablecoinMetadata) {
+            amount = formatUnits(transfer.value, stablecoinMetadata.decimals);
+          }
         }
       }
 
@@ -220,10 +216,13 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       }
       const result = {
         status: 'completed' as const,
-        id: id as Hex,
+        id: transactionHash as Hex,
         message: 'Payment completed successfully',
         sender: receipt.result.sender,
         amount,
+        tokenAmount,
+        tokenAddress,
+        tokenSymbol,
         recipient,
       };
       return result;
@@ -244,7 +243,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
     }
     const result = {
       status: 'failed' as const,
-      id: id as Hex,
+      id: transactionHash as Hex,
       message: 'Payment failed',
       sender: receipt.result.sender,
       reason: userFriendlyReason,
