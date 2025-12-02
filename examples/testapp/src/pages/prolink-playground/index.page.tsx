@@ -64,7 +64,6 @@ const ERC20_TRANSFER_ABI = [
   },
 ] as const;
 
-
 export default function ProlinkPlayground() {
   const toast = useToast();
 
@@ -72,11 +71,11 @@ export default function ProlinkPlayground() {
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const codeBgColor = useColorModeValue('gray.50', 'gray.900');
+  const blueBgColor = useColorModeValue('blue.50', 'blue.900');
+  const blueBorderColor = useColorModeValue('blue.200', 'blue.700');
 
   // Method selection
-  const [methodType, setMethodType] = useState<'wallet_sendCalls' | 'generic'>(
-    'wallet_sendCalls'
-  );
+  const [methodType, setMethodType] = useState<'wallet_sendCalls' | 'generic'>('wallet_sendCalls');
 
   // Common fields
   const [chainId, setChainId] = useState('8453'); // Base mainnet
@@ -179,14 +178,7 @@ export default function ProlinkPlayground() {
       // Invalid input, don't update
       console.error('Error encoding calldata:', error);
     }
-  }, [
-    useSimpleMode,
-    selectedToken,
-    tokenAmount,
-    recipientAddress,
-    chainId,
-    methodType,
-  ]);
+  }, [useSimpleMode, selectedToken, tokenAmount, recipientAddress, chainId, methodType]);
 
   // Auto-generate webhook.site URL when capabilities are enabled
   useEffect(() => {
@@ -199,10 +191,10 @@ export default function ProlinkPlayground() {
           method: 'POST',
         });
         const data = await response.json();
-        
+
         if (data.uuid) {
           setWebhookUuid(data.uuid);
-          
+
           // Update capabilities JSON with the webhook URL
           const capabilities = {
             dataCallback: {
@@ -214,7 +206,7 @@ export default function ProlinkPlayground() {
             },
           };
           setCapabilitiesJson(JSON.stringify(capabilities, null, 2));
-          
+
           toast({
             title: 'Webhook generated!',
             description: 'A temporary webhook.site URL has been created',
@@ -429,9 +421,7 @@ export default function ProlinkPlayground() {
                     <Select
                       value={methodType}
                       onChange={(e) =>
-                        setMethodType(
-                          e.target.value as 'wallet_sendCalls' | 'generic'
-                        )
+                        setMethodType(e.target.value as 'wallet_sendCalls' | 'generic')
                       }
                       size="lg"
                     >
@@ -481,9 +471,9 @@ export default function ProlinkPlayground() {
                           <Box
                             p={4}
                             borderRadius="md"
-                            bg={useColorModeValue('blue.50', 'blue.900')}
+                            bg={blueBgColor}
                             borderWidth="1px"
-                            borderColor={useColorModeValue('blue.200', 'blue.700')}
+                            borderColor={blueBorderColor}
                           >
                             <VStack spacing={4} align="stretch">
                               <FormControl>
@@ -516,8 +506,8 @@ export default function ProlinkPlayground() {
                                   bg={bgColor}
                                 />
                                 <Text fontSize="xs" color="gray.500" mt={1}>
-                                  {selectedToken === 'USDC' 
-                                    ? '10000 = $0.01 (USDC has 6 decimals)' 
+                                  {selectedToken === 'USDC'
+                                    ? '10000 = $0.01 (USDC has 6 decimals)'
                                     : '1000 = 0.000000000000001 ETH (dust)'}
                                 </Text>
                               </FormControl>
@@ -546,7 +536,9 @@ export default function ProlinkPlayground() {
                             borderColor={borderColor}
                           >
                             <VStack spacing={3} align="stretch">
-                              <Heading size="xs" mb={2}>Generated Calldata</Heading>
+                              <Heading size="xs" mb={2}>
+                                Generated Calldata
+                              </Heading>
                               <FormControl>
                                 <FormLabel fontSize="sm">To Address</FormLabel>
                                 <Input
@@ -761,7 +753,11 @@ export default function ProlinkPlayground() {
                                     </Button>
                                   </HStack>
                                   <Box p={4} bg={codeBgColor} borderRadius="md" overflowX="auto">
-                                    <Code display="block" whiteSpace="pre-wrap" wordBreak="break-all">
+                                    <Code
+                                      display="block"
+                                      whiteSpace="pre-wrap"
+                                      wordBreak="break-all"
+                                    >
                                       {baseDeeplink}
                                     </Code>
                                   </Box>
@@ -783,7 +779,8 @@ export default function ProlinkPlayground() {
                                     <QRCodeSVG value={baseDeeplink} size={256} />
                                   </Box>
                                   <Text fontSize="sm" color="gray.600" mt={2} textAlign="center">
-                                    Scan this QR code with the Base mobile app to execute the prolink
+                                    Scan this QR code with the Base mobile app to execute the
+                                    prolink
                                   </Text>
                                 </Box>
 
