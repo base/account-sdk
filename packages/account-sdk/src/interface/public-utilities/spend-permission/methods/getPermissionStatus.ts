@@ -5,7 +5,7 @@ import {
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { PublicClient, createPublicClient, http } from 'viem';
-import { multicall, readContract } from 'viem/actions';
+import { multicall } from 'viem/actions';
 import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { getPublicClientFromChainId } from '../utils.node.js';
 import { withTelemetry } from '../withTelemetry.js';
