@@ -5,7 +5,7 @@ import {
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { PublicClient, createPublicClient, http } from 'viem';
-import { readContract } from 'viem/actions';
+import { multicall } from 'viem/actions';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { getPublicClientFromChainId } from '../utils.node.js';
@@ -23,6 +23,7 @@ const getPublicClientFromChainIdSpy = vi.mocked(getPublicClientFromChainId);
 
 vi.mock('viem/actions', () => ({
   readContract: vi.fn(),
+  multicall: vi.fn(),
 }));
 
 vi.mock('../utils.js', () => ({
@@ -96,10 +97,11 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment (client in store)
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod) // getCurrentPeriod
-        .mockResolvedValueOnce(mockIsRevoked) // isRevoked
-        .mockResolvedValueOnce(true); // isValid (approved onchain)
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: mockIsRevoked },
+        { status: 'success', result: true }, // isValid
+      ]);
 
       const result: GetPermissionStatusResponseType =
         await getPermissionStatus(mockSpendPermission);
@@ -116,15 +118,16 @@ describe('getPermissionStatus - browser + node', () => {
 
       expect(getClient).toHaveBeenCalledWith(8453);
       expect(toSpendPermissionArgs).toHaveBeenCalledWith(mockSpendPermission);
-      expect(readContract).toHaveBeenCalledTimes(3);
+      expect(multicall).toHaveBeenCalledTimes(1);
 
       // Test with node environment (no client in store)
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod) // getCurrentPeriod
-        .mockResolvedValueOnce(mockIsRevoked) // isRevoked
-        .mockResolvedValueOnce(true); // isValid (approved onchain)
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: mockIsRevoked },
+        { status: 'success', result: true }, // isValid
+      ]);
 
       const nodeResult: GetPermissionStatusResponseType =
         await getPermissionStatus(mockSpendPermission);
@@ -150,10 +153,11 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(mockIsRevoked)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: mockIsRevoked },
+        { status: 'success', result: true }, // isValid
+      ]);
 
       const result = await getPermissionStatus(mockSpendPermission);
 
@@ -167,10 +171,11 @@ describe('getPermissionStatus - browser + node', () => {
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(mockIsRevoked)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: mockIsRevoked },
+        { status: 'success', result: true }, // isValid
+      ]);
 
       const nodeResult = await getPermissionStatus(mockSpendPermission);
 
@@ -194,10 +199,11 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(mockIsRevoked)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: mockIsRevoked },
+        { status: 'success', result: true }, // isValid
+      ]);
 
       const result = await getPermissionStatus(mockSpendPermission);
 
@@ -210,10 +216,11 @@ describe('getPermissionStatus - browser + node', () => {
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(mockIsRevoked)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: mockIsRevoked },
+        { status: 'success', result: true }, // isValid
+      ]);
 
       const nodeResult = await getPermissionStatus(mockSpendPermission);
 
@@ -237,10 +244,11 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(mockIsRevoked)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: mockIsRevoked },
+        { status: 'success', result: true },
+      ]); // isValid
 
       const result = await getPermissionStatus(mockSpendPermission);
 
@@ -253,10 +261,11 @@ describe('getPermissionStatus - browser + node', () => {
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(mockIsRevoked)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: mockIsRevoked },
+        { status: 'success', result: true },
+      ]); // isValid
 
       const nodeResult = await getPermissionStatus(mockSpendPermission);
 
@@ -279,9 +288,11 @@ describe('getPermissionStatus - browser + node', () => {
 
         // Test with browser environment
         (getClient as Mock).mockReturnValue(mockClient);
-        (readContract as Mock)
-          .mockResolvedValueOnce(mockCurrentPeriod)
-          .mockResolvedValueOnce(false);
+        (multicall as Mock).mockResolvedValueOnce([
+          { status: 'success', result: mockCurrentPeriod },
+          { status: 'success', result: false },
+          { status: 'success', result: true }, // isValid
+        ]);
 
         await getPermissionStatus(permission);
 
@@ -290,9 +301,11 @@ describe('getPermissionStatus - browser + node', () => {
         // Test with node environment
         (getClient as Mock).mockReturnValue(null);
         getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-        (readContract as Mock)
-          .mockResolvedValueOnce(mockCurrentPeriod)
-          .mockResolvedValueOnce(false);
+        (multicall as Mock).mockResolvedValueOnce([
+          { status: 'success', result: mockCurrentPeriod },
+          { status: 'success', result: false },
+          { status: 'success', result: true }, // isValid
+        ]);
 
         await getPermissionStatus(permission);
 
@@ -317,7 +330,7 @@ describe('getPermissionStatus - browser + node', () => {
       );
 
       expect(getClient).not.toHaveBeenCalled();
-      expect(readContract).not.toHaveBeenCalled();
+      expect(multicall).not.toHaveBeenCalled();
 
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
@@ -327,7 +340,7 @@ describe('getPermissionStatus - browser + node', () => {
       );
 
       expect(getPublicClientFromChainIdSpy).not.toHaveBeenCalled();
-      expect(readContract).not.toHaveBeenCalled();
+      expect(multicall).not.toHaveBeenCalled();
     });
 
     it('should throw error when client is not available', async () => {
@@ -341,34 +354,34 @@ describe('getPermissionStatus - browser + node', () => {
 
       expect(getClient).toHaveBeenCalledWith(8453);
       expect(getPublicClientFromChainIdSpy).toHaveBeenCalledWith(8453);
-      expect(readContract).not.toHaveBeenCalled();
+      expect(multicall).not.toHaveBeenCalled();
     });
 
-    it('should propagate readContract errors', async () => {
+    it('should propagate multicall errors', async () => {
       const contractError = new Error('Contract call failed');
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock).mockRejectedValue(contractError);
+      (multicall as Mock).mockRejectedValue(contractError);
 
       await expect(getPermissionStatus(mockSpendPermission)).rejects.toThrow(
         'Contract call failed'
       );
 
       expect(getClient).toHaveBeenCalledWith(8453);
-      expect(readContract).toHaveBeenCalled();
+      expect(multicall).toHaveBeenCalled();
 
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock).mockRejectedValue(contractError);
+      (multicall as Mock).mockRejectedValue(contractError);
 
       await expect(getPermissionStatus(mockSpendPermission)).rejects.toThrow(
         'Contract call failed'
       );
 
       expect(getPublicClientFromChainIdSpy).toHaveBeenCalledWith(8453);
-      expect(readContract).toHaveBeenCalled();
+      expect(multicall).toHaveBeenCalled();
     });
 
     it('should handle network errors gracefully', async () => {
@@ -376,7 +389,7 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock).mockRejectedValue(networkError);
+      (multicall as Mock).mockRejectedValue(networkError);
 
       await expect(getPermissionStatus(mockSpendPermission)).rejects.toThrow(
         'Network request failed'
@@ -385,7 +398,7 @@ describe('getPermissionStatus - browser + node', () => {
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock).mockRejectedValue(networkError);
+      (multicall as Mock).mockRejectedValue(networkError);
 
       await expect(getPermissionStatus(mockSpendPermission)).rejects.toThrow(
         'Network request failed'
@@ -413,37 +426,38 @@ describe('getPermissionStatus - browser + node', () => {
           getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
         }
 
-        (readContract as Mock)
-          .mockResolvedValueOnce(mockCurrentPeriod)
-          .mockResolvedValueOnce(false)
-          .mockResolvedValueOnce(true); // isValid
+        (multicall as Mock).mockResolvedValueOnce([
+          { status: 'success', result: mockCurrentPeriod },
+          { status: 'success', result: false },
+          { status: 'success', result: true }, // isValid
+        ]);
 
         await getPermissionStatusFunc(mockSpendPermission);
 
-        expect(readContract).toHaveBeenCalledTimes(3);
+        expect(multicall).toHaveBeenCalledTimes(1);
 
-        // Verify getCurrentPeriod call
-        expect(readContract).toHaveBeenNthCalledWith(1, mockClient, {
-          address: spendPermissionManagerAddress,
-          abi: spendPermissionManagerAbi,
-          functionName: 'getCurrentPeriod',
-          args: [mockSpendPermissionArgs],
-        });
-
-        // Verify isRevoked call
-        expect(readContract).toHaveBeenNthCalledWith(2, mockClient, {
-          address: spendPermissionManagerAddress,
-          abi: spendPermissionManagerAbi,
-          functionName: 'isRevoked',
-          args: [mockSpendPermissionArgs],
-        });
-
-        // Verify isValid call
-        expect(readContract).toHaveBeenNthCalledWith(3, mockClient, {
-          address: spendPermissionManagerAddress,
-          abi: spendPermissionManagerAbi,
-          functionName: 'isValid',
-          args: [mockSpendPermissionArgs],
+        // Verify multicall was called with correct contracts configuration
+        expect(multicall).toHaveBeenCalledWith(mockClient, {
+          contracts: [
+            {
+              address: spendPermissionManagerAddress,
+              abi: spendPermissionManagerAbi,
+              functionName: 'getCurrentPeriod',
+              args: [mockSpendPermissionArgs],
+            },
+            {
+              address: spendPermissionManagerAddress,
+              abi: spendPermissionManagerAbi,
+              functionName: 'isRevoked',
+              args: [mockSpendPermissionArgs],
+            },
+            {
+              address: spendPermissionManagerAddress,
+              abi: spendPermissionManagerAbi,
+              functionName: 'isValid',
+              args: [mockSpendPermissionArgs],
+            },
+          ],
         });
 
         // Restore Date.now
@@ -455,7 +469,7 @@ describe('getPermissionStatus - browser + node', () => {
       ['browser', getPermissionStatus],
       ['node', getPermissionStatus],
     ])(
-      'should make contract calls in parallel for better performance for %s environment',
+      'should make contract calls in single multicall in %s environment',
       async (environment, getPermissionStatusFunc) => {
         const mockCurrentPeriod = { start: 1, end: 2, spend: BigInt('0') };
 
@@ -470,37 +484,17 @@ describe('getPermissionStatus - browser + node', () => {
           getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
         }
 
-        // Create promises that we can control
-        let resolveGetCurrentPeriod: (value: any) => void;
-        let resolveIsRevoked: (value: any) => void;
-        let resolveIsValid: (value: any) => void;
+        // multicall batches all calls into a single RPC request
+        (multicall as Mock).mockResolvedValueOnce([
+          { status: 'success', result: mockCurrentPeriod },
+          { status: 'success', result: false },
+          { status: 'success', result: true }, // isValid
+        ]);
 
-        const getCurrentPeriodPromise = new Promise((resolve) => {
-          resolveGetCurrentPeriod = resolve;
-        });
-        const isRevokedPromise = new Promise((resolve) => {
-          resolveIsRevoked = resolve;
-        });
-        const isValidPromise = new Promise((resolve) => {
-          resolveIsValid = resolve;
-        });
+        await getPermissionStatusFunc(mockSpendPermission);
 
-        (readContract as Mock)
-          .mockReturnValueOnce(getCurrentPeriodPromise)
-          .mockReturnValueOnce(isRevokedPromise)
-          .mockReturnValueOnce(isValidPromise);
-
-        const statusPromise = getPermissionStatusFunc(mockSpendPermission);
-
-        // Verify all contract calls are made immediately
-        expect(readContract).toHaveBeenCalledTimes(3);
-
-        // Resolve all promises
-        resolveGetCurrentPeriod!(mockCurrentPeriod);
-        resolveIsRevoked!(false);
-        resolveIsValid!(true);
-
-        await statusPromise;
+        // Verify multicall is called once (batching all 3 contract calls)
+        expect(multicall).toHaveBeenCalledTimes(1);
 
         // Restore Date.now
         Date.now = originalDateNow;
@@ -526,10 +520,11 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: false },
+        { status: 'success', result: true },
+      ]); // isValid
 
       const result = await getPermissionStatus(permissionWithZeroAllowance);
 
@@ -539,10 +534,11 @@ describe('getPermissionStatus - browser + node', () => {
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: false },
+        { status: 'success', result: true },
+      ]); // isValid
 
       const nodeResult = await getPermissionStatus(permissionWithZeroAllowance);
 
@@ -573,10 +569,11 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: false },
+        { status: 'success', result: true },
+      ]); // isValid
 
       const result = await getPermissionStatus(permissionWithLargeAllowance);
 
@@ -588,10 +585,11 @@ describe('getPermissionStatus - browser + node', () => {
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: false },
+        { status: 'success', result: true },
+      ]); // isValid
 
       const nodeResult = await getPermissionStatus(permissionWithLargeAllowance);
 
@@ -614,10 +612,11 @@ describe('getPermissionStatus - browser + node', () => {
 
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: false },
+        { status: 'success', result: true },
+      ]); // isValid
 
       const result = await getPermissionStatus(mockSpendPermission);
 
@@ -627,14 +626,57 @@ describe('getPermissionStatus - browser + node', () => {
       // Test with node environment
       (getClient as Mock).mockReturnValue(null);
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod)
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: false },
+        { status: 'success', result: true },
+      ]); // isValid
 
       const nodeResult = await getPermissionStatus(mockSpendPermission);
 
       expect(nodeResult).toEqual(result);
+
+      // Restore Date.now
+      Date.now = originalDateNow;
+    });
+
+    it('should use custom RPC URL when provided', async () => {
+      const mockCurrentPeriod = {
+        start: 1640995200,
+        end: 1641081600,
+        spend: BigInt('0'),
+      };
+      const mockIsRevoked = false;
+      const customRpcUrl = 'https://custom-rpc.example.com';
+
+      // Mock Date.now() to control the current timestamp
+      const originalDateNow = Date.now;
+      Date.now = vi.fn(() => 1234567890 * 1000);
+
+      // When custom RPC URL is provided, client from store/fallback should not be used
+      (getClient as Mock).mockReturnValue(mockClient);
+      getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
+
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'success', result: mockCurrentPeriod },
+        { status: 'success', result: mockIsRevoked },
+        { status: 'success', result: true }, // isValid
+      ]);
+
+      const result = await getPermissionStatus(mockSpendPermission, { rpcUrl: customRpcUrl });
+
+      expect(result).toEqual({
+        remainingSpend: BigInt('1000000000000000000'),
+        nextPeriodStart: new Date(1641081601 * 1000),
+        isRevoked: false,
+        isExpired: false,
+        isActive: true,
+        isApprovedOnchain: true,
+        currentPeriod: mockCurrentPeriod,
+      });
+
+      expect(multicall).toHaveBeenCalledTimes(1);
+      expect(toSpendPermissionArgs).toHaveBeenCalledWith(mockSpendPermission);
 
       // Restore Date.now
       Date.now = originalDateNow;

@@ -13,6 +13,10 @@ import type { PaymentStatus, PaymentStatusOptions } from './types.js';
  * Check the status of a payment transaction using its transaction ID (userOp hash)
  *
  * @param options - Payment status check options
+ * @param options.id - Transaction ID (userOp hash) to check status for
+ * @param options.testnet - Whether to check on testnet (Base Sepolia). Defaults to false (mainnet)
+ * @param options.telemetry - Whether to enable telemetry logging. Defaults to true
+ * @param options.bundlerUrl - Optional custom bundler URL to use for status checks. Useful for avoiding rate limits on public endpoints.
  * @returns Promise<PaymentStatus> - Status information about the payment
  * @throws Error if unable to connect to the RPC endpoint or if the RPC request fails
  *
@@ -22,6 +26,13 @@ import type { PaymentStatus, PaymentStatusOptions } from './types.js';
  *   const status = await getPaymentStatus({
  *     id: "0x1234...5678",
  *     testnet: true
+ *   })
+ *
+ *   // With custom bundler URL to avoid rate limits
+ *   const status = await getPaymentStatus({
+ *     id: "0x1234...5678",
+ *     testnet: false,
+ *     bundlerUrl: 'https://my-bundler.example.com/rpc'
  *   })
  *
  *   if (status.status === 'failed') {
@@ -35,7 +46,7 @@ import type { PaymentStatus, PaymentStatusOptions } from './types.js';
  * @note The id is the userOp hash returned from the pay function
  */
 export async function getPaymentStatus(options: PaymentStatusOptions): Promise<PaymentStatus> {
-  const { id, testnet = false, telemetry = true } = options;
+  const { id, testnet = false, telemetry = true, bundlerUrl } = options;
 
   // Generate correlation ID for this status check
   const correlationId = crypto.randomUUID();
@@ -46,13 +57,15 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
   }
 
   try {
-    // Get the bundler URL based on network
-    const bundlerUrl = testnet
-      ? 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
-      : 'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O';
+    // Get the bundler URL - use custom URL if provided, otherwise use default based on network
+    const effectiveBundlerUrl =
+      bundlerUrl ||
+      (testnet
+        ? 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
+        : 'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O');
 
     // Call eth_getUserOperationReceipt via the bundler
-    const receipt = await fetch(bundlerUrl, {
+    const receipt = await fetch(effectiveBundlerUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -79,7 +92,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
     // If no result, payment is still pending or not found
     if (!receipt.result) {
       // Try eth_getUserOperationByHash to see if it's in mempool
-      const userOpResponse = await fetch(bundlerUrl, {
+      const userOpResponse = await fetch(effectiveBundlerUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

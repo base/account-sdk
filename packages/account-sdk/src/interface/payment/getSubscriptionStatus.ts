@@ -16,6 +16,7 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
  * @param options - Options for checking subscription status
  * @param options.id - The subscription ID (permission hash) returned from subscribe()
  * @param options.testnet - Whether to check on testnet (Base Sepolia). Defaults to false (mainnet)
+ * @param options.rpcUrl - Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints.
  * @returns Promise<SubscriptionStatus> - Subscription status information
  * @throws Error if the subscription cannot be found or if fetching fails
  *
@@ -29,6 +30,13 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
  *   testnet: false
  * });
  *
+ * // With custom RPC URL to avoid rate limits
+ * const status = await getSubscriptionStatus({
+ *   id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+ *   testnet: false,
+ *   rpcUrl: 'https://my-custom-rpc.example.com'
+ * });
+ *
  * console.log(`Subscribed: ${status.isSubscribed}`);
  * console.log(`Next payment: ${status.nextPeriodStart}`);
  * console.log(`Recurring amount: $${status.recurringCharge}`);
@@ -38,7 +46,7 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
 export async function getSubscriptionStatus(
   options: SubscriptionStatusOptions
 ): Promise<SubscriptionStatus> {
-  const { id, testnet = false } = options;
+  const { id, testnet = false, rpcUrl } = options;
 
   // First, try to fetch the permission details using the hash
   const permission = await fetchPermission({
@@ -87,7 +95,7 @@ export async function getSubscriptionStatus(
   }
 
   // Get the current permission status (includes period info and active state)
-  const status = await getPermissionStatus(permission);
+  const status = await getPermissionStatus(permission, { rpcUrl });
 
   // Format the allowance amount from wei to USD string (USDC has 6 decimals)
   const recurringCharge = formatUnits(BigInt(permission.permission.allowance), 6);

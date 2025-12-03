@@ -100,6 +100,8 @@ export interface PaymentStatusOptions {
   testnet?: boolean;
   /** Whether to enable telemetry logging. Defaults to true */
   telemetry?: boolean;
+  /** Optional custom bundler URL to use for status checks. Useful for avoiding rate limits on public endpoints. */
+  bundlerUrl?: string;
 }
 
 /**
@@ -255,6 +257,8 @@ export interface SubscriptionStatusOptions {
   id: string;
   /** Whether to check on testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
+  /** Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints. */
+  rpcUrl?: string;
 }
 
 /**
