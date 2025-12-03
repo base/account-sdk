@@ -683,10 +683,7 @@ describe('getSubscriptionStatus', () => {
       });
 
       // Verify that getPermissionStatus was called with the custom rpcUrl
-      expect(getPermissionStatus).toHaveBeenCalledWith(
-        mockPermission,
-        { rpcUrl: customRpcUrl }
-      );
+      expect(getPermissionStatus).toHaveBeenCalledWith(mockPermission, { rpcUrl: customRpcUrl });
     });
   });
 });

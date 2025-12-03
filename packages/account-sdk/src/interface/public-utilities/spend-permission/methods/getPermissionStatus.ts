@@ -85,7 +85,7 @@ const getPermissionStatusFn = async (
   if (rpcUrl) {
     const viemChain = getPublicClientFromChainId(chainId);
     const chain = viemChain?.chain;
-    
+
     client = createPublicClient({
       chain,
       transport: http(rpcUrl),
@@ -133,13 +133,19 @@ const getPermissionStatusFn = async (
 
   // Extract results with error checking
   if (results[0].status !== 'success') {
-    throw new Error(`Failed to fetch current period: ${results[0].error?.message ?? 'Unknown error'}`);
+    throw new Error(
+      `Failed to fetch current period: ${results[0].error?.message ?? 'Unknown error'}`
+    );
   }
   if (results[1].status !== 'success') {
-    throw new Error(`Failed to check if permission is revoked: ${results[1].error?.message ?? 'Unknown error'}`);
+    throw new Error(
+      `Failed to check if permission is revoked: ${results[1].error?.message ?? 'Unknown error'}`
+    );
   }
   if (results[2].status !== 'success') {
-    throw new Error(`Failed to check if permission is valid: ${results[2].error?.message ?? 'Unknown error'}`);
+    throw new Error(
+      `Failed to check if permission is valid: ${results[2].error?.message ?? 'Unknown error'}`
+    );
   }
 
   const currentPeriod = results[0].result as { start: number; end: number; spend: bigint };
