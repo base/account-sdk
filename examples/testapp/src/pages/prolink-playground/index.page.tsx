@@ -25,7 +25,7 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { QRCodeSVG } from 'qrcode.react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { encodeFunctionData, type Address } from 'viem';
 
 // Token configuration
@@ -119,11 +119,12 @@ export default function ProlinkPlayground() {
     JSON.stringify(
       {
         dataCallback: {
-          url: 'https://example.com/callback',
-          events: ['initiated', 'preSigning', 'postSigning'],
-          metadata: {
-            customField: 'customValue',
-          },
+          callbackURL: 'https://example.com/callback',
+          events: [
+            { type: 'initiated', context: { orderId: '123' } },
+            { type: 'preSign', context: { shippingTier: 'express' } },
+            { type: 'postSign', context: { webhookTag: 'after' } },
+          ],
         },
       },
       null,
@@ -198,11 +199,12 @@ export default function ProlinkPlayground() {
           // Update capabilities JSON with the webhook URL
           const capabilities = {
             dataCallback: {
-              url: `https://webhook.site/${data.uuid}`,
-              events: ['initiated', 'preSigning', 'postSigning'],
-              metadata: {
-                customField: 'customValue',
-              },
+              callbackURL: `https://webhook.site/${data.uuid}`,
+              events: [
+                { type: 'initiated', context: { orderId: '123' } },
+                { type: 'preSign', context: { shippingTier: 'express' } },
+                { type: 'postSign', context: { webhookTag: 'after' } },
+              ],
             },
           };
           setCapabilitiesJson(JSON.stringify(capabilities, null, 2));
