@@ -5,7 +5,7 @@ import {
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { PublicClient, createPublicClient, http } from 'viem';
-import { multicall } from 'viem/actions';
+import { readContract } from 'viem/actions';
 import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { getPublicClientFromChainId } from '../utils.node.js';
 import { withTelemetry } from '../withTelemetry.js';
@@ -33,9 +33,7 @@ export type GetPermissionStatusResponseType = {
  *
  * The function automatically uses the appropriate blockchain client based on the
  * permission's chain ID and calls multiple view functions on the SpendPermissionManager
- * contract to gather comprehensive status information. Uses multicall to batch the
- * three required contract calls into a single RPC request for better performance and
- * to avoid rate limiting.
+ * contract to gather comprehensive status information.
  *
  * When the spend permission does not have a chainId, the function will throw an error.
  *
@@ -106,51 +104,26 @@ const getPermissionStatusFn = async (
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
-  // Use multicall to batch all 3 contract calls into a single RPC request
-  // This reduces network overhead and helps avoid rate limiting
-  const results = await multicall(client, {
-    contracts: [
-      {
-        address: spendPermissionManagerAddress,
-        abi: spendPermissionManagerAbi,
-        functionName: 'getCurrentPeriod',
-        args: [spendPermissionArgs],
-      },
-      {
-        address: spendPermissionManagerAddress,
-        abi: spendPermissionManagerAbi,
-        functionName: 'isRevoked',
-        args: [spendPermissionArgs],
-      },
-      {
-        address: spendPermissionManagerAddress,
-        abi: spendPermissionManagerAbi,
-        functionName: 'isValid',
-        args: [spendPermissionArgs],
-      },
-    ],
-  });
-
-  // Extract results with error checking
-  if (results[0].status !== 'success') {
-    throw new Error(
-      `Failed to fetch current period: ${results[0].error?.message ?? 'Unknown error'}`
-    );
-  }
-  if (results[1].status !== 'success') {
-    throw new Error(
-      `Failed to check if permission is revoked: ${results[1].error?.message ?? 'Unknown error'}`
-    );
-  }
-  if (results[2].status !== 'success') {
-    throw new Error(
-      `Failed to check if permission is valid: ${results[2].error?.message ?? 'Unknown error'}`
-    );
-  }
-
-  const currentPeriod = results[0].result as { start: number; end: number; spend: bigint };
-  const isRevoked = results[1].result as boolean;
-  const isValid = results[2].result as boolean;
+  const [currentPeriod, isRevoked, isValid] = await Promise.all([
+    readContract(client, {
+      address: spendPermissionManagerAddress,
+      abi: spendPermissionManagerAbi,
+      functionName: 'getCurrentPeriod',
+      args: [spendPermissionArgs],
+    }) as Promise<{ start: number; end: number; spend: bigint }>,
+    readContract(client, {
+      address: spendPermissionManagerAddress,
+      abi: spendPermissionManagerAbi,
+      functionName: 'isRevoked',
+      args: [spendPermissionArgs],
+    }) as Promise<boolean>,
+    readContract(client, {
+      address: spendPermissionManagerAddress,
+      abi: spendPermissionManagerAbi,
+      functionName: 'isValid',
+      args: [spendPermissionArgs],
+    }) as Promise<boolean>,
+  ]);
 
   // Calculate remaining spend in current period
   const allowance = BigInt(permission.permission.allowance);
