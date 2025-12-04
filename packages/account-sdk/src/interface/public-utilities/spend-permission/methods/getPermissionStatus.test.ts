@@ -639,5 +639,48 @@ describe('getPermissionStatus - browser + node', () => {
       // Restore Date.now
       Date.now = originalDateNow;
     });
+
+    it('should use custom RPC URL when provided', async () => {
+      const mockCurrentPeriod = {
+        start: 1640995200,
+        end: 1641081600,
+        spend: BigInt('0'),
+      };
+      const mockIsRevoked = false;
+      const customRpcUrl = 'https://custom-rpc.example.com';
+
+      // Mock Date.now() to control the current timestamp
+      const originalDateNow = Date.now;
+      Date.now = vi.fn(() => 1234567890 * 1000);
+
+      // When custom RPC URL is provided, a new client should be created with custom transport
+      getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
+
+      (readContract as Mock)
+        .mockResolvedValueOnce(mockCurrentPeriod) // getCurrentPeriod
+        .mockResolvedValueOnce(mockIsRevoked) // isRevoked
+        .mockResolvedValueOnce(true); // isValid
+
+      const result = await getPermissionStatus(mockSpendPermission, { rpcUrl: customRpcUrl });
+
+      expect(result).toEqual({
+        remainingSpend: BigInt('1000000000000000000'),
+        nextPeriodStart: new Date(1641081601 * 1000),
+        isRevoked: false,
+        isExpired: false,
+        isActive: true,
+        isApprovedOnchain: true,
+        currentPeriod: mockCurrentPeriod,
+      });
+
+      expect(readContract).toHaveBeenCalledTimes(3);
+      expect(toSpendPermissionArgs).toHaveBeenCalledWith(mockSpendPermission);
+
+      // Verify that getClient was not called when custom RPC URL is provided
+      expect(getClient).not.toHaveBeenCalled();
+
+      // Restore Date.now
+      Date.now = originalDateNow;
+    });
   });
 });

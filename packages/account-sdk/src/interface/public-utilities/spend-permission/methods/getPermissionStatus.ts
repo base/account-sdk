@@ -4,7 +4,7 @@ import {
   spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
-import { PublicClient } from 'viem';
+import { PublicClient, createPublicClient, http } from 'viem';
 import { readContract } from 'viem/actions';
 import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { getPublicClientFromChainId } from '../utils.node.js';
@@ -38,6 +38,8 @@ export type GetPermissionStatusResponseType = {
  * When the spend permission does not have a chainId, the function will throw an error.
  *
  * @param permission - The spend permission object to check status for.
+ * @param options - Optional configuration options.
+ * @param options.rpcUrl - Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints.
  *
  * @returns A promise that resolves to an object containing permission status details.
  *
@@ -47,6 +49,11 @@ export type GetPermissionStatusResponseType = {
  *
  * // Check the status of a permission (no client needed)
  * const status = await getPermissionStatus(permission);
+ *
+ * // With custom RPC URL to avoid rate limits
+ * const status = await getPermissionStatus(permission, {
+ *   rpcUrl: 'https://my-custom-rpc.example.com'
+ * });
  *
  * console.log(`Remaining spend: ${status.remainingSpend} wei`);
  * console.log(`Next period starts: ${status.nextPeriodStart}`);
@@ -60,23 +67,39 @@ export type GetPermissionStatusResponseType = {
  * ```
  */
 const getPermissionStatusFn = async (
-  permission: SpendPermission
+  permission: SpendPermission,
+  options?: { rpcUrl?: string }
 ): Promise<GetPermissionStatusResponseType> => {
   const { chainId } = permission;
+  const { rpcUrl } = options ?? {};
 
   if (!chainId) {
     throw new Error('chainId is missing in the spend permission');
   }
 
-  // Try to get client from store first (browser environment with connected SDK)
-  let client: PublicClient | undefined = getClient(chainId);
+  let client: PublicClient | undefined;
 
-  // If no client in store, create one using the node utility (node environment or disconnected SDK)
-  if (!client) {
-    client = getPublicClientFromChainId(chainId);
+  // If a custom RPC URL is provided, create a client with it
+  if (rpcUrl) {
+    const viemChain = getPublicClientFromChainId(chainId);
+    const chain = viemChain?.chain;
+
+    client = createPublicClient({
+      chain,
+      transport: http(rpcUrl),
+    });
+  } else {
+    // Try to get client from store first (browser environment with connected SDK)
+    client = getClient(chainId);
+
+    // If no client in store, create one using the node utility (node environment or disconnected SDK)
     if (!client) {
-      throw new Error(`No client available for chain ID ${chainId}. Chain is not supported.`);
+      client = getPublicClientFromChainId(chainId);
     }
+  }
+
+  if (!client) {
+    throw new Error(`No client available for chain ID ${chainId}. Chain is not supported.`);
   }
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
