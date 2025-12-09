@@ -1,5 +1,6 @@
 import { createBaseAccountSDK, getCryptoKeyAccount } from '@base-org/account';
-import { Box, Button } from '@chakra-ui/react';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { Box, Button, HStack, Link, Text } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { numberToHex } from 'viem';
 
@@ -62,6 +63,17 @@ export function AddSubAccount({ sdk, onAddSubAccount, signerFn }: AddSubAccountP
 
   return (
     <>
+      <HStack w="full" justify="space-between" align="center">
+        <Text fontWeight="medium">wallet_addSubAccount</Text>
+        <Link
+          href="https://docs.base.org/base-account/improve-ux/sub-accounts"
+          isExternal
+          color="blue.500"
+          fontSize="sm"
+        >
+          Docs <ExternalLinkIcon mx="2px" />
+        </Link>
+      </HStack>
       <Button
         w="full"
         onClick={handleAddSubAccount}

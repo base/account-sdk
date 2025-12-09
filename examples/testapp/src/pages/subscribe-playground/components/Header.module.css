@@ -32,6 +32,17 @@
   color: #64748b;
 }
 
+.docsLink {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.docsLink:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .header {

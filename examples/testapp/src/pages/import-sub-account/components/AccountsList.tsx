@@ -1,5 +1,5 @@
 import { createBaseAccountSDK } from '@base-org/account';
-import { CopyIcon, DeleteIcon } from '@chakra-ui/icons';
+import { CopyIcon, DeleteIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import {
   Badge,
   Box,
@@ -8,6 +8,7 @@ import {
   HStack,
   IconButton,
   Input,
+  Link,
   Text,
   VStack,
   useToast,
@@ -259,9 +260,19 @@ export function AccountsList({
   return (
     <VStack w="full" spacing={4} align="stretch">
       <HStack justify="space-between">
-        <Text fontSize="lg" fontWeight="bold">
-          Test Sub Accounts ({accounts.length})
-        </Text>
+        <HStack spacing={2}>
+          <Text fontSize="lg" fontWeight="bold">
+            Test Sub Accounts ({accounts.length})
+          </Text>
+          <Link
+            href="https://docs.base.org/base-account/improve-ux/sub-accounts"
+            isExternal
+            color="blue.500"
+            fontSize="sm"
+          >
+            Docs <ExternalLinkIcon mx="2px" />
+          </Link>
+        </HStack>
         <Button size="sm" colorScheme="green" onClick={onAddAccount}>
           + Generate New Account
         </Button>
