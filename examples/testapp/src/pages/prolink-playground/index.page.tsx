@@ -1,4 +1,5 @@
 import { createProlinkUrl, decodeProlink, encodeProlink } from '@base-org/account';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
@@ -415,6 +416,17 @@ export default function ProlinkPlayground() {
           <TabPanels>
             {/* Encode Tab */}
             <TabPanel px={0}>
+              <HStack mb={4}>
+                <Heading size="md">encodeProlink</Heading>
+                <Link
+                  href="https://docs.base.org/base-account/reference/prolink-utilities/encodeProlink"
+                  isExternal
+                  color="blue.500"
+                  fontSize="sm"
+                >
+                  Docs <ExternalLinkIcon mx="2px" />
+                </Link>
+              </HStack>
               {/* Method Selection */}
               <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
                 <VStack spacing={6} align="stretch">
@@ -824,9 +836,19 @@ export default function ProlinkPlayground() {
 
             {/* Decode Tab */}
             <TabPanel px={0}>
+              <HStack mb={4}>
+                <Heading size="md">decodeProlink</Heading>
+                <Link
+                  href="https://docs.base.org/base-account/reference/prolink-utilities/decodeProlink"
+                  isExternal
+                  color="blue.500"
+                  fontSize="sm"
+                >
+                  Docs <ExternalLinkIcon mx="2px" />
+                </Link>
+              </HStack>
               <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
                 <VStack spacing={6} align="stretch">
-                  <Heading size="md">Decode Prolink</Heading>
                   <Text color="gray.600">
                     Paste an encoded prolink payload to decode and inspect its contents
                   </Text>

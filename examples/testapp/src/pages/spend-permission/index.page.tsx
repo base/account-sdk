@@ -1109,9 +1109,17 @@ export default function SpendPermissionPage() {
             _dark={{ bg: 'green.900', borderColor: 'green.700' }}
           >
             <CardBody p={{ base: 4, md: 6 }}>
-              <Heading size={{ base: 'sm', md: 'md' }} mb={4}>
-                Request Spend Permission
-              </Heading>
+              <Flex justify="space-between" align="center" mb={4}>
+                <Heading size={{ base: 'sm', md: 'md' }}>Request Spend Permission</Heading>
+                <Link
+                  href="https://docs.base.org/base-account/reference/spend-permission-utilities/requestSpendPermission"
+                  isExternal
+                  color="blue.500"
+                  fontSize="sm"
+                >
+                  Docs <ExternalLinkIcon mx="2px" />
+                </Link>
+              </Flex>
 
               {/* Quick Summary */}
               <Grid templateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)' }} gap={3} mb={4}>
