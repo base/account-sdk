@@ -1110,9 +1110,7 @@ export default function SpendPermissionPage() {
           >
             <CardBody p={{ base: 4, md: 6 }}>
               <Flex justify="space-between" align="center" mb={4}>
-                <Heading size={{ base: 'sm', md: 'md' }}>
-                  Request Spend Permission
-                </Heading>
+                <Heading size={{ base: 'sm', md: 'md' }}>Request Spend Permission</Heading>
                 <Link
                   href="https://docs.base.org/base-account/reference/spend-permission-utilities/requestSpendPermission"
                   isExternal
