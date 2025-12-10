@@ -108,7 +108,7 @@ describe('getSubscriptionStatus', () => {
       });
 
       expect(fetchPermission).toHaveBeenCalledWith({ permissionHash: mockPermissionHash });
-      expect(getPermissionStatus).toHaveBeenCalledWith(mockPermission);
+      expect(getPermissionStatus).toHaveBeenCalledWith(mockPermission, { rpcUrl: undefined });
     });
 
     it('should return subscription status based on isActive from getPermissionStatus', async () => {
@@ -650,6 +650,40 @@ describe('getSubscriptionStatus', () => {
 
         expect(result.recurringCharge).toBe(expectedRecurring);
       }
+    });
+
+    it('should pass custom RPC URL to getPermissionStatus when provided', async () => {
+      const customRpcUrl = 'https://custom-rpc.example.com';
+      const mockPermission = createMockPermission();
+      const currentTime = Math.floor(Date.now() / 1000);
+      const mockCurrentPeriod = {
+        start: currentTime - 86400,
+        end: currentTime + 2505600,
+        spend: 0n,
+      };
+
+      const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
+      const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
+
+      vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
+      vi.mocked(getPermissionStatus).mockResolvedValue({
+        isActive: true,
+        isRevoked: false,
+        isExpired: false,
+        remainingSpend: 8000000n,
+        nextPeriodStart: new Date((currentTime + 2505600) * 1000),
+        isApprovedOnchain: true,
+        currentPeriod: mockCurrentPeriod,
+      } as any);
+
+      await getSubscriptionStatus({
+        id: mockPermissionHash,
+        testnet: false,
+        rpcUrl: customRpcUrl,
+      });
+
+      // Verify that getPermissionStatus was called with the custom rpcUrl
+      expect(getPermissionStatus).toHaveBeenCalledWith(mockPermission, { rpcUrl: customRpcUrl });
     });
   });
 });

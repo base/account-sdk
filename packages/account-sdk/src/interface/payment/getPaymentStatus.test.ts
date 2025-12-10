@@ -564,4 +564,146 @@ describe('getPaymentStatus', () => {
       });
     });
   });
+
+  describe('custom bundlerUrl', () => {
+    it('should use custom bundler URL when provided', async () => {
+      const customBundlerUrl = 'https://my-custom-bundler.example.com/rpc';
+      const mockReceipt = {
+        jsonrpc: '2.0',
+        id: 1,
+        result: {
+          success: true,
+          receipt: {
+            transactionHash: '0xabc123',
+            logs: [
+              {
+                address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+                data: '0x0000000000000000000000000000000000000000000000000000000000989680',
+                topics: [
+                  '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                  '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce',
+                  '0x000000000000000000000000f1ddf1fc0310cb11f0ca87508207012f4a9cb336',
+                ],
+              },
+            ],
+          },
+          sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
+        },
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        json: async () => mockReceipt,
+      } as Response);
+
+      const status = await getPaymentStatus({
+        id: '0x123456',
+        testnet: false,
+        bundlerUrl: customBundlerUrl,
+      });
+
+      expect(status.status).toBe('completed');
+
+      // Verify that custom bundler URL was used instead of default
+      expect(fetch).toHaveBeenCalledWith(
+        customBundlerUrl,
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'eth_getUserOperationReceipt',
+            params: ['0x123456'],
+          }),
+        })
+      );
+
+      // Verify default bundler URL was NOT used
+      expect(fetch).not.toHaveBeenCalledWith(
+        'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+        expect.anything()
+      );
+    });
+
+    it('should use custom bundler URL for both receipt and pending checks', async () => {
+      const customBundlerUrl = 'https://my-custom-bundler.example.com/rpc';
+      const mockReceiptNotFound = {
+        jsonrpc: '2.0',
+        id: 1,
+        result: null,
+      };
+      const mockUserOp = {
+        jsonrpc: '2.0',
+        id: 2,
+        result: {
+          sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
+        },
+      };
+
+      vi.mocked(fetch)
+        .mockResolvedValueOnce({
+          json: async () => mockReceiptNotFound,
+        } as Response)
+        .mockResolvedValueOnce({
+          json: async () => mockUserOp,
+        } as Response);
+
+      const status = await getPaymentStatus({
+        id: '0x123456',
+        testnet: false,
+        bundlerUrl: customBundlerUrl,
+      });
+
+      expect(status.status).toBe('pending');
+
+      // Verify custom bundler URL was used for both calls
+      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(fetch).toHaveBeenNthCalledWith(
+        1,
+        customBundlerUrl,
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('eth_getUserOperationReceipt'),
+        })
+      );
+      expect(fetch).toHaveBeenNthCalledWith(
+        2,
+        customBundlerUrl,
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('eth_getUserOperationByHash'),
+        })
+      );
+    });
+
+    it('should fallback to default bundler URL when custom URL is not provided', async () => {
+      const mockReceipt = {
+        jsonrpc: '2.0',
+        id: 1,
+        result: {
+          success: true,
+          receipt: {
+            transactionHash: '0xabc123',
+            logs: [],
+          },
+          sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
+        },
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        json: async () => mockReceipt,
+      } as Response);
+
+      await getPaymentStatus({
+        id: '0x123456',
+        testnet: true,
+      });
+
+      // Verify default testnet bundler URL was used
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+        expect.anything()
+      );
+    });
+  });
 });
