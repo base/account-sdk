@@ -56,3 +56,17 @@ export type {
   ProlinkDecoded,
   ProlinkRequest,
 } from './interface/public-utilities/prolink/index.js';
+
+export {
+  isMulticallFailure,
+  isMulticallSuccess,
+  multicall,
+  unwrapMulticallResults,
+} from './interface/public-utilities/multicall/index.js';
+export type {
+  ContractCall,
+  MulticallFailure,
+  MulticallOptions,
+  MulticallResult,
+  MulticallSuccess,
+} from './interface/public-utilities/multicall/index.js';

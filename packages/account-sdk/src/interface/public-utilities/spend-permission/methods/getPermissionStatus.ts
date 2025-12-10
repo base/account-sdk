@@ -5,7 +5,7 @@ import {
 } from ':sign/base-account/utils/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { PublicClient, createPublicClient, http } from 'viem';
-import { readContract } from 'viem/actions';
+import { multicall, unwrapMulticallResults } from '../../multicall/index.js';
 import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { getPublicClientFromChainId } from '../utils.node.js';
 import { withTelemetry } from '../withTelemetry.js';
@@ -104,26 +104,43 @@ const getPermissionStatusFn = async (
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
-  const [currentPeriod, isRevoked, isValid] = await Promise.all([
-    readContract(client, {
-      address: spendPermissionManagerAddress,
-      abi: spendPermissionManagerAbi,
-      functionName: 'getCurrentPeriod',
-      args: [spendPermissionArgs],
-    }) as Promise<{ start: number; end: number; spend: bigint }>,
-    readContract(client, {
-      address: spendPermissionManagerAddress,
-      abi: spendPermissionManagerAbi,
-      functionName: 'isRevoked',
-      args: [spendPermissionArgs],
-    }) as Promise<boolean>,
-    readContract(client, {
-      address: spendPermissionManagerAddress,
-      abi: spendPermissionManagerAbi,
-      functionName: 'isValid',
-      args: [spendPermissionArgs],
-    }) as Promise<boolean>,
-  ]);
+  // Use multicall to batch all contract reads into a single RPC call
+  const results = await multicall(client, {
+    contracts: [
+      {
+        address: spendPermissionManagerAddress,
+        abi: spendPermissionManagerAbi,
+        functionName: 'getCurrentPeriod',
+        args: [spendPermissionArgs],
+      },
+      {
+        address: spendPermissionManagerAddress,
+        abi: spendPermissionManagerAbi,
+        functionName: 'isRevoked',
+        args: [spendPermissionArgs],
+      },
+      {
+        address: spendPermissionManagerAddress,
+        abi: spendPermissionManagerAbi,
+        functionName: 'isValid',
+        args: [spendPermissionArgs],
+      },
+    ],
+    errorMessages: [
+      'Failed to fetch current period',
+      'Failed to fetch revoked status',
+      'Failed to fetch valid status',
+    ],
+  });
+
+  // Extract results from multicall response
+  const [currentPeriod, isRevoked, isValid] = unwrapMulticallResults<
+    { start: number; end: number; spend: bigint } | boolean
+  >(results, [
+    'Failed to fetch current period',
+    'Failed to fetch revoked status',
+    'Failed to fetch valid status',
+  ]) as [{ start: number; end: number; spend: bigint }, boolean, boolean];
 
   // Calculate remaining spend in current period
   const allowance = BigInt(permission.permission.allowance);
