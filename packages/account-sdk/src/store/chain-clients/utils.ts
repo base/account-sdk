@@ -90,6 +90,7 @@ function defineChainConfig(
         http: [rpcUrl],
       },
     },
+    contracts: viemChain?.contracts,
   });
 }
 
