@@ -141,8 +141,8 @@ describe('chain-clients/utils', () => {
 
       const client = ChainClients.getState()[baseSepolia.id]?.client;
       expect(client).toBeDefined();
-      expect(client.chain.contracts?.multicall3).toBeDefined();
-      expect(client.chain.contracts?.multicall3?.address).toBe(
+      expect(client?.chain?.contracts?.multicall3).toBeDefined();
+      expect(client?.chain?.contracts?.multicall3?.address).toBe(
         '0xca11bde05977b3631167028862be2a173976ca11'
       );
     });
@@ -157,8 +157,8 @@ describe('chain-clients/utils', () => {
 
       const client = ChainClients.getState()[baseSepolia.id]?.client;
       expect(client).toBeDefined();
-      expect(client.chain.contracts?.multicall3).toBeDefined();
-      expect(client.chain.contracts?.multicall3?.address).toBe(
+      expect(client?.chain?.contracts?.multicall3).toBeDefined();
+      expect(client?.chain?.contracts?.multicall3?.address).toBe(
         '0xca11bde05977b3631167028862be2a173976ca11'
       );
     });
@@ -173,8 +173,8 @@ describe('chain-clients/utils', () => {
 
       const client = ChainClients.getState()[base.id]?.client;
       expect(client).toBeDefined();
-      expect(client.chain.contracts?.multicall3).toBeDefined();
-      expect(client.chain.contracts?.multicall3?.address).toBe(
+      expect(client?.chain?.contracts?.multicall3).toBeDefined();
+      expect(client?.chain?.contracts?.multicall3?.address).toBe(
         '0xca11bde05977b3631167028862be2a173976ca11'
       );
     });

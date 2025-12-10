@@ -682,10 +682,9 @@ describe('getPermissionStatus - browser + node', () => {
       // When custom RPC URL is provided, a new client should be created with custom transport
       getPublicClientFromChainIdSpy.mockReturnValue(mockClient as unknown as PublicClient);
 
-      (readContract as Mock)
-        .mockResolvedValueOnce(mockCurrentPeriod) // getCurrentPeriod
-        .mockResolvedValueOnce(mockIsRevoked) // isRevoked
-        .mockResolvedValueOnce(true); // isValid
+      (multicall as Mock).mockResolvedValueOnce(
+        createMulticallResponse(mockCurrentPeriod, mockIsRevoked, true)
+      );
 
       const result = await getPermissionStatus(mockSpendPermission, { rpcUrl: customRpcUrl });
 
@@ -699,7 +698,7 @@ describe('getPermissionStatus - browser + node', () => {
         currentPeriod: mockCurrentPeriod,
       });
 
-      expect(readContract).toHaveBeenCalledTimes(3);
+      expect(multicall).toHaveBeenCalledTimes(1);
       expect(toSpendPermissionArgs).toHaveBeenCalledWith(mockSpendPermission);
 
       // Verify that getClient was not called when custom RPC URL is provided
