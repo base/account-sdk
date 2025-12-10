@@ -58,4 +58,3 @@ export type MulticallOptions = {
 export type ExtractMulticallResults<T extends readonly ContractCall[]> = {
   [K in keyof T]: unknown;
 };
-

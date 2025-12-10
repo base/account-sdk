@@ -1,12 +1,6 @@
 import type { PublicClient } from 'viem';
 import { multicall as viemMulticall } from 'viem/actions';
-import type {
-  ContractCall,
-  MulticallFailure,
-  MulticallOptions,
-  MulticallResult,
-  MulticallSuccess,
-} from './types.js';
+import type { ContractCall, MulticallFailure, MulticallResult, MulticallSuccess } from './types.js';
 
 /**
  * Executes multiple contract read calls in a single RPC request using multicall3.
@@ -76,8 +70,10 @@ export async function multicall(
   }
 
   try {
-    const results = await viemMulticall(client, {
-      contracts: contracts as any[],
+    // biome-ignore lint/suspicious/noExplicitAny: viem's multicall requires specific contract type structure
+    const results = await viemMulticall(client as any, {
+      // biome-ignore lint/suspicious/noExplicitAny: viem's multicall requires specific ABI type
+      contracts: contracts as any,
     });
 
     return results.map((result, index): MulticallResult => {
@@ -88,9 +84,14 @@ export async function multicall(
         } as MulticallSuccess;
       }
 
+      const failureError =
+        result.status === 'failure' && 'error' in result
+          ? (result.error as Error)
+          : new Error('Unknown error');
+
       const error = new Error(
         errorMessages[index] ||
-          `Contract call ${index} failed: ${(result as any).error?.message || 'Unknown error'}`
+          `Contract call ${index} failed: ${failureError.message || 'Unknown error'}`
       );
 
       if (!allowPartialFailure) {
@@ -112,7 +113,9 @@ export async function multicall(
     }
 
     // Wrap unexpected errors
-    throw new Error(`Multicall execution failed: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Multicall execution failed: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -147,9 +150,7 @@ export function unwrapMulticallResults<T = unknown>(
     }
 
     throw new Error(
-      errorMessages[index] ||
-        result.error.message ||
-        `Call ${index} failed: Unknown error`
+      errorMessages[index] || result.error.message || `Call ${index} failed: Unknown error`
     );
   });
 }
@@ -201,4 +202,3 @@ export type {
   MulticallResult,
   MulticallSuccess,
 } from './types.js';
-

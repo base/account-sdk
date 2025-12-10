@@ -1,22 +1,27 @@
-import { createPublicClient, http } from 'viem';
+import { type PublicClient, createPublicClient, http } from 'viem';
 import { multicall as viemMulticall } from 'viem/actions';
 import { base } from 'viem/chains';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
-import { isMulticallFailure, isMulticallSuccess, multicall, unwrapMulticallResults } from './index.js';
+import {
+  isMulticallFailure,
+  isMulticallSuccess,
+  multicall,
+  unwrapMulticallResults,
+} from './index.js';
 
 vi.mock('viem/actions', () => ({
   multicall: vi.fn(),
 }));
 
 describe('multicall', () => {
-  let mockClient: ReturnType<typeof createPublicClient>;
+  let mockClient: PublicClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockClient = createPublicClient({
       chain: base,
       transport: http(),
-    });
+    }) as PublicClient;
   });
 
   describe('basic functionality', () => {
@@ -107,9 +112,9 @@ describe('multicall', () => {
     });
 
     it('should throw when contracts is not provided', async () => {
-      await expect(
-        multicall(mockClient, { contracts: undefined as any })
-      ).rejects.toThrow('At least one contract call is required');
+      await expect(multicall(mockClient, { contracts: undefined as any })).rejects.toThrow(
+        'At least one contract call is required'
+      );
     });
 
     it('should throw by default when a call fails', async () => {
@@ -133,15 +138,11 @@ describe('multicall', () => {
         },
       ];
 
-      await expect(multicall(mockClient, { contracts })).rejects.toThrow(
-        'Contract call 1 failed'
-      );
+      await expect(multicall(mockClient, { contracts })).rejects.toThrow('Contract call 1 failed');
     });
 
     it('should use custom error messages when provided', async () => {
-      const mockResults = [
-        { status: 'failure' as const, error: new Error('Call failed') },
-      ];
+      const mockResults = [{ status: 'failure' as const, error: new Error('Call failed') }];
 
       (viemMulticall as Mock).mockResolvedValue(mockResults);
 
@@ -219,9 +220,7 @@ describe('multicall', () => {
     });
 
     it('should use custom error messages with partial failures', async () => {
-      const mockResults = [
-        { status: 'failure' as const, error: new Error('Call failed') },
-      ];
+      const mockResults = [{ status: 'failure' as const, error: new Error('Call failed') }];
 
       (viemMulticall as Mock).mockResolvedValue(mockResults);
 
@@ -268,19 +267,15 @@ describe('unwrapMulticallResults', () => {
   });
 
   it('should use custom error messages', () => {
-    const results = [
-      { status: 'failure' as const, error: new Error('Original error') },
-    ];
+    const results = [{ status: 'failure' as const, error: new Error('Original error') }];
 
-    expect(() =>
-      unwrapMulticallResults(results, ['Custom error message'])
-    ).toThrow('Custom error message');
+    expect(() => unwrapMulticallResults(results, ['Custom error message'])).toThrow(
+      'Custom error message'
+    );
   });
 
   it('should handle missing error messages', () => {
-    const results = [
-      { status: 'failure' as const, error: new Error('Original error') },
-    ];
+    const results = [{ status: 'failure' as const, error: new Error('Original error') }];
 
     expect(() => unwrapMulticallResults(results)).toThrow('Original error');
   });
@@ -343,4 +338,3 @@ describe('type guards', () => {
     });
   });
 });
-
