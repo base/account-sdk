@@ -40,7 +40,9 @@ describe('prepareCharge', () => {
     });
 
     expect(fetchPermission).toHaveBeenCalledWith({ permissionHash: '0xhash123' });
-    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, undefined, { rpcUrl: undefined });
+    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, undefined, {
+      rpcUrl: undefined,
+    });
     expect(result).toEqual(mockCallData);
   });
 
@@ -84,7 +86,9 @@ describe('prepareCharge', () => {
       testnet: true,
     });
 
-    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n, undefined, { rpcUrl: undefined });
+    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n, undefined, {
+      rpcUrl: undefined,
+    });
   });
 
   it('should throw error for network mismatch', async () => {
@@ -128,7 +132,9 @@ describe('prepareCharge', () => {
 
     expect(fetchPermission).toHaveBeenCalledWith({ permissionHash: '0xhash123' });
     // Now prepareSpendCallData handles the recipient and transfer logic
-    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, recipient, { rpcUrl: undefined });
+    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, recipient, {
+      rpcUrl: undefined,
+    });
     expect(result).toEqual(mockCallData);
   });
 
@@ -155,7 +161,9 @@ describe('prepareCharge', () => {
     });
 
     // Now prepareSpendCallData handles the recipient and transfer logic
-    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n, recipient, { rpcUrl: undefined });
+    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n, recipient, {
+      rpcUrl: undefined,
+    });
     expect(result).toEqual(mockCallData);
   });
 
@@ -201,7 +209,9 @@ describe('prepareCharge', () => {
     });
 
     expect(fetchPermission).toHaveBeenCalledWith({ permissionHash: '0xhash123' });
-    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, undefined, { rpcUrl: customRpcUrl });
+    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, undefined, {
+      rpcUrl: customRpcUrl,
+    });
     expect(result).toEqual(mockCallData);
   });
 });

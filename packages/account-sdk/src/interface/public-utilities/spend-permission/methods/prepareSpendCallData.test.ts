@@ -172,13 +172,10 @@ describe('prepareSpendCallData', () => {
 
   it('should pass rpcUrl option to getPermissionStatus when provided', async () => {
     const customRpcUrl = 'https://my-custom-rpc.example.com';
-    
-    await prepareSpendCallData(
-      mockSpendPermission,
-      'max-remaining-allowance',
-      undefined,
-      { rpcUrl: customRpcUrl }
-    );
+
+    await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance', undefined, {
+      rpcUrl: customRpcUrl,
+    });
 
     expect(mockGetPermissionStatus).toHaveBeenCalledWith(mockSpendPermission, {
       rpcUrl: customRpcUrl,

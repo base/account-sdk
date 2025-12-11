@@ -124,7 +124,10 @@ const prepareSpendCallDataFn = async (
   recipient?: Address,
   options?: { rpcUrl?: string }
 ): Promise<PrepareSpendCallDataResponseType> => {
-  const { remainingSpend, isApprovedOnchain, isRevoked } = await getPermissionStatus(permission, options);
+  const { remainingSpend, isApprovedOnchain, isRevoked } = await getPermissionStatus(
+    permission,
+    options
+  );
 
   if (isRevoked) {
     throw new Error('Spend permission has been revoked');

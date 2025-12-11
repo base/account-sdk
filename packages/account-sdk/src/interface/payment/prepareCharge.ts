@@ -1,7 +1,7 @@
 import { parseUnits } from 'viem';
 import {
-    fetchPermission,
-    prepareSpendCallData,
+  fetchPermission,
+  prepareSpendCallData,
 } from '../public-utilities/spend-permission/index.js';
 import { TOKENS } from './constants.js';
 import type { PrepareChargeOptions, PrepareChargeResult } from './types.js';
