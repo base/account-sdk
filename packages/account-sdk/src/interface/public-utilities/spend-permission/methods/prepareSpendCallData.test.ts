@@ -167,7 +167,22 @@ describe('prepareSpendCallData', () => {
   it('should call getPermissionStatus with the correct permission', async () => {
     await prepareSpendCallData(mockSpendPermission, 'max-remaining-allowance');
 
-    expect(mockGetPermissionStatus).toHaveBeenCalledWith(mockSpendPermission);
+    expect(mockGetPermissionStatus).toHaveBeenCalledWith(mockSpendPermission, undefined);
+  });
+
+  it('should pass rpcUrl option to getPermissionStatus when provided', async () => {
+    const customRpcUrl = 'https://my-custom-rpc.example.com';
+    
+    await prepareSpendCallData(
+      mockSpendPermission,
+      'max-remaining-allowance',
+      undefined,
+      { rpcUrl: customRpcUrl }
+    );
+
+    expect(mockGetPermissionStatus).toHaveBeenCalledWith(mockSpendPermission, {
+      rpcUrl: customRpcUrl,
+    });
   });
 
   it('should call toSpendPermissionArgs with the correct permission', async () => {

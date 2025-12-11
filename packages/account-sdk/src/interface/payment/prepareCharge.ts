@@ -1,7 +1,7 @@
 import { parseUnits } from 'viem';
 import {
-  fetchPermission,
-  prepareSpendCallData,
+    fetchPermission,
+    prepareSpendCallData,
 } from '../public-utilities/spend-permission/index.js';
 import { TOKENS } from './constants.js';
 import type { PrepareChargeOptions, PrepareChargeResult } from './types.js';
@@ -23,6 +23,7 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  * @param options.amount - Amount to charge as a string (e.g., "10.50") or 'max-remaining-charge'
  * @param options.testnet - Whether this permission is on testnet (Base Sepolia). Defaults to false (mainnet)
  * @param options.recipient - Optional recipient address to receive the charged USDC
+ * @param options.rpcUrl - Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints.
  * @returns Promise<PrepareChargeResult> - Array of call data for the charge
  * @throws Error if the subscription cannot be found or if the amount exceeds remaining allowance
  *
@@ -50,6 +51,14 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  *   recipient: '0x0000000000000000000000000000000000000001'
  * });
  *
+ * // With custom RPC URL to avoid rate limits
+ * const chargeWithCustomRpc = await base.subscription.prepareCharge({
+ *   id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+ *   amount: '9.99',
+ *   testnet: false,
+ *   rpcUrl: 'https://my-custom-rpc.example.com'
+ * });
+ *
  * // Send the calls using your app's spender account
  * await provider.request({
  *   method: 'wallet_sendCalls',
@@ -64,7 +73,7 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  * ```
  */
 export async function prepareCharge(options: PrepareChargeOptions): Promise<PrepareChargeResult> {
-  const { id, amount, testnet = false, recipient } = options;
+  const { id, amount, testnet = false, recipient, rpcUrl } = options;
 
   // Fetch the permission using the subscription ID (permission hash)
   const permission = await fetchPermission({
@@ -92,8 +101,8 @@ export async function prepareCharge(options: PrepareChargeOptions): Promise<Prep
     spendAmount = parseUnits(amount, TOKENS.USDC.decimals);
   }
 
-  // Call the existing prepareSpendCallData utility with the optional recipient
-  const callData = await prepareSpendCallData(permission, spendAmount, recipient);
+  // Call the existing prepareSpendCallData utility with the optional recipient and rpcUrl
+  const callData = await prepareSpendCallData(permission, spendAmount, recipient, { rpcUrl });
 
   return callData;
 }

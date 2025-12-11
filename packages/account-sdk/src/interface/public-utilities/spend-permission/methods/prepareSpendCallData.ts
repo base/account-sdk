@@ -37,6 +37,8 @@ export type PrepareSpendCallDataResponseType = Call[];
  * @param permission - The spend permission object containing the permission details and signature.
  * @param amount - The amount to spend in wei. If 'max-remaining-allowance' is provided, the full remaining allowance will be spent.
  * @param recipient - Optional recipient address to receive the spent tokens via ERC20 transfer.
+ * @param options - Optional configuration options.
+ * @param options.rpcUrl - Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints.
  *
  * @returns A promise that resolves to an array containing all the necessary calls.
  *
@@ -65,6 +67,14 @@ export type PrepareSpendCallDataResponseType = Call[];
  *   permission,
  *   50n * 10n ** 6n,
  *   '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb8' // recipient address
+ * );
+ *
+ * // With custom RPC URL to avoid rate limits
+ * const callsWithCustomRpc = await prepareSpendCallData(
+ *   permission,
+ *   50n * 10n ** 6n,
+ *   undefined,
+ *   { rpcUrl: 'https://my-custom-rpc.example.com' }
  * );
  *
  * // Send the calls using your app's spender account
@@ -111,9 +121,10 @@ const ERC20_TRANSFER_ABI = [
 const prepareSpendCallDataFn = async (
   permission: SpendPermission,
   amount: bigint | 'max-remaining-allowance',
-  recipient?: Address
+  recipient?: Address,
+  options?: { rpcUrl?: string }
 ): Promise<PrepareSpendCallDataResponseType> => {
-  const { remainingSpend, isApprovedOnchain, isRevoked } = await getPermissionStatus(permission);
+  const { remainingSpend, isApprovedOnchain, isRevoked } = await getPermissionStatus(permission, options);
 
   if (isRevoked) {
     throw new Error('Spend permission has been revoked');
