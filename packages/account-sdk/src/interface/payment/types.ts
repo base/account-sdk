@@ -293,6 +293,8 @@ export interface PrepareChargeOptions {
   testnet?: boolean;
   /** Optional recipient address to receive the charged USDC */
   recipient?: Address;
+  /** Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints. */
+  rpcUrl?: string;
 }
 
 /**
