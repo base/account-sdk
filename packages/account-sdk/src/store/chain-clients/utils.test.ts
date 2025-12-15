@@ -129,4 +129,54 @@ describe('chain-clients/utils', () => {
       expect(ChainClients.getState()[999999]).toBeUndefined();
     });
   });
+
+  describe('multicall3 contract preservation', () => {
+    it('should preserve multicall3 contract configuration from viem chain for Base Sepolia', () => {
+      createClients([
+        {
+          id: baseSepolia.id,
+          rpcUrl: baseSepolia.rpcUrls.default.http[0],
+        },
+      ]);
+
+      const client = ChainClients.getState()[baseSepolia.id]?.client;
+      expect(client).toBeDefined();
+      expect(client?.chain?.contracts?.multicall3).toBeDefined();
+      expect(client?.chain?.contracts?.multicall3?.address).toBe(
+        '0xca11bde05977b3631167028862be2a173976ca11'
+      );
+    });
+
+    it('should preserve multicall3 contract configuration when using fallback RPC', () => {
+      createClients([
+        {
+          id: baseSepolia.id,
+          // No rpcUrl - will use fallback
+        },
+      ]);
+
+      const client = ChainClients.getState()[baseSepolia.id]?.client;
+      expect(client).toBeDefined();
+      expect(client?.chain?.contracts?.multicall3).toBeDefined();
+      expect(client?.chain?.contracts?.multicall3?.address).toBe(
+        '0xca11bde05977b3631167028862be2a173976ca11'
+      );
+    });
+
+    it('should preserve multicall3 contract configuration for Base mainnet', () => {
+      createClients([
+        {
+          id: base.id,
+          rpcUrl: base.rpcUrls.default.http[0],
+        },
+      ]);
+
+      const client = ChainClients.getState()[base.id]?.client;
+      expect(client).toBeDefined();
+      expect(client?.chain?.contracts?.multicall3).toBeDefined();
+      expect(client?.chain?.contracts?.multicall3?.address).toBe(
+        '0xca11bde05977b3631167028862be2a173976ca11'
+      );
+    });
+  });
 });
