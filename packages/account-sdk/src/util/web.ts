@@ -1,6 +1,13 @@
 import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
+import {
+  logIframeCreateFailure,
+  logIframeCreateStart,
+  logIframeCreateSuccess,
+  logIframeDestroyed,
+} from ':core/telemetry/events/communicator.js';
 import { logDialogActionClicked, logDialogShown } from ':core/telemetry/events/dialog.js';
+import { externalCorrelationIds } from ':store/external-correlation-id/store.js';
 import { store } from ':store/store.js';
 import { initDialog } from '../ui/Dialog/index.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
@@ -11,10 +18,37 @@ const POPUP_HEIGHT = 700;
 const POPUP_BLOCKED_TITLE = '{app} wants to continue in Base Account';
 const POPUP_BLOCKED_MESSAGE = 'This action requires your permission to open a new window.';
 
-export function openPopup(url: URL): Promise<Window> {
+// iFrame constants for embedded mode
+export const IFRAME_ID = 'keys-frame';
+const IFRAME_ALLOW = 'publickey-credentials-get; publickey-credentials-create; clipboard-write';
+const IFRAME_STYLES = {
+  overflow: 'hidden',
+  overflowX: 'hidden',
+  overflowY: 'hidden',
+  height: '100%',
+  width: '100%',
+  position: 'absolute',
+  top: '0px',
+  left: '0px',
+  right: '0px',
+  bottom: '0px',
+  backgroundColor: 'transparent',
+  border: 'none',
+  'z-index': '1000',
+  // The iframe is initially hidden and then made
+  // visible once the popup is loaded
+  opacity: '0',
+} as const;
+
+export function openPopup(url: URL, mode: 'embedded' | 'popup'): Promise<Window> {
+  appendAppInfoQueryParams(url);
+
+  if (mode === 'embedded') {
+    return Promise.resolve(createEmbeddedIframe(url));
+  }
+
   const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
   const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
-  appendAppInfoQueryParams(url);
 
   function tryOpenPopup(): Window | null {
     const popupId = `wallet_${crypto.randomUUID()}`;
@@ -44,17 +78,37 @@ export function openPopup(url: URL): Promise<Window> {
 }
 
 export function closePopup(popup: Window | null) {
-  if (popup && !popup.closed) {
+  if (!popup) {
+    return;
+  }
+
+  // If embedded, remove the iframe element
+  const iframe = document.getElementById(IFRAME_ID) as HTMLIFrameElement;
+  if (iframe && iframe.contentWindow === popup) {
+    iframe.style.transition = 'opacity 0.3s ease-in-out';
+    iframe.style.opacity = '0';
+
+    setTimeout(() => {
+      iframe.remove();
+      logIframeDestroyed();
+    }, 300);
+    return;
+  }
+
+  // Otherwise, close the popup
+  if (!popup.closed) {
     popup.close();
   }
 }
 
 function appendAppInfoQueryParams(url: URL) {
+  const externalCorrelationId = externalCorrelationIds.get();
   const params = {
     sdkName: PACKAGE_NAME,
     sdkVersion: PACKAGE_VERSION,
     origin: window.location.origin,
     coop: getCrossOriginOpenerPolicy(),
+    ...(externalCorrelationId && { externalCorrelationId }),
   };
 
   for (const [key, value] of Object.entries(params)) {
@@ -112,4 +166,28 @@ function openPopupWithDialog(tryOpenPopup: () => Window | null) {
       ],
     });
   });
+}
+
+function createEmbeddedIframe(url: URL): Window {
+  logIframeCreateStart();
+
+  const iframe = document.createElement('iframe');
+  iframe.id = IFRAME_ID;
+  iframe.allowFullscreen = true;
+  iframe.allow = IFRAME_ALLOW;
+
+  iframe.style.cssText = Object.entries(IFRAME_STYLES)
+    .map(([key, value]) => `${key}:${value}`)
+    .join(';');
+
+  iframe.src = url.toString();
+  document.body.appendChild(iframe);
+
+  if (!iframe.contentWindow) {
+    logIframeCreateFailure();
+    throw standardErrors.rpc.internal('iframe failed to initialize');
+  }
+
+  logIframeCreateSuccess();
+  return iframe.contentWindow;
 }

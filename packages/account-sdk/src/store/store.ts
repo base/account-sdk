@@ -42,6 +42,7 @@ type Config = {
   version: string;
   deviceId?: string;
   paymasterUrls?: Record<number, string>;
+  externalCorrelationId?: string;
 };
 
 type ChainSlice = {
