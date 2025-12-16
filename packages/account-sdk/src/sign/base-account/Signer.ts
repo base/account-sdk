@@ -14,14 +14,6 @@ import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissio
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { GetSubAccountsResponse } from ':core/rpc/wallet_getSubAccount.js';
 import {
-  logHandshakeCompleted,
-  logHandshakeError,
-  logHandshakeStarted,
-  logRequestCompleted,
-  logRequestError,
-  logRequestStarted,
-} from ':core/telemetry/events/scw-signer.js';
-import {
   logAddOwnerCompleted,
   logAddOwnerError,
   logAddOwnerStarted,
@@ -37,7 +29,7 @@ import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
-import { createStoreHelpers, spendPermissions, store, type StoreInstance } from ':store/store.js';
+import { type StoreInstance, createStoreHelpers, spendPermissions, store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import {
@@ -67,6 +59,7 @@ import { findOwnerIndex } from './utils/findOwnerIndex.js';
 import { handleAddSubAccountOwner } from './utils/handleAddSubAccountOwner.js';
 import { handleInsufficientBalanceError } from './utils/handleInsufficientBalance.js';
 import { routeThroughGlobalAccount } from './utils/routeThroughGlobalAccount.js';
+import { withHandshakeMeasurement, withSignerRequestMeasurement } from './withSignerMeasurement.js';
 
 type ConstructorOptions = {
   metadata: AppMetadata;
@@ -76,14 +69,14 @@ type ConstructorOptions = {
 };
 
 export class Signer {
-  private readonly communicator: Communicator;
-  private readonly keyManager: SCWKeyManager;
-  private callback: ProviderEventCallback | null;
-  private readonly storeHelpers: ReturnType<typeof createStoreHelpers>;
-  private readonly storeInstance: StoreInstance;
+  protected readonly communicator: Communicator;
+  protected readonly keyManager: SCWKeyManager;
+  protected callback: ProviderEventCallback | null;
+  protected readonly storeHelpers: ReturnType<typeof createStoreHelpers>;
+  protected readonly storeInstance: StoreInstance;
 
-  private accounts: Address[];
-  private chain: SDKChain;
+  protected accounts: Address[];
+  protected chain: SDKChain;
 
   constructor(params: ConstructorOptions) {
     this.communicator = params.communicator;
@@ -92,8 +85,8 @@ export class Signer {
     this.storeInstance = params.storeInstance ?? store;
     // Reuse global store helpers if using global store (important for testing/mocking)
     // Otherwise create new helpers for the custom store instance
-    this.storeHelpers =
-      this.storeInstance === store ? store : createStoreHelpers(this.storeInstance);
+    const isGloabalStore = this.storeInstance === store;
+    this.storeHelpers = isGloabalStore ? store : createStoreHelpers(this.storeInstance);
     this.keyManager = new SCWKeyManager(this.storeInstance);
 
     const { account, chains } = this.storeInstance.getState();
@@ -113,11 +106,15 @@ export class Signer {
     return this.accounts.length > 0;
   }
 
-  async handshake(args: RequestArguments) {
-    const correlationId = correlationIds.get(args);
-    logHandshakeStarted({ method: args.method, correlationId, isEphemeral: false });
+  protected get isEphemeral(): boolean {
+    return false;
+  }
 
-    try {
+  handshake = withHandshakeMeasurement(
+    () => ({ isEphemeral: this.isEphemeral }),
+    async (args: RequestArguments): Promise<void> => {
+      const correlationId = correlationIds.get(args);
+
       // Open the popup before constructing the request message.
       // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
       await this.communicator.waitForPopupLoaded?.();
@@ -145,217 +142,192 @@ export class Signer {
       const decrypted = await this.decryptResponseMessage(response);
 
       this.handleResponse(args, decrypted);
-      logHandshakeCompleted({ method: args.method, correlationId, isEphemeral: false });
-    } catch (error) {
-      logHandshakeError({
-        method: args.method,
-        correlationId,
-        errorMessage: parseErrorMessageFromAny(error),
-        isEphemeral: false,
-      });
-      throw error;
     }
-  }
+  );
 
-  async request(request: RequestArguments) {
-    const correlationId = correlationIds.get(request);
-    logRequestStarted({ method: request.method, correlationId, isEphemeral: false });
+  request = withSignerRequestMeasurement(
+    () => ({ isEphemeral: this.isEphemeral }),
+    async <T>(request: RequestArguments): Promise<T> => {
+      if (this.accounts.length === 0) {
+        switch (request.method) {
+          case 'wallet_switchEthereumChain': {
+            assertParamsChainId(request.params);
+            this.chain.id = Number(request.params[0].chainId);
+            return undefined as T;
+          }
+          case 'wallet_connect': {
+            // Wait for the popup to be loaded before making async calls
+            await this.communicator.waitForPopupLoaded?.();
+            await initSubAccountConfig();
 
-    try {
-      const result = await this._request(request);
-      logRequestCompleted({ method: request.method, correlationId, isEphemeral: false });
-      return result;
-    } catch (error) {
-      logRequestError({
-        method: request.method,
-        correlationId,
-        errorMessage: parseErrorMessageFromAny(error),
-        isEphemeral: false,
-      });
-      throw error;
-    }
-  }
-
-  async _request(request: RequestArguments) {
-    if (this.accounts.length === 0) {
-      switch (request.method) {
-        case 'wallet_switchEthereumChain': {
-          assertParamsChainId(request.params);
-          this.chain.id = Number(request.params[0].chainId);
-          return;
+            const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
+            // Inject capabilities from config (e.g., addSubAccount when creation: 'on-connect')
+            const modifiedRequest = injectRequestCapabilities(
+              request,
+              subAccountsConfig?.capabilities ?? {}
+            );
+            return this.sendRequestToPopup(modifiedRequest) as Promise<T>;
+          }
+          case 'experimental_requestInfo':
+          case 'wallet_sendCalls':
+          case 'wallet_sign': {
+            return this.sendRequestToPopup(request) as Promise<T>;
+          }
+          default:
+            throw standardErrors.provider.unauthorized();
         }
+      }
+
+      if (this.shouldRequestUseSubAccountSigner(request)) {
+        const correlationId = correlationIds.get(request);
+        logSubAccountRequestStarted({ method: request.method, correlationId });
+        try {
+          const result = await this.sendRequestToSubAccountSigner(request);
+          logSubAccountRequestCompleted({ method: request.method, correlationId });
+          return result as T;
+        } catch (error) {
+          logSubAccountRequestError({
+            method: request.method,
+            correlationId,
+            errorMessage: parseErrorMessageFromAny(error),
+          });
+          throw error;
+        }
+      }
+
+      // Handle all experimental methods
+      if (request.method.startsWith('experimental_')) {
+        return this.sendRequestToPopup(request) as Promise<T>;
+      }
+
+      switch (request.method) {
+        case 'eth_requestAccounts':
+        case 'eth_accounts': {
+          const subAccount = this.storeHelpers.subAccounts.get();
+          const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
+          if (subAccount?.address) {
+            // if defaultAccount is 'sub' and we have a sub account, we need to return it as the first account
+            // otherwise, we just append it to the accounts array
+            this.accounts =
+              subAccountsConfig?.defaultAccount === 'sub'
+                ? prependWithoutDuplicates(this.accounts, subAccount.address)
+                : appendWithoutDuplicates(this.accounts, subAccount.address);
+          }
+
+          this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
+          return this.accounts as T;
+        }
+        case 'eth_coinbase':
+          return this.accounts[0] as T;
+        case 'net_version':
+          return this.chain.id as T;
+        case 'eth_chainId':
+          return numberToHex(this.chain.id) as T;
+        case 'wallet_getCapabilities':
+          return this.handleGetCapabilitiesRequest(request) as Promise<T>;
+        case 'wallet_switchEthereumChain':
+          return this.handleSwitchChainRequest(request) as Promise<T>;
+        case 'eth_ecRecover':
+        case 'personal_sign':
+        case 'wallet_sign':
+        case 'personal_ecRecover':
+        case 'eth_signTransaction':
+        case 'eth_sendTransaction':
+        case 'eth_signTypedData_v1':
+        case 'eth_signTypedData_v3':
+        case 'eth_signTypedData_v4':
+        case 'eth_signTypedData':
+        case 'wallet_addEthereumChain':
+        case 'wallet_watchAsset':
+        case 'wallet_sendCalls':
+        case 'wallet_showCallsStatus':
+        case 'wallet_grantPermissions':
+          return this.sendRequestToPopup(request) as Promise<T>;
         case 'wallet_connect': {
           // Wait for the popup to be loaded before making async calls
           await this.communicator.waitForPopupLoaded?.();
           await initSubAccountConfig();
-
           const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
-          // Inject capabilities from config (e.g., addSubAccount when creation: 'on-connect')
           const modifiedRequest = injectRequestCapabilities(
             request,
             subAccountsConfig?.capabilities ?? {}
           );
-          return this.sendRequestToPopup(modifiedRequest);
+          const result = await this.sendRequestToPopup(modifiedRequest);
+
+          this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
+          return result as T;
         }
-        case 'experimental_requestInfo':
-        case 'wallet_sendCalls':
-        case 'wallet_sign': {
-          return this.sendRequestToPopup(request);
+        // Sub Account Support
+        case 'wallet_getSubAccounts': {
+          const subAccount = this.storeHelpers.subAccounts.get();
+          if (subAccount?.address) {
+            return {
+              subAccounts: [subAccount],
+            } as T;
+          }
+
+          if (!this.chain.rpcUrl) {
+            throw standardErrors.rpc.internal('No RPC URL set for chain');
+          }
+          const response = (await fetchRPCRequest(
+            request,
+            this.chain.rpcUrl
+          )) as GetSubAccountsResponse;
+          assertArrayPresence(response.subAccounts, 'subAccounts');
+          if (response.subAccounts.length > 0) {
+            // cache the sub account
+            assertSubAccount(response.subAccounts[0]);
+            const subAccount = response.subAccounts[0];
+            this.storeHelpers.subAccounts.set({
+              address: subAccount.address,
+              factory: subAccount.factory,
+              factoryData: subAccount.factoryData,
+            });
+          }
+          return response as T;
+        }
+        case 'wallet_addSubAccount':
+          return this.addSubAccount(request) as Promise<T>;
+        case 'coinbase_fetchPermissions': {
+          assertFetchPermissionsRequest(request);
+          const completeRequest = fillMissingParamsForFetchPermissions(request);
+          const permissions = (await fetchRPCRequest(
+            completeRequest,
+            CB_WALLET_RPC_URL
+          )) as FetchPermissionsResponse;
+          const requestedChainId = hexToNumber(completeRequest.params?.[0].chainId);
+          this.storeHelpers.spendPermissions.set(
+            permissions.permissions.map((permission) => ({
+              ...permission,
+              chainId: requestedChainId,
+            }))
+          );
+          return permissions as T;
+        }
+        case 'coinbase_fetchPermission': {
+          const fetchPermissionRequest = request as FetchPermissionRequest;
+          const response = (await fetchRPCRequest(
+            fetchPermissionRequest,
+            CB_WALLET_RPC_URL
+          )) as FetchPermissionResponse;
+
+          // Store the single permission if it has a chainId
+          if (response.permission && response.permission.chainId) {
+            this.storeHelpers.spendPermissions.set([response.permission]);
+          }
+
+          return response as T;
         }
         default:
-          throw standardErrors.provider.unauthorized();
+          if (!this.chain.rpcUrl) {
+            throw standardErrors.rpc.internal('No RPC URL set for chain');
+          }
+          return fetchRPCRequest(request, this.chain.rpcUrl) as Promise<T>;
       }
     }
+  );
 
-    if (this.shouldRequestUseSubAccountSigner(request)) {
-      const correlationId = correlationIds.get(request);
-      logSubAccountRequestStarted({ method: request.method, correlationId });
-      try {
-        const result = await this.sendRequestToSubAccountSigner(request);
-        logSubAccountRequestCompleted({ method: request.method, correlationId });
-        return result;
-      } catch (error) {
-        logSubAccountRequestError({
-          method: request.method,
-          correlationId,
-          errorMessage: parseErrorMessageFromAny(error),
-        });
-        throw error;
-      }
-    }
-
-    // Handle all experimental methods
-    if (request.method.startsWith('experimental_')) {
-      return this.sendRequestToPopup(request);
-    }
-
-    switch (request.method) {
-      case 'eth_requestAccounts':
-      case 'eth_accounts': {
-        const subAccount = this.storeHelpers.subAccounts.get();
-        const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
-        if (subAccount?.address) {
-          // if defaultAccount is 'sub' and we have a sub account, we need to return it as the first account
-          // otherwise, we just append it to the accounts array
-          this.accounts =
-            subAccountsConfig?.defaultAccount === 'sub'
-              ? prependWithoutDuplicates(this.accounts, subAccount.address)
-              : appendWithoutDuplicates(this.accounts, subAccount.address);
-        }
-
-        this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
-        return this.accounts;
-      }
-      case 'eth_coinbase':
-        return this.accounts[0];
-      case 'net_version':
-        return this.chain.id;
-      case 'eth_chainId':
-        return numberToHex(this.chain.id);
-      case 'wallet_getCapabilities':
-        return this.handleGetCapabilitiesRequest(request);
-      case 'wallet_switchEthereumChain':
-        return this.handleSwitchChainRequest(request);
-      case 'eth_ecRecover':
-      case 'personal_sign':
-      case 'wallet_sign':
-      case 'personal_ecRecover':
-      case 'eth_signTransaction':
-      case 'eth_sendTransaction':
-      case 'eth_signTypedData_v1':
-      case 'eth_signTypedData_v3':
-      case 'eth_signTypedData_v4':
-      case 'eth_signTypedData':
-      case 'wallet_addEthereumChain':
-      case 'wallet_watchAsset':
-      case 'wallet_sendCalls':
-      case 'wallet_showCallsStatus':
-      case 'wallet_grantPermissions':
-        return this.sendRequestToPopup(request);
-      case 'wallet_connect': {
-        // Wait for the popup to be loaded before making async calls
-        await this.communicator.waitForPopupLoaded?.();
-        await initSubAccountConfig();
-        const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
-        const modifiedRequest = injectRequestCapabilities(
-          request,
-          subAccountsConfig?.capabilities ?? {}
-        );
-        const result = await this.sendRequestToPopup(modifiedRequest);
-
-        this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
-        return result;
-      }
-      // Sub Account Support
-      case 'wallet_getSubAccounts': {
-        const subAccount = this.storeHelpers.subAccounts.get();
-        if (subAccount?.address) {
-          return {
-            subAccounts: [subAccount],
-          };
-        }
-
-        if (!this.chain.rpcUrl) {
-          throw standardErrors.rpc.internal('No RPC URL set for chain');
-        }
-        const response = (await fetchRPCRequest(
-          request,
-          this.chain.rpcUrl
-        )) as GetSubAccountsResponse;
-        assertArrayPresence(response.subAccounts, 'subAccounts');
-        if (response.subAccounts.length > 0) {
-          // cache the sub account
-          assertSubAccount(response.subAccounts[0]);
-          const subAccount = response.subAccounts[0];
-          this.storeHelpers.subAccounts.set({
-            address: subAccount.address,
-            factory: subAccount.factory,
-            factoryData: subAccount.factoryData,
-          });
-        }
-        return response;
-      }
-      case 'wallet_addSubAccount':
-        return this.addSubAccount(request);
-      case 'coinbase_fetchPermissions': {
-        assertFetchPermissionsRequest(request);
-        const completeRequest = fillMissingParamsForFetchPermissions(request);
-        const permissions = (await fetchRPCRequest(
-          completeRequest,
-          CB_WALLET_RPC_URL
-        )) as FetchPermissionsResponse;
-        const requestedChainId = hexToNumber(completeRequest.params?.[0].chainId);
-        this.storeHelpers.spendPermissions.set(
-          permissions.permissions.map((permission) => ({
-            ...permission,
-            chainId: requestedChainId,
-          }))
-        );
-        return permissions;
-      }
-      case 'coinbase_fetchPermission': {
-        const fetchPermissionRequest = request as FetchPermissionRequest;
-        const response = (await fetchRPCRequest(
-          fetchPermissionRequest,
-          CB_WALLET_RPC_URL
-        )) as FetchPermissionResponse;
-
-        // Store the single permission if it has a chainId
-        if (response.permission && response.permission.chainId) {
-          this.storeHelpers.spendPermissions.set([response.permission]);
-        }
-
-        return response;
-      }
-      default:
-        if (!this.chain.rpcUrl) {
-          throw standardErrors.rpc.internal('No RPC URL set for chain');
-        }
-        return fetchRPCRequest(request, this.chain.rpcUrl);
-    }
-  }
-
-  private async sendRequestToPopup(request: RequestArguments) {
+  protected async sendRequestToPopup(request: RequestArguments) {
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
     await this.communicator.waitForPopupLoaded?.();
@@ -366,7 +338,7 @@ export class Signer {
     return this.handleResponse(request, decrypted);
   }
 
-  private async handleResponse(request: RequestArguments, decrypted: RPCResponse) {
+  protected async handleResponse(request: RequestArguments, decrypted: RPCResponse) {
     const result = decrypted.result;
 
     if ('error' in result) throw result.error;
@@ -524,7 +496,7 @@ export class Signer {
     return filteredCapabilities;
   }
 
-  private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
+  protected async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
     const sharedSecret = await this.keyManager.getSharedSecret();
     if (!sharedSecret) {
       throw standardErrors.provider.unauthorized('No shared secret found when encrypting request');
@@ -543,7 +515,7 @@ export class Signer {
     return this.communicator.postRequestAndWaitForResponse(message);
   }
 
-  private async createRequestMessage(
+  protected async createRequestMessage(
     content: RPCRequestMessage['content'],
     correlationId: string | undefined
   ): Promise<RPCRequestMessage> {
@@ -558,7 +530,7 @@ export class Signer {
     };
   }
 
-  private async decryptResponseMessage(message: RPCResponseMessage): Promise<RPCResponse> {
+  protected async decryptResponseMessage(message: RPCResponseMessage): Promise<RPCResponse> {
     const content = message.content;
 
     // throw protocol level error
