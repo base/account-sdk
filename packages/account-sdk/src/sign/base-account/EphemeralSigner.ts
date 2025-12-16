@@ -4,14 +4,9 @@ import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import {
-  logHandshakeCompleted,
-  logHandshakeError,
-  logHandshakeStarted,
-  logRequestCompleted,
-  logRequestError,
-  logRequestStarted,
-} from ':core/telemetry/events/scw-signer.js';
-import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
+  withHandshakeMeasurement,
+  withSignerRequestMeasurement,
+} from './withSignerMeasurement.js';
 import { SDKChain, createClients } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
 import { createStoreHelpers, type StoreInstance } from ':store/store.js';
@@ -72,11 +67,11 @@ export class EphemeralSigner {
     }
   }
 
-  async handshake(args: RequestArguments) {
-    const correlationId = correlationIds.get(args);
-    logHandshakeStarted({ method: args.method, correlationId, isEphemeral: true });
+  handshake = withHandshakeMeasurement(
+    { isEphemeral: true },
+    async (args: RequestArguments): Promise<void> => {
+      const correlationId = correlationIds.get(args);
 
-    try {
       // Open the popup before constructing the request message.
       await this.communicator.waitForPopupLoaded?.();
 
@@ -101,52 +96,26 @@ export class EphemeralSigner {
       await this.keyManager.setPeerPublicKey(peerPublicKey);
 
       await this.decryptResponseMessage(response);
-
-      logHandshakeCompleted({ method: args.method, correlationId, isEphemeral: true });
-    } catch (error) {
-      logHandshakeError({
-        method: args.method,
-        correlationId,
-        errorMessage: parseErrorMessageFromAny(error),
-        isEphemeral: true,
-      });
-      throw error;
     }
-  }
+  );
 
-  async request(request: RequestArguments) {
-    const correlationId = correlationIds.get(request);
-    logRequestStarted({ method: request.method, correlationId, isEphemeral: true });
-
-    try {
-      const result = await this._request(request);
-      logRequestCompleted({ method: request.method, correlationId, isEphemeral: true });
-      return result;
-    } catch (error) {
-      logRequestError({
-        method: request.method,
-        correlationId,
-        errorMessage: parseErrorMessageFromAny(error),
-        isEphemeral: true,
-      });
-      throw error;
-    }
-  }
-
-  private async _request(request: RequestArguments) {
-    // Ephemeral signer only supports sending requests to popup
-    // for wallet_sendCalls and wallet_sign methods
-    switch (request.method) {
-      case 'wallet_sendCalls':
-      case 'wallet_sign': {
-        return this.sendRequestToPopup(request);
+  request = withSignerRequestMeasurement(
+    { isEphemeral: true },
+    async <T>(request: RequestArguments): Promise<T> => {
+      // Ephemeral signer only supports sending requests to popup
+      // for wallet_sendCalls and wallet_sign methods
+      switch (request.method) {
+        case 'wallet_sendCalls':
+        case 'wallet_sign': {
+          return this.sendRequestToPopup(request) as Promise<T>;
+        }
+        default:
+          throw standardErrors.provider.unauthorized(
+            `Method '${request.method}' is not supported by ephemeral signer`
+          );
       }
-      default:
-        throw standardErrors.provider.unauthorized(
-          `Method '${request.method}' is not supported by ephemeral signer`
-        );
     }
-  }
+  );
 
   private async sendRequestToPopup(request: RequestArguments) {
     // Open the popup before constructing the request message.
