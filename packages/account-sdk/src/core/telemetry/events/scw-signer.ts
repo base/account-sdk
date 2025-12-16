@@ -4,9 +4,11 @@ import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '.
 export const logHandshakeStarted = ({
   method,
   correlationId,
+  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
+  isEphemeral?: boolean;
 }) => {
   const config = store.subAccountsConfig.get();
   logEvent(
@@ -16,6 +18,7 @@ export const logHandshakeStarted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
+      isEphemeral,
       subAccountCreation: config?.creation,
       subAccountDefaultAccount: config?.defaultAccount,
       subAccountFunding: config?.funding,
@@ -28,10 +31,12 @@ export const logHandshakeError = ({
   method,
   correlationId,
   errorMessage,
+  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
   errorMessage: string;
+  isEphemeral?: boolean;
 }) => {
   const config = store.subAccountsConfig.get();
   logEvent(
@@ -42,6 +47,7 @@ export const logHandshakeError = ({
       method,
       correlationId,
       errorMessage,
+      isEphemeral,
       subAccountCreation: config?.creation,
       subAccountDefaultAccount: config?.defaultAccount,
       subAccountFunding: config?.funding,
@@ -53,9 +59,11 @@ export const logHandshakeError = ({
 export const logHandshakeCompleted = ({
   method,
   correlationId,
+  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
+  isEphemeral?: boolean;
 }) => {
   const config = store.subAccountsConfig.get();
   logEvent(
@@ -65,6 +73,7 @@ export const logHandshakeCompleted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
+      isEphemeral,
       subAccountCreation: config?.creation,
       subAccountDefaultAccount: config?.defaultAccount,
       subAccountFunding: config?.funding,
@@ -76,9 +85,11 @@ export const logHandshakeCompleted = ({
 export const logRequestStarted = ({
   method,
   correlationId,
+  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
+  isEphemeral?: boolean;
 }) => {
   const config = store.subAccountsConfig.get();
   logEvent(
@@ -88,6 +99,7 @@ export const logRequestStarted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
+      isEphemeral,
       subAccountCreation: config?.creation,
       subAccountDefaultAccount: config?.defaultAccount,
       subAccountFunding: config?.funding,
@@ -100,10 +112,12 @@ export const logRequestError = ({
   method,
   correlationId,
   errorMessage,
+  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
   errorMessage: string;
+  isEphemeral?: boolean;
 }) => {
   const config = store.subAccountsConfig.get();
   logEvent(
@@ -114,6 +128,7 @@ export const logRequestError = ({
       method,
       correlationId,
       errorMessage,
+      isEphemeral,
       subAccountCreation: config?.creation,
       subAccountDefaultAccount: config?.defaultAccount,
       subAccountFunding: config?.funding,
@@ -125,9 +140,11 @@ export const logRequestError = ({
 export const logRequestCompleted = ({
   method,
   correlationId,
+  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
+  isEphemeral?: boolean;
 }) => {
   const config = store.subAccountsConfig.get();
   logEvent(
@@ -137,6 +154,7 @@ export const logRequestCompleted = ({
       componentType: ComponentType.unknown,
       method,
       correlationId,
+      isEphemeral,
       subAccountCreation: config?.creation,
       subAccountDefaultAccount: config?.defaultAccount,
       subAccountFunding: config?.funding,

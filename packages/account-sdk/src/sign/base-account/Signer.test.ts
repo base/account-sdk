@@ -176,7 +176,8 @@ describe('Signer', () => {
     mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
 
     mockCallback = vi.fn();
-    mockKeyManager = new SCWKeyManager() as Mocked<SCWKeyManager>;
+    // Mock SCWKeyManager - the actual store instance doesn't matter since it's mocked
+    mockKeyManager = new SCWKeyManager(store) as Mocked<SCWKeyManager>;
     (SCWKeyManager as Mock).mockImplementation(() => mockKeyManager);
 
     (importKeyFromHexString as Mock).mockResolvedValue(mockCryptoKey);
