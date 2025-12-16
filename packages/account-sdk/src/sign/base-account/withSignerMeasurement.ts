@@ -21,15 +21,16 @@ type WithSignerMeasurementOptions = {
  * - Retrieving correlation ID (set by provider)
  * - Logging handshake start/completed/error
  *
- * @param options - Configuration options including isEphemeral flag
+ * @param getOptions - Getter function for options (evaluated at call time, not definition time)
  * @param handler - The actual handshake handler function
  * @returns Wrapped handler with measurement instrumentation
  */
 export function withHandshakeMeasurement(
-  options: WithSignerMeasurementOptions,
+  getOptions: () => WithSignerMeasurementOptions,
   handler: (args: RequestArguments) => Promise<void>
 ): (args: RequestArguments) => Promise<void> {
   return async (args: RequestArguments): Promise<void> => {
+    const options = getOptions();
     const correlationId = correlationIds.get(args);
     const measurementParams = {
       method: args.method,
@@ -61,15 +62,16 @@ export function withHandshakeMeasurement(
  * Note: This is different from the provider's withMeasurement - it doesn't
  * generate or clean up correlation IDs (the provider does that).
  *
- * @param options - Configuration options including isEphemeral flag
+ * @param getOptions - Getter function for options (evaluated at call time, not definition time)
  * @param handler - The actual request handler function
  * @returns Wrapped handler with measurement instrumentation
  */
 export function withSignerRequestMeasurement(
-  options: WithSignerMeasurementOptions,
+  getOptions: () => WithSignerMeasurementOptions,
   handler: <T>(args: RequestArguments) => Promise<T>
 ): <T>(args: RequestArguments) => Promise<T> {
   return async <T>(args: RequestArguments): Promise<T> => {
+    const options = getOptions();
     const correlationId = correlationIds.get(args);
     const measurementParams = {
       method: args.method,

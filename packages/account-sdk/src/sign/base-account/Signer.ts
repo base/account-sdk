@@ -69,14 +69,14 @@ type ConstructorOptions = {
 };
 
 export class Signer {
-  private readonly communicator: Communicator;
-  private readonly keyManager: SCWKeyManager;
-  private callback: ProviderEventCallback | null;
-  private readonly storeHelpers: ReturnType<typeof createStoreHelpers>;
-  private readonly storeInstance: StoreInstance;
+  protected readonly communicator: Communicator;
+  protected readonly keyManager: SCWKeyManager;
+  protected callback: ProviderEventCallback | null;
+  protected readonly storeHelpers: ReturnType<typeof createStoreHelpers>;
+  protected readonly storeInstance: StoreInstance;
 
-  private accounts: Address[];
-  private chain: SDKChain;
+  protected accounts: Address[];
+  protected chain: SDKChain;
 
   constructor(params: ConstructorOptions) {
     this.communicator = params.communicator;
@@ -85,8 +85,8 @@ export class Signer {
     this.storeInstance = params.storeInstance ?? store;
     // Reuse global store helpers if using global store (important for testing/mocking)
     // Otherwise create new helpers for the custom store instance
-    this.storeHelpers =
-      this.storeInstance === store ? store : createStoreHelpers(this.storeInstance);
+    const isGloabalStore = this.storeInstance === store;
+    this.storeHelpers = isGloabalStore ? store : createStoreHelpers(this.storeInstance);
     this.keyManager = new SCWKeyManager(this.storeInstance);
 
     const { account, chains } = this.storeInstance.getState();
@@ -106,8 +106,12 @@ export class Signer {
     return this.accounts.length > 0;
   }
 
+  protected get isEphemeral(): boolean {
+    return false;
+  }
+
   handshake = withHandshakeMeasurement(
-    { isEphemeral: false },
+    () => ({ isEphemeral: this.isEphemeral }),
     async (args: RequestArguments): Promise<void> => {
       const correlationId = correlationIds.get(args);
 
@@ -142,7 +146,7 @@ export class Signer {
   );
 
   request = withSignerRequestMeasurement(
-    { isEphemeral: false },
+    () => ({ isEphemeral: this.isEphemeral }),
     async <T>(request: RequestArguments): Promise<T> => {
       if (this.accounts.length === 0) {
         switch (request.method) {
@@ -323,7 +327,7 @@ export class Signer {
     }
   );
 
-  private async sendRequestToPopup(request: RequestArguments) {
+  protected async sendRequestToPopup(request: RequestArguments) {
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
     await this.communicator.waitForPopupLoaded?.();
@@ -334,7 +338,7 @@ export class Signer {
     return this.handleResponse(request, decrypted);
   }
 
-  private async handleResponse(request: RequestArguments, decrypted: RPCResponse) {
+  protected async handleResponse(request: RequestArguments, decrypted: RPCResponse) {
     const result = decrypted.result;
 
     if ('error' in result) throw result.error;
@@ -492,7 +496,7 @@ export class Signer {
     return filteredCapabilities;
   }
 
-  private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
+  protected async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
     const sharedSecret = await this.keyManager.getSharedSecret();
     if (!sharedSecret) {
       throw standardErrors.provider.unauthorized('No shared secret found when encrypting request');
@@ -511,7 +515,7 @@ export class Signer {
     return this.communicator.postRequestAndWaitForResponse(message);
   }
 
-  private async createRequestMessage(
+  protected async createRequestMessage(
     content: RPCRequestMessage['content'],
     correlationId: string | undefined
   ): Promise<RPCRequestMessage> {
@@ -526,7 +530,7 @@ export class Signer {
     };
   }
 
-  private async decryptResponseMessage(message: RPCResponseMessage): Promise<RPCResponse> {
+  protected async decryptResponseMessage(message: RPCResponseMessage): Promise<RPCResponse> {
     const content = message.content;
 
     // throw protocol level error
