@@ -38,6 +38,7 @@ const PAGES = [
   '/pay-playground',
   '/subscribe-playground',
   '/prolink-playground',
+  '/e2e-test',
 ];
 
 export function Layout({ children }: LayoutProps) {

@@ -218,3 +218,39 @@ yarn add @base-org/account
   1. Fork this repo and clone it
   1. From the root dir run `yarn install`
   1. From the root dir run `yarn dev`
+
+### Testing
+
+The SDK includes comprehensive test suites:
+
+#### E2E Test Playground
+
+An interactive playground for testing all SDK features end-to-end:
+
+```bash
+cd examples/testapp
+yarn dev
+
+# Navigate to http://localhost:3001/e2e-test
+# Or select "E2E Test" from the Pages menu
+```
+
+The E2E test playground provides:
+- 🧪 Comprehensive test coverage for all SDK features
+- 🎨 Beautiful, interactive UI
+- 📊 Real-time test statistics and results
+- 📝 Console logging for debugging
+- ✅ Visual pass/fail indicators
+
+See [E2E Test README](./examples/testapp/src/pages/e2e-test/README.md) for more details.
+
+#### Smoke Tests
+
+Quick validation tests for CI/automated testing:
+
+```bash
+yarn build:packages
+yarn test:smoke
+```
+
+See [Scripts README](./scripts/README.md) for more details on available tests.

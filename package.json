@@ -19,6 +19,7 @@
     "format": "yarn workspaces foreach -A -pt run format",
     "format:check": "yarn workspaces foreach -A -pt run format:check",
     "test": "yarn workspaces foreach -A -ipv run test",
+    "test:smoke": "node scripts/smoke-test.mjs",
     "typecheck": "yarn workspaces foreach -A -pt run typecheck"
   },
   "devDependencies": {
