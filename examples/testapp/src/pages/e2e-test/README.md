@@ -15,6 +15,41 @@ This E2E test playground provides an interactive interface for testing all major
 7. **Sub-account features** - Sub-account creation and management
 8. **Sign & Send** - Message signing and transaction sending
 
+## 🆕 Version Testing
+
+The E2E test playground now supports testing different versions of the SDK:
+
+- **Local Workspace**: Test your local development version (default)
+- **NPM Registry**: Test any published npm version of `@base-org/account`
+
+This allows you to:
+- ✅ Verify backward compatibility with older SDK versions
+- ✅ Test new features against the latest npm release
+- ✅ Compare behavior between local changes and published versions
+- ✅ Validate SDK upgrades before updating in your application
+
+### How to Switch Versions
+
+1. Navigate to the E2E Test page
+2. Use the **SDK Version Selector** at the top of the page
+3. Choose between "Local Workspace" or "NPM Registry"
+4. If using NPM, select a version from the dropdown (latest or specific version)
+5. Click "Load SDK" to load the selected version
+6. Run your tests
+
+The currently loaded version is always displayed in the header.
+
+## SDK Version Selection
+
+The playground header allows you to test against different SDK versions:
+
+- **Local Build**: Test against your local workspace build (default)
+- **NPM Package**: Test against published NPM versions
+  - Select from the dropdown to choose a specific version
+  - Includes "latest" and the 10 most recent published versions
+
+When switching between sources or versions, the SDK will automatically reload and reinitialize.
+
 ## Running the Tests
 
 ### Local Development
@@ -234,6 +269,33 @@ If you want to allow running the test individually, add a button in the UI (curr
 5. **Test on testnet** - Use Base Sepolia (84532) for testing to avoid real transactions
 
 ## Troubleshooting
+
+### SDK Not Loaded
+
+**Error:** Tests fail with "SDK not loaded"
+
+**Solution:** 
+1. Check that the SDK loaded successfully - look for the green version badge in the header
+2. If loading from npm, ensure you have internet connectivity
+3. Check the browser console for errors
+4. Try reloading the page
+
+### NPM Version Not Loading
+
+**Error:** "Failed to load SDK from npm"
+
+**Possible causes:**
+- No internet connection
+- CDN (unpkg.com) is blocked or unavailable
+- Invalid version number
+- Version doesn't exist on npm
+
+**Solution:**
+1. Check your internet connection
+2. Try loading `latest` version first
+3. Verify the version exists on npm: https://www.npmjs.com/package/@base-org/account
+4. Check browser console for detailed error messages
+5. Try switching back to "Local Workspace" to continue testing
 
 ### SDK Not Initialized
 
