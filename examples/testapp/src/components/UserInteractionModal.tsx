@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Modal,
   ModalBody,
@@ -72,8 +73,20 @@ export function UserInteractionModal({
             <Text fontWeight="bold" fontSize="lg" color="purple.500">
               {testName}
             </Text>
+            <Box
+              bg="purple.50"
+              borderWidth="2px"
+              borderColor="purple.400"
+              borderRadius="md"
+              p={4}
+              textAlign="center"
+            >
+              <Text fontWeight="bold" fontSize="xl" color="purple.600">
+                [Press Enter to Continue]
+              </Text>
+            </Box>
             <Text fontSize="sm" color="gray.600">
-              Click "Continue Test" to proceed, or "Cancel Test" to stop the test suite.
+              Or click "Continue Test" to proceed, or "Cancel Test" to stop the test suite.
             </Text>
           </VStack>
         </ModalBody>

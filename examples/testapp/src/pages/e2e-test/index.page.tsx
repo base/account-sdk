@@ -18,7 +18,6 @@ import {
     MenuList,
     Radio,
     RadioGroup,
-    Select,
     Stack,
     Stat,
     StatGroup,
@@ -41,7 +40,7 @@ import { createPublicClient, http, parseUnits, toHex } from 'viem';
 import { baseSepolia } from 'viem/chains';
 import { UserInteractionModal } from '../../components/UserInteractionModal';
 import { useUserInteraction } from '../../hooks/useUserInteraction';
-import { getAvailableVersions, loadSDK, type LoadedSDK, type SDKSource } from '../../utils/sdkLoader';
+import { loadSDK, type LoadedSDK, type SDKSource } from '../../utils/sdkLoader';
 
 // Test result types
 type TestStatus = 'pending' | 'running' | 'passed' | 'failed' | 'skipped';
@@ -64,11 +63,7 @@ interface HeaderProps {
   sdkVersion: string;
   sdkSource: SDKSource;
   onSourceChange: (source: SDKSource) => void;
-  onVersionChange: (version: string) => void;
-  availableVersions: string[];
-  npmVersion: string;
   isLoadingSDK?: boolean;
-  onLoadSDK?: () => void;
 }
 
 const PLAYGROUND_PAGES = [
@@ -87,11 +82,7 @@ function Header({
   sdkVersion,
   sdkSource,
   onSourceChange,
-  onVersionChange,
-  availableVersions,
-  npmVersion,
   isLoadingSDK,
-  onLoadSDK,
 }: HeaderProps) {
   return (
     <Box
@@ -140,44 +131,22 @@ function Header({
               value={sdkSource}
               onChange={(value) => onSourceChange(value as SDKSource)}
               size="sm"
+              isDisabled={isLoadingSDK}
             >
               <Stack direction="row" spacing={3}>
                 <Radio value="local" colorScheme="purple">
                   <Text fontSize="xs">Local</Text>
                 </Radio>
                 <Radio value="npm" colorScheme="purple">
-                  <Text fontSize="xs">NPM</Text>
+                  <Text fontSize="xs">NPM Latest</Text>
                 </Radio>
               </Stack>
             </RadioGroup>
 
-            {sdkSource === 'npm' && (
-              <>
-                <Select
-                  value={npmVersion}
-                  onChange={(e) => onVersionChange(e.target.value)}
-                  bg="gray.700"
-                  borderColor="gray.600"
-                  size="sm"
-                  w="120px"
-                  fontSize="xs"
-                >
-                  {availableVersions.map((version) => (
-                    <option key={version} value={version}>
-                      {version}
-                    </option>
-                  ))}
-                </Select>
-                <Button
-                  colorScheme="purple"
-                  size="sm"
-                  onClick={onLoadSDK}
-                  isLoading={isLoadingSDK}
-                  fontSize="xs"
-                >
-                  Load
-                </Button>
-              </>
+            {isLoadingSDK && (
+              <Badge colorScheme="blue" fontSize="xs" px={2} py={1}>
+                Loading...
+              </Badge>
             )}
 
             <Badge colorScheme="green" fontSize="xs" px={2} py={1}>
@@ -206,8 +175,6 @@ export default function E2ETestPage() {
 
   // SDK version management
   const [sdkSource, setSdkSource] = useState<SDKSource>('local');
-  const [npmVersion, setNpmVersion] = useState<string>('latest');
-  const [availableVersions, setAvailableVersions] = useState<string[]>(['latest']);
   const [loadedSDK, setLoadedSDK] = useState<LoadedSDK | null>(null);
   const [isLoadingSDK, setIsLoadingSDK] = useState(false);
   const [sdkLoadError, setSdkLoadError] = useState<string | null>(null);
@@ -342,7 +309,7 @@ export default function E2ETestPage() {
 
     let resultsText = '=== E2E Test Results ===\n\n';
     resultsText += `SDK Version: ${loadedSDK?.VERSION || 'Not Loaded'}\n`;
-    resultsText += `SDK Source: ${sdkSource}${sdkSource === 'npm' ? ` (v${npmVersion})` : ''}\n`;
+    resultsText += `SDK Source: ${sdkSource === 'npm' ? 'NPM Latest' : 'Local Workspace'}\n`;
     resultsText += `Timestamp: ${new Date().toISOString()}\n\n`;
     resultsText += `Summary:\n`;
     resultsText += `  Total: ${totalTests}\n`;
@@ -431,8 +398,9 @@ export default function E2ETestPage() {
           
           // Show SDK initialization test
           if (initTest) {
-            const icon = initTest.status === 'passed' ? ':check:' : ':failure_icon:';
-            resultsText += `${icon} ${initTest.name}\n`;
+            // Skip showing initialization test in abbreviated results
+            // const icon = initTest.status === 'passed' ? ':check:' : ':failure_icon:';
+            // resultsText += `${icon} ${initTest.name}\n`;
           }
           
           // Collapse export tests
@@ -441,7 +409,8 @@ export default function E2ETestPage() {
             const anyExportsFailed = exportTests.some((t) => t.status === 'failed');
             
             if (allExportsPassed) {
-              resultsText += `:check: All required exports are available\n`;
+              // Skip showing exports summary in abbreviated results
+              // resultsText += `:check: All required exports are available\n`;
             } else if (anyExportsFailed) {
               // Show which exports failed
               exportTests.forEach((test) => {
@@ -466,7 +435,8 @@ export default function E2ETestPage() {
             const anyListenersFailed = listenerTests.some((t) => t.status === 'failed');
             
             if (allListenersPassed) {
-              resultsText += `:check: Provider event listeners\n`;
+              // Skip showing listeners summary in abbreviated results
+              // resultsText += `:check: Provider event listeners\n`;
             } else if (anyListenersFailed) {
               // Show which listeners failed
               listenerTests.forEach((test) => {
@@ -525,7 +495,7 @@ export default function E2ETestPage() {
 
     let resultsText = `=== ${categoryName} Test Results ===\n\n`;
     resultsText += `SDK Version: ${loadedSDK?.VERSION || 'Not Loaded'}\n`;
-    resultsText += `SDK Source: ${sdkSource}${sdkSource === 'npm' ? ` (v${npmVersion})` : ''}\n`;
+    resultsText += `SDK Source: ${sdkSource === 'npm' ? 'NPM Latest' : 'Local Workspace'}\n`;
     resultsText += `Timestamp: ${new Date().toISOString()}\n\n`;
     resultsText += `Summary:\n`;
     resultsText += `  Total: ${category.tests.length}\n`;
@@ -588,22 +558,17 @@ export default function E2ETestPage() {
     }
   };
 
-  // Load available npm versions on mount
-  useEffect(() => {
-    getAvailableVersions().then(setAvailableVersions);
-  }, []);
-
-  // Load SDK when source or version changes
+  // Load SDK based on source
   const handleLoadSDK = async () => {
     setIsLoadingSDK(true);
     setSdkLoadError(null);
     
     try {
-      addLog('info', `Loading SDK from ${sdkSource}${sdkSource === 'npm' ? ` (v${npmVersion})` : ''}...`);
+      const sourceLabel = sdkSource === 'npm' ? 'NPM Latest' : 'Local Workspace';
+      addLog('info', `Loading SDK from ${sourceLabel}...`);
       
       const sdk = await loadSDK({
         source: sdkSource,
-        version: sdkSource === 'npm' ? npmVersion : undefined,
       });
       
       setLoadedSDK(sdk);
@@ -621,7 +586,7 @@ export default function E2ETestPage() {
       
       toast({
         title: 'SDK Loaded',
-        description: `${sdkSource === 'npm' ? 'NPM' : 'Local'} version ${sdk.VERSION}`,
+        description: `${sourceLabel} (v${sdk.VERSION})`,
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -648,12 +613,12 @@ export default function E2ETestPage() {
     handleLoadSDK();
   }, []);
 
-  // Reload SDK when source or version changes
+  // Reload SDK when source changes
   useEffect(() => {
     if (loadedSDK) {
       handleLoadSDK();
     }
-  }, [sdkSource, npmVersion]);
+  }, [sdkSource]);
 
   // Helper to update test status
   const updateTestStatus = (
@@ -2199,6 +2164,34 @@ export default function E2ETestPage() {
     );
   };
 
+  // Helper to ensure connection is established
+  const ensureConnection = async () => {
+    if (!provider) {
+      addLog('error', 'Provider not available. Please initialize SDK first.');
+      throw new Error('Provider not available');
+    }
+
+    // Check if already connected
+    const accounts = await provider.request({
+      method: 'eth_accounts',
+      params: [],
+    });
+
+    if (accounts && accounts.length > 0) {
+      addLog('info', `Already connected to: ${accounts[0]}`);
+      setCurrentAccount(accounts[0]);
+      setConnected(true);
+      return;
+    }
+
+    // Not connected, establish connection
+    addLog('info', 'No connection found. Establishing connection...');
+    await testConnectWallet();
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await testGetAccounts();
+    await testGetChainId();
+  };
+
   // Run specific test section
   const runTestSection = async (sectionName: string) => {
     setRunningSectionName(sectionName);
@@ -2213,6 +2206,18 @@ export default function E2ETestPage() {
     addLog('info', '');
 
     try {
+      // Sections that require a wallet connection
+      const requiresConnection = [
+        'Sign & Send',
+        'Sub-Account Features',
+      ];
+
+      // Ensure connection is established for sections that need it
+      if (requiresConnection.includes(sectionName)) {
+        await ensureConnection();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
       switch (sectionName) {
         case 'SDK Initialization & Exports':
           await testSDKInitialization();
@@ -2223,8 +2228,6 @@ export default function E2ETestPage() {
           await new Promise((resolve) => setTimeout(resolve, 500));
           await testGetAccounts();
           await testGetChainId();
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          await testSignMessage();
           break;
         
         case 'Payment Features':
@@ -2494,10 +2497,6 @@ export default function E2ETestPage() {
     setSdkSource(source);
   };
 
-  const handleVersionChange = (version: string) => {
-    setNpmVersion(version);
-  };
-
   return (
     <>
       <UserInteractionModal
@@ -2510,11 +2509,7 @@ export default function E2ETestPage() {
         sdkVersion={loadedSDK?.VERSION || 'Not Loaded'}
         sdkSource={sdkSource}
         onSourceChange={handleSourceChange}
-        onVersionChange={handleVersionChange}
-        availableVersions={availableVersions}
-        npmVersion={npmVersion}
         isLoadingSDK={isLoadingSDK}
-        onLoadSDK={handleLoadSDK}
       />
       <Container maxW="container.xl" py={8}>
         <VStack spacing={6} align="stretch">
