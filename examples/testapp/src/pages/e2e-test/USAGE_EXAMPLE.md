@@ -59,14 +59,13 @@ const testNewWalletFeature = async () => {
 
 Add `requestUserInteraction()` before any operation that:
 - Opens a new window or popup
-- Makes a request to SCW (Smart Contract Wallet)
+- Makes a request to SCW (Smart Contract Wallet) that opens a UI
 - **EXCEPT** for the very first test with an external request (e.g., `testConnectWallet`), which can use the "Run All Tests" button click as the user gesture
 - Uses methods like:
   - `eth_requestAccounts`
   - `personal_sign`
   - `eth_signTypedData_v4`
-  - `wallet_sendCalls`
-  - `wallet_prepareCalls`
+  - `wallet_sendCalls` (opens popup to send calls)
   - Any SDK method that opens the SCW interface
 
 ## When NOT to Use
@@ -76,6 +75,8 @@ Do NOT add `requestUserInteraction()` for:
 - Background operations that don't open popups
 - Tests that don't interact with the wallet UI
 - Status check operations (`getPaymentStatus`, `getPermissionStatus`)
+- `wallet_prepareCalls` (internal SDK operation, no popup)
+- **Subaccount operations** (`personal_sign` with subaccount, `wallet_sendCalls` from subaccount) - these are signed locally without popups
 
 ## Integration Checklist
 

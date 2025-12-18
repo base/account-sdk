@@ -37,7 +37,13 @@ The following tests require user interaction and will show the modal:
 - `testSignMessage()` - Signs a message with personal_sign
 - `testSignTypedData()` - Signs typed data with eth_signTypedData_v4
 - `testWalletSendCalls()` - Sends calls via wallet_sendCalls
-- `testWalletPrepareCalls()` - Prepares calls via wallet_prepareCalls
+
+**Note:** The following tests do NOT require user interaction:
+- `testWalletPrepareCalls()` - Only prepares calls internally without opening a popup
+- `testSignWithSubAccount()` - Subaccount signing is done locally without a popup
+- `testSendCallsFromSubAccount()` - Subaccount transactions are signed locally without a popup
+
+Subaccount operations don't require user interaction because subaccounts are controlled by the primary account and can sign transactions locally.
 
 ### Usage
 

@@ -2,34 +2,10 @@
  * Utility to dynamically load SDK from npm or use local workspace version
  */
 
-export type SDKSource = 'local' | 'npm';
+import type { LoadedSDK, SDKLoaderConfig, SDKSource } from '../pages/e2e-test/types';
 
-export interface SDKLoaderConfig {
-  source: SDKSource;
-}
-
-export interface LoadedSDK {
-  base: any;
-  createBaseAccountSDK: any;
-  createProlinkUrl: any;
-  decodeProlink: any;
-  encodeProlink: any;
-  getCryptoKeyAccount?: any; // Only available in local SDK
-  VERSION: string;
-  CHAIN_IDS: any;
-  TOKENS: any;
-  getPaymentStatus: any;
-  getSubscriptionStatus: any;
-  spendPermission: {
-    fetchPermission: any;
-    fetchPermissions: any;
-    getHash: any;
-    getPermissionStatus: any;
-    prepareRevokeCallData: any;
-    prepareSpendCallData: any;
-    requestSpendPermission: any;
-  };
-}
+// Re-export types for backward compatibility
+export type { LoadedSDK, SDKLoaderConfig, SDKSource };
 
 /**
  * Load SDK from npm package (published version)
@@ -38,9 +14,9 @@ async function loadFromNpm(): Promise<LoadedSDK> {
   console.log('[SDK Loader] Loading from npm (@base-org/account-npm)...');
   
   // Dynamic import of npm package (installed as @base-org/account-npm alias)
-  // @ts-expect-error - TypeScript doesn't recognize yarn aliases, but package is installed
+  // @ts-expect-error - Package is available at runtime via yarn alias
   const mainModule = await import('@base-org/account-npm');
-  // @ts-expect-error - TypeScript doesn't recognize yarn aliases, but package is installed
+  // @ts-expect-error - Package is available at runtime via yarn alias
   const spendPermissionModule = await import('@base-org/account-npm/spend-permission');
   
   console.log('[SDK Loader] NPM module loaded');
@@ -67,7 +43,7 @@ async function loadFromNpm(): Promise<LoadedSDK> {
       prepareSpendCallData: spendPermissionModule.prepareSpendCallData,
       requestSpendPermission: spendPermissionModule.requestSpendPermission,
     },
-  };
+  } as unknown as LoadedSDK;
 }
 
 /**
@@ -105,7 +81,7 @@ async function loadFromLocal(): Promise<LoadedSDK> {
       prepareSpendCallData: spendPermissionModule.prepareSpendCallData,
       requestSpendPermission: spendPermissionModule.requestSpendPermission,
     },
-  };
+  } as unknown as LoadedSDK;
 }
 
 /**
