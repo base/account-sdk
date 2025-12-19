@@ -10,6 +10,7 @@ import { useCallback, useRef } from 'react';
 import { TEST_DELAYS } from '../../../utils/e2e-test-config/test-config';
 import { categoryRequiresConnection, getTestsByCategory, type TestFn } from '../tests';
 import type { TestContext, TestHandlers } from '../types';
+import { processTestResult } from './testResultHandlers';
 import type { UseConnectionStateReturn } from './useConnectionState';
 import type { UseTestStateReturn } from './useTestState';
 
@@ -127,126 +128,19 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       try {
         const result = await testFn(handlers, context);
         
-        // Update refs and test details based on test results and test identity
+        // Process test result using centralized handler
         if (result) {
-          // Payment features
-          if (testName === 'pay() function' && result.id) {
-            paymentIdRef.current = result.id;
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Payment ID: ${result.id}`);
-          }
-          
-          // Subscription features
-          if (testName === 'subscribe() function' && result.id) {
-            subscriptionIdRef.current = result.id;
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Subscription ID: ${result.id}`);
-          }
-          
-          if (testName === 'base.subscription.getStatus()' && result.details) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, result.details);
-          }
-          
-          if (testName === 'prepareCharge() with amount' && Array.isArray(result)) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Generated ${result.length} call(s)`);
-          }
-          
-          if (testName === 'prepareCharge() max-remaining-charge' && Array.isArray(result)) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Generated ${result.length} call(s)`);
-          }
-          
-          // Sub-account features
-          if (testName === 'wallet_addSubAccount' && result.address) {
-            subAccountAddressRef.current = result.address;
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Address: ${result.address}`);
-          }
-          
-          if (testName === 'wallet_getSubAccounts' && result.subAccounts) {
-            const addresses = result.addresses || result.subAccounts.map((sa: any) => sa.address);
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, addresses.join(', '));
-          }
-          
-          if (testName === 'wallet_sendCalls (sub-account)' && result.txHash) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Tx: ${result.txHash}`);
-          }
-          
-          if (testName === 'personal_sign (sub-account)' && result.isValid !== undefined) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Verified: ${result.isValid}`);
-          }
-          
-          // Spend permission features
-          if (testName === 'spendPermission.requestSpendPermission()' && result.permissionHash) {
-            permissionHashRef.current = result.permissionHash;
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Hash: ${result.permissionHash}`);
-          }
-          
-          if (testName === 'spendPermission.getPermissionStatus()' && result.remainingSpend) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Remaining: ${result.remainingSpend}`);
-          }
-          
-          if (testName === 'spendPermission.fetchPermission()' && result.permissionHash) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Hash: ${result.permissionHash}`);
-          }
-          
-          if (testName === 'spendPermission.fetchPermissions()' && Array.isArray(result)) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Found ${result.length} permission(s)`);
-          }
-          
-          if (testName === 'spendPermission.prepareSpendCallData()' && Array.isArray(result)) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Generated ${result.length} call(s)`);
-          }
-          
-          if (testName === 'spendPermission.prepareRevokeCallData()' && result.to) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `To: ${result.to}`);
-          }
-          
-          // Wallet connection
-          if (testName === 'Connect wallet' && Array.isArray(result) && result.length > 0) {
-            connectionState.setCurrentAccount(result[0]);
-            connectionState.setConnected(true);
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Connected: ${result[0]}`);
-          }
-          
-          if (testName === 'Get accounts' && Array.isArray(result)) {
-            if (result.length > 0 && !connectionState.connected) {
-              connectionState.setCurrentAccount(result[0]);
-              connectionState.setConnected(true);
-            }
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, result.join(', '));
-          }
-          
-          if (testName === 'Get chain ID' && typeof result === 'number') {
-            connectionState.setChainId(result);
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Chain ID: ${result}`);
-          }
-          
-          if (testName === 'Sign message (personal_sign)' && typeof result === 'string') {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Sig: ${result}`);
-          }
-          
-          // Sign & Send
-          if (testName === 'eth_signTypedData_v4' && typeof result === 'string') {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Sig: ${result}`);
-          }
-          
-          if (testName === 'wallet_sendCalls') {
-            let hash: string | undefined;
-            if (typeof result === 'string') {
-              hash = result;
-            } else if (typeof result === 'object' && result !== null && 'id' in result) {
-              hash = result.id;
-            }
-            if (hash) {
-              testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Hash: ${hash}`);
-            }
-          }
-          
-          // Prolink features
-          if (testName === 'encodeProlink()' && typeof result === 'string') {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Encoded: ${result}`);
-          }
-          
-          if (testName === 'createProlinkUrl()' && typeof result === 'string') {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `URL: ${result}`);
-          }
+          processTestResult({
+            testCategory,
+            testName,
+            result,
+            testState,
+            connectionState,
+            paymentIdRef,
+            subscriptionIdRef,
+            permissionHashRef,
+            subAccountAddressRef,
+          });
         }
       } catch (error) {
         // Test functions handle their own errors, but we catch here to prevent
@@ -277,6 +171,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
 
     if (accounts && accounts.length > 0) {
       connectionState.setCurrentAccount(accounts[0]);
+      connectionState.setAllAccounts(accounts);
       connectionState.setConnected(true);
       return;
     }

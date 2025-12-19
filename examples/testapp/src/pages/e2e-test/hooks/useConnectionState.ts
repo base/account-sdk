@@ -15,11 +15,13 @@ export interface UseConnectionStateReturn {
   // State
   connected: boolean;
   currentAccount: string | null;
+  allAccounts: string[];
   chainId: number | null;
   
   // Actions
   setConnected: (connected: boolean) => void;
   setCurrentAccount: (account: string | null) => void;
+  setAllAccounts: (accounts: string[]) => void;
   setChainId: (chainId: number | null) => void;
   
   // Helpers
@@ -33,6 +35,7 @@ export interface UseConnectionStateReturn {
 export function useConnectionState(): UseConnectionStateReturn {
   const [connected, setConnected] = useState(false);
   const [currentAccount, setCurrentAccount] = useState<string | null>(null);
+  const [allAccounts, setAllAccounts] = useState<string[]>([]);
   const [chainId, setChainId] = useState<number | null>(null);
 
   /**
@@ -54,9 +57,11 @@ export function useConnectionState(): UseConnectionStateReturn {
 
         if (accounts && accounts.length > 0) {
           setCurrentAccount(accounts[0]);
+          setAllAccounts(accounts);
           setConnected(true);
         } else {
           setCurrentAccount(null);
+          setAllAccounts([]);
           setConnected(false);
         }
 
@@ -78,11 +83,13 @@ export function useConnectionState(): UseConnectionStateReturn {
     // State
     connected,
     currentAccount,
+    allAccounts,
     chainId,
     
     // Actions
     setConnected,
     setCurrentAccount,
+    setAllAccounts,
     setChainId,
     
     // Helpers

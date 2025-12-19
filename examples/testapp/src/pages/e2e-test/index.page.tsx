@@ -1,4 +1,4 @@
-import { ChevronDownIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, CopyIcon } from '@chakra-ui/icons';
 import {
     Badge,
     Box,
@@ -9,7 +9,6 @@ import {
     Code,
     Container,
     Flex,
-    Grid,
     Heading,
     Link,
     Menu,
@@ -169,7 +168,7 @@ export default function E2ETestPage() {
   } = useSDKState();
 
   const connectionState = useConnectionState();
-  const { connected, currentAccount, chainId } = connectionState;
+  const { connected, currentAccount, allAccounts, chainId } = connectionState;
 
   // Test runner hook - handles all test execution logic
   const { runAllTests, runTestSection } = useTestRunner({
@@ -329,24 +328,39 @@ export default function E2ETestPage() {
               </Flex>
 
               {connected && currentAccount && (
-                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                <VStack align="stretch" spacing={4}>
                   <Box>
                     <Text fontSize="sm" color="gray.600" mb={2}>
-                      Connected Account
+                      Connected Account{allAccounts.length > 1 ? 's' : ''}
                     </Text>
-                    <Code fontSize="xs" p={2} borderRadius="md" display="block">
-                      {currentAccount}
-                    </Code>
+                    <VStack align="stretch" spacing={2}>
+                      {allAccounts.map((account, index) => (
+                        <Code 
+                          key={account} 
+                          fontSize="xs" 
+                          p={2} 
+                          borderRadius="md" 
+                          display="block"
+                          bg={index === 0 ? 'blue.50' : undefined}
+                          borderWidth={index === 0 ? '2px' : undefined}
+                          borderColor={index === 0 ? 'blue.300' : undefined}
+                        >
+                          {account}
+                        </Code>
+                      ))}
+                    </VStack>
                   </Box>
                   <Box>
-                    <Text fontSize="sm" color="gray.600" mb={2}>
-                      Chain ID
+                    <Text fontSize="sm" color="gray.600" mb={1}>
+                      Active Network Chain ID
                     </Text>
-                    <Badge colorScheme="blue" fontSize="md" p={2}>
-                      {chainId || 'Unknown'}
-                    </Badge>
+                    <Flex align="center" gap={2}>
+                      <Badge colorScheme="blue" fontSize="md" p={2}>
+                        {chainId || 'Unknown'}
+                      </Badge>
+                    </Flex>
                   </Box>
-                </Grid>
+                </VStack>
               )}
 
               {!connected && (
@@ -396,8 +410,9 @@ export default function E2ETestPage() {
                     variant="outline"
                     onClick={copyAbbreviatedResults}
                     isDisabled={testCategories.reduce((acc, cat) => acc + cat.tests.length, 0) === 0}
+                    leftIcon={<CopyIcon />}
                   >
-                    📋 Copy Short
+                    Copy Short
                   </Button>
                 </Tooltip>
                 <Tooltip label="Copy detailed test results with failure reasons" placement="left">
@@ -406,8 +421,9 @@ export default function E2ETestPage() {
                     colorScheme="purple"
                     onClick={copyTestResults}
                     isDisabled={testCategories.reduce((acc, cat) => acc + cat.tests.length, 0) === 0}
+                    leftIcon={<CopyIcon />}
                   >
-                    📋 Copy Full
+                    Copy Full
                   </Button>
                 </Tooltip>
               </Flex>
@@ -481,7 +497,7 @@ export default function E2ETestPage() {
                               onClick={() => copySectionResults(category.name)}
                               isDisabled={category.tests.length === 0}
                             >
-                              📋
+                              <CopyIcon />
                             </Button>
                           </Tooltip>
                           <Button
