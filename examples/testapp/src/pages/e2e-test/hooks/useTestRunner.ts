@@ -60,13 +60,18 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
 
   const toast = useToast();
   
-  // Track whether we're running an individual section (skip modal) vs full suite (show modal)
-  const isRunningSectionRef = useRef(false);
+  // Track whether we've shown the first modal for the current test run
+  // The first modal should be skipped since the user's button click provides the gesture
+  const hasShownFirstModalRef = useRef(false);
 
   /**
    * Build test context from current state
    */
   const buildTestContext = useCallback((): TestContext => {
+    // Skip the first modal since the user's button click provides the gesture
+    // After that, show modals for subsequent user interactions
+    const skipModal = !hasShownFirstModalRef.current;
+    
     return {
       provider,
       loadedSDK,
@@ -77,7 +82,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       subscriptionId: subscriptionIdRef.current,
       permissionHash: permissionHashRef.current,
       subAccountAddress: subAccountAddressRef.current,
-      skipModal: isRunningSectionRef.current,
+      skipModal,
     };
   }, [
     provider,
@@ -102,13 +107,21 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       // Track which test ran by wrapping updateTestStatus
       let testCategory = '';
       let testName = '';
+      let requiresUserInteraction = false;
+      
       const handlers: TestHandlers = {
         updateTestStatus: (category, name, status, error, details, duration) => {
           testCategory = category;
           testName = name;
           testState.updateTestStatus(category, name, status, error, details, duration);
         },
-        requestUserInteraction,
+        requestUserInteraction: async (testName: string, skipModal?: boolean) => {
+          requiresUserInteraction = true;
+          await requestUserInteraction(testName, skipModal);
+          // After the first modal opportunity (whether shown or skipped), 
+          // mark that we've passed it so subsequent modals will be shown
+          hasShownFirstModalRef.current = true;
+        },
       };
       
       try {
@@ -169,8 +182,8 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
             testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Remaining: ${result.remainingSpend}`);
           }
           
-          if (testName === 'spendPermission.fetchPermission()' && result.chainId) {
-            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Chain ID: ${result.chainId}`);
+          if (testName === 'spendPermission.fetchPermission()' && result.permissionHash) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Hash: ${result.permissionHash}`);
           }
           
           if (testName === 'spendPermission.fetchPermissions()' && Array.isArray(result)) {
@@ -212,6 +225,18 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
           // Sign & Send
           if (testName === 'eth_signTypedData_v4' && typeof result === 'string') {
             testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Sig: ${result}`);
+          }
+          
+          if (testName === 'wallet_sendCalls') {
+            let hash: string | undefined;
+            if (typeof result === 'string') {
+              hash = result;
+            } else if (typeof result === 'object' && result !== null && 'id' in result) {
+              hash = result.id;
+            }
+            if (hash) {
+              testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Hash: ${hash}`);
+            }
           }
           
           // Prolink features
@@ -272,8 +297,9 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       testState.setRunningSectionName(sectionName);
       testState.resetCategory(sectionName);
 
-      // Skip user interaction modal for individual sections since the button click provides the gesture
-      isRunningSectionRef.current = true;
+      // Reset modal tracking for this test run
+      // The first modal will be skipped since the button click provides the gesture
+      hasShownFirstModalRef.current = false;
 
       try {
         // Check if section requires connection
@@ -318,7 +344,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
         }
       } finally {
         testState.setRunningSectionName(null);
-        isRunningSectionRef.current = false;
       }
     },
     [testState, toast, ensureConnectionForTests, executeTest]
@@ -331,8 +356,9 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     testState.startTests();
     testState.resetAllCategories();
 
-    // Don't skip modal for full test suite - keep user interaction prompts
-    isRunningSectionRef.current = false;
+    // Reset modal tracking for this test run
+    // The first modal will be skipped since the button click provides the gesture
+    hasShownFirstModalRef.current = false;
 
     try {
       // Execute tests following the optimized sequence from the original implementation
