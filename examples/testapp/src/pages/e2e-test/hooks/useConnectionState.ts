@@ -5,7 +5,7 @@
  * Provides helper functions for ensuring connection is established.
  */
 
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 // ============================================================================
 // Types
@@ -23,11 +23,6 @@ export interface UseConnectionStateReturn {
   setChainId: (chainId: number | null) => void;
   
   // Helpers
-  ensureConnection: (
-    provider: any,
-    addLog: (type: string, message: string) => void,
-    connectWalletFn: () => Promise<void>
-  ) => Promise<void>;
   updateConnectionFromProvider: (provider: any) => Promise<void>;
 }
 
@@ -39,41 +34,6 @@ export function useConnectionState(): UseConnectionStateReturn {
   const [connected, setConnected] = useState(false);
   const [currentAccount, setCurrentAccount] = useState<string | null>(null);
   const [chainId, setChainId] = useState<number | null>(null);
-
-  /**
-   * Ensure wallet connection is established
-   * If not connected, attempts to connect via the provided connectWalletFn
-   */
-  const ensureConnection = useCallback(
-    async (
-      provider: any,
-      addLog: (type: string, message: string) => void,
-      connectWalletFn: () => Promise<void>
-    ) => {
-      if (!provider) {
-        addLog('error', 'Provider not available. Please initialize SDK first.');
-        throw new Error('Provider not available');
-      }
-
-      // Check if already connected
-      const accounts = await provider.request({
-        method: 'eth_accounts',
-        params: [],
-      });
-
-      if (accounts && accounts.length > 0) {
-        addLog('info', `Already connected to: ${accounts[0]}`);
-        setCurrentAccount(accounts[0]);
-        setConnected(true);
-        return;
-      }
-
-      // Not connected, establish connection
-      addLog('info', 'No connection found. Establishing connection...');
-      await connectWalletFn();
-    },
-    []
-  );
 
   /**
    * Update connection state from provider
@@ -126,7 +86,6 @@ export function useConnectionState(): UseConnectionStateReturn {
     setChainId,
     
     // Helpers
-    ensureConnection,
     updateConnectionFromProvider,
   };
 }

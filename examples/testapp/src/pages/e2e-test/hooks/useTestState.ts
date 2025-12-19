@@ -1,40 +1,32 @@
 /**
  * Hook for managing test execution state
  * 
- * Consolidates test categories, test results, console logs, and running section tracking
+ * Consolidates test categories, test results, and running section tracking
  * into a single cohesive state manager using reducer pattern.
  */
 
 import { useReducer, useCallback } from 'react';
-import type { TestCategory, TestResult, TestResults, TestStatus } from '../types';
+import type { TestCategory, TestResults, TestStatus } from '../types';
 import { TEST_CATEGORIES } from '../../../utils/e2e-test-config';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export interface ConsoleLog {
-  type: 'info' | 'success' | 'error' | 'warning';
-  message: string;
-}
-
 interface TestState {
   categories: TestCategory[];
   results: TestResults;
-  logs: ConsoleLog[];
   runningSectionName: string | null;
   isRunningTests: boolean;
 }
 
 type TestAction =
   | { type: 'UPDATE_TEST_STATUS'; payload: { category: string; testName: string; status: TestStatus; error?: string; details?: string; duration?: number } }
-  | { type: 'ADD_LOG'; payload: ConsoleLog }
   | { type: 'RESET_CATEGORY'; payload: string }
   | { type: 'RESET_ALL_CATEGORIES' }
   | { type: 'START_TESTS' }
   | { type: 'STOP_TESTS' }
   | { type: 'SET_RUNNING_SECTION'; payload: string | null }
-  | { type: 'CLEAR_LOGS' }
   | { type: 'TOGGLE_CATEGORY_EXPANDED'; payload: string };
 
 // ============================================================================
@@ -55,7 +47,6 @@ const initialState: TestState = {
     failed: 0,
     skipped: 0,
   },
-  logs: [],
   runningSectionName: null,
   isRunningTests: false,
 };
@@ -120,12 +111,6 @@ function testStateReducer(state: TestState, action: TestAction): TestState {
       };
     }
 
-    case 'ADD_LOG':
-      return {
-        ...state,
-        logs: [...state.logs, action.payload],
-      };
-
     case 'RESET_CATEGORY': {
       const updatedCategories = state.categories.map((cat) =>
         cat.name === action.payload ? { ...cat, tests: [] } : cat
@@ -166,12 +151,6 @@ function testStateReducer(state: TestState, action: TestAction): TestState {
         runningSectionName: action.payload,
       };
 
-    case 'CLEAR_LOGS':
-      return {
-        ...state,
-        logs: [],
-      };
-
     case 'TOGGLE_CATEGORY_EXPANDED': {
       const updatedCategories = state.categories.map((cat) =>
         cat.name === action.payload ? { ...cat, expanded: !cat.expanded } : cat
@@ -195,7 +174,6 @@ export interface UseTestStateReturn {
   // State
   testCategories: TestCategory[];
   testResults: TestResults;
-  consoleLogs: ConsoleLog[];
   runningSectionName: string | null;
   isRunningTests: boolean;
   
@@ -208,13 +186,11 @@ export interface UseTestStateReturn {
     details?: string,
     duration?: number
   ) => void;
-  addLog: (type: ConsoleLog['type'], message: string) => void;
   resetCategory: (categoryName: string) => void;
   resetAllCategories: () => void;
   startTests: () => void;
   stopTests: () => void;
   setRunningSectionName: (name: string | null) => void;
-  clearLogs: () => void;
   toggleCategoryExpanded: (categoryName: string) => void;
 }
 
@@ -238,10 +214,6 @@ export function useTestState(): UseTestStateReturn {
     []
   );
 
-  const addLog = useCallback((type: ConsoleLog['type'], message: string) => {
-    dispatch({ type: 'ADD_LOG', payload: { type, message } });
-  }, []);
-
   const resetCategory = useCallback((categoryName: string) => {
     dispatch({ type: 'RESET_CATEGORY', payload: categoryName });
   }, []);
@@ -262,10 +234,6 @@ export function useTestState(): UseTestStateReturn {
     dispatch({ type: 'SET_RUNNING_SECTION', payload: name });
   }, []);
 
-  const clearLogs = useCallback(() => {
-    dispatch({ type: 'CLEAR_LOGS' });
-  }, []);
-
   const toggleCategoryExpanded = useCallback((categoryName: string) => {
     dispatch({ type: 'TOGGLE_CATEGORY_EXPANDED', payload: categoryName });
   }, []);
@@ -274,19 +242,16 @@ export function useTestState(): UseTestStateReturn {
     // State
     testCategories: state.categories,
     testResults: state.results,
-    consoleLogs: state.logs,
     runningSectionName: state.runningSectionName,
     isRunningTests: state.isRunningTests,
     
     // Actions
     updateTestStatus,
-    addLog,
     resetCategory,
     resetAllCategories,
     startTests,
     stopTests,
     setRunningSectionName,
-    clearLogs,
     toggleCategoryExpanded,
   };
 }

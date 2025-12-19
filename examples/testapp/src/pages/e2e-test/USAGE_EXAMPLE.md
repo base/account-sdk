@@ -17,7 +17,6 @@ const testNewWalletFeature = async () => {
 
   try {
     updateTestStatus(category, 'New Feature Test', 'running');
-    addLog('info', 'Testing new wallet feature...');
     
     // 🔥 ADD THIS LINE before any action that opens a popup
     await requestUserInteraction('New Feature Test');
@@ -36,7 +35,6 @@ const testNewWalletFeature = async () => {
       undefined,
       `Result: ${result}`
     );
-    addLog('success', 'New feature test passed!');
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -44,13 +42,11 @@ const testNewWalletFeature = async () => {
     // 🔥 ADD THIS ERROR HANDLING for test cancellation
     if (errorMessage === 'Test cancelled by user') {
       updateTestStatus(category, 'New Feature Test', 'skipped', 'Cancelled by user');
-      addLog('warning', 'Test cancelled by user');
       throw error; // Re-throw to stop test execution
     }
     
     // Handle other errors
     updateTestStatus(category, 'New Feature Test', 'failed', errorMessage);
-    addLog('error', `New feature test failed: ${errorMessage}`);
   }
 };
 ```
@@ -87,7 +83,6 @@ When adding a new test with user interaction:
 - [ ] Mark test as 'skipped' when cancelled
 - [ ] Re-throw the error to stop the test suite
 - [ ] Add the test to the `runAllTests()` function with proper sequencing
-- [ ] Add appropriate logging messages
 
 ## Testing Your Implementation
 
@@ -163,5 +158,4 @@ const result2 = await secondMethod();
 2. **Use descriptive names**: The test name should clearly describe what's about to happen
 3. **Handle cancellation**: Always add proper error handling for user cancellation
 4. **Add delays between tests**: Use `setTimeout` between tests to avoid overwhelming the user
-5. **Log appropriately**: Add info logs before and success/error logs after the action
 

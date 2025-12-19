@@ -34,8 +34,6 @@ export async function testSDKInitialization(
       // Update provider in context (this is a side effect but necessary for subsequent tests)
       const provider = sdkInstance.getProvider();
       
-      handlers.addLog('success', `SDK initialized successfully (v${ctx.loadedSDK.VERSION})`);
-      
       return { sdkInstance, provider };
     },
     handlers,

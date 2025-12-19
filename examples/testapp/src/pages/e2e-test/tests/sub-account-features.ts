@@ -25,7 +25,6 @@ export async function testCreateSubAccount(
       'skipped',
       'getCryptoKeyAccount not available (local SDK only)'
     );
-    handlers.addLog('warning', 'Sub-account creation requires local SDK');
     return undefined;
   }
 
@@ -38,10 +37,7 @@ export async function testCreateSubAccount(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Creating sub-account...');
-      
       // Get or create a signer using getCryptoKeyAccount
-      handlers.addLog('info', 'Step 1: Getting owner account from getCryptoKeyAccount...');
       const { account } = await ctx.loadedSDK.getCryptoKeyAccount!();
       
       if (!account) {
@@ -49,23 +45,17 @@ export async function testCreateSubAccount(
       }
       
       const accountType = account.type as string;
-      handlers.addLog('info', `Step 2: Got account of type: ${accountType || 'address'}`);
 
       // Switch to Base Sepolia
-      handlers.addLog('info', 'Step 3: Switching to Base Sepolia (chainId: 0x14a34 / 84532)...');
       await ctx.provider.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: '0x14a34' }], // 84532 in hex
       });
-      handlers.addLog('info', 'Step 4: Chain switched successfully');
 
       // Prepare keys
-      handlers.addLog('info', 'Step 5: Preparing wallet_addSubAccount params...');
       const keys = accountType === 'webAuthn'
         ? [{ type: 'webauthn-p256', publicKey: account.publicKey }]
         : [{ type: 'address', publicKey: account.address }];
-      
-      handlers.addLog('info', `Step 6: Calling wallet_addSubAccount with ${keys.length} key(s) of type: ${keys[0].type}...`);
       
       // Create sub-account with keys
       const response = await ctx.provider.request({
@@ -84,15 +74,6 @@ export async function testCreateSubAccount(
       if (!response || !response.address) {
         throw new Error('wallet_addSubAccount returned invalid response (no address)');
       }
-      
-      handlers.updateTestStatus(
-        'Sub-Account Features',
-        'wallet_addSubAccount',
-        'passed',
-        undefined,
-        `Address: ${response.address.slice(0, 10)}...`
-      );
-      handlers.addLog('success', `Sub-account created: ${response.address}`);
       
       return response;
     },
@@ -126,8 +107,6 @@ export async function testGetSubAccounts(
       requiresProvider: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Fetching sub-accounts...');
-      
       const accounts = await ctx.provider.request({
         method: 'eth_accounts',
         params: [],
@@ -148,17 +127,9 @@ export async function testGetSubAccounts(
       }) as { subAccounts: Array<{ address: string; factory: string; factoryData: string }> };
 
       const subAccounts = response.subAccounts || [];
+      const addresses = subAccounts.map(sa => sa.address);
       
-      handlers.updateTestStatus(
-        'Sub-Account Features',
-        'wallet_getSubAccounts',
-        'passed',
-        undefined,
-        `Found ${subAccounts.length} sub-account(s)`
-      );
-      handlers.addLog('success', `Retrieved ${subAccounts.length} sub-account(s)`);
-      
-      return response;
+      return { ...response, addresses };
     },
     handlers,
     context
@@ -191,8 +162,6 @@ export async function testSignWithSubAccount(
       requiresUserInteraction: false,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Signing message with sub-account...');
-      
       const message = 'Hello from sub-account!';
       const signature = await ctx.provider.request({
         method: 'personal_sign',
@@ -210,15 +179,10 @@ export async function testSignWithSubAccount(
         message,
         signature: signature as `0x${string}`,
       });
-
-      handlers.updateTestStatus(
-        'Sub-Account Features',
-        'personal_sign (sub-account)',
-        isValid ? 'passed' : 'failed',
-        isValid ? undefined : 'Signature verification failed',
-        `Verified: ${isValid}`
-      );
-      handlers.addLog('success', `Sub-account signature verified: ${isValid}`);
+      
+      if (!isValid) {
+        throw new Error('Signature verification failed');
+      }
       
       return { signature, isValid };
     },
@@ -253,8 +217,6 @@ export async function testSendCallsFromSubAccount(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Sending calls from sub-account...');
-      
       const result = await ctx.provider.request({
         method: 'wallet_sendCalls',
         params: [{
@@ -272,18 +234,9 @@ export async function testSendCallsFromSubAccount(
             },
           },
         }],
-      });
-
-      handlers.updateTestStatus(
-        'Sub-Account Features',
-        'wallet_sendCalls (sub-account)',
-        'passed',
-        undefined,
-        'Transaction sent with paymaster'
-      );
-      handlers.addLog('success', 'Sub-account transaction sent successfully');
+      }) as string;
       
-      return result;
+      return { txHash: result };
     },
     handlers,
     context

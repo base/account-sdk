@@ -23,8 +23,6 @@ export async function testSignTypedData(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Signing typed data...');
-      
       // Get current account and chain ID
       const accounts = await ctx.provider.request({
         method: 'eth_accounts',
@@ -60,15 +58,6 @@ export async function testSignTypedData(
         method: 'eth_signTypedData_v4',
         params: [account, JSON.stringify(typedData)],
       }) as string;
-
-      handlers.updateTestStatus(
-        'Sign & Send',
-        'eth_signTypedData_v4',
-        'passed',
-        undefined,
-        `Sig: ${signature.slice(0, 20)}...`
-      );
-      handlers.addLog('success', `Typed data signed: ${signature.slice(0, 20)}...`);
       
       return signature;
     },
@@ -93,8 +82,6 @@ export async function testWalletSendCalls(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Sending calls via wallet_sendCalls...');
-      
       // Get current account and chain ID
       const accounts = await ctx.provider.request({
         method: 'eth_accounts',
@@ -122,15 +109,6 @@ export async function testWalletSendCalls(
           }],
         }],
       });
-
-      handlers.updateTestStatus(
-        'Sign & Send',
-        'wallet_sendCalls',
-        'passed',
-        undefined,
-        `Result: ${JSON.stringify(result).slice(0, 30)}...`
-      );
-      handlers.addLog('success', 'Calls sent successfully');
       
       return result;
     },
@@ -155,8 +133,6 @@ export async function testWalletPrepareCalls(
       requiresUserInteraction: false, // wallet_prepareCalls doesn't open a popup
     },
     async (ctx) => {
-      handlers.addLog('info', 'Preparing calls via wallet_prepareCalls...');
-      
       // Get current account and chain ID
       const accounts = await ctx.provider.request({
         method: 'eth_accounts',
@@ -184,15 +160,6 @@ export async function testWalletPrepareCalls(
           }],
         }],
       });
-
-      handlers.updateTestStatus(
-        'Sign & Send',
-        'wallet_prepareCalls',
-        'passed',
-        undefined,
-        `Result: ${JSON.stringify(result).slice(0, 30)}...`
-      );
-      handlers.addLog('success', 'Calls prepared successfully');
       
       return result;
     },

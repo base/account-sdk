@@ -23,23 +23,12 @@ export async function testSubscribe(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Testing subscribe() function...');
-      
       const result = await ctx.loadedSDK.base.subscribe({
         recurringCharge: '9.99',
         subscriptionOwner: '0x0000000000000000000000000000000000000001',
         periodInDays: 30,
         testnet: true,
       });
-
-      handlers.updateTestStatus(
-        'Subscription Features',
-        'subscribe() function',
-        'passed',
-        undefined,
-        `Subscription ID: ${result.id}`
-      );
-      handlers.addLog('success', `Subscription created: ${result.id}`);
       
       return result;
     },
@@ -73,8 +62,6 @@ export async function testGetSubscriptionStatus(
       requiresSDK: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Checking subscription status...');
-      
       const status = await ctx.loadedSDK.base.subscription.getStatus({
         id: ctx.subscriptionId!,
         testnet: true,
@@ -87,28 +74,7 @@ export async function testGetSubscriptionStatus(
         status.periodInDays ? `Period: ${status.periodInDays} days` : null,
       ].filter(Boolean).join(', ');
       
-      handlers.updateTestStatus(
-        'Subscription Features',
-        'base.subscription.getStatus()',
-        'passed',
-        undefined,
-        details
-      );
-      handlers.addLog('success', 'Subscription status retrieved successfully');
-      handlers.addLog('info', `  - Active: ${status.isSubscribed}`);
-      handlers.addLog('info', `  - Recurring charge: $${status.recurringCharge}`);
-      
-      if (status.remainingChargeInPeriod) {
-        handlers.addLog('info', `  - Remaining in period: $${status.remainingChargeInPeriod}`);
-      }
-      if (status.periodInDays) {
-        handlers.addLog('info', `  - Period: ${status.periodInDays} days`);
-      }
-      if (status.nextPeriodStart) {
-        handlers.addLog('info', `  - Next period: ${status.nextPeriodStart.toISOString()}`);
-      }
-      
-      return status;
+      return { status, details };
     },
     handlers,
     context
@@ -147,22 +113,11 @@ export async function testPrepareCharge(
       requiresSDK: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Preparing charge with specific amount...');
-      
       const chargeCalls = await ctx.loadedSDK.base.subscription.prepareCharge({
         id: ctx.subscriptionId!,
         amount: '1.00',
         testnet: true,
       });
-
-      handlers.updateTestStatus(
-        'Subscription Features',
-        'prepareCharge() with amount',
-        'passed',
-        undefined,
-        `Generated ${chargeCalls.length} call(s)`
-      );
-      handlers.addLog('success', `Charge prepared: ${chargeCalls.length} calls`);
       
       return chargeCalls;
     },
@@ -178,22 +133,11 @@ export async function testPrepareCharge(
       requiresSDK: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Preparing charge with max-remaining-charge...');
-      
       const maxChargeCalls = await ctx.loadedSDK.base.subscription.prepareCharge({
         id: ctx.subscriptionId!,
         amount: 'max-remaining-charge',
         testnet: true,
       });
-
-      handlers.updateTestStatus(
-        'Subscription Features',
-        'prepareCharge() max-remaining-charge',
-        'passed',
-        undefined,
-        `Generated ${maxChargeCalls.length} call(s)`
-      );
-      handlers.addLog('success', `Max charge prepared: ${maxChargeCalls.length} calls`);
       
       return maxChargeCalls;
     },

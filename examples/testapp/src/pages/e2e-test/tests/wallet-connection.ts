@@ -24,22 +24,12 @@ export async function testConnectWallet(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Requesting wallet connection...');
-      
       const accounts = await ctx.provider.request({
         method: 'eth_requestAccounts',
         params: [],
       }) as string[];
 
       if (accounts && accounts.length > 0) {
-        handlers.updateTestStatus(
-          'Wallet Connection',
-          'Connect wallet',
-          'passed',
-          undefined,
-          `Connected: ${accounts[0].slice(0, 10)}...`
-        );
-        handlers.addLog('success', `Connected to wallet: ${accounts[0]}`);
         return accounts;
       }
       
@@ -69,20 +59,6 @@ export async function testGetAccounts(
         params: [],
       }) as string[];
 
-      // Update connection state if accounts are found
-      if (accounts && accounts.length > 0) {
-        handlers.addLog('success', `Connected account found: ${accounts[0]}`);
-      }
-
-      handlers.updateTestStatus(
-        'Wallet Connection',
-        'Get accounts',
-        'passed',
-        undefined,
-        `Found ${accounts.length} account(s)`
-      );
-      handlers.addLog('info', `Found ${accounts.length} account(s)`);
-      
       return accounts;
     },
     handlers,
@@ -110,15 +86,6 @@ export async function testGetChainId(
       }) as string;
 
       const chainIdNum = parseInt(chainIdHex, 16);
-      
-      handlers.updateTestStatus(
-        'Wallet Connection',
-        'Get chain ID',
-        'passed',
-        undefined,
-        `Chain ID: ${chainIdNum}`
-      );
-      handlers.addLog('info', `Chain ID: ${chainIdNum}`);
       
       return chainIdNum;
     },
@@ -155,15 +122,6 @@ export async function testSignMessage(
         method: 'personal_sign',
         params: [message, account],
       }) as string;
-
-      handlers.updateTestStatus(
-        'Wallet Connection',
-        'Sign message (personal_sign)',
-        'passed',
-        undefined,
-        `Sig: ${signature.slice(0, 20)}...`
-      );
-      handlers.addLog('success', `Message signed: ${signature.slice(0, 20)}...`);
       
       return signature;
     },

@@ -24,7 +24,6 @@ export async function testRequestSpendPermission(
       'skipped',
       'Spend permission API not available (only works with local SDK)'
     );
-    handlers.addLog('warning', 'Spend permission API not available in npm CDN builds');
     return undefined;
   }
 
@@ -38,8 +37,6 @@ export async function testRequestSpendPermission(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Requesting spend permission...');
-      
       const accounts = await ctx.provider.request({
         method: 'eth_accounts',
         params: [],
@@ -61,15 +58,6 @@ export async function testRequestSpendPermission(
         allowance: parseUnits('100', 6),
         periodInDays: 30,
       });
-
-      handlers.updateTestStatus(
-        'Spend Permissions',
-        'spendPermission.requestSpendPermission()',
-        'passed',
-        undefined,
-        `Hash: ${permission.permissionHash.slice(0, 20)}...`
-      );
-      handlers.addLog('success', `Spend permission created: ${permission.permissionHash}`);
       
       return permission;
     },
@@ -113,8 +101,6 @@ export async function testGetPermissionStatus(
       requiresSDK: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Getting permission status...');
-      
       // First fetch the full permission object (which includes chainId)
       const permission = await ctx.loadedSDK.spendPermission!.fetchPermission({
         permissionHash: ctx.permissionHash!,
@@ -126,15 +112,6 @@ export async function testGetPermissionStatus(
 
       // Now get the status using the full permission object
       const status = await ctx.loadedSDK.spendPermission!.getPermissionStatus(permission);
-
-      handlers.updateTestStatus(
-        'Spend Permissions',
-        'spendPermission.getPermissionStatus()',
-        'passed',
-        undefined,
-        `Remaining: ${status.remainingSpend}`
-      );
-      handlers.addLog('success', `Permission status retrieved: remaining spend ${status.remainingSpend}`);
       
       return status;
     },
@@ -178,21 +155,11 @@ export async function testFetchPermission(
       requiresSDK: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Fetching permission...');
-      
       const permission = await ctx.loadedSDK.spendPermission!.fetchPermission({
         permissionHash: ctx.permissionHash!,
       });
 
       if (permission) {
-        handlers.updateTestStatus(
-          'Spend Permissions',
-          'spendPermission.fetchPermission()',
-          'passed',
-          undefined,
-          `Chain ID: ${permission.chainId}`
-        );
-        handlers.addLog('success', 'Permission fetched');
         return permission;
       }
       
@@ -230,8 +197,6 @@ export async function testFetchPermissions(
       requiresConnection: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Fetching all permissions...');
-      
       const accounts = await ctx.provider.request({
         method: 'eth_accounts',
         params: [],
@@ -246,15 +211,6 @@ export async function testFetchPermissions(
         spender: '0x0000000000000000000000000000000000000001',
         chainId: 84532,
       });
-
-      handlers.updateTestStatus(
-        'Spend Permissions',
-        'spendPermission.fetchPermissions()',
-        'passed',
-        undefined,
-        `Found ${permissions.length} permission(s)`
-      );
-      handlers.addLog('success', `Fetched ${permissions.length} permissions`);
       
       return permissions;
     },
@@ -298,8 +254,6 @@ export async function testPrepareSpendCallData(
       requiresSDK: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Preparing spend call data...');
-      
       const permission = await ctx.loadedSDK.spendPermission!.fetchPermission({
         permissionHash: ctx.permissionHash!,
       });
@@ -312,15 +266,6 @@ export async function testPrepareSpendCallData(
         permission,
         parseUnits('10', 6)
       );
-
-      handlers.updateTestStatus(
-        'Spend Permissions',
-        'spendPermission.prepareSpendCallData()',
-        'passed',
-        undefined,
-        `Generated ${callData.length} call(s)`
-      );
-      handlers.addLog('success', 'Spend call data prepared');
       
       return callData;
     },
@@ -364,8 +309,6 @@ export async function testPrepareRevokeCallData(
       requiresSDK: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Preparing revoke call data...');
-      
       const permission = await ctx.loadedSDK.spendPermission!.fetchPermission({
         permissionHash: ctx.permissionHash!,
       });
@@ -375,15 +318,6 @@ export async function testPrepareRevokeCallData(
       }
 
       const callData = await ctx.loadedSDK.spendPermission!.prepareRevokeCallData(permission);
-
-      handlers.updateTestStatus(
-        'Spend Permissions',
-        'spendPermission.prepareRevokeCallData()',
-        'passed',
-        undefined,
-        `To: ${callData.to.slice(0, 10)}...`
-      );
-      handlers.addLog('success', 'Revoke call data prepared');
       
       return callData;
     },

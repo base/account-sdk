@@ -134,18 +134,16 @@ export async function runTest<T>(
   context: TestContext
 ): Promise<T | undefined> {
   const { category, name, requiresUserInteraction } = config;
-  const { updateTestStatus, addLog, requestUserInteraction } = handlers;
+  const { updateTestStatus, requestUserInteraction } = handlers;
 
   try {
     // Mark test as running
     updateTestStatus(category, name, 'running');
-    addLog('info', `Testing ${name}...`);
 
     // Validate prerequisites
     const prerequisiteError = validatePrerequisites(config, context);
     if (prerequisiteError) {
       updateTestStatus(category, name, 'skipped', prerequisiteError);
-      addLog('warning', `Skipped ${name}: ${prerequisiteError}`);
       return undefined;
     }
 
@@ -154,7 +152,6 @@ export async function runTest<T>(
       const account = await getCurrentAccount(context);
       if (!account) {
         updateTestStatus(category, name, 'skipped', 'Not connected');
-        addLog('warning', `Skipped ${name}: Not connected`);
         return undefined;
       }
     }
@@ -171,21 +168,18 @@ export async function runTest<T>(
 
     // Mark test as passed
     updateTestStatus(category, name, 'passed', undefined, undefined, duration);
-    addLog('success', `${name} passed`);
 
     return result;
   } catch (error) {
     // Handle test cancellation
     if (isTestCancelled(error)) {
       updateTestStatus(category, name, 'skipped', 'Cancelled by user');
-      addLog('warning', 'Test cancelled by user');
       throw error; // Re-throw to stop test suite
     }
 
     // Handle other errors
     const errorMessage = formatTestError(error);
     updateTestStatus(category, name, 'failed', errorMessage);
-    addLog('error', `${name} failed: ${errorMessage}`);
 
     return undefined;
   }

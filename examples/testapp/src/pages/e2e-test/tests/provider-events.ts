@@ -41,15 +41,6 @@ export async function testProviderEvents(
       // Clean up listener
       ctx.provider.removeListener('accountsChanged', accountsChangedHandler);
       
-      handlers.updateTestStatus(
-        category,
-        'accountsChanged listener',
-        'passed',
-        undefined,
-        'Listener registered successfully'
-      );
-      handlers.addLog('success', 'accountsChanged listener works');
-      
       return true;
     },
     handlers,
@@ -68,15 +59,6 @@ export async function testProviderEvents(
       ctx.provider.on('chainChanged', chainChangedHandler);
       ctx.provider.removeListener('chainChanged', chainChangedHandler);
       
-      handlers.updateTestStatus(
-        category,
-        'chainChanged listener',
-        'passed',
-        undefined,
-        'Listener registered successfully'
-      );
-      handlers.addLog('success', 'chainChanged listener works');
-      
       return true;
     },
     handlers,
@@ -94,15 +76,6 @@ export async function testProviderEvents(
       const disconnectHandler = () => {};
       ctx.provider.on('disconnect', disconnectHandler);
       ctx.provider.removeListener('disconnect', disconnectHandler);
-      
-      handlers.updateTestStatus(
-        category,
-        'disconnect listener',
-        'passed',
-        undefined,
-        'Listener registered successfully'
-      );
-      handlers.addLog('success', 'disconnect listener works');
       
       return true;
     },

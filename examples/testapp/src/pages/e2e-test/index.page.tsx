@@ -155,7 +155,6 @@ export default function E2ETestPage() {
   const testState = useTestState();
   const {
     testCategories,
-    consoleLogs,
     runningSectionName,
     isRunningTests,
   } = testState;
@@ -186,28 +185,6 @@ export default function E2ETestPage() {
   });
 
   // Copy functions for test results
-  const copyConsoleOutput = async () => {
-    const consoleText = consoleLogs.map(log => log.message).join('\n');
-    try {
-      await navigator.clipboard.writeText(consoleText);
-      toast({
-        title: 'Copied!',
-        description: 'Console output copied to clipboard',
-        status: 'success',
-        duration: TEST_DELAYS.TOAST_SUCCESS_DURATION,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: 'Copy Failed',
-        description: 'Failed to copy to clipboard',
-        status: 'error',
-        duration: TEST_DELAYS.TOAST_ERROR_DURATION,
-        isClosable: true,
-      });
-    }
-  };
-
   const copyTestResults = async () => {
     const resultsText = formatTestResults(testCategories, {
       format: 'full',
@@ -479,7 +456,6 @@ export default function E2ETestPage() {
         <Tabs variant="enclosed" colorScheme="purple">
           <TabList>
             <Tab>Test Categories</Tab>
-            <Tab>Console Logs</Tab>
           </TabList>
 
           <TabPanels>
@@ -581,62 +557,6 @@ export default function E2ETestPage() {
                   </Card>
                 ))}
               </VStack>
-            </TabPanel>
-
-            {/* Console Logs Tab */}
-            <TabPanel>
-              <Card>
-                <CardHeader>
-                  <Flex justify="space-between" align="center">
-                    <Heading size="md">Console Output</Heading>
-                    <Tooltip label="Copy all console output" placement="left">
-                      <Button
-                        size="sm"
-                        colorScheme="purple"
-                        onClick={copyConsoleOutput}
-                        isDisabled={consoleLogs.length === 0}
-                      >
-                        📋 Copy
-                      </Button>
-                    </Tooltip>
-                  </Flex>
-                </CardHeader>
-                <CardBody>
-                  <Box
-                    p={4}
-                    bg="gray.900"
-                    borderRadius="md"
-                    fontFamily="mono"
-                    fontSize="sm"
-                    color="green.300"
-                    maxH="600px"
-                    overflowY="auto"
-                  >
-                    {consoleLogs.length === 0 ? (
-                      <Text color="gray.500">No logs yet. Run tests to see output.</Text>
-                    ) : (
-                      <VStack spacing={1} align="stretch">
-                        {consoleLogs.map((log, index) => (
-                          <Text
-                            key={index}
-                            color={
-                              log.type === 'error'
-                                ? 'red.300'
-                                : log.type === 'warning'
-                                  ? 'yellow.300'
-                                  : log.type === 'success'
-                                    ? 'green.300'
-                                    : 'gray.300'
-                            }
-                          >
-                            {log.message}
-                          </Text>
-                        ))}
-                      </VStack>
-                    )}
-                  </Box>
-                </CardBody>
-              </Card>
             </TabPanel>
           </TabPanels>
         </Tabs>

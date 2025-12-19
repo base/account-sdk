@@ -5,13 +5,13 @@
  * and the full test suite. Uses the test registry to execute tests in sequence.
  */
 
-import { useRef, useCallback } from 'react';
 import { useToast } from '@chakra-ui/react';
-import type { TestContext, TestHandlers } from '../types';
-import { testRegistry, getTestsByCategory, categoryRequiresConnection, type TestFn } from '../tests';
+import { useCallback, useRef } from 'react';
 import { TEST_DELAYS } from '../../../utils/e2e-test-config/test-config';
-import type { UseTestStateReturn } from './useTestState';
+import { categoryRequiresConnection, getTestsByCategory, type TestFn } from '../tests';
+import type { TestContext, TestHandlers } from '../types';
 import type { UseConnectionStateReturn } from './useConnectionState';
+import type { UseTestStateReturn } from './useTestState';
 
 // ============================================================================
 // Types
@@ -108,59 +108,119 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
           testName = name;
           testState.updateTestStatus(category, name, status, error, details, duration);
         },
-        addLog: testState.addLog,
         requestUserInteraction,
       };
       
       try {
         const result = await testFn(handlers, context);
         
-        // Update refs based on test results and test identity
+        // Update refs and test details based on test results and test identity
         if (result) {
           // Payment features
           if (testName === 'pay() function' && result.id) {
             paymentIdRef.current = result.id;
-            testState.addLog('info', `💾 Saved payment ID: ${result.id}`);
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Payment ID: ${result.id}`);
           }
           
           // Subscription features
           if (testName === 'subscribe() function' && result.id) {
             subscriptionIdRef.current = result.id;
-            testState.addLog('info', `💾 Saved subscription ID: ${result.id}`);
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Subscription ID: ${result.id}`);
+          }
+          
+          if (testName === 'base.subscription.getStatus()' && result.details) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, result.details);
+          }
+          
+          if (testName === 'prepareCharge() with amount' && Array.isArray(result)) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Generated ${result.length} call(s)`);
+          }
+          
+          if (testName === 'prepareCharge() max-remaining-charge' && Array.isArray(result)) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Generated ${result.length} call(s)`);
           }
           
           // Sub-account features
           if (testName === 'wallet_addSubAccount' && result.address) {
             subAccountAddressRef.current = result.address;
-            testState.addLog('info', `💾 Saved sub-account address: ${result.address}`);
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Address: ${result.address}`);
+          }
+          
+          if (testName === 'wallet_getSubAccounts' && result.subAccounts) {
+            const addresses = result.addresses || result.subAccounts.map((sa: any) => sa.address);
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, addresses.join(', '));
+          }
+          
+          if (testName === 'wallet_sendCalls (sub-account)' && result.txHash) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Tx: ${result.txHash}`);
+          }
+          
+          if (testName === 'personal_sign (sub-account)' && result.isValid !== undefined) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Verified: ${result.isValid}`);
           }
           
           // Spend permission features
           if (testName === 'spendPermission.requestSpendPermission()' && result.permissionHash) {
             permissionHashRef.current = result.permissionHash;
-            testState.addLog('info', `💾 Saved permission hash: ${result.permissionHash}`);
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Hash: ${result.permissionHash}`);
           }
           
-          // Wallet connection - update connection state
+          if (testName === 'spendPermission.getPermissionStatus()' && result.remainingSpend) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Remaining: ${result.remainingSpend}`);
+          }
+          
+          if (testName === 'spendPermission.fetchPermission()' && result.chainId) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Chain ID: ${result.chainId}`);
+          }
+          
+          if (testName === 'spendPermission.fetchPermissions()' && Array.isArray(result)) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Found ${result.length} permission(s)`);
+          }
+          
+          if (testName === 'spendPermission.prepareSpendCallData()' && Array.isArray(result)) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Generated ${result.length} call(s)`);
+          }
+          
+          if (testName === 'spendPermission.prepareRevokeCallData()' && result.to) {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `To: ${result.to}`);
+          }
+          
+          // Wallet connection
           if (testName === 'Connect wallet' && Array.isArray(result) && result.length > 0) {
             connectionState.setCurrentAccount(result[0]);
             connectionState.setConnected(true);
-            testState.addLog('info', `💾 Connected to: ${result[0]}`);
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Connected: ${result[0]}`);
           }
           
-          // Get accounts test - also update connection state to be sure
-          if (testName === 'Get accounts' && Array.isArray(result) && result.length > 0) {
-            if (!connectionState.connected) {
+          if (testName === 'Get accounts' && Array.isArray(result)) {
+            if (result.length > 0 && !connectionState.connected) {
               connectionState.setCurrentAccount(result[0]);
               connectionState.setConnected(true);
-              testState.addLog('info', `💾 Updated connection state: ${result[0]}`);
             }
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, result.join(', '));
           }
           
-          // Get chain ID test - update chain ID state
           if (testName === 'Get chain ID' && typeof result === 'number') {
             connectionState.setChainId(result);
-            testState.addLog('info', `💾 Chain ID: ${result}`);
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Chain ID: ${result}`);
+          }
+          
+          if (testName === 'Sign message (personal_sign)' && typeof result === 'string') {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Sig: ${result}`);
+          }
+          
+          // Sign & Send
+          if (testName === 'eth_signTypedData_v4' && typeof result === 'string') {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Sig: ${result}`);
+          }
+          
+          // Prolink features
+          if (testName === 'encodeProlink()' && typeof result === 'string') {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `Encoded: ${result}`);
+          }
+          
+          if (testName === 'createProlinkUrl()' && typeof result === 'string') {
+            testState.updateTestStatus(testCategory, testName, 'passed', undefined, `URL: ${result}`);
           }
         }
       } catch (error) {
@@ -181,7 +241,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
    */
   const ensureConnectionForTests = useCallback(async (): Promise<void> => {
     if (!provider) {
-      testState.addLog('error', 'Provider not available. Please initialize SDK first.');
       throw new Error('Provider not available');
     }
 
@@ -192,21 +251,18 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     });
 
     if (accounts && accounts.length > 0) {
-      testState.addLog('info', `Already connected to: ${accounts[0]}`);
       connectionState.setCurrentAccount(accounts[0]);
       connectionState.setConnected(true);
       return;
     }
 
     // Not connected - run wallet connection tests to establish connection
-    testState.addLog('info', 'No connection found. Establishing connection...');
-    
     const walletTests = getTestsByCategory('Wallet Connection');
     for (const testFn of walletTests) {
       await executeTest(testFn);
       await delay(TEST_DELAYS.BETWEEN_TESTS);
     }
-  }, [provider, testState, connectionState, executeTest]);
+  }, [provider, connectionState, executeTest]);
 
   /**
    * Run a specific test section
@@ -219,9 +275,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       // Skip user interaction modal for individual sections since the button click provides the gesture
       isRunningSectionRef.current = true;
 
-      testState.addLog('info', `🚀 Running ${sectionName} tests...`);
-      testState.addLog('info', '');
-
       try {
         // Check if section requires connection
         if (categoryRequiresConnection(sectionName)) {
@@ -233,7 +286,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
         const tests = getTestsByCategory(sectionName);
         
         if (tests.length === 0) {
-          testState.addLog('warning', `No tests found for section: ${sectionName}`);
           return;
         }
 
@@ -247,9 +299,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
           }
         }
 
-        testState.addLog('info', '');
-        testState.addLog('success', `✅ ${sectionName} tests completed!`);
-
         toast({
           title: 'Section Complete',
           description: `${sectionName} tests finished`,
@@ -259,9 +308,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
         });
       } catch (error) {
         if (error instanceof Error && error.message === 'Test cancelled by user') {
-          testState.addLog('info', '');
-          testState.addLog('warning', `⚠️ ${sectionName} tests cancelled by user`);
-          
           toast({
             title: 'Tests Cancelled',
             description: `${sectionName} tests were cancelled`,
@@ -269,8 +315,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
             duration: TEST_DELAYS.TOAST_WARNING_DURATION,
             isClosable: true,
           });
-        } else {
-          testState.addLog('error', `❌ ${sectionName} tests failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       } finally {
         testState.setRunningSectionName(null);
@@ -286,13 +330,9 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
   const runAllTests = useCallback(async (): Promise<void> => {
     testState.startTests();
     testState.resetAllCategories();
-    testState.clearLogs();
 
     // Don't skip modal for full test suite - keep user interaction prompts
     isRunningSectionRef.current = false;
-
-    testState.addLog('info', '🚀 Starting E2E Test Suite...');
-    testState.addLog('info', '');
 
     try {
       // Execute tests following the optimized sequence from the original implementation
@@ -334,14 +374,8 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
 
       await runTestCategory('Provider Events');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
-
-      testState.addLog('info', '');
-      testState.addLog('success', '✅ Test suite completed!');
     } catch (error) {
       if (error instanceof Error && error.message === 'Test cancelled by user') {
-        testState.addLog('info', '');
-        testState.addLog('warning', '⚠️ Test suite cancelled by user');
-        
         toast({
           title: 'Tests Cancelled',
           description: 'Test suite was cancelled by user',

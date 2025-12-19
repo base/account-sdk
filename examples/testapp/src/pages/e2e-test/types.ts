@@ -218,7 +218,6 @@ export interface TestHandlers {
     details?: string,
     duration?: number
   ) => void;
-  addLog: (type: 'info' | 'success' | 'error' | 'warning', message: string) => void;
   requestUserInteraction?: (testName: string, skipModal?: boolean) => Promise<void>;
 }
 
@@ -233,15 +232,6 @@ export interface TestConfig {
 
 export interface TestFunction<T = unknown> {
   (context: TestContext): Promise<T>;
-}
-
-// ============================================================================
-// Console Log Types
-// ============================================================================
-
-export interface ConsoleLog {
-  type: 'info' | 'success' | 'error' | 'warning';
-  message: string;
 }
 
 // ============================================================================

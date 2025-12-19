@@ -22,22 +22,11 @@ export async function testPay(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Testing pay() function...');
-      
       const result = await ctx.loadedSDK.base.pay({
         amount: '0.01',
         to: '0x0000000000000000000000000000000000000001',
         testnet: true,
       });
-
-      handlers.updateTestStatus(
-        'Payment Features',
-        'pay() function',
-        'passed',
-        undefined,
-        `Payment ID: ${result.id}`
-      );
-      handlers.addLog('success', `Payment created: ${result.id}`);
       
       return result;
     },
@@ -71,8 +60,6 @@ export async function testGetPaymentStatus(
       requiresSDK: true,
     },
     async (ctx) => {
-      handlers.addLog('info', 'Checking payment status with polling (up to 5s)...');
-      
       const status = await ctx.loadedSDK.getPaymentStatus({
         id: ctx.paymentId!,
         testnet: true,
@@ -80,16 +67,15 @@ export async function testGetPaymentStatus(
         retryDelayMs: 500, // 500ms between retries = ~5 seconds total
       });
 
-      handlers.updateTestStatus(
-        'Payment Features',
-        'getPaymentStatus()',
-        'passed',
-        undefined,
-        `Status: ${status.status}`
-      );
-      handlers.addLog('success', `Payment status: ${status.status}`);
+      const details = [
+        `Status: ${status.status}`,
+        status.amount ? `Amount: ${status.amount} USDC` : null,
+        status.recipient ? `Recipient: ${status.recipient}` : null,
+        status.sender ? `Sender: ${status.sender}` : null,
+        status.reason ? `Reason: ${status.reason}` : null,
+      ].filter(Boolean).join(', ');
       
-      return status;
+      return { status, details };
     },
     handlers,
     context

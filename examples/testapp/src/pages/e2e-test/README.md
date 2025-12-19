@@ -177,7 +177,6 @@ const testMyFeature = async () => {
 
   try {
     updateTestStatus(category, 'My test name', 'running');
-    addLog('info', 'Testing my feature...');
     
     const start = Date.now();
     // Perform your test here
@@ -192,7 +191,6 @@ const testMyFeature = async () => {
       `Result: ${result}`,
       duration
     );
-    addLog('success', `My feature test passed: ${result}`);
   } catch (error) {
     updateTestStatus(
       category,
@@ -200,7 +198,6 @@ const testMyFeature = async () => {
       'failed',
       error instanceof Error ? error.message : 'Unknown error'
     );
-    addLog('error', `My feature test failed: ${error}`);
   }
 };
 ```
