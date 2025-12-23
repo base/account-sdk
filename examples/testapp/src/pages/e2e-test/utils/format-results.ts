@@ -2,7 +2,7 @@
  * Utilities for formatting and copying test results
  */
 
-import type { TestCategory, TestResult, TestStatus, FormatOptions } from '../types';
+import type { FormatOptions, TestCategory, TestResult, TestStatus } from '../types';
 
 // ============================================================================
 // Status Utilities
@@ -80,7 +80,7 @@ function formatHeader(
   header += `SDK Version: ${sdkInfo.version}\n`;
   header += `SDK Source: ${sdkInfo.source}\n`;
   header += `Timestamp: ${new Date().toISOString()}\n\n`;
-  
+
   if (stats) {
     header += 'Summary:\n';
     header += `  Total: ${stats.total}\n`;
@@ -88,7 +88,7 @@ function formatHeader(
     header += `  Failed: ${stats.failed}\n`;
     header += `  Skipped: ${stats.skipped}\n\n`;
   }
-  
+
   return header;
 }
 
@@ -99,19 +99,19 @@ function formatTestResult(test: TestResult): string {
   const statusSymbol = getStatusIcon(test.status);
   let result = `${statusSymbol} ${test.name}\n`;
   result += `   Status: ${test.status.toUpperCase()}\n`;
-  
+
   if (test.duration) {
     result += `   Duration: ${test.duration}ms\n`;
   }
-  
+
   if (test.details) {
     result += `   Details: ${test.details}\n`;
   }
-  
+
   if (test.error) {
     result += `   ERROR: ${test.error}\n`;
   }
-  
+
   result += '\n';
   return result;
 }
@@ -119,33 +119,30 @@ function formatTestResult(test: TestResult): string {
 /**
  * Format detailed results for all categories or a specific category
  */
-function formatDetailedResults(
-  categories: TestCategory[],
-  includeFailureSummary = true
-): string {
+function formatDetailedResults(categories: TestCategory[], includeFailureSummary = true): string {
   let result = '';
-  
+
   // Format each category
   categories.forEach((category) => {
     if (category.tests.length > 0) {
       result += `\n${category.name}\n`;
-      result += '='.repeat(category.name.length) + '\n\n';
-      
+      result += `${'='.repeat(category.name.length)}\n\n`;
+
       category.tests.forEach((test) => {
         result += formatTestResult(test);
       });
     }
   });
-  
+
   // Add failed tests summary if requested
   if (includeFailureSummary) {
     const failedCategories = categories.filter((cat) =>
       cat.tests.some((t) => t.status === 'failed')
     );
-    
+
     if (failedCategories.length > 0) {
       result += '\n=== Failed Tests Summary ===\n\n';
-      
+
       failedCategories.forEach((category) => {
         const failedTests = category.tests.filter((t) => t.status === 'failed');
         if (failedTests.length > 0) {
@@ -162,7 +159,7 @@ function formatDetailedResults(
       });
     }
   }
-  
+
   return result;
 }
 
@@ -171,32 +168,30 @@ function formatDetailedResults(
  */
 function formatAbbreviatedResults(categories: TestCategory[]): string {
   let result = '';
-  
+
   categories.forEach((category) => {
     // Filter out skipped tests - only show passed and failed
     const relevantTests = category.tests.filter(
       (t) => t.status === 'passed' || t.status === 'failed'
     );
-    
+
     if (relevantTests.length > 0) {
       // Special handling for SDK Initialization & Exports - collapse exports
       if (category.name === 'SDK Initialization & Exports') {
         const initTest = relevantTests.find((t) => t.name === 'SDK can be initialized');
         const exportTests = relevantTests.filter((t) => t.name.includes('is exported'));
-        const otherTests = relevantTests.filter(
-          (t) => t !== initTest && !exportTests.includes(t)
-        );
-        
+        const otherTests = relevantTests.filter((t) => t !== initTest && !exportTests.includes(t));
+
         // Show SDK initialization test (commented out to skip in abbreviated)
         // if (initTest) {
         //   const icon = initTest.status === 'passed' ? ':check:' : ':failure_icon:';
         //   result += `${icon} ${initTest.name}\n`;
         // }
-        
+
         // Collapse export tests
         if (exportTests.length > 0) {
           const anyExportsFailed = exportTests.some((t) => t.status === 'failed');
-          
+
           if (anyExportsFailed) {
             // Show which exports failed
             exportTests.forEach((test) => {
@@ -207,7 +202,7 @@ function formatAbbreviatedResults(categories: TestCategory[]): string {
           }
           // Skip showing "all exports passed" in abbreviated results
         }
-        
+
         // Show any other tests
         otherTests.forEach((test) => {
           const icon = test.status === 'passed' ? ':check:' : ':failure_icon:';
@@ -216,10 +211,10 @@ function formatAbbreviatedResults(categories: TestCategory[]): string {
       } else if (category.name === 'Provider Events') {
         // Collapse provider events listeners
         const listenerTests = relevantTests.filter((t) => t.name.includes('listener'));
-        
+
         if (listenerTests.length > 0) {
           const anyListenersFailed = listenerTests.some((t) => t.status === 'failed');
-          
+
           if (anyListenersFailed) {
             // Show which listeners failed
             listenerTests.forEach((test) => {
@@ -239,31 +234,28 @@ function formatAbbreviatedResults(categories: TestCategory[]): string {
       }
     }
   });
-  
+
   return result;
 }
 
 /**
  * Main function to format test results based on options
  */
-export function formatTestResults(
-  categories: TestCategory[],
-  options: FormatOptions
-): string {
+export function formatTestResults(categories: TestCategory[], options: FormatOptions): string {
   const { format, categoryName, sdkInfo } = options;
-  
+
   // Filter categories if section format
   const targetCategories =
     format === 'section' && categoryName
       ? categories.filter((cat) => cat.name === categoryName)
       : categories;
-  
+
   // Calculate stats
   const stats = calculateStats(targetCategories);
-  
+
   // Format based on type
   let result = '';
-  
+
   if (format === 'abbreviated') {
     // No header for abbreviated format
     result = formatAbbreviatedResults(targetCategories);
@@ -271,25 +263,25 @@ export function formatTestResults(
     // Section format
     const title = categoryName ? `${categoryName} Test Results` : 'E2E Test Results';
     result = formatHeader(title, sdkInfo, stats);
-    
+
     // For section, show category name again
     if (categoryName && targetCategories.length > 0) {
       result += `${categoryName}\n`;
-      result += '='.repeat(categoryName.length) + '\n\n';
+      result += `${'='.repeat(categoryName.length)}\n\n`;
     }
-    
+
     // Format tests
     targetCategories.forEach((category) => {
       category.tests.forEach((test) => {
         result += formatTestResult(test);
       });
     });
-    
+
     // Add failed tests summary for section
     const failedTests = targetCategories.flatMap((cat) =>
       cat.tests.filter((t) => t.status === 'failed')
     );
-    
+
     if (failedTests.length > 0) {
       result += '\n=== Failed Tests ===\n\n';
       failedTests.forEach((test) => {
@@ -306,7 +298,7 @@ export function formatTestResults(
     result = formatHeader('E2E Test Results', sdkInfo, stats);
     result += formatDetailedResults(targetCategories, true);
   }
-  
+
   return result;
 }
 
@@ -320,11 +312,7 @@ export function hasTestResults(categories: TestCategory[]): boolean {
 /**
  * Helper to check if a specific category has results
  */
-export function categoryHasResults(
-  categories: TestCategory[],
-  categoryName: string
-): boolean {
+export function categoryHasResults(categories: TestCategory[], categoryName: string): boolean {
   const category = categories.find((cat) => cat.name === categoryName);
   return category ? category.tests.length > 0 : false;
 }
-

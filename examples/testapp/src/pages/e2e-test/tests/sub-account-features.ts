@@ -1,11 +1,11 @@
 /**
  * Sub-Account Features Tests
- * 
+ *
  * Tests for sub-account creation, management, and operations including
  * creating sub-accounts, retrieving them, and performing operations with them.
  */
 
-import { createPublicClient, http, toHex } from 'viem';
+import { http, createPublicClient, toHex } from 'viem';
 import { baseSepolia } from 'viem/chains';
 import type { TestContext, TestHandlers } from '../types';
 import { runTest } from '../utils/test-helpers';
@@ -39,11 +39,11 @@ export async function testCreateSubAccount(
     async (ctx) => {
       // Get or create a signer using getCryptoKeyAccount
       const { account } = await ctx.loadedSDK.getCryptoKeyAccount!();
-      
+
       if (!account) {
         throw new Error('Could not get owner account from getCryptoKeyAccount');
       }
-      
+
       const accountType = account.type as string;
 
       // Switch to Base Sepolia
@@ -53,12 +53,13 @@ export async function testCreateSubAccount(
       });
 
       // Prepare keys
-      const keys = accountType === 'webAuthn'
-        ? [{ type: 'webauthn-p256', publicKey: account.publicKey }]
-        : [{ type: 'address', publicKey: account.address }];
-      
+      const keys =
+        accountType === 'webAuthn'
+          ? [{ type: 'webauthn-p256', publicKey: account.publicKey }]
+          : [{ type: 'address', publicKey: account.address }];
+
       // Create sub-account with keys
-      const response = await ctx.provider.request({
+      const response = (await ctx.provider.request({
         method: 'wallet_addSubAccount',
         params: [
           {
@@ -69,12 +70,12 @@ export async function testCreateSubAccount(
             },
           },
         ],
-      }) as { address: string };
+      })) as { address: string };
 
       if (!response || !response.address) {
         throw new Error('wallet_addSubAccount returned invalid response (no address)');
       }
-      
+
       return response;
     },
     handlers,
@@ -88,7 +89,7 @@ export async function testCreateSubAccount(
 export async function testGetSubAccounts(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any> {
+): Promise<unknown> {
   // Check if sub-account address is available
   if (!context.subAccountAddress) {
     handlers.updateTestStatus(
@@ -107,16 +108,16 @@ export async function testGetSubAccounts(
       requiresProvider: true,
     },
     async (ctx) => {
-      const accounts = await ctx.provider.request({
+      const accounts = (await ctx.provider.request({
         method: 'eth_accounts',
         params: [],
-      }) as string[];
-      
+      })) as string[];
+
       if (!accounts || accounts.length < 2) {
         throw new Error('No sub-account found in accounts list');
       }
 
-      const response = await ctx.provider.request({
+      const response = (await ctx.provider.request({
         method: 'wallet_getSubAccounts',
         params: [
           {
@@ -124,11 +125,11 @@ export async function testGetSubAccounts(
             domain: window.location.origin,
           },
         ],
-      }) as { subAccounts: Array<{ address: string; factory: string; factoryData: string }> };
+      })) as { subAccounts: Array<{ address: string; factory: string; factoryData: string }> };
 
       const subAccounts = response.subAccounts || [];
-      const addresses = subAccounts.map(sa => sa.address);
-      
+      const addresses = subAccounts.map((sa) => sa.address);
+
       return { ...response, addresses };
     },
     handlers,
@@ -163,10 +164,10 @@ export async function testSignWithSubAccount(
     },
     async (ctx) => {
       const message = 'Hello from sub-account!';
-      const signature = await ctx.provider.request({
+      const signature = (await ctx.provider.request({
         method: 'personal_sign',
         params: [toHex(message), ctx.subAccountAddress!],
-      }) as string;
+      })) as string;
 
       // Verify signature
       const publicClient = createPublicClient({
@@ -179,11 +180,11 @@ export async function testSignWithSubAccount(
         message,
         signature: signature as `0x${string}`,
       });
-      
+
       if (!isValid) {
         throw new Error('Signature verification failed');
       }
-      
+
       return { signature, isValid };
     },
     handlers,
@@ -197,7 +198,7 @@ export async function testSignWithSubAccount(
 export async function testSendCallsFromSubAccount(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any> {
+): Promise<unknown> {
   // Check if sub-account address is available
   if (!context.subAccountAddress) {
     handlers.updateTestStatus(
@@ -217,44 +218,47 @@ export async function testSendCallsFromSubAccount(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      const result = await ctx.provider.request({
+      const result = (await ctx.provider.request({
         method: 'wallet_sendCalls',
-        params: [{
-          version: '1.0',
-          chainId: '0x14a34', // Base Sepolia
-          from: ctx.subAccountAddress!,
-          calls: [{
-            to: '0x000000000000000000000000000000000000dead',
-            data: '0x',
-            value: '0x0',
-          }],
-          capabilities: {
-            paymasterService: {
-              url: 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+        params: [
+          {
+            version: '1.0',
+            chainId: '0x14a34', // Base Sepolia
+            from: ctx.subAccountAddress!,
+            calls: [
+              {
+                to: '0x000000000000000000000000000000000000dead',
+                data: '0x',
+                value: '0x0',
+              },
+            ],
+            capabilities: {
+              paymasterService: {
+                url: 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+              },
             },
           },
-        }],
-      }) as string;
-      
+        ],
+      })) as string;
+
       // Validate the result
       if (!result) {
         throw new Error('wallet_sendCalls returned empty response');
       }
-      
+
       // Check if the result is an error message instead of a transaction hash
       if (typeof result === 'string' && result.toLowerCase().includes('error')) {
         throw new Error(result);
       }
-      
+
       // Validate transaction hash format (should start with 0x)
       if (typeof result === 'string' && !result.startsWith('0x')) {
         throw new Error(`Invalid transaction hash format: ${result}`);
       }
-      
+
       return { txHash: result };
     },
     handlers,
     context
   );
 }
-

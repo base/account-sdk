@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { createPublicClient, formatUnits, getAddress, http } from 'viem';
+import { http, createPublicClient, formatUnits, getAddress } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 
 import { NETWORKS, SPENDER_ACCOUNT_STORAGE_KEY } from '../constants';

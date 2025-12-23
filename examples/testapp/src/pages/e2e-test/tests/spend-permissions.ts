@@ -1,6 +1,6 @@
 /**
  * Spend Permission Tests
- * 
+ *
  * Tests for spend permission functionality including requesting permissions,
  * fetching permissions, and preparing spend/revoke call data.
  */
@@ -37,18 +37,18 @@ export async function testRequestSpendPermission(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      const accounts = await ctx.provider.request({
+      const accounts = (await ctx.provider.request({
         method: 'eth_accounts',
         params: [],
-      }) as string[];
-      
+      })) as string[];
+
       const account = accounts[0];
-      
+
       // Check if TOKENS are available
       if (!ctx.loadedSDK.TOKENS?.USDC?.addresses?.baseSepolia) {
         throw new Error('TOKENS.USDC not available');
       }
-      
+
       const permission = await ctx.loadedSDK.spendPermission.requestSpendPermission({
         provider: ctx.provider,
         account,
@@ -58,7 +58,7 @@ export async function testRequestSpendPermission(
         allowance: parseUnits('100', 6),
         periodInDays: 30,
       });
-      
+
       return permission;
     },
     handlers,
@@ -72,7 +72,7 @@ export async function testRequestSpendPermission(
 export async function testGetPermissionStatus(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any> {
+): Promise<unknown> {
   // Check prerequisites
   if (!context.permissionHash) {
     handlers.updateTestStatus(
@@ -84,7 +84,10 @@ export async function testGetPermissionStatus(
     return undefined;
   }
 
-  if (!context.loadedSDK.spendPermission?.getPermissionStatus || !context.loadedSDK.spendPermission?.fetchPermission) {
+  if (
+    !context.loadedSDK.spendPermission?.getPermissionStatus ||
+    !context.loadedSDK.spendPermission?.fetchPermission
+  ) {
     handlers.updateTestStatus(
       'Spend Permissions',
       'spendPermission.getPermissionStatus()',
@@ -112,7 +115,7 @@ export async function testGetPermissionStatus(
 
       // Now get the status using the full permission object
       const status = await ctx.loadedSDK.spendPermission!.getPermissionStatus(permission);
-      
+
       return status;
     },
     handlers,
@@ -126,7 +129,7 @@ export async function testGetPermissionStatus(
 export async function testFetchPermission(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any> {
+): Promise<unknown> {
   // Check prerequisites
   if (!context.permissionHash) {
     handlers.updateTestStatus(
@@ -162,7 +165,7 @@ export async function testFetchPermission(
       if (permission) {
         return permission;
       }
-      
+
       throw new Error('Permission not found');
     },
     handlers,
@@ -176,7 +179,7 @@ export async function testFetchPermission(
 export async function testFetchPermissions(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any[]> {
+): Promise<unknown[]> {
   // Check if spendPermission API is available
   if (!context.loadedSDK.spendPermission?.fetchPermissions) {
     handlers.updateTestStatus(
@@ -188,35 +191,37 @@ export async function testFetchPermissions(
     return [];
   }
 
-  return runTest(
-    {
-      category: 'Spend Permissions',
-      name: 'spendPermission.fetchPermissions()',
-      requiresProvider: true,
-      requiresSDK: true,
-      requiresConnection: true,
-    },
-    async (ctx) => {
-      const accounts = await ctx.provider.request({
-        method: 'eth_accounts',
-        params: [],
-      }) as string[];
-      
-      const account = accounts[0];
-      
-      // fetchPermissions requires a spender parameter - use the same one we used in requestSpendPermission
-      const permissions = await ctx.loadedSDK.spendPermission!.fetchPermissions({
-        provider: ctx.provider,
-        account,
-        spender: '0x0000000000000000000000000000000000000001',
-        chainId: 84532,
-      });
-      
-      return permissions;
-    },
-    handlers,
-    context
-  ) || [];
+  return (
+    runTest(
+      {
+        category: 'Spend Permissions',
+        name: 'spendPermission.fetchPermissions()',
+        requiresProvider: true,
+        requiresSDK: true,
+        requiresConnection: true,
+      },
+      async (ctx) => {
+        const accounts = (await ctx.provider.request({
+          method: 'eth_accounts',
+          params: [],
+        })) as string[];
+
+        const account = accounts[0];
+
+        // fetchPermissions requires a spender parameter - use the same one we used in requestSpendPermission
+        const permissions = await ctx.loadedSDK.spendPermission!.fetchPermissions({
+          provider: ctx.provider,
+          account,
+          spender: '0x0000000000000000000000000000000000000001',
+          chainId: 84532,
+        });
+
+        return permissions;
+      },
+      handlers,
+      context
+    ) || []
+  );
 }
 
 /**
@@ -225,7 +230,7 @@ export async function testFetchPermissions(
 export async function testPrepareSpendCallData(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any> {
+): Promise<unknown> {
   // Check prerequisites
   if (!context.permissionHash) {
     handlers.updateTestStatus(
@@ -237,7 +242,10 @@ export async function testPrepareSpendCallData(
     return undefined;
   }
 
-  if (!context.loadedSDK.spendPermission?.prepareSpendCallData || !context.loadedSDK.spendPermission?.fetchPermission) {
+  if (
+    !context.loadedSDK.spendPermission?.prepareSpendCallData ||
+    !context.loadedSDK.spendPermission?.fetchPermission
+  ) {
     handlers.updateTestStatus(
       'Spend Permissions',
       'spendPermission.prepareSpendCallData()',
@@ -257,7 +265,7 @@ export async function testPrepareSpendCallData(
       const permission = await ctx.loadedSDK.spendPermission!.fetchPermission({
         permissionHash: ctx.permissionHash!,
       });
-      
+
       if (!permission) {
         throw new Error('Permission not found');
       }
@@ -266,7 +274,7 @@ export async function testPrepareSpendCallData(
         permission,
         parseUnits('10', 6)
       );
-      
+
       return callData;
     },
     handlers,
@@ -280,7 +288,7 @@ export async function testPrepareSpendCallData(
 export async function testPrepareRevokeCallData(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any> {
+): Promise<unknown> {
   // Check prerequisites
   if (!context.permissionHash) {
     handlers.updateTestStatus(
@@ -292,7 +300,10 @@ export async function testPrepareRevokeCallData(
     return undefined;
   }
 
-  if (!context.loadedSDK.spendPermission?.prepareRevokeCallData || !context.loadedSDK.spendPermission?.fetchPermission) {
+  if (
+    !context.loadedSDK.spendPermission?.prepareRevokeCallData ||
+    !context.loadedSDK.spendPermission?.fetchPermission
+  ) {
     handlers.updateTestStatus(
       'Spend Permissions',
       'spendPermission.prepareRevokeCallData()',
@@ -312,17 +323,16 @@ export async function testPrepareRevokeCallData(
       const permission = await ctx.loadedSDK.spendPermission!.fetchPermission({
         permissionHash: ctx.permissionHash!,
       });
-      
+
       if (!permission) {
         throw new Error('Permission not found');
       }
 
       const callData = await ctx.loadedSDK.spendPermission!.prepareRevokeCallData(permission);
-      
+
       return callData;
     },
     handlers,
     context
   );
 }
-

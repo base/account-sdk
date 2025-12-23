@@ -1,6 +1,6 @@
 /**
  * SDK Initialization & Exports Tests
- * 
+ *
  * Tests that verify the SDK can be properly initialized and all expected
  * functions are exported.
  */
@@ -33,7 +33,7 @@ export async function testSDKInitialization(
 
       // Update provider in context (this is a side effect but necessary for subsequent tests)
       const provider = sdkInstance.getProvider();
-      
+
       return { sdkInstance, provider };
     },
     handlers,
@@ -46,7 +46,10 @@ export async function testSDKInitialization(
     { name: 'base.pay', value: context.loadedSDK.base?.pay },
     { name: 'base.subscribe', value: context.loadedSDK.base?.subscribe },
     { name: 'base.subscription.getStatus', value: context.loadedSDK.base?.subscription?.getStatus },
-    { name: 'base.subscription.prepareCharge', value: context.loadedSDK.base?.subscription?.prepareCharge },
+    {
+      name: 'base.subscription.prepareCharge',
+      value: context.loadedSDK.base?.subscription?.prepareCharge,
+    },
     { name: 'getPaymentStatus', value: context.loadedSDK.getPaymentStatus },
     { name: 'TOKENS', value: context.loadedSDK.TOKENS },
     { name: 'CHAIN_IDS', value: context.loadedSDK.CHAIN_IDS },
@@ -72,14 +75,26 @@ export async function testSDKInitialization(
     { name: 'encodeProlink', value: context.loadedSDK.encodeProlink },
     { name: 'decodeProlink', value: context.loadedSDK.decodeProlink },
     { name: 'createProlinkUrl', value: context.loadedSDK.createProlinkUrl },
-    { name: 'spendPermission.requestSpendPermission', value: context.loadedSDK.spendPermission?.requestSpendPermission },
-    { name: 'spendPermission.fetchPermissions', value: context.loadedSDK.spendPermission?.fetchPermissions },
+    {
+      name: 'spendPermission.requestSpendPermission',
+      value: context.loadedSDK.spendPermission?.requestSpendPermission,
+    },
+    {
+      name: 'spendPermission.fetchPermissions',
+      value: context.loadedSDK.spendPermission?.fetchPermissions,
+    },
   ];
 
   for (const exp of optionalExports) {
     handlers.updateTestStatus(category, `${exp.name} is exported`, 'running');
     if (exp.value !== undefined && exp.value !== null) {
-      handlers.updateTestStatus(category, `${exp.name} is exported`, 'passed', undefined, 'Available');
+      handlers.updateTestStatus(
+        category,
+        `${exp.name} is exported`,
+        'passed',
+        undefined,
+        'Available'
+      );
     } else {
       handlers.updateTestStatus(
         category,
@@ -90,4 +105,3 @@ export async function testSDKInitialization(
     }
   }
 }
-

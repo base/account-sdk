@@ -1,11 +1,3 @@
-/**
- * Wallet Connection Tests
- * 
- * Tests for connecting to wallets, retrieving account information,
- * and signing messages.
- */
-
-import { toHex } from 'viem';
 import type { TestContext, TestHandlers } from '../types';
 import { runTest } from '../utils/test-helpers';
 
@@ -24,15 +16,15 @@ export async function testConnectWallet(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      const accounts = await ctx.provider.request({
+      const accounts = (await ctx.provider.request({
         method: 'eth_requestAccounts',
         params: [],
-      }) as string[];
+      })) as string[];
 
       if (accounts && accounts.length > 0) {
         return accounts;
       }
-      
+
       throw new Error('No accounts returned');
     },
     handlers,
@@ -54,10 +46,10 @@ export async function testGetAccounts(
       requiresProvider: true,
     },
     async (ctx) => {
-      const accounts = await ctx.provider.request({
+      const accounts = (await ctx.provider.request({
         method: 'eth_accounts',
         params: [],
-      }) as string[];
+      })) as string[];
 
       return accounts;
     },
@@ -80,13 +72,13 @@ export async function testGetChainId(
       requiresProvider: true,
     },
     async (ctx) => {
-      const chainIdHex = await ctx.provider.request({
+      const chainIdHex = (await ctx.provider.request({
         method: 'eth_chainId',
         params: [],
-      }) as string;
+      })) as string;
 
-      const chainIdNum = parseInt(chainIdHex, 16);
-      
+      const chainIdNum = Number.parseInt(chainIdHex, 16);
+
       return chainIdNum;
     },
     handlers,
@@ -110,23 +102,22 @@ export async function testSignMessage(
       requiresUserInteraction: true,
     },
     async (ctx) => {
-      const accounts = await ctx.provider.request({
+      const accounts = (await ctx.provider.request({
         method: 'eth_accounts',
         params: [],
-      }) as string[];
-      
+      })) as string[];
+
       const account = accounts[0];
       const message = 'Hello from Base Account SDK E2E Test!';
-      
-      const signature = await ctx.provider.request({
+
+      const signature = (await ctx.provider.request({
         method: 'personal_sign',
         params: [message, account],
-      }) as string;
-      
+      })) as string;
+
       return signature;
     },
     handlers,
     context
   );
 }
-

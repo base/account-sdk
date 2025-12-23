@@ -1,55 +1,48 @@
 /**
  * Test Registry
- * 
+ *
  * Central registry of all E2E tests organized by category.
  * This provides a structured way to access and run tests.
  */
 
 import type { TestContext, TestHandlers } from '../types';
 
+import { testGetPaymentStatus, testPay } from './payment-features';
+import { testProlinkEncodeDecode } from './prolink-features';
+import { testProviderEvents } from './provider-events';
 // Import all test functions
 import { testSDKInitialization } from './sdk-initialization';
+import { testSignTypedData, testWalletPrepareCalls, testWalletSendCalls } from './sign-and-send';
+import {
+  testFetchPermission,
+  testFetchPermissions,
+  testGetPermissionStatus,
+  testPrepareRevokeCallData,
+  testPrepareSpendCallData,
+  testRequestSpendPermission,
+} from './spend-permissions';
+import {
+  testCreateSubAccount,
+  testGetSubAccounts,
+  testSendCallsFromSubAccount,
+  testSignWithSubAccount,
+} from './sub-account-features';
+import {
+  testGetSubscriptionStatus,
+  testPrepareCharge,
+  testSubscribe,
+} from './subscription-features';
 import {
   testConnectWallet,
   testGetAccounts,
   testGetChainId,
   testSignMessage,
 } from './wallet-connection';
-import {
-  testPay,
-  testGetPaymentStatus,
-} from './payment-features';
-import {
-  testSubscribe,
-  testGetSubscriptionStatus,
-  testPrepareCharge,
-} from './subscription-features';
-import {
-  testRequestSpendPermission,
-  testGetPermissionStatus,
-  testFetchPermission,
-  testFetchPermissions,
-  testPrepareSpendCallData,
-  testPrepareRevokeCallData,
-} from './spend-permissions';
-import {
-  testCreateSubAccount,
-  testGetSubAccounts,
-  testSignWithSubAccount,
-  testSendCallsFromSubAccount,
-} from './sub-account-features';
-import {
-  testSignTypedData,
-  testWalletSendCalls,
-  testWalletPrepareCalls,
-} from './sign-and-send';
-import { testProlinkEncodeDecode } from './prolink-features';
-import { testProviderEvents } from './provider-events';
 
 /**
  * Test function type
  */
-export type TestFn = (handlers: TestHandlers, context: TestContext) => Promise<any>;
+export type TestFn = (handlers: TestHandlers, context: TestContext) => Promise<unknown>;
 
 /**
  * Test category definition
@@ -71,29 +64,17 @@ export const testRegistry: TestCategoryDefinition[] = [
   },
   {
     name: 'Wallet Connection',
-    tests: [
-      testConnectWallet,
-      testGetAccounts,
-      testGetChainId,
-      testSignMessage,
-    ],
+    tests: [testConnectWallet, testGetAccounts, testGetChainId, testSignMessage],
     requiresConnection: false, // Connection is established during these tests
   },
   {
     name: 'Payment Features',
-    tests: [
-      testPay,
-      testGetPaymentStatus,
-    ],
+    tests: [testPay, testGetPaymentStatus],
     requiresConnection: false, // pay() doesn't require explicit connection
   },
   {
     name: 'Subscription Features',
-    tests: [
-      testSubscribe,
-      testGetSubscriptionStatus,
-      testPrepareCharge,
-    ],
+    tests: [testSubscribe, testGetSubscriptionStatus, testPrepareCharge],
     requiresConnection: false, // subscribe() doesn't require explicit connection
   },
   {
@@ -125,11 +106,7 @@ export const testRegistry: TestCategoryDefinition[] = [
   },
   {
     name: 'Sign & Send',
-    tests: [
-      testSignTypedData,
-      testWalletSendCalls,
-      testWalletPrepareCalls,
-    ],
+    tests: [testSignTypedData, testWalletSendCalls, testWalletPrepareCalls],
     requiresConnection: true,
   },
   {
@@ -143,14 +120,14 @@ export const testRegistry: TestCategoryDefinition[] = [
  * Get all test functions in a flat array
  */
 export function getAllTests(): TestFn[] {
-  return testRegistry.flatMap(category => category.tests);
+  return testRegistry.flatMap((category) => category.tests);
 }
 
 /**
  * Get tests for a specific category by name
  */
 export function getTestsByCategory(categoryName: string): TestFn[] {
-  const category = testRegistry.find(cat => cat.name === categoryName);
+  const category = testRegistry.find((cat) => cat.name === categoryName);
   return category?.tests || [];
 }
 
@@ -158,14 +135,14 @@ export function getTestsByCategory(categoryName: string): TestFn[] {
  * Get all category names
  */
 export function getCategoryNames(): string[] {
-  return testRegistry.map(cat => cat.name);
+  return testRegistry.map((cat) => cat.name);
 }
 
 /**
  * Check if a category requires connection
  */
 export function categoryRequiresConnection(categoryName: string): boolean {
-  const category = testRegistry.find(cat => cat.name === categoryName);
+  const category = testRegistry.find((cat) => cat.name === categoryName);
   return category?.requiresConnection || false;
 }
 
@@ -207,4 +184,3 @@ export {
 } from './sign-and-send';
 export { testProlinkEncodeDecode } from './prolink-features';
 export { testProviderEvents } from './provider-events';
-

@@ -1,11 +1,11 @@
 /**
  * Hook for running E2E tests
- * 
+ *
  * Encapsulates the test execution orchestration logic for both individual sections
  * and the full test suite. Uses the test registry to execute tests in sequence.
  */
 
-import { useToast } from '@chakra-ui/react';
+iimport { useToast } from '@chakra-ui/react';
 import { useCallback, useRef } from 'react';
 import { TEST_DELAYS } from '../../../utils/e2e-test-config/test-config';
 import { categoryRequiresConnection, getTestsByCategory, type TestFn } from '../tests';
@@ -13,6 +13,7 @@ import type { TestContext, TestHandlers } from '../types';
 import { processTestResult } from './testResultHandlers';
 import type { UseConnectionStateReturn } from './useConnectionState';
 import type { UseTestStateReturn } from './useTestState';
+{ UseTestStateReturn } from './useTestState';
 
 // ============================================================================
 // Types
@@ -22,20 +23,22 @@ export interface UseTestRunnerOptions {
   // State management
   testState: UseTestStateReturn;
   connectionState: UseConnectionStateReturn;
-  
+
   // SDK state
+  // biome-ignore lint/suspicious/noExplicitAny: LoadedSDK type varies between local and npm versions
   loadedSDK: any;
+  // biome-ignore lint/suspicious/noExplicitAny: EIP1193Provider type from viem
   provider: any;
-  
+
   // User interaction
   requestUserInteraction: (testName: string, skipModal?: boolean) => Promise<void>;
-  
+
   // Test data refs
-  paymentIdRef: React.MutableRefObject<string | null>;
-  subscriptionIdRef: React.MutableRefObject<string | null>;
-  permissionHashRef: React.MutableRefObject<string | null>;
-  subAccountAddressRef: React.MutableRefObject<string | null>;
-  
+  paymentIdRef: MutableRefObject<string | null>;
+  subscriptionIdRef: MutableRefObject<string | null>;
+  permissionHashRef: MutableRefObject<string | null>;
+  subAccountAddressRef: MutableRefObject<string | null>;
+
   // Configuration
   walletUrl?: string;
 }
@@ -65,7 +68,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
   } = options;
 
   const toast = useToast();
-  
+
   // Track whether we've shown the first modal for the current test run
   // The first modal should be skipped since the user's button click provides the gesture
   const hasShownFirstModalRef = useRef(false);
@@ -77,7 +80,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     // Skip the first modal since the user's button click provides the gesture
     // After that, show modals for subsequent user interactions
     const skipModal = !hasShownFirstModalRef.current;
-    
+
     return {
       provider,
       loadedSDK,
@@ -104,19 +107,18 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     walletUrl,
   ]);
 
-
   /**
    * Execute a single test function and capture return values to update refs
    */
   const executeTest = useCallback(
     async (testFn: TestFn): Promise<void> => {
       const context = buildTestContext();
-      
+
       // Track which test ran by wrapping updateTestStatus
       let testCategory = '';
       let testName = '';
-      let requiresUserInteraction = false;
-      
+      let _requiresUserInteraction = false;
+
       const handlers: TestHandlers = {
         updateTestStatus: (category, name, status, error, details, duration) => {
           testCategory = category;
@@ -124,17 +126,17 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
           testState.updateTestStatus(category, name, status, error, details, duration);
         },
         requestUserInteraction: async (testName: string, skipModal?: boolean) => {
-          requiresUserInteraction = true;
+          _requiresUserInteraction = true;
           await requestUserInteraction(testName, skipModal);
-          // After the first modal opportunity (whether shown or skipped), 
+          // After the first modal opportunity (whether shown or skipped),
           // mark that we've passed it so subsequent modals will be shown
           hasShownFirstModalRef.current = true;
         },
       };
-      
+
       try {
         const result = await testFn(handlers, context);
-        
+
         // Process test result using centralized handler
         if (result) {
           processTestResult({
@@ -159,7 +161,16 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
         // Other errors are already logged by the test function
       }
     },
-    [buildTestContext, paymentIdRef, subscriptionIdRef, subAccountAddressRef, permissionHashRef, testState, connectionState, requestUserInteraction]
+    [
+      buildTestContext,
+      paymentIdRef,
+      subscriptionIdRef,
+      subAccountAddressRef,
+      permissionHashRef,
+      testState,
+      connectionState,
+      requestUserInteraction,
+    ]
   );
 
   /**
@@ -212,7 +223,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
 
         // Get tests for this section
         const tests = getTestsByCategory(sectionName);
-        
+
         if (tests.length === 0) {
           return;
         }
@@ -220,7 +231,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
         // Execute tests in sequence
         for (let i = 0; i < tests.length; i++) {
           await executeTest(tests[i]);
-          
+
           // Add delay between tests (except after last test)
           if (i < tests.length - 1) {
             await delay(TEST_DELAYS.BETWEEN_TESTS);
@@ -254,6 +265,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
   /**
    * Run all tests in the complete test suite
    */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runTestCategory is intentionally not a dependency to avoid circular dependency
   const runAllTests = useCallback(async (): Promise<void> => {
     testState.startTests();
     testState.resetAllCategories();
@@ -265,7 +277,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     try {
       // Execute tests following the optimized sequence from the original implementation
       // This sequence is designed to minimize flakiness and ensure proper test dependencies
-      
+
       // 1. SDK Initialization (must be first)
       await runTestCategory('SDK Initialization & Exports');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
@@ -276,7 +288,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
 
       // 3. Run connection-dependent tests BEFORE pay/subscribe
       // These need a stable connection state
-      
+
       // Sign & Send tests
       await runTestCategory('Sign & Send');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
@@ -335,7 +347,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
         });
       }
     }
-  }, [testState, toast, executeTest]);
+  }, [testState, toast, runTestCategory]);
 
   /**
    * Helper to run all tests in a category
@@ -343,10 +355,10 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
   const runTestCategory = useCallback(
     async (categoryName: string): Promise<void> => {
       const tests = getTestsByCategory(categoryName);
-      
+
       for (let i = 0; i < tests.length; i++) {
         await executeTest(tests[i]);
-        
+
         // Add delay between tests (except after last test)
         if (i < tests.length - 1) {
           await delay(TEST_DELAYS.BETWEEN_TESTS);
@@ -359,7 +371,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
   /**
    * Run only tests that make external requests (require user interaction)
    * This is useful for SCW Release testing
-   * 
+   *
    * The following tests are included (tests that open popups/windows and receive responses):
    * 1. Wallet Connection:
    *    - testConnectWallet (opens popup)
@@ -384,7 +396,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
    * 6. Subscription Features:
    *    - testSubscribe (opens popup)
    *    - testGetSubscriptionStatus
-   * 
+   *
    * Tests excluded (no external requests or not relevant for SCW Release):
    * - SDK Initialization & Exports (SDK already instantiated on page load)
    * - wallet_prepareCalls (no popup)
@@ -405,17 +417,17 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     try {
       // Execute tests that make external requests following the optimized sequence
       // Note: SDK Initialization tests are skipped - SDK is already loaded on page load
-      
+
       // 1. Establish wallet connection - testConnectWallet requires user interaction
       await executeTest(getTestsByCategory('Wallet Connection')[0]); // testConnectWallet
       await delay(TEST_DELAYS.BETWEEN_TESTS);
-      
+
       // Get remaining wallet connection tests (testGetAccounts, testGetChainId don't need user interaction)
       await executeTest(getTestsByCategory('Wallet Connection')[1]); // testGetAccounts
       await delay(TEST_DELAYS.BETWEEN_TESTS);
       await executeTest(getTestsByCategory('Wallet Connection')[2]); // testGetChainId
       await delay(TEST_DELAYS.BETWEEN_TESTS);
-      
+
       // testSignMessage requires user interaction
       await executeTest(getTestsByCategory('Wallet Connection')[3]); // testSignMessage
       await delay(TEST_DELAYS.BETWEEN_TESTS);
@@ -456,7 +468,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       await delay(TEST_DELAYS.BETWEEN_TESTS);
       // testGetSubscriptionStatus doesn't require user interaction - skip
       // testPrepareCharge doesn't require user interaction - skip
-
     } catch (error) {
       if (error instanceof Error && error.message === 'Test cancelled by user') {
         toast({
@@ -509,4 +520,3 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-

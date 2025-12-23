@@ -26,9 +26,7 @@ export const Header = ({
       <div className={styles.headerContent}>
         <div className={styles.titleSection}>
           <h1 className={styles.title}>🧪 E2E Test Suite</h1>
-          <p className={styles.subtitle}>
-            Comprehensive end-to-end tests for the Base Account SDK
-          </p>
+          <p className={styles.subtitle}>Comprehensive end-to-end tests for the Base Account SDK</p>
         </div>
         <div className={styles.versionSection}>
           <div className={styles.versionBadge}>
@@ -82,4 +80,3 @@ export const Header = ({
     </header>
   );
 };
-

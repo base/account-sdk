@@ -67,9 +67,7 @@ export function UserInteractionModal({
         <ModalHeader>User Interaction Required</ModalHeader>
         <ModalBody>
           <VStack spacing={4} align="stretch">
-            <Text>
-              The next test requires user interaction to prevent popup blockers:
-            </Text>
+            <Text>The next test requires user interaction to prevent popup blockers:</Text>
             <Text fontWeight="bold" fontSize="lg" color="purple.500">
               {testName}
             </Text>
@@ -94,11 +92,7 @@ export function UserInteractionModal({
           <Button variant="ghost" onClick={onCancel}>
             Cancel Test
           </Button>
-          <Button
-            ref={continueButtonRef}
-            colorScheme="purple"
-            onClick={onContinue}
-          >
+          <Button ref={continueButtonRef} colorScheme="purple" onClick={onContinue}>
             Continue Test
           </Button>
         </ModalFooter>
@@ -106,4 +100,3 @@ export function UserInteractionModal({
     </Modal>
   );
 }
-

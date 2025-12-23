@@ -1,6 +1,6 @@
 /**
  * Provider Events Tests
- * 
+ *
  * Tests for provider event listeners (accountsChanged, chainChanged, disconnect).
  */
 
@@ -17,8 +17,18 @@ export async function testProviderEvents(
   const category = 'Provider Events';
 
   if (!context.provider) {
-    handlers.updateTestStatus(category, 'accountsChanged listener', 'skipped', 'Provider not available');
-    handlers.updateTestStatus(category, 'chainChanged listener', 'skipped', 'Provider not available');
+    handlers.updateTestStatus(
+      category,
+      'accountsChanged listener',
+      'skipped',
+      'Provider not available'
+    );
+    handlers.updateTestStatus(
+      category,
+      'chainChanged listener',
+      'skipped',
+      'Provider not available'
+    );
     handlers.updateTestStatus(category, 'disconnect listener', 'skipped', 'Provider not available');
     return;
   }
@@ -31,16 +41,16 @@ export async function testProviderEvents(
       requiresProvider: true,
     },
     async (ctx) => {
-      let accountsChangedFired = false;
+      let _accountsChangedFired = false;
       const accountsChangedHandler = () => {
-        accountsChangedFired = true;
+        _accountsChangedFired = true;
       };
-      
+
       ctx.provider.on('accountsChanged', accountsChangedHandler);
-      
+
       // Clean up listener
       ctx.provider.removeListener('accountsChanged', accountsChangedHandler);
-      
+
       return true;
     },
     handlers,
@@ -58,7 +68,7 @@ export async function testProviderEvents(
       const chainChangedHandler = () => {};
       ctx.provider.on('chainChanged', chainChangedHandler);
       ctx.provider.removeListener('chainChanged', chainChangedHandler);
-      
+
       return true;
     },
     handlers,
@@ -76,11 +86,10 @@ export async function testProviderEvents(
       const disconnectHandler = () => {};
       ctx.provider.on('disconnect', disconnectHandler);
       ctx.provider.removeListener('disconnect', disconnectHandler);
-      
+
       return true;
     },
     handlers,
     context
   );
 }
-

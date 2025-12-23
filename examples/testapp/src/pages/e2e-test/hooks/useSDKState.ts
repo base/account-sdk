@@ -1,14 +1,14 @@
 /**
  * Hook for managing SDK loading and state
- * 
+ *
  * Consolidates SDK source selection, loading, version management,
  * and SDK instance state into a single hook.
  */
 
-import { useState, useCallback } from 'react';
-import { loadSDK, type LoadedSDK, type SDKSource } from '../../../utils/sdkLoader';
-import type { BaseAccountSDK } from '../types';
+import { useCallback, useState } from 'react';
 import { SDK_CONFIG } from '../../../utils/e2e-test-config';
+import { type LoadedSDK, type SDKSource, loadSDK } from '../../../utils/sdkLoader';
+import type { BaseAccountSDK } from '../types';
 
 // ============================================================================
 // Types
@@ -19,14 +19,21 @@ export interface UseSDKStateReturn {
   sdkSource: SDKSource;
   loadedSDK: LoadedSDK | null;
   sdk: BaseAccountSDK | null;
+  // biome-ignore lint/suspicious/noExplicitAny: EIP1193Provider type varies
   provider: any | null; // EIP1193Provider type
   isLoadingSDK: boolean;
   sdkLoadError: string | null;
-  
+
   // Actions
   setSdkSource: (source: SDKSource) => void;
-  loadAndInitializeSDK: (config?: { appName?: string; appLogoUrl?: string; appChainIds?: number[]; walletUrl?: string }) => Promise<void>;
+  loadAndInitializeSDK: (config?: {
+    appName?: string;
+    appLogoUrl?: string;
+    appChainIds?: number[];
+    walletUrl?: string;
+  }) => Promise<void>;
   setSdk: (sdk: BaseAccountSDK | null) => void;
+  // biome-ignore lint/suspicious/noExplicitAny: EIP1193Provider type varies
   setProvider: (provider: any | null) => void;
 }
 
@@ -38,12 +45,18 @@ export function useSDKState(): UseSDKStateReturn {
   const [sdkSource, setSdkSource] = useState<SDKSource>('local');
   const [loadedSDK, setLoadedSDK] = useState<LoadedSDK | null>(null);
   const [sdk, setSdk] = useState<BaseAccountSDK | null>(null);
+  // biome-ignore lint/suspicious/noExplicitAny: EIP1193Provider type varies
   const [provider, setProvider] = useState<any | null>(null);
   const [isLoadingSDK, setIsLoadingSDK] = useState(false);
   const [sdkLoadError, setSdkLoadError] = useState<string | null>(null);
 
   const loadAndInitializeSDK = useCallback(
-    async (config?: { appName?: string; appLogoUrl?: string; appChainIds?: number[]; walletUrl?: string }) => {
+    async (config?: {
+      appName?: string;
+      appLogoUrl?: string;
+      appChainIds?: number[];
+      walletUrl?: string;
+    }) => {
       setIsLoadingSDK(true);
       setSdkLoadError(null);
 
@@ -83,7 +96,7 @@ export function useSDKState(): UseSDKStateReturn {
     provider,
     isLoadingSDK,
     sdkLoadError,
-    
+
     // Actions
     setSdkSource,
     loadAndInitializeSDK,
@@ -91,4 +104,3 @@ export function useSDKState(): UseSDKStateReturn {
     setProvider,
   };
 }
-

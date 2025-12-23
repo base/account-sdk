@@ -1,6 +1,6 @@
 /**
  * Centralized test configuration and constants
- * 
+ *
  * This file consolidates all hardcoded values, test addresses, chain configurations,
  * and other constants used throughout the E2E test suite.
  */
@@ -14,7 +14,8 @@ export const CHAINS = {
     chainId: 84532,
     chainIdHex: '0x14a34',
     name: 'Base Sepolia',
-    rpcUrl: 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+    rpcUrl:
+      'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
   },
 } as const;
 
@@ -27,17 +28,17 @@ export const TEST_ADDRESSES = {
    * Zero address - used for various tests
    */
   ZERO: '0x0000000000000000000000000000000000000000' as const,
-  
+
   /**
    * Burn address - used for transaction tests
    */
   BURN: '0x000000000000000000000000000000000000dead' as const,
-  
+
   /**
    * Generic test recipient address
    */
   TEST_RECIPIENT: '0x0000000000000000000000000000000000000001' as const,
-  
+
   /**
    * Alternative test address
    */
@@ -69,17 +70,17 @@ export const TEST_DELAYS = {
    * Delay between individual tests in a sequence (milliseconds)
    */
   BETWEEN_TESTS: 500,
-  
+
   /**
    * Delay for payment status polling (milliseconds)
    */
   PAYMENT_STATUS_POLLING: 500,
-  
+
   /**
    * Maximum number of retries for payment status checks
    */
   PAYMENT_STATUS_MAX_RETRIES: 10,
-  
+
   /**
    * Toast notification durations (milliseconds)
    */
@@ -98,12 +99,12 @@ export const SDK_CONFIG = {
    * Default app name for SDK initialization
    */
   APP_NAME: 'E2E Test Suite',
-  
+
   /**
    * Default chain IDs for SDK initialization
    */
   DEFAULT_CHAIN_IDS: [CHAINS.BASE_SEPOLIA.chainId],
-  
+
   /**
    * App logo URL (optional)
    */
@@ -119,12 +120,12 @@ export const TEST_MESSAGES = {
    * Personal sign test message
    */
   PERSONAL_SIGN: 'Hello from Base Account SDK E2E Test!',
-  
+
   /**
    * Sub-account sign test message
    */
   SUB_ACCOUNT_SIGN: 'Hello from sub-account!',
-  
+
   /**
    * Typed data test message
    */
@@ -140,17 +141,17 @@ export const PAYMENT_CONFIG = {
    * Test payment amount
    */
   AMOUNT: '0.01',
-  
+
   /**
    * Test subscription recurring charge
    */
   SUBSCRIPTION_RECURRING_CHARGE: '9.99',
-  
+
   /**
    * Test subscription specific charge
    */
   SUBSCRIPTION_CHARGE_AMOUNT: '1.00',
-  
+
   /**
    * Subscription period in days
    */
@@ -166,12 +167,12 @@ export const SPEND_PERMISSION_CONFIG = {
    * Test allowance amount (in USDC base units - 6 decimals)
    */
   ALLOWANCE: '100',
-  
+
   /**
    * Smaller spend amount for testing (in USDC base units)
    */
   SPEND_AMOUNT: '10',
-  
+
   /**
    * Permission period in days
    */
@@ -187,7 +188,7 @@ export const PROLINK_CONFIG = {
    * Base URL for prolink generation
    */
   BASE_URL: 'https://base.app/base-pay',
-  
+
   /**
    * Test RPC request for prolink encoding
    */
@@ -219,12 +220,12 @@ export const WALLET_SEND_CALLS_CONFIG = {
    * Version for wallet_sendCalls
    */
   VERSION: '2.0.0',
-  
+
   /**
    * Version for wallet_addSubAccount
    */
   SUB_ACCOUNT_VERSION: '1',
-  
+
   /**
    * Simple test call (no value transfer)
    */
@@ -233,7 +234,7 @@ export const WALLET_SEND_CALLS_CONFIG = {
     data: '0x',
     value: '0x0',
   },
-  
+
   /**
    * Burn address call for sub-account tests
    */
@@ -256,16 +257,14 @@ export const TYPED_DATA_CONFIG = {
     name: 'E2E Test',
     version: '1',
   },
-  
+
   /**
    * Test typed data types
    */
   TYPES: {
-    TestMessage: [
-      { name: 'message', type: 'string' },
-    ],
+    TestMessage: [{ name: 'message', type: 'string' }],
   },
-  
+
   /**
    * Primary type
    */
@@ -288,7 +287,7 @@ export const TEST_CATEGORIES = [
   'Provider Events',
 ] as const;
 
-export type TestCategoryName = typeof TEST_CATEGORIES[number];
+export type TestCategoryName = (typeof TEST_CATEGORIES)[number];
 
 // ============================================================================
 // Playground Pages Configuration
@@ -346,4 +345,3 @@ export function getChainConfig(chainId: number) {
 export function toHexChainId(chainId: number): `0x${string}` {
   return `0x${chainId.toString(16)}` as `0x${string}`;
 }
-

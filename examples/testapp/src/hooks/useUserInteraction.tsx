@@ -21,7 +21,7 @@ export function useUserInteraction(): UseUserInteractionReturn {
     if (skipModal) {
       return Promise.resolve();
     }
-    
+
     return new Promise((resolve, reject) => {
       setCurrentTestName(testName);
       setIsModalOpen(true);
@@ -49,4 +49,3 @@ export function useUserInteraction(): UseUserInteractionReturn {
     handleCancel,
   };
 }
-

@@ -1,13 +1,13 @@
 /**
  * Hook for managing test execution state
- * 
+ *
  * Consolidates test categories, test results, and running section tracking
  * into a single cohesive state manager using reducer pattern.
  */
 
-import { useReducer, useCallback } from 'react';
-import type { TestCategory, TestResults, TestStatus } from '../types';
+import { useCallback, useReducer } from 'react';
 import { TEST_CATEGORIES } from '../../../utils/e2e-test-config';
+import type { TestCategory, TestResults, TestStatus } from '../types';
 
 // ============================================================================
 // Types
@@ -21,7 +21,17 @@ interface TestState {
 }
 
 type TestAction =
-  | { type: 'UPDATE_TEST_STATUS'; payload: { category: string; testName: string; status: TestStatus; error?: string; details?: string; duration?: number } }
+  | {
+      type: 'UPDATE_TEST_STATUS';
+      payload: {
+        category: string;
+        testName: string;
+        status: TestStatus;
+        error?: string;
+        details?: string;
+        duration?: number;
+      };
+    }
   | { type: 'RESET_CATEGORY'; payload: string }
   | { type: 'RESET_ALL_CATEGORIES' }
   | { type: 'START_TESTS' }
@@ -33,7 +43,7 @@ type TestAction =
 // Initial State
 // ============================================================================
 
-const initialCategories: TestCategory[] = TEST_CATEGORIES.map(name => ({
+const initialCategories: TestCategory[] = TEST_CATEGORIES.map((name) => ({
   name,
   tests: [],
   expanded: true,
@@ -59,11 +69,11 @@ function testStateReducer(state: TestState, action: TestAction): TestState {
   switch (action.type) {
     case 'UPDATE_TEST_STATUS': {
       const { category, testName, status, error, details, duration } = action.payload;
-      
+
       const updatedCategories = state.categories.map((cat) => {
         if (cat.name === category) {
           const existingTestIndex = cat.tests.findIndex((t) => t.name === testName);
-          
+
           if (existingTestIndex >= 0) {
             // Update existing test
             const updatedTests = [...cat.tests];
@@ -76,7 +86,7 @@ function testStateReducer(state: TestState, action: TestAction): TestState {
             };
             return { ...cat, tests: updatedTests };
           }
-          
+
           // Add new test
           return {
             ...cat,
@@ -92,8 +102,9 @@ function testStateReducer(state: TestState, action: TestAction): TestState {
         // Check if this is a new final status (not an update)
         const oldCategory = state.categories.find((c) => c.name === category);
         const oldTest = oldCategory?.tests.find((t) => t.name === testName);
-        const wasNotFinal = !oldTest || oldTest.status === 'pending' || oldTest.status === 'running';
-        
+        const wasNotFinal =
+          !oldTest || oldTest.status === 'pending' || oldTest.status === 'running';
+
         if (wasNotFinal) {
           updatedResults = {
             total: state.results.total + 1,
@@ -176,7 +187,7 @@ export interface UseTestStateReturn {
   testResults: TestResults;
   runningSectionName: string | null;
   isRunningTests: boolean;
-  
+
   // Actions
   updateTestStatus: (
     category: string,
@@ -244,7 +255,7 @@ export function useTestState(): UseTestStateReturn {
     testResults: state.results,
     runningSectionName: state.runningSectionName,
     isRunningTests: state.isRunningTests,
-    
+
     // Actions
     updateTestStatus,
     resetCategory,
@@ -255,4 +266,3 @@ export function useTestState(): UseTestStateReturn {
     toggleCategoryExpanded,
   };
 }
-

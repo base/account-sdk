@@ -1,17 +1,11 @@
 /**
  * Test helper utilities for E2E test suite
- * 
+ *
  * This module provides the core `runTest` function that wraps test execution
  * with consistent error handling, status updates, and logging.
  */
 
-import type {
-  TestConfig,
-  TestContext,
-  TestFunction,
-  TestHandlers,
-  TestStatus,
-} from '../types';
+import type { TestConfig, TestContext, TestFunction, TestHandlers, TestStatus } from '../types';
 
 /**
  * Custom error class for test cancellation
@@ -52,7 +46,7 @@ export function formatTestError(error: unknown): string {
 
 /**
  * Validate test prerequisites
- * 
+ *
  * Note: Connection status is NOT checked here because it's checked later
  * with a live provider query in the main runTest function. This ensures
  * we always use the most up-to-date connection status.
@@ -81,10 +75,10 @@ async function getCurrentAccount(context: TestContext): Promise<string | null> {
   }
 
   try {
-    const accounts = await context.provider.request({
+    const accounts = (await context.provider.request({
       method: 'eth_accounts',
       params: [],
-    }) as string[];
+    })) as string[];
 
     return accounts && accounts.length > 0 ? accounts[0] : null;
   } catch {
@@ -95,16 +89,16 @@ async function getCurrentAccount(context: TestContext): Promise<string | null> {
 /**
  * Core test runner that wraps test execution with consistent error handling,
  * status updates, and logging.
- * 
+ *
  * This function eliminates ~500 lines of duplicated try-catch-logging-status code
  * across all test functions.
- * 
+ *
  * @param config - Test configuration (name, category, requirements)
  * @param testFn - The actual test function to execute
  * @param handlers - Handlers for status updates and logging
  * @param context - Test context (provider, SDK, connection state, etc.)
  * @returns The test result or undefined if skipped/failed
- * 
+ *
  * @example
  * ```typescript
  * await runTest(
@@ -187,7 +181,7 @@ export async function runTest<T>(
 
 /**
  * Run multiple tests in sequence with delays between them
- * 
+ *
  * @param tests - Array of test functions to run
  * @param delayMs - Delay in milliseconds between tests (default: 500)
  */
@@ -197,7 +191,7 @@ export async function runTestSequence(
 ): Promise<void> {
   for (let i = 0; i < tests.length; i++) {
     await tests[i]();
-    
+
     // Add delay between tests (but not after the last one)
     if (i < tests.length - 1) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -207,7 +201,7 @@ export async function runTestSequence(
 
 /**
  * Create a test function wrapper that provides simplified test context
- * 
+ *
  * This is useful for tests that need to be called multiple times or
  * need access to shared test data (like paymentId, subscriptionId, etc.)
  */
@@ -223,7 +217,7 @@ export function createTestWrapper(
 
 /**
  * Helper to update test result details after a test has completed
- * 
+ *
  * Useful for adding additional information after the test finishes
  */
 export function updateTestDetails(
@@ -235,4 +229,3 @@ export function updateTestDetails(
 ): void {
   handlers.updateTestStatus(category, name, status, undefined, details);
 }
-

@@ -1,6 +1,6 @@
 /**
  * Payment Features Tests
- * 
+ *
  * Tests for one-time payment functionality via base.pay() and status checking.
  */
 
@@ -28,7 +28,7 @@ export async function testPay(
         testnet: true,
         walletUrl: ctx.walletUrl,
       });
-      
+
       return result;
     },
     handlers,
@@ -42,7 +42,7 @@ export async function testPay(
 export async function testGetPaymentStatus(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any> {
+): Promise<unknown> {
   // Check if payment ID is available
   if (!context.paymentId) {
     handlers.updateTestStatus(
@@ -74,12 +74,13 @@ export async function testGetPaymentStatus(
         status.recipient ? `Recipient: ${status.recipient}` : null,
         status.sender ? `Sender: ${status.sender}` : null,
         status.reason ? `Reason: ${status.reason}` : null,
-      ].filter(Boolean).join(', ');
-      
+      ]
+        .filter(Boolean)
+        .join(', ');
+
       return { status, details };
     },
     handlers,
     context
   );
 }
-

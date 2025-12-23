@@ -1,6 +1,6 @@
 /**
  * Sign & Send Tests
- * 
+ *
  * Tests for signing typed data and sending transactions/calls.
  */
 
@@ -24,19 +24,19 @@ export async function testSignTypedData(
     },
     async (ctx) => {
       // Get current account and chain ID
-      const accounts = await ctx.provider.request({
+      const accounts = (await ctx.provider.request({
         method: 'eth_accounts',
         params: [],
-      }) as string[];
-      
+      })) as string[];
+
       const account = accounts[0];
-      
-      const chainIdHex = await ctx.provider.request({
+
+      const chainIdHex = (await ctx.provider.request({
         method: 'eth_chainId',
         params: [],
-      }) as string;
-      const chainIdNum = parseInt(chainIdHex, 16);
-      
+      })) as string;
+      const chainIdNum = Number.parseInt(chainIdHex, 16);
+
       const typedData = {
         domain: {
           name: 'E2E Test',
@@ -44,9 +44,7 @@ export async function testSignTypedData(
           chainId: chainIdNum,
         },
         types: {
-          TestMessage: [
-            { name: 'message', type: 'string' },
-          ],
+          TestMessage: [{ name: 'message', type: 'string' }],
         },
         primaryType: 'TestMessage',
         message: {
@@ -54,11 +52,11 @@ export async function testSignTypedData(
         },
       };
 
-      const signature = await ctx.provider.request({
+      const signature = (await ctx.provider.request({
         method: 'eth_signTypedData_v4',
         params: [account, JSON.stringify(typedData)],
-      }) as string;
-      
+      })) as string;
+
       return signature;
     },
     handlers,
@@ -72,7 +70,7 @@ export async function testSignTypedData(
 export async function testWalletSendCalls(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any> {
+): Promise<unknown> {
   return runTest(
     {
       category: 'Sign & Send',
@@ -83,33 +81,37 @@ export async function testWalletSendCalls(
     },
     async (ctx) => {
       // Get current account and chain ID
-      const accounts = await ctx.provider.request({
+      const accounts = (await ctx.provider.request({
         method: 'eth_accounts',
         params: [],
-      }) as string[];
-      
+      })) as string[];
+
       const account = accounts[0];
-      
-      const chainIdHex = await ctx.provider.request({
+
+      const chainIdHex = (await ctx.provider.request({
         method: 'eth_chainId',
         params: [],
-      }) as string;
-      const chainIdNum = parseInt(chainIdHex, 16);
-      
+      })) as string;
+      const chainIdNum = Number.parseInt(chainIdHex, 16);
+
       const result = await ctx.provider.request({
         method: 'wallet_sendCalls',
-        params: [{
-          version: '2.0.0',
-          from: account,
-          chainId: `0x${chainIdNum.toString(16)}`,
-          calls: [{
-            to: '0x0000000000000000000000000000000000000001',
-            data: '0x',
-            value: '0x0',
-          }],
-        }],
+        params: [
+          {
+            version: '2.0.0',
+            from: account,
+            chainId: `0x${chainIdNum.toString(16)}`,
+            calls: [
+              {
+                to: '0x0000000000000000000000000000000000000001',
+                data: '0x',
+                value: '0x0',
+              },
+            ],
+          },
+        ],
       });
-      
+
       return result;
     },
     handlers,
@@ -123,7 +125,7 @@ export async function testWalletSendCalls(
 export async function testWalletPrepareCalls(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any> {
+): Promise<unknown> {
   return runTest(
     {
       category: 'Sign & Send',
@@ -134,37 +136,40 @@ export async function testWalletPrepareCalls(
     },
     async (ctx) => {
       // Get current account and chain ID
-      const accounts = await ctx.provider.request({
+      const accounts = (await ctx.provider.request({
         method: 'eth_accounts',
         params: [],
-      }) as string[];
-      
+      })) as string[];
+
       const account = accounts[0];
-      
-      const chainIdHex = await ctx.provider.request({
+
+      const chainIdHex = (await ctx.provider.request({
         method: 'eth_chainId',
         params: [],
-      }) as string;
-      const chainIdNum = parseInt(chainIdHex, 16);
-      
+      })) as string;
+      const chainIdNum = Number.parseInt(chainIdHex, 16);
+
       const result = await ctx.provider.request({
         method: 'wallet_prepareCalls',
-        params: [{
-          version: '2.0.0',
-          from: account,
-          chainId: `0x${chainIdNum.toString(16)}`,
-          calls: [{
-            to: '0x0000000000000000000000000000000000000001',
-            data: '0x',
-            value: '0x0',
-          }],
-        }],
+        params: [
+          {
+            version: '2.0.0',
+            from: account,
+            chainId: `0x${chainIdNum.toString(16)}`,
+            calls: [
+              {
+                to: '0x0000000000000000000000000000000000000001',
+                data: '0x',
+                value: '0x0',
+              },
+            ],
+          },
+        ],
       });
-      
+
       return result;
     },
     handlers,
     context
   );
 }
-

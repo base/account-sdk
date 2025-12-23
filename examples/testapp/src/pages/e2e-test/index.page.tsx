@@ -25,8 +25,8 @@ import {
   Tabs,
   Text,
   Tooltip,
+  VStack,
   useToast,
-  VStack
 } from '@chakra-ui/react';
 import { useEffect, useRef } from 'react';
 import { WIDTH_2XL } from '../../components/Layout';
@@ -46,13 +46,8 @@ import { formatTestResults, getStatusColor, getStatusIcon } from './utils/format
 export default function E2ETestPage() {
   const toast = useToast();
   const { scwUrl } = useConfig();
-  const {
-    isModalOpen,
-    currentTestName,
-    requestUserInteraction,
-    handleContinue,
-    handleCancel,
-  } = useUserInteraction();
+  const { isModalOpen, currentTestName, requestUserInteraction, handleContinue, handleCancel } =
+    useUserInteraction();
 
   // Test data refs (use refs instead of state to avoid async state update issues)
   const paymentIdRef = useRef<string | null>(null);
@@ -62,20 +57,10 @@ export default function E2ETestPage() {
 
   // State management hooks
   const testState = useTestState();
-  const {
-    testCategories,
-    runningSectionName,
-    isRunningTests,
-  } = testState;
+  const { testCategories, runningSectionName, isRunningTests } = testState;
 
-  const {
-    sdkSource,
-    loadedSDK,
-    provider,
-    isLoadingSDK,
-    setSdkSource,
-    loadAndInitializeSDK,
-  } = useSDKState();
+  const { sdkSource, loadedSDK, provider, isLoadingSDK, setSdkSource, loadAndInitializeSDK } =
+    useSDKState();
 
   const connectionState = useConnectionState();
   const { connected, currentAccount, allAccounts, chainId } = connectionState;
@@ -113,7 +98,7 @@ export default function E2ETestPage() {
         duration: TEST_DELAYS.TOAST_SUCCESS_DURATION,
         isClosable: true,
       });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Copy Failed',
         description: 'Failed to copy to clipboard',
@@ -142,7 +127,7 @@ export default function E2ETestPage() {
         duration: TEST_DELAYS.TOAST_SUCCESS_DURATION,
         isClosable: true,
       });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Copy Failed',
         description: 'Failed to copy to clipboard',
@@ -172,7 +157,7 @@ export default function E2ETestPage() {
         duration: TEST_DELAYS.TOAST_SUCCESS_DURATION,
         isClosable: true,
       });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Copy Failed',
         description: 'Failed to copy to clipboard',
@@ -184,16 +169,20 @@ export default function E2ETestPage() {
   };
 
   // Initialize SDK on mount with local version
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loadAndInitializeSDK should only run on mount
   useEffect(() => {
     loadAndInitializeSDK({ walletUrl: scwUrl });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reload SDK when source or scwUrl changes
+  // Reload SDK when scwUrl changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loadAndInitializeSDK is stable, loadedSDK check is intentional
   useEffect(() => {
     if (loadedSDK) {
       loadAndInitializeSDK({ walletUrl: scwUrl });
     }
-  }, [sdkSource, scwUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scwUrl]);
 
   // Helper for source change
   const handleSourceChange = (source: SDKSource) => {
@@ -250,86 +239,85 @@ export default function E2ETestPage() {
           </CardBody>
         </Card>
         <VStack spacing={6} align="stretch">
+          {/* Connection Status */}
+          <Card>
+            <CardHeader>
+              <Heading size="md">Wallet Connection Status</Heading>
+            </CardHeader>
+            <CardBody>
+              <VStack spacing={4} align="stretch">
+                <Flex align="center" gap={3}>
+                  <Box
+                    w={3}
+                    h={3}
+                    borderRadius="full"
+                    bg={connected ? UI_COLORS.STATUS.CONNECTED : UI_COLORS.STATUS.DISCONNECTED}
+                    boxShadow={connected ? '0 0 10px rgba(72, 187, 120, 0.6)' : 'none'}
+                  />
+                  <Text fontSize="lg" fontWeight="bold">
+                    {connected ? 'Connected' : 'Not Connected'}
+                  </Text>
+                  {connected && <Badge colorScheme="green">Active</Badge>}
+                </Flex>
 
-        {/* Connection Status */}
-        <Card>
-          <CardHeader>
-            <Heading size="md">Wallet Connection Status</Heading>
-          </CardHeader>
-          <CardBody>
-            <VStack spacing={4} align="stretch">
-              <Flex align="center" gap={3}>
-                <Box
-                  w={3}
-                  h={3}
-                  borderRadius="full"
-                  bg={connected ? UI_COLORS.STATUS.CONNECTED : UI_COLORS.STATUS.DISCONNECTED}
-                  boxShadow={connected ? '0 0 10px rgba(72, 187, 120, 0.6)' : 'none'}
-                />
-                <Text fontSize="lg" fontWeight="bold">
-                  {connected ? 'Connected' : 'Not Connected'}
-                </Text>
-                {connected && <Badge colorScheme="green">Active</Badge>}
-              </Flex>
+                {connected && currentAccount && (
+                  <VStack align="stretch" spacing={4}>
+                    <Box>
+                      <Text fontSize="sm" color="gray.600" mb={2}>
+                        Connected Account{allAccounts.length > 1 ? 's' : ''}
+                      </Text>
+                      <VStack align="stretch" spacing={2}>
+                        {allAccounts.map((account, index) => (
+                          <Code
+                            key={account}
+                            fontSize="xs"
+                            p={2}
+                            borderRadius="md"
+                            display="block"
+                            bg={index === 0 ? 'blue.50' : undefined}
+                            borderWidth={index === 0 ? '2px' : undefined}
+                            borderColor={index === 0 ? 'blue.300' : undefined}
+                          >
+                            {account}
+                          </Code>
+                        ))}
+                      </VStack>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" color="gray.600" mb={1}>
+                        Active Network Chain ID
+                      </Text>
+                      <Flex align="center" gap={2}>
+                        <Badge colorScheme="blue" fontSize="md" p={2}>
+                          {chainId || 'Unknown'}
+                        </Badge>
+                      </Flex>
+                    </Box>
+                  </VStack>
+                )}
 
-              {connected && currentAccount && (
-                <VStack align="stretch" spacing={4}>
-                  <Box>
-                    <Text fontSize="sm" color="gray.600" mb={2}>
-                      Connected Account{allAccounts.length > 1 ? 's' : ''}
+                {!connected && (
+                  <Box p={4} bg="gray.50" borderRadius="md" _dark={{ bg: 'gray.800' }}>
+                    <Text fontSize="sm" color="gray.600">
+                      No wallet connected. Run the "Connect wallet" test to establish a connection.
                     </Text>
-                    <VStack align="stretch" spacing={2}>
-                      {allAccounts.map((account, index) => (
-                        <Code 
-                          key={account} 
-                          fontSize="xs" 
-                          p={2} 
-                          borderRadius="md" 
-                          display="block"
-                          bg={index === 0 ? 'blue.50' : undefined}
-                          borderWidth={index === 0 ? '2px' : undefined}
-                          borderColor={index === 0 ? 'blue.300' : undefined}
-                        >
-                          {account}
-                        </Code>
-                      ))}
-                    </VStack>
                   </Box>
-                  <Box>
-                    <Text fontSize="sm" color="gray.600" mb={1}>
-                      Active Network Chain ID
-                    </Text>
-                    <Flex align="center" gap={2}>
-                      <Badge colorScheme="blue" fontSize="md" p={2}>
-                        {chainId || 'Unknown'}
-                      </Badge>
-                    </Flex>
-                  </Box>
-                </VStack>
-              )}
+                )}
+              </VStack>
+            </CardBody>
+          </Card>
 
-              {!connected && (
-                <Box p={4} bg="gray.50" borderRadius="md" _dark={{ bg: 'gray.800' }}>
-                  <Text fontSize="sm" color="gray.600">
-                    No wallet connected. Run the "Connect wallet" test to establish a connection.
+          {/* Test Controls */}
+          <Card>
+            <CardBody>
+              <Flex justify="space-between" align="center">
+                <Box>
+                  <Heading size="md">Test Controls</Heading>
+                  <Text fontSize="sm" color="gray.600" mt={1}>
+                    Run all tests or individual test categories
                   </Text>
                 </Box>
-              )}
-            </VStack>
-          </CardBody>
-        </Card>
-
-        {/* Test Controls */}
-        <Card>
-          <CardBody>
-            <Flex justify="space-between" align="center">
-              <Box>
-                <Heading size="md">Test Controls</Heading>
-                <Text fontSize="sm" color="gray.600" mt={1}>
-                  Run all tests or individual test categories
-                </Text>
-              </Box>
-              <Flex gap={3}>
+                <Flex gap={3}>
                   <Button
                     colorScheme="blue"
                     size="lg"
@@ -339,216 +327,224 @@ export default function E2ETestPage() {
                   >
                     Keys / TBA Release
                   </Button>
-                <Button
-                  colorScheme="purple"
-                  size="lg"
-                  onClick={runAllTests}
-                  isLoading={isRunningTests}
-                  loadingText="Running Tests..."
-                >
-                  SDK Release
-                </Button>
-              </Flex>
-            </Flex>
-          </CardBody>
-        </Card>
-
-        {/* Test Results Summary */}
-        <Card>
-          <CardHeader>
-            <Flex justify="space-between" align="center">
-              <Heading size="md">Test Results</Heading>
-              <Flex gap={2}>
-                <Tooltip label="Copy abbreviated results (passed/failed only)" placement="left">
                   <Button
-                    size="sm"
                     colorScheme="purple"
-                    variant="outline"
-                    onClick={copyAbbreviatedResults}
-                    isDisabled={testCategories.reduce((acc, cat) => acc + cat.tests.length, 0) === 0}
-                    leftIcon={<CopyIcon />}
+                    size="lg"
+                    onClick={runAllTests}
+                    isLoading={isRunningTests}
+                    loadingText="Running Tests..."
                   >
-                    Copy Short
+                    SDK Release
                   </Button>
-                </Tooltip>
-                <Tooltip label="Copy detailed test results with failure reasons" placement="left">
-                  <Button
-                    size="sm"
-                    colorScheme="purple"
-                    onClick={copyTestResults}
-                    isDisabled={testCategories.reduce((acc, cat) => acc + cat.tests.length, 0) === 0}
-                    leftIcon={<CopyIcon />}
-                  >
-                    Copy Full
-                  </Button>
-                </Tooltip>
+                </Flex>
               </Flex>
-            </Flex>
-          </CardHeader>
-          <CardBody>
-            <StatGroup>
-              <Stat>
-                <StatLabel>Total Tests</StatLabel>
-                <StatNumber>
-                  {testCategories.reduce((acc, cat) => acc + cat.tests.length, 0)}
-                </StatNumber>
-              </Stat>
-              <Stat>
-                <StatLabel>Passed</StatLabel>
-                <StatNumber color={UI_COLORS.STATUS.PASSED}>
-                  {testCategories.reduce(
-                    (acc, cat) => acc + cat.tests.filter((t) => t.status === 'passed').length,
-                    0
-                  )}
-                </StatNumber>
-              </Stat>
-              <Stat>
-                <StatLabel>Failed</StatLabel>
-                <StatNumber color={UI_COLORS.STATUS.FAILED}>
-                  {testCategories.reduce(
-                    (acc, cat) => acc + cat.tests.filter((t) => t.status === 'failed').length,
-                    0
-                  )}
-                </StatNumber>
-              </Stat>
-              <Stat>
-                <StatLabel>Skipped</StatLabel>
-                <StatNumber color={UI_COLORS.STATUS.SKIPPED}>
-                  {testCategories.reduce(
-                    (acc, cat) => acc + cat.tests.filter((t) => t.status === 'skipped').length,
-                    0
-                  )}
-                </StatNumber>
-              </Stat>
-            </StatGroup>
-          </CardBody>
-        </Card>
+            </CardBody>
+          </Card>
 
-        {/* Test Categories */}
-        <Tabs variant="enclosed" colorScheme="purple">
-          <TabList>
-            <Tab>Test Categories</Tab>
-          </TabList>
+          {/* Test Results Summary */}
+          <Card>
+            <CardHeader>
+              <Flex justify="space-between" align="center">
+                <Heading size="md">Test Results</Heading>
+                <Flex gap={2}>
+                  <Tooltip label="Copy abbreviated results (passed/failed only)" placement="left">
+                    <Button
+                      size="sm"
+                      colorScheme="purple"
+                      variant="outline"
+                      onClick={copyAbbreviatedResults}
+                      isDisabled={
+                        testCategories.reduce((acc, cat) => acc + cat.tests.length, 0) === 0
+                      }
+                      leftIcon={<CopyIcon />}
+                    >
+                      Copy Short
+                    </Button>
+                  </Tooltip>
+                  <Tooltip label="Copy detailed test results with failure reasons" placement="left">
+                    <Button
+                      size="sm"
+                      colorScheme="purple"
+                      onClick={copyTestResults}
+                      isDisabled={
+                        testCategories.reduce((acc, cat) => acc + cat.tests.length, 0) === 0
+                      }
+                      leftIcon={<CopyIcon />}
+                    >
+                      Copy Full
+                    </Button>
+                  </Tooltip>
+                </Flex>
+              </Flex>
+            </CardHeader>
+            <CardBody>
+              <StatGroup>
+                <Stat>
+                  <StatLabel>Total Tests</StatLabel>
+                  <StatNumber>
+                    {testCategories.reduce((acc, cat) => acc + cat.tests.length, 0)}
+                  </StatNumber>
+                </Stat>
+                <Stat>
+                  <StatLabel>Passed</StatLabel>
+                  <StatNumber color={UI_COLORS.STATUS.PASSED}>
+                    {testCategories.reduce(
+                      (acc, cat) => acc + cat.tests.filter((t) => t.status === 'passed').length,
+                      0
+                    )}
+                  </StatNumber>
+                </Stat>
+                <Stat>
+                  <StatLabel>Failed</StatLabel>
+                  <StatNumber color={UI_COLORS.STATUS.FAILED}>
+                    {testCategories.reduce(
+                      (acc, cat) => acc + cat.tests.filter((t) => t.status === 'failed').length,
+                      0
+                    )}
+                  </StatNumber>
+                </Stat>
+                <Stat>
+                  <StatLabel>Skipped</StatLabel>
+                  <StatNumber color={UI_COLORS.STATUS.SKIPPED}>
+                    {testCategories.reduce(
+                      (acc, cat) => acc + cat.tests.filter((t) => t.status === 'skipped').length,
+                      0
+                    )}
+                  </StatNumber>
+                </Stat>
+              </StatGroup>
+            </CardBody>
+          </Card>
 
-          <TabPanels>
-            {/* Test Categories Tab */}
-            <TabPanel>
-              <VStack spacing={4} align="stretch">
-                {testCategories.map((category) => (
-                  <Card key={category.name}>
-                    <CardHeader>
-                      <Flex justify="space-between" align="center">
-                        <Box flex="1">
-                          <Heading size="md">{category.name}</Heading>
-                        </Box>
-                        <Flex gap={2} align="center">
-                          <Badge colorScheme="purple">
-                            {category.tests.length} test{category.tests.length !== 1 ? 's' : ''}
-                          </Badge>
-                          <Tooltip label="Copy section results" placement="top">
+          {/* Test Categories */}
+          <Tabs variant="enclosed" colorScheme="purple">
+            <TabList>
+              <Tab>Test Categories</Tab>
+            </TabList>
+
+            <TabPanels>
+              {/* Test Categories Tab */}
+              <TabPanel>
+                <VStack spacing={4} align="stretch">
+                  {testCategories.map((category) => (
+                    <Card key={category.name}>
+                      <CardHeader>
+                        <Flex justify="space-between" align="center">
+                          <Box flex="1">
+                            <Heading size="md">{category.name}</Heading>
+                          </Box>
+                          <Flex gap={2} align="center">
+                            <Badge colorScheme="purple">
+                              {category.tests.length} test{category.tests.length !== 1 ? 's' : ''}
+                            </Badge>
+                            <Tooltip label="Copy section results" placement="top">
+                              <Button
+                                size="sm"
+                                colorScheme="purple"
+                                variant="ghost"
+                                onClick={() => copySectionResults(category.name)}
+                                isDisabled={category.tests.length === 0}
+                              >
+                                <CopyIcon />
+                              </Button>
+                            </Tooltip>
                             <Button
                               size="sm"
                               colorScheme="purple"
-                              variant="ghost"
-                              onClick={() => copySectionResults(category.name)}
-                              isDisabled={category.tests.length === 0}
-                            >
-                              <CopyIcon />
-                            </Button>
-                          </Tooltip>
-                          <Button
-                            size="sm"
-                            colorScheme="purple"
-                            variant="outline"
-                            onClick={() => runTestSection(category.name)}
-                            isLoading={runningSectionName === category.name}
-                            isDisabled={isRunningTests || (runningSectionName !== null && runningSectionName !== category.name)}
-                            loadingText="Running..."
-                          >
-                            ▶ Run Section
-                          </Button>
-                        </Flex>
-                      </Flex>
-                    </CardHeader>
-                    <CardBody>
-                      {category.tests.length === 0 ? (
-                        <Text color="gray.500" fontSize="sm">
-                          No tests run yet
-                        </Text>
-                      ) : (
-                        <VStack spacing={3} align="stretch">
-                          {category.tests.map((test) => (
-                            <Box
-                              key={test.name}
-                              p={4}
-                              borderWidth="1px"
-                              borderRadius="md"
-                              borderColor={getStatusColor(test.status)}
-                              bg={
-                                test.status === 'failed'
-                                  ? 'red.50'
-                                  : test.status === 'passed'
-                                    ? 'green.50'
-                                    : 'gray.50'
+                              variant="outline"
+                              onClick={() => runTestSection(category.name)}
+                              isLoading={runningSectionName === category.name}
+                              isDisabled={
+                                isRunningTests ||
+                                (runningSectionName !== null &&
+                                  runningSectionName !== category.name)
                               }
-                              _dark={{
-                                bg:
-                                  test.status === 'failed'
-                                    ? 'red.900'
-                                    : test.status === 'passed'
-                                      ? 'green.900'
-                                      : 'gray.800',
-                              }}
+                              loadingText="Running..."
                             >
-                              <Flex justify="space-between" align="center">
-                                <Flex align="center" gap={2}>
-                                  <Text fontSize="lg">{getStatusIcon(test.status)}</Text>
-                                  <Text fontWeight="medium">{test.name}</Text>
+                              ▶ Run Section
+                            </Button>
+                          </Flex>
+                        </Flex>
+                      </CardHeader>
+                      <CardBody>
+                        {category.tests.length === 0 ? (
+                          <Text color="gray.500" fontSize="sm">
+                            No tests run yet
+                          </Text>
+                        ) : (
+                          <VStack spacing={3} align="stretch">
+                            {category.tests.map((test) => (
+                              <Box
+                                key={test.name}
+                                p={4}
+                                borderWidth="1px"
+                                borderRadius="md"
+                                borderColor={getStatusColor(test.status)}
+                                bg={
+                                  test.status === 'failed'
+                                    ? 'red.50'
+                                    : test.status === 'passed'
+                                      ? 'green.50'
+                                      : 'gray.50'
+                                }
+                                _dark={{
+                                  bg:
+                                    test.status === 'failed'
+                                      ? 'red.900'
+                                      : test.status === 'passed'
+                                        ? 'green.900'
+                                        : 'gray.800',
+                                }}
+                              >
+                                <Flex justify="space-between" align="center">
+                                  <Flex align="center" gap={2}>
+                                    <Text fontSize="lg">{getStatusIcon(test.status)}</Text>
+                                    <Text fontWeight="medium">{test.name}</Text>
+                                  </Flex>
+                                  {test.duration && (
+                                    <Badge colorScheme="gray">{test.duration}ms</Badge>
+                                  )}
                                 </Flex>
-                                {test.duration && (
-                                  <Badge colorScheme="gray">{test.duration}ms</Badge>
-                                )}
-                              </Flex>
-                              {test.details && (
-                                <Text fontSize="sm" color="gray.600" mt={2}>
-                                  {test.details}
-                                </Text>
-                              )}
-                              {test.error && (
-                                <Box mt={2} p={2} bg="red.100" borderRadius="md">
-                                  <Text fontSize="sm" color="red.700">
-                                    Error: {test.error}
+                                {test.details && (
+                                  <Text fontSize="sm" color="gray.600" mt={2}>
+                                    {test.details}
                                   </Text>
-                                </Box>
-                              )}
-                            </Box>
-                          ))}
-                        </VStack>
-                      )}
-                    </CardBody>
-                  </Card>
-                ))}
-              </VStack>
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
+                                )}
+                                {test.error && (
+                                  <Box mt={2} p={2} bg="red.100" borderRadius="md">
+                                    <Text fontSize="sm" color="red.700">
+                                      Error: {test.error}
+                                    </Text>
+                                  </Box>
+                                )}
+                              </Box>
+                            ))}
+                          </VStack>
+                        )}
+                      </CardBody>
+                    </Card>
+                  ))}
+                </VStack>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
 
-        {/* Documentation Link */}
-        <Card>
-          <CardBody>
-            <Flex justify="center" align="center" gap={2}>
-              <Text>📚 For more information, visit the</Text>
-              <Link
-                href="https://docs.base.org/base-account"
-                isExternal
-                color="purple.500"
-                fontWeight="bold"
-              >
-                Base Account Documentation
-              </Link>
-            </Flex>
-          </CardBody>
-        </Card>
+          {/* Documentation Link */}
+          <Card>
+            <CardBody>
+              <Flex justify="center" align="center" gap={2}>
+                <Text>📚 For more information, visit the</Text>
+                <Link
+                  href="https://docs.base.org/base-account"
+                  isExternal
+                  color="purple.500"
+                  fontWeight="bold"
+                >
+                  Base Account Documentation
+                </Link>
+              </Flex>
+            </CardBody>
+          </Card>
         </VStack>
       </Container>
     </>

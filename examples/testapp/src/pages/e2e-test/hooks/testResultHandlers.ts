@@ -1,6 +1,6 @@
 /**
  * Test Result Handlers Configuration
- * 
+ *
  * Centralized mapping of test names to their result processing logic.
  * Each handler is responsible for:
  * - Extracting relevant data from test results
@@ -9,6 +9,7 @@
  * - Updating connection state when needed
  */
 
+import type { MutableRefObject } from 'react';
 import type { UseConnectionStateReturn } from './useConnectionState';
 import type { UseTestStateReturn } from './useTestState';
 
@@ -22,13 +23,14 @@ import type { UseTestStateReturn } from './useTestState';
 export interface TestResultHandlerContext {
   testCategory: string;
   testName: string;
+  // biome-ignore lint/suspicious/noExplicitAny: Result type varies, runtime checks in handlers
   result: any;
   testState: UseTestStateReturn;
   connectionState: UseConnectionStateReturn;
-  paymentIdRef: React.MutableRefObject<string | null>;
-  subscriptionIdRef: React.MutableRefObject<string | null>;
-  permissionHashRef: React.MutableRefObject<string | null>;
-  subAccountAddressRef: React.MutableRefObject<string | null>;
+  paymentIdRef: MutableRefObject<string | null>;
+  subscriptionIdRef: MutableRefObject<string | null>;
+  permissionHashRef: MutableRefObject<string | null>;
+  subAccountAddressRef: MutableRefObject<string | null>;
 }
 
 /**
@@ -49,7 +51,13 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
   'pay() function': (ctx) => {
     if (ctx.result.id) {
       ctx.paymentIdRef.current = ctx.result.id;
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Payment ID: ${ctx.result.id}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Payment ID: ${ctx.result.id}`
+      );
     }
   },
 
@@ -57,48 +65,97 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
   'subscribe() function': (ctx) => {
     if (ctx.result.id) {
       ctx.subscriptionIdRef.current = ctx.result.id;
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Subscription ID: ${ctx.result.id}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Subscription ID: ${ctx.result.id}`
+      );
     }
   },
   'base.subscription.getStatus()': (ctx) => {
     if (ctx.result.details) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, ctx.result.details);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        ctx.result.details
+      );
     }
   },
   'prepareCharge() with amount': (ctx) => {
     if (Array.isArray(ctx.result)) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Generated ${ctx.result.length} call(s)`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Generated ${ctx.result.length} call(s)`
+      );
     }
   },
   'prepareCharge() max-remaining-charge': (ctx) => {
     if (Array.isArray(ctx.result)) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Generated ${ctx.result.length} call(s)`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Generated ${ctx.result.length} call(s)`
+      );
     }
   },
 
   // Sub-account features
-  'wallet_addSubAccount': (ctx) => {
+  wallet_addSubAccount: (ctx) => {
     if (ctx.result.address) {
       ctx.subAccountAddressRef.current = ctx.result.address;
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Address: ${ctx.result.address}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Address: ${ctx.result.address}`
+      );
     }
   },
-  'wallet_getSubAccounts': (ctx) => {
-    if (ctx.result.subAccounts) {
-      const addresses = ctx.result.addresses || ctx.result.subAccounts.map((sa: any) => sa.address);
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, addresses.join(', '));
+  wallet_getSubAccounts: (ctx) => {
+    const result = ctx.result as { subAccounts?: Array<{ address: string }>; addresses?: string[] };
+    if (result.subAccounts) {
+      const addresses = result.addresses || result.subAccounts.map((sa) => sa.address);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        addresses.join(', ')
+      );
     }
   },
   'wallet_sendCalls (sub-account)': (ctx) => {
     // Handle both direct string result and object with txHash property
     const hash = typeof ctx.result === 'string' ? ctx.result : ctx.result?.txHash;
     if (hash) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Tx: ${hash}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Tx: ${hash}`
+      );
     }
   },
   'personal_sign (sub-account)': (ctx) => {
     if (ctx.result.isValid !== undefined) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Verified: ${ctx.result.isValid}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Verified: ${ctx.result.isValid}`
+      );
     }
   },
 
@@ -106,32 +163,68 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
   'spendPermission.requestSpendPermission()': (ctx) => {
     if (ctx.result.permissionHash) {
       ctx.permissionHashRef.current = ctx.result.permissionHash;
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Hash: ${ctx.result.permissionHash}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Hash: ${ctx.result.permissionHash}`
+      );
     }
   },
   'spendPermission.getPermissionStatus()': (ctx) => {
     if (ctx.result.remainingSpend) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Remaining: ${ctx.result.remainingSpend}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Remaining: ${ctx.result.remainingSpend}`
+      );
     }
   },
   'spendPermission.fetchPermission()': (ctx) => {
     if (ctx.result.permissionHash) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Hash: ${ctx.result.permissionHash}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Hash: ${ctx.result.permissionHash}`
+      );
     }
   },
   'spendPermission.fetchPermissions()': (ctx) => {
     if (Array.isArray(ctx.result)) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Found ${ctx.result.length} permission(s)`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Found ${ctx.result.length} permission(s)`
+      );
     }
   },
   'spendPermission.prepareSpendCallData()': (ctx) => {
     if (Array.isArray(ctx.result)) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Generated ${ctx.result.length} call(s)`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Generated ${ctx.result.length} call(s)`
+      );
     }
   },
   'spendPermission.prepareRevokeCallData()': (ctx) => {
     if (ctx.result.to) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `To: ${ctx.result.to}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `To: ${ctx.result.to}`
+      );
     }
   },
 
@@ -141,7 +234,13 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
       ctx.connectionState.setCurrentAccount(ctx.result[0]);
       ctx.connectionState.setAllAccounts(ctx.result);
       ctx.connectionState.setConnected(true);
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Connected: ${ctx.result[0]}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Connected: ${ctx.result[0]}`
+      );
     }
   },
   'Get accounts': (ctx) => {
@@ -154,28 +253,52 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
         // Update accounts even if already connected
         ctx.connectionState.setAllAccounts(ctx.result);
       }
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, ctx.result.join(', '));
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        ctx.result.join(', ')
+      );
     }
   },
   'Get chain ID': (ctx) => {
     if (typeof ctx.result === 'number') {
       ctx.connectionState.setChainId(ctx.result);
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Chain ID: ${ctx.result}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Chain ID: ${ctx.result}`
+      );
     }
   },
   'Sign message (personal_sign)': (ctx) => {
     if (typeof ctx.result === 'string') {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Sig: ${ctx.result}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Sig: ${ctx.result}`
+      );
     }
   },
 
   // Sign & Send
-  'eth_signTypedData_v4': (ctx) => {
+  eth_signTypedData_v4: (ctx) => {
     if (typeof ctx.result === 'string') {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Sig: ${ctx.result}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Sig: ${ctx.result}`
+      );
     }
   },
-  'wallet_sendCalls': (ctx) => {
+  wallet_sendCalls: (ctx) => {
     let hash: string | undefined;
     if (typeof ctx.result === 'string') {
       hash = ctx.result;
@@ -183,19 +306,37 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
       hash = ctx.result.id;
     }
     if (hash) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Hash: ${hash}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Hash: ${hash}`
+      );
     }
   },
 
   // Prolink features
   'encodeProlink()': (ctx) => {
     if (typeof ctx.result === 'string') {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Encoded: ${ctx.result}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `Encoded: ${ctx.result}`
+      );
     }
   },
   'createProlinkUrl()': (ctx) => {
     if (typeof ctx.result === 'string') {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `URL: ${ctx.result}`);
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `URL: ${ctx.result}`
+      );
     }
   },
 };
@@ -214,4 +355,3 @@ export function processTestResult(ctx: TestResultHandlerContext): void {
     handler(ctx);
   }
 }
-

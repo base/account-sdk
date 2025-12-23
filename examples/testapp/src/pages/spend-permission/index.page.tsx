@@ -35,13 +35,13 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 import {
+  http,
+  type Hex,
   createPublicClient,
   createWalletClient,
   formatUnits,
   getAddress,
-  http,
   parseUnits,
-  type Hex,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 

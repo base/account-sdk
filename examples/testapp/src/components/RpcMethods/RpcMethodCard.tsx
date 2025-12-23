@@ -78,7 +78,8 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
 
       if (method.includes('wallet_sign')) {
         const type = data.type || (data.request as unknown as { type: string }).type;
-        const walletSignData = data.data || (data.request as unknown as { data: { message?: string } }).data;
+        const walletSignData =
+          data.data || (data.request as unknown as { data: string | { message?: string } }).data;
         let result: string | null = null;
         if (type === '0x01') {
           result = await verifySignMsg({
@@ -94,7 +95,8 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
             method: 'personal_sign',
             from: data.address?.toLowerCase(),
             sign: response,
-            message: walletSignData.message,
+            message:
+              typeof walletSignData === 'string' ? walletSignData : walletSignData.message || '',
             chain: chain as Chain,
           });
         }

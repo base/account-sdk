@@ -1,6 +1,6 @@
 /**
  * Subscription Features Tests
- * 
+ *
  * Tests for recurring payment functionality via base.subscribe() and
  * related subscription management methods.
  */
@@ -31,7 +31,7 @@ export async function testSubscribe(
         testnet: true,
         walletUrl: ctx.walletUrl,
       });
-      
+
       return result;
     },
     handlers,
@@ -45,7 +45,7 @@ export async function testSubscribe(
 export async function testGetSubscriptionStatus(
   handlers: TestHandlers,
   context: TestContext
-): Promise<any> {
+): Promise<unknown> {
   // Check if subscription ID is available
   if (!context.subscriptionId) {
     handlers.updateTestStatus(
@@ -74,8 +74,10 @@ export async function testGetSubscriptionStatus(
         `Recurring: $${status.recurringCharge}`,
         status.remainingChargeInPeriod ? `Remaining: $${status.remainingChargeInPeriod}` : null,
         status.periodInDays ? `Period: ${status.periodInDays} days` : null,
-      ].filter(Boolean).join(', ');
-      
+      ]
+        .filter(Boolean)
+        .join(', ');
+
       return { status, details };
     },
     handlers,
@@ -120,7 +122,7 @@ export async function testPrepareCharge(
         amount: '1.00',
         testnet: true,
       });
-      
+
       return chargeCalls;
     },
     handlers,
@@ -140,11 +142,10 @@ export async function testPrepareCharge(
         amount: 'max-remaining-charge',
         testnet: true,
       });
-      
+
       return maxChargeCalls;
     },
     handlers,
     context
   );
 }
-

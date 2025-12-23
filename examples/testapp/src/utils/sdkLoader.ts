@@ -11,15 +11,10 @@ export type { LoadedSDK, SDKLoaderConfig, SDKSource };
  * Load SDK from npm package (published version)
  */
 async function loadFromNpm(): Promise<LoadedSDK> {
-  console.log('[SDK Loader] Loading from npm (@base-org/account-npm)...');
-  
   // Dynamic import of npm package (installed as @base-org/account-npm alias)
   const mainModule = await import('@base-org/account-npm');
   const spendPermissionModule = await import('@base-org/account-npm/spend-permission');
-  
-  console.log('[SDK Loader] NPM module loaded');
-  console.log('[SDK Loader] VERSION:', mainModule.VERSION);
-  
+
   return {
     base: mainModule.base,
     createBaseAccountSDK: mainModule.createBaseAccountSDK,
@@ -48,16 +43,10 @@ async function loadFromNpm(): Promise<LoadedSDK> {
  * Load SDK from local workspace (development version)
  */
 async function loadFromLocal(): Promise<LoadedSDK> {
-  console.log('[SDK Loader] Loading from local workspace...');
-  
   // Dynamic import of local workspace package
   const mainModule = await import('@base-org/account');
   const spendPermissionModule = await import('@base-org/account/spend-permission');
-  
-  console.log('[SDK Loader] Local module loaded');
-  console.log('[SDK Loader] VERSION:', mainModule.VERSION);
-  console.log('[SDK Loader] getCryptoKeyAccount available:', !!mainModule.getCryptoKeyAccount);
-  
+
   return {
     base: mainModule.base,
     createBaseAccountSDK: mainModule.createBaseAccountSDK,
@@ -88,7 +77,6 @@ async function loadFromLocal(): Promise<LoadedSDK> {
 export async function loadSDK(config: SDKLoaderConfig): Promise<LoadedSDK> {
   if (config.source === 'npm') {
     return loadFromNpm();
-  } else {
-    return loadFromLocal();
   }
+  return loadFromLocal();
 }

@@ -1,6 +1,6 @@
 /**
  * Prolink Features Tests
- * 
+ *
  * Tests for Prolink encoding, decoding, and URL generation functionality.
  */
 
@@ -17,10 +17,19 @@ export async function testProlinkEncodeDecode(
   const category = 'Prolink Features';
 
   // Check if Prolink functions are available
-  if (!context.loadedSDK.encodeProlink || !context.loadedSDK.decodeProlink || !context.loadedSDK.createProlinkUrl) {
+  if (
+    !context.loadedSDK.encodeProlink ||
+    !context.loadedSDK.decodeProlink ||
+    !context.loadedSDK.createProlinkUrl
+  ) {
     handlers.updateTestStatus(category, 'encodeProlink()', 'skipped', 'Prolink API not available');
     handlers.updateTestStatus(category, 'decodeProlink()', 'skipped', 'Prolink API not available');
-    handlers.updateTestStatus(category, 'createProlinkUrl()', 'skipped', 'Prolink API not available');
+    handlers.updateTestStatus(
+      category,
+      'createProlinkUrl()',
+      'skipped',
+      'Prolink API not available'
+    );
     return;
   }
 
@@ -51,9 +60,9 @@ export async function testProlinkEncodeDecode(
       };
 
       const encoded = await ctx.loadedSDK.encodeProlink!(testRequest);
-      
+
       const details = `Length: ${encoded.length} chars, Method: ${testRequest.method}`;
-      
+
       return { encoded, details };
     },
     handlers,
@@ -65,7 +74,8 @@ export async function testProlinkEncodeDecode(
   }
 
   // Extract the encoded string from the result
-  const encodedString = typeof encoded === 'object' && 'encoded' in encoded ? encoded.encoded : encoded;
+  const encodedString =
+    typeof encoded === 'object' && 'encoded' in encoded ? encoded.encoded : encoded;
 
   // Test decoding
   await runTest(
@@ -76,13 +86,13 @@ export async function testProlinkEncodeDecode(
     },
     async (ctx) => {
       const decoded = await ctx.loadedSDK.decodeProlink!(encodedString);
-      
+
       if (decoded.method === 'wallet_sendCalls') {
         const details = `Method: ${decoded.method}, ChainId: ${decoded.chainId || 'N/A'}`;
-        
+
         return { decoded, details };
       }
-      
+
       throw new Error('Decoded method mismatch');
     },
     handlers,
@@ -98,17 +108,16 @@ export async function testProlinkEncodeDecode(
     },
     async (ctx) => {
       const url = ctx.loadedSDK.createProlinkUrl!(encodedString);
-      
+
       if (url.startsWith('https://base.app/base-pay')) {
         const details = `URL: ${url.substring(0, 50)}..., Params: ${new URL(url).searchParams.size}`;
-        
+
         return { url, details };
       }
-      
+
       throw new Error(`Invalid URL format: ${url}`);
     },
     handlers,
     context
   );
 }
-
