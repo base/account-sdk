@@ -72,7 +72,7 @@ export function useConnectionState(): UseConnectionStateReturn {
       })) as string;
       const chainIdNum = Number.parseInt(chainIdHex, 16);
       setChainId(chainIdNum);
-    } catch (error) {
+    } catch (_error) {
       // Failed to update connection from provider - reset state
       setCurrentAccount(null);
       setAllAccounts([]);
