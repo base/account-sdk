@@ -68,6 +68,8 @@ export interface PaymentOptions {
   walletUrl?: string;
   /** Whether to enable telemetry logging. Defaults to true */
   telemetry?: boolean;
+  /** Optional custom bundler URL to use for payment status polling. Useful for avoiding rate limits on public endpoints. */
+  bundlerUrl?: string;
 }
 
 /**

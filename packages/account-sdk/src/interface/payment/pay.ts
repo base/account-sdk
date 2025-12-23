@@ -1,7 +1,7 @@
 import {
-  logPaymentCompleted,
-  logPaymentError,
-  logPaymentStarted,
+    logPaymentCompleted,
+    logPaymentError,
+    logPaymentStarted,
 } from ':core/telemetry/events/payment.js';
 import { getPaymentStatus } from './getPaymentStatus.js';
 import type { PaymentOptions, PaymentResult } from './types.js';
@@ -17,6 +17,7 @@ import { normalizeAddress, validateStringAmount } from './utils/validation.js';
  * @param options.to - Ethereum address to send payment to
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.payerInfo - Optional payer information configuration for data callbacks
+ * @param options.bundlerUrl - Optional custom bundler URL to use for payment status polling. Useful for avoiding rate limits on public endpoints.
  * @returns Promise<PaymentResult> - Result of the payment transaction
  * @throws Error if the payment fails
  *
@@ -36,7 +37,7 @@ import { normalizeAddress, validateStringAmount } from './utils/validation.js';
  * ```
  */
 export async function pay(options: PaymentOptions): Promise<PaymentResult> {
-  const { amount, to, testnet = false, payerInfo, walletUrl, telemetry = true } = options;
+  const { amount, to, testnet = false, payerInfo, walletUrl, telemetry = true, bundlerUrl } = options;
 
   // Generate correlation ID for this payment request
   const correlationId = crypto.randomUUID();
@@ -83,6 +84,7 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
           id: executionResult.transactionHash,
           testnet,
           telemetry: false, // Disable telemetry for polling to avoid noise
+          bundlerUrl,
         });
 
         // Exit early if payment is confirmed or failed
