@@ -70,21 +70,21 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
     const pollingStartTime = Date.now();
     const pollingDurationMs = 2000;
     const pollingIntervalMs = 200; // Poll every 200ms
-    
+
     let latestPayerInfoResponses = executionResult.payerInfoResponses;
-    
+
     while (Date.now() - pollingStartTime < pollingDurationMs) {
       try {
         // Wait before polling
         await new Promise((resolve) => setTimeout(resolve, pollingIntervalMs));
-        
+
         // Check payment status
         const status = await getPaymentStatus({
           id: executionResult.transactionHash,
           testnet,
           telemetry: false, // Disable telemetry for polling to avoid noise
         });
-        
+
         // Exit early if payment is confirmed or failed
         if (status.status === 'completed' || status.status === 'failed') {
           break;

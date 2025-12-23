@@ -33,7 +33,7 @@ describe('pay', () => {
     vi.stubGlobal('crypto', {
       randomUUID: vi.fn().mockReturnValue('mock-correlation-id'),
     });
-    
+
     // Mock getPaymentStatus to return 'pending' by default (simulating still pending after 2 seconds)
     vi.mocked(getPaymentStatusModule.getPaymentStatus).mockResolvedValue({
       status: 'pending',
@@ -733,9 +733,7 @@ describe('pay', () => {
 
       // Payment should still succeed with original response despite polling error
       expect(payment.success).toBe(true);
-      expect(payment.id).toBe(
-        '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
-      );
+      expect(payment.id).toBe('0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
     });
 
     it('should disable telemetry for status polling calls', async () => {
