@@ -1,141 +1,51 @@
-import { ChevronDownIcon, CopyIcon } from '@chakra-ui/icons';
+import { CopyIcon } from '@chakra-ui/icons';
 import {
-    Badge,
-    Box,
-    Button,
-    Card,
-    CardBody,
-    CardHeader,
-    Code,
-    Container,
-    Flex,
-    Heading,
-    Link,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuList,
-    Radio,
-    RadioGroup,
-    Stack,
-    Stat,
-    StatGroup,
-    StatLabel,
-    StatNumber,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Tabs,
-    Text,
-    Tooltip,
-    useToast,
-    VStack
+  Badge,
+  Box,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Code,
+  Container,
+  Flex,
+  Heading,
+  Link,
+  Radio,
+  RadioGroup,
+  Stack,
+  Stat,
+  StatGroup,
+  StatLabel,
+  StatNumber,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Text,
+  Tooltip,
+  useToast,
+  VStack
 } from '@chakra-ui/react';
-import NextLink from 'next/link';
 import { useEffect, useRef } from 'react';
+import { WIDTH_2XL } from '../../components/Layout';
 import { UserInteractionModal } from '../../components/UserInteractionModal';
+import { useConfig } from '../../context/ConfigContextProvider';
 import { useUserInteraction } from '../../hooks/useUserInteraction';
 import type { SDKSource } from '../../utils/sdkLoader';
 
 // Import refactored modules
-import { PLAYGROUND_PAGES, TEST_DELAYS, UI_COLORS } from '../../utils/e2e-test-config';
+import { TEST_DELAYS, UI_COLORS } from '../../utils/e2e-test-config';
 import { useConnectionState } from './hooks/useConnectionState';
 import { useSDKState } from './hooks/useSDKState';
 import { useTestRunner } from './hooks/useTestRunner';
 import { useTestState } from './hooks/useTestState';
 import { formatTestResults, getStatusColor, getStatusIcon } from './utils/format-results';
 
-interface HeaderProps {
-  sdkVersion: string;
-  sdkSource: SDKSource;
-  onSourceChange: (source: SDKSource) => void;
-  isLoadingSDK?: boolean;
-}
-
-function Header({
-  sdkVersion,
-  sdkSource,
-  onSourceChange,
-  isLoadingSDK,
-}: HeaderProps) {
-  return (
-    <Box
-      py={3}
-      px={4}
-      bg="gray.800"
-      color="white"
-      borderBottom="1px solid"
-      borderColor="gray.700"
-    >
-      <Container maxW="container.xl">
-        <Flex justify="space-between" align="center" gap={4}>
-          {/* Left side - Title and Navigation */}
-          <Flex align="center" gap={4}>
-            <Heading size="md" fontFamily="mono">
-              E2E Test Suite
-            </Heading>
-            <Menu>
-              <MenuButton
-                as={Button}
-                rightIcon={<ChevronDownIcon />}
-                size="sm"
-                variant="outline"
-                colorScheme="whiteAlpha"
-              >
-                Navigate
-              </MenuButton>
-              <MenuList>
-                {PLAYGROUND_PAGES.map((page) => (
-                  <MenuItem
-                    key={page.path}
-                    as={NextLink}
-                    href={page.path}
-                    color="gray.800"
-                  >
-                    {page.name}
-                  </MenuItem>
-                ))}
-              </MenuList>
-            </Menu>
-          </Flex>
-
-          {/* Right side - SDK Config */}
-          <Flex align="center" gap={3}>
-            <RadioGroup
-              value={sdkSource}
-              onChange={(value) => onSourceChange(value as SDKSource)}
-              size="sm"
-              isDisabled={isLoadingSDK}
-            >
-              <Stack direction="row" spacing={3}>
-                <Radio value="local" colorScheme="purple">
-                  <Text fontSize="xs">Local</Text>
-                </Radio>
-                <Radio value="npm" colorScheme="purple">
-                  <Text fontSize="xs">NPM Latest</Text>
-                </Radio>
-              </Stack>
-            </RadioGroup>
-
-            {isLoadingSDK && (
-              <Badge colorScheme="blue" fontSize="xs" px={2} py={1}>
-                Loading...
-              </Badge>
-            )}
-
-            <Badge colorScheme="green" fontSize="xs" px={2} py={1}>
-              v{sdkVersion}
-            </Badge>
-          </Flex>
-        </Flex>
-      </Container>
-    </Box>
-  );
-}
-
 export default function E2ETestPage() {
   const toast = useToast();
+  const { scwUrl } = useConfig();
   const {
     isModalOpen,
     currentTestName,
@@ -171,7 +81,7 @@ export default function E2ETestPage() {
   const { connected, currentAccount, allAccounts, chainId } = connectionState;
 
   // Test runner hook - handles all test execution logic
-  const { runAllTests, runTestSection } = useTestRunner({
+  const { runAllTests, runTestSection, runSCWReleaseTests } = useTestRunner({
     testState,
     connectionState,
     loadedSDK,
@@ -181,6 +91,7 @@ export default function E2ETestPage() {
     subscriptionIdRef,
     permissionHashRef,
     subAccountAddressRef,
+    walletUrl: scwUrl,
   });
 
   // Copy functions for test results
@@ -274,15 +185,15 @@ export default function E2ETestPage() {
 
   // Initialize SDK on mount with local version
   useEffect(() => {
-    loadAndInitializeSDK();
+    loadAndInitializeSDK({ walletUrl: scwUrl });
   }, []);
 
-  // Reload SDK when source changes
+  // Reload SDK when source or scwUrl changes
   useEffect(() => {
     if (loadedSDK) {
-      loadAndInitializeSDK();
+      loadAndInitializeSDK({ walletUrl: scwUrl });
     }
-  }, [sdkSource]);
+  }, [sdkSource, scwUrl]);
 
   // Helper for source change
   const handleSourceChange = (source: SDKSource) => {
@@ -297,13 +208,47 @@ export default function E2ETestPage() {
         onContinue={handleContinue}
         onCancel={handleCancel}
       />
-      <Header
-        sdkVersion={loadedSDK?.VERSION || 'Not Loaded'}
-        sdkSource={sdkSource}
-        onSourceChange={handleSourceChange}
-        isLoadingSDK={isLoadingSDK}
-      />
-      <Container maxW="container.xl" py={8}>
+      <Container maxW={WIDTH_2XL} py={8}>
+        {/* SDK Source Controls */}
+        <Card mb={6}>
+          <CardBody>
+            <Flex justify="space-between" align="center" gap={4}>
+              <Box>
+                <Heading size="md">SDK Configuration</Heading>
+                <Text fontSize="sm" color="gray.600" mt={1}>
+                  Choose which SDK version to test
+                </Text>
+              </Box>
+              <Flex align="center" gap={3}>
+                <RadioGroup
+                  value={sdkSource}
+                  onChange={(value) => handleSourceChange(value as SDKSource)}
+                  size="md"
+                  isDisabled={isLoadingSDK}
+                >
+                  <Stack direction="row" spacing={4}>
+                    <Radio value="local" colorScheme="purple">
+                      Local
+                    </Radio>
+                    <Radio value="npm" colorScheme="purple">
+                      NPM Latest
+                    </Radio>
+                  </Stack>
+                </RadioGroup>
+
+                {isLoadingSDK && (
+                  <Badge colorScheme="blue" fontSize="sm" px={3} py={1}>
+                    Loading...
+                  </Badge>
+                )}
+
+                <Badge colorScheme="green" fontSize="sm" px={3} py={1}>
+                  v{loadedSDK?.VERSION || 'Not Loaded'}
+                </Badge>
+              </Flex>
+            </Flex>
+          </CardBody>
+        </Card>
         <VStack spacing={6} align="stretch">
 
         {/* Connection Status */}
@@ -384,15 +329,26 @@ export default function E2ETestPage() {
                   Run all tests or individual test categories
                 </Text>
               </Box>
-              <Button
-                colorScheme="purple"
-                size="lg"
-                onClick={runAllTests}
-                isLoading={isRunningTests}
-                loadingText="Running Tests..."
-              >
-                Run All Tests
-              </Button>
+              <Flex gap={3}>
+                  <Button
+                    colorScheme="blue"
+                    size="lg"
+                    onClick={runSCWReleaseTests}
+                    isLoading={isRunningTests}
+                    loadingText="Running Tests..."
+                  >
+                    Keys / TBA Release
+                  </Button>
+                <Button
+                  colorScheme="purple"
+                  size="lg"
+                  onClick={runAllTests}
+                  isLoading={isRunningTests}
+                  loadingText="Running Tests..."
+                >
+                  SDK Release
+                </Button>
+              </Flex>
             </Flex>
           </CardBody>
         </Card>
@@ -598,8 +554,3 @@ export default function E2ETestPage() {
     </>
   );
 }
-
-// Custom layout for this page - no app header
-E2ETestPage.getLayout = function getLayout(page: React.ReactElement) {
-  return page;
-};

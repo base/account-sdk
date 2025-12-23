@@ -35,11 +35,15 @@ export interface UseTestRunnerOptions {
   subscriptionIdRef: React.MutableRefObject<string | null>;
   permissionHashRef: React.MutableRefObject<string | null>;
   subAccountAddressRef: React.MutableRefObject<string | null>;
+  
+  // Configuration
+  walletUrl?: string;
 }
 
 export interface UseTestRunnerReturn {
   runAllTests: () => Promise<void>;
   runTestSection: (sectionName: string) => Promise<void>;
+  runSCWReleaseTests: () => Promise<void>;
 }
 
 // ============================================================================
@@ -57,6 +61,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     subscriptionIdRef,
     permissionHashRef,
     subAccountAddressRef,
+    walletUrl,
   } = options;
 
   const toast = useToast();
@@ -84,6 +89,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       permissionHash: permissionHashRef.current,
       subAccountAddress: subAccountAddressRef.current,
       skipModal,
+      walletUrl,
     };
   }, [
     provider,
@@ -95,6 +101,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     subscriptionIdRef,
     permissionHashRef,
     subAccountAddressRef,
+    walletUrl,
   ]);
 
 
@@ -349,9 +356,146 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     [executeTest]
   );
 
+  /**
+   * Run only tests that make external requests (require user interaction)
+   * This is useful for SCW Release testing
+   * 
+   * The following tests are included (tests that open popups/windows and receive responses):
+   * 1. Wallet Connection:
+   *    - testConnectWallet (opens popup)
+   *    - testGetAccounts
+   *    - testGetChainId
+   *    - testSignMessage (opens popup)
+   * 2. Sign & Send:
+   *    - testSignTypedData (opens popup)
+   *    - testWalletSendCalls (opens popup)
+   * 3. Spend Permissions:
+   *    - testRequestSpendPermission (opens popup)
+   *    - testGetPermissionStatus
+   *    - testFetchPermission
+   *    - testFetchPermissions
+   * 4. Sub-Account Features:
+   *    - testCreateSubAccount (opens popup)
+   *    - testGetSubAccounts
+   *    - testSendCallsFromSubAccount (opens popup)
+   * 5. Payment Features:
+   *    - testPay (opens popup)
+   *    - testGetPaymentStatus
+   * 6. Subscription Features:
+   *    - testSubscribe (opens popup)
+   *    - testGetSubscriptionStatus
+   * 
+   * Tests excluded (no external requests or not relevant for SCW Release):
+   * - SDK Initialization & Exports (SDK already instantiated on page load)
+   * - wallet_prepareCalls (no popup)
+   * - personal_sign (sub-account) (no popup)
+   * - prepareSpendCallData (no popup)
+   * - prepareRevokeCallData (no popup)
+   * - prepareCharge variants (no popup)
+   * - Prolink Features (all tests - no external requests)
+   * - Provider Events (all tests - no external requests)
+   */
+  const runSCWReleaseTests = useCallback(async (): Promise<void> => {
+    testState.startTests();
+    testState.resetAllCategories();
+
+    // Reset modal tracking for this test run
+    hasShownFirstModalRef.current = false;
+
+    try {
+      // Execute tests that make external requests following the optimized sequence
+      // Note: SDK Initialization tests are skipped - SDK is already loaded on page load
+      
+      // 1. Establish wallet connection - testConnectWallet requires user interaction
+      await executeTest(getTestsByCategory('Wallet Connection')[0]); // testConnectWallet
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      
+      // Get remaining wallet connection tests (testGetAccounts, testGetChainId don't need user interaction)
+      await executeTest(getTestsByCategory('Wallet Connection')[1]); // testGetAccounts
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTest(getTestsByCategory('Wallet Connection')[2]); // testGetChainId
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      
+      // testSignMessage requires user interaction
+      await executeTest(getTestsByCategory('Wallet Connection')[3]); // testSignMessage
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+
+      // 2. Sign & Send tests - testSignTypedData and testWalletSendCalls require user interaction
+      await executeTest(getTestsByCategory('Sign & Send')[0]); // testSignTypedData
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTest(getTestsByCategory('Sign & Send')[1]); // testWalletSendCalls
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      // testWalletPrepareCalls doesn't require user interaction - skip
+
+      // 3. Spend Permission tests - testRequestSpendPermission requires user interaction
+      await executeTest(getTestsByCategory('Spend Permissions')[0]); // testRequestSpendPermission
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      // testGetPermissionStatus, testFetchPermission don't require user interaction - skip
+      // testFetchPermissions doesn't require user interaction
+      await executeTest(getTestsByCategory('Spend Permissions')[3]); // testFetchPermissions
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      // testPrepareSpendCallData and testPrepareRevokeCallData don't require user interaction - skip
+
+      // 4. Sub-Account tests - testCreateSubAccount and testSendCallsFromSubAccount require user interaction
+      await executeTest(getTestsByCategory('Sub-Account Features')[0]); // testCreateSubAccount
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTest(getTestsByCategory('Sub-Account Features')[1]); // testGetSubAccounts
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      // testSignWithSubAccount doesn't require user interaction - skip
+      await executeTest(getTestsByCategory('Sub-Account Features')[3]); // testSendCallsFromSubAccount
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+
+      // 5. Payment tests - testPay requires user interaction
+      await executeTest(getTestsByCategory('Payment Features')[0]); // testPay
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTest(getTestsByCategory('Payment Features')[1]); // testGetPaymentStatus
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+
+      // 6. Subscription tests - testSubscribe requires user interaction
+      await executeTest(getTestsByCategory('Subscription Features')[0]); // testSubscribe
+      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      // testGetSubscriptionStatus doesn't require user interaction - skip
+      // testPrepareCharge doesn't require user interaction - skip
+
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Test cancelled by user') {
+        toast({
+          title: 'Tests Cancelled',
+          description: 'SCW Release test suite was cancelled by user',
+          status: 'warning',
+          duration: TEST_DELAYS.TOAST_WARNING_DURATION,
+          isClosable: true,
+        });
+      }
+    } finally {
+      testState.stopTests();
+
+      // Show completion toast
+      const passed = testState.testCategories.reduce(
+        (acc, cat) => acc + cat.tests.filter((t) => t.status === 'passed').length,
+        0
+      );
+      const failed = testState.testCategories.reduce(
+        (acc, cat) => acc + cat.tests.filter((t) => t.status === 'failed').length,
+        0
+      );
+
+      if (passed > 0 || failed > 0) {
+        toast({
+          title: 'SCW Release Tests Complete',
+          description: `${passed} passed, ${failed} failed`,
+          status: failed > 0 ? 'warning' : 'success',
+          duration: TEST_DELAYS.TOAST_INFO_DURATION,
+          isClosable: true,
+        });
+      }
+    }
+  }, [testState, toast, executeTest]);
+
   return {
     runAllTests,
     runTestSection,
+    runSCWReleaseTests,
   };
 }
 

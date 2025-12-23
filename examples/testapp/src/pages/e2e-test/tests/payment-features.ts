@@ -26,6 +26,7 @@ export async function testPay(
         amount: '0.01',
         to: '0x0000000000000000000000000000000000000001',
         testnet: true,
+        walletUrl: ctx.walletUrl,
       });
       
       return result;

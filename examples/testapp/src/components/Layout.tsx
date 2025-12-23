@@ -20,7 +20,7 @@ import {
 import NextLink from 'next/link';
 import React, { useMemo } from 'react';
 import { useConfig } from '../context/ConfigContextProvider';
-import { scwUrls, sdkVersions } from '../store/config';
+import { scwUrls } from '../store/config';
 import { cleanupSDKLocalStorage } from '../utils/cleanupSDKLocalStorage';
 type LayoutProps = {
   children: React.ReactNode;
@@ -42,7 +42,7 @@ const PAGES = [
 ];
 
 export function Layout({ children }: LayoutProps) {
-  const { version, setSDKVersion, scwUrl, setScwUrlAndSave } = useConfig();
+  const { scwUrl, setScwUrlAndSave } = useConfig();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSmallScreen = useBreakpointValue({ base: true, xl: false });
@@ -55,24 +55,6 @@ export function Layout({ children }: LayoutProps) {
   const configs = useMemo(() => {
     return (
       <>
-        <Menu>
-          <MenuButton colorScheme="telegram" as={Button} rightIcon={<ChevronDownIcon />}>
-            {`SDK: ${version}`}
-          </MenuButton>
-          <MenuList>
-            {sdkVersions.map((v) => (
-              <MenuItem
-                color={'MenuText'}
-                key={v}
-                icon={v === version ? <CheckIcon /> : null}
-                onClick={() => setSDKVersion(v)}
-              >
-                {v}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Menu>
-
         <Menu>
           <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
             {`Env: ${scwUrl}`}
@@ -92,7 +74,7 @@ export function Layout({ children }: LayoutProps) {
         </Menu>
       </>
     );
-  }, [version, setSDKVersion, scwUrl, setScwUrlAndSave]);
+  }, [scwUrl, setScwUrlAndSave]);
 
   const handleGoToHome = () => {
     window.location.href = '/';

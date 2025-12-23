@@ -27,7 +27,9 @@ export async function testSubscribe(
         recurringCharge: '9.99',
         subscriptionOwner: '0x0000000000000000000000000000000000000001',
         periodInDays: 30,
+        requireBalance: false,
         testnet: true,
+        walletUrl: ctx.walletUrl,
       });
       
       return result;

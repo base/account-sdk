@@ -236,6 +236,21 @@ export async function testSendCallsFromSubAccount(
         }],
       }) as string;
       
+      // Validate the result
+      if (!result) {
+        throw new Error('wallet_sendCalls returned empty response');
+      }
+      
+      // Check if the result is an error message instead of a transaction hash
+      if (typeof result === 'string' && result.toLowerCase().includes('error')) {
+        throw new Error(result);
+      }
+      
+      // Validate transaction hash format (should start with 0x)
+      if (typeof result === 'string' && !result.startsWith('0x')) {
+        throw new Error(`Invalid transaction hash format: ${result}`);
+      }
+      
       return { txHash: result };
     },
     handlers,

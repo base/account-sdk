@@ -14,9 +14,7 @@ async function loadFromNpm(): Promise<LoadedSDK> {
   console.log('[SDK Loader] Loading from npm (@base-org/account-npm)...');
   
   // Dynamic import of npm package (installed as @base-org/account-npm alias)
-  // @ts-expect-error - Package is available at runtime via yarn alias
   const mainModule = await import('@base-org/account-npm');
-  // @ts-expect-error - Package is available at runtime via yarn alias
   const spendPermissionModule = await import('@base-org/account-npm/spend-permission');
   
   console.log('[SDK Loader] NPM module loaded');

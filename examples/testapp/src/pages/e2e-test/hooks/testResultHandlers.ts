@@ -90,8 +90,10 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
     }
   },
   'wallet_sendCalls (sub-account)': (ctx) => {
-    if (ctx.result.txHash) {
-      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Tx: ${ctx.result.txHash}`);
+    // Handle both direct string result and object with txHash property
+    const hash = typeof ctx.result === 'string' ? ctx.result : ctx.result?.txHash;
+    if (hash) {
+      ctx.testState.updateTestStatus(ctx.testCategory, ctx.testName, 'passed', undefined, `Tx: ${hash}`);
     }
   },
   'personal_sign (sub-account)': (ctx) => {

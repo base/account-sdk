@@ -25,7 +25,7 @@ export interface UseSDKStateReturn {
   
   // Actions
   setSdkSource: (source: SDKSource) => void;
-  loadAndInitializeSDK: (config?: { appName?: string; appLogoUrl?: string; appChainIds?: number[] }) => Promise<void>;
+  loadAndInitializeSDK: (config?: { appName?: string; appLogoUrl?: string; appChainIds?: number[]; walletUrl?: string }) => Promise<void>;
   setSdk: (sdk: BaseAccountSDK | null) => void;
   setProvider: (provider: any | null) => void;
 }
@@ -43,7 +43,7 @@ export function useSDKState(): UseSDKStateReturn {
   const [sdkLoadError, setSdkLoadError] = useState<string | null>(null);
 
   const loadAndInitializeSDK = useCallback(
-    async (config?: { appName?: string; appLogoUrl?: string; appChainIds?: number[] }) => {
+    async (config?: { appName?: string; appLogoUrl?: string; appChainIds?: number[]; walletUrl?: string }) => {
       setIsLoadingSDK(true);
       setSdkLoadError(null);
 
@@ -55,7 +55,10 @@ export function useSDKState(): UseSDKStateReturn {
         const sdkInstance = loaded.createBaseAccountSDK({
           appName: config?.appName || SDK_CONFIG.APP_NAME,
           appLogoUrl: config?.appLogoUrl || SDK_CONFIG.APP_LOGO_URL,
-          appChainIds: config?.appChainIds || SDK_CONFIG.DEFAULT_CHAIN_IDS,
+          appChainIds: config?.appChainIds || [...SDK_CONFIG.DEFAULT_CHAIN_IDS],
+          preference: {
+            walletUrl: config?.walletUrl,
+          },
         });
 
         setSdk(sdkInstance);

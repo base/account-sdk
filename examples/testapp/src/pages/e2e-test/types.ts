@@ -172,6 +172,11 @@ export interface SDKConfig {
   appName: string;
   appLogoUrl?: string;
   appChainIds: number[];
+  preference?: {
+    walletUrl?: string;
+    attribution?: any;
+    telemetry?: boolean;
+  };
 }
 
 export interface CryptoKeyAccount {
@@ -207,6 +212,7 @@ export interface TestContext {
   subAccountAddress: string | null;
   // Configuration
   skipModal: boolean;
+  walletUrl?: string;
 }
 
 export interface TestHandlers {
