@@ -5,7 +5,7 @@
  * and SDK instance state into a single hook.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { SDK_CONFIG } from '../../../utils/e2e-test-config';
 import { type LoadedSDK, type SDKSource, loadSDK } from '../../../utils/sdkLoader';
 import type { BaseAccountSDK } from '../types';
@@ -50,6 +50,9 @@ export function useSDKState(): UseSDKStateReturn {
   const [isLoadingSDK, setIsLoadingSDK] = useState(false);
   const [sdkLoadError, setSdkLoadError] = useState<string | null>(null);
 
+  // Track SDK load version to handle race conditions when rapidly switching sources
+  const loadVersionRef = useRef(0);
+
   const loadAndInitializeSDK = useCallback(
     async (config?: {
       appName?: string;
@@ -57,11 +60,21 @@ export function useSDKState(): UseSDKStateReturn {
       appChainIds?: number[];
       walletUrl?: string;
     }) => {
+      // Increment load version to invalidate any in-flight SDK loads
+      const currentLoadVersion = ++loadVersionRef.current;
+
       setIsLoadingSDK(true);
       setSdkLoadError(null);
 
       try {
         const loaded = await loadSDK({ source: sdkSource });
+
+        // Check if this load is still valid (user hasn't switched sources)
+        if (currentLoadVersion !== loadVersionRef.current) {
+          // Ignoring stale SDK load - user has switched sources
+          return;
+        }
+
         setLoadedSDK(loaded);
 
         // Initialize SDK instance with provided or default config
@@ -78,11 +91,17 @@ export function useSDKState(): UseSDKStateReturn {
         const providerInstance = sdkInstance.getProvider();
         setProvider(providerInstance);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        setSdkLoadError(errorMessage);
-        throw error; // Re-throw so caller can handle
+        // Only update error state if this load is still current
+        if (currentLoadVersion === loadVersionRef.current) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          setSdkLoadError(errorMessage);
+          throw error; // Re-throw so caller can handle
+        }
       } finally {
-        setIsLoadingSDK(false);
+        // Only update loading state if this load is still current
+        if (currentLoadVersion === loadVersionRef.current) {
+          setIsLoadingSDK(false);
+        }
       }
     },
     [sdkSource]

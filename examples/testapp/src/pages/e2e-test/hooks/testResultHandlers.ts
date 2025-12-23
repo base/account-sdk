@@ -348,10 +348,27 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
 /**
  * Process test result using the configured handler.
  * If no handler exists for the test name, this is a no-op.
+ * Errors in handlers are caught and logged to prevent test suite crashes.
  */
 export function processTestResult(ctx: TestResultHandlerContext): void {
   const handler = TEST_RESULT_HANDLERS[ctx.testName];
   if (handler) {
-    handler(ctx);
+    try {
+      handler(ctx);
+    } catch (error) {
+      console.error(`[Test Result Handler] Error processing result for "${ctx.testName}":`, error);
+      // Update test status to reflect handler error, but keep the test as passed
+      // since the actual test execution succeeded
+      const currentDetails = ctx.testState.testCategories
+        .find((cat) => cat.name === ctx.testCategory)
+        ?.tests.find((t) => t.name === ctx.testName)?.details;
+      ctx.testState.updateTestStatus(
+        ctx.testCategory,
+        ctx.testName,
+        'passed',
+        undefined,
+        `${currentDetails || 'Success'} (Note: Result handler error - check console)`
+      );
+    }
   }
 }

@@ -5,15 +5,20 @@
  * and the full test suite. Uses the test registry to execute tests in sequence.
  */
 
-iimport { useToast } from '@chakra-ui/react';
-import { useCallback, useRef } from 'react';
+import { useToast } from '@chakra-ui/react';
+import { useCallback, useRef, type MutableRefObject } from 'react';
 import { TEST_DELAYS } from '../../../utils/e2e-test-config/test-config';
-import { categoryRequiresConnection, getTestsByCategory, type TestFn } from '../tests';
+import {
+  TEST_INDICES,
+  categoryRequiresConnection,
+  getTestByIndex,
+  getTestsByCategory,
+  type TestFn,
+} from '../tests';
 import type { TestContext, TestHandlers } from '../types';
 import { processTestResult } from './testResultHandlers';
 import type { UseConnectionStateReturn } from './useConnectionState';
 import type { UseTestStateReturn } from './useTestState';
-{ UseTestStateReturn } from './useTestState';
 
 // ============================================================================
 // Types
@@ -200,6 +205,23 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       await executeTest(testFn);
       await delay(TEST_DELAYS.BETWEEN_TESTS);
     }
+
+    // Verify connection was established
+    const accountsAfter = await provider.request({
+      method: 'eth_accounts',
+      params: [],
+    });
+
+    if (!accountsAfter || accountsAfter.length === 0) {
+      throw new Error(
+        'Failed to establish wallet connection after running connection tests. Please ensure wallet is available and user approves connection.'
+      );
+    }
+
+    // Update connection state with verified connection
+    connectionState.setCurrentAccount(accountsAfter[0]);
+    connectionState.setAllAccounts(accountsAfter);
+    connectionState.setConnected(true);
   }, [provider, connectionState, executeTest]);
 
   /**
@@ -263,9 +285,27 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
   );
 
   /**
+   * Helper to run all tests in a category
+   */
+  const runTestCategory = useCallback(
+    async (categoryName: string): Promise<void> => {
+      const tests = getTestsByCategory(categoryName);
+
+      for (let i = 0; i < tests.length; i++) {
+        await executeTest(tests[i]);
+
+        // Add delay between tests (except after last test)
+        if (i < tests.length - 1) {
+          await delay(TEST_DELAYS.BETWEEN_TESTS);
+        }
+      }
+    },
+    [executeTest]
+  );
+
+  /**
    * Run all tests in the complete test suite
    */
-  // biome-ignore lint/correctness/useExhaustiveDependencies: runTestCategory is intentionally not a dependency to avoid circular dependency
   const runAllTests = useCallback(async (): Promise<void> => {
     testState.startTests();
     testState.resetAllCategories();
@@ -350,25 +390,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
   }, [testState, toast, runTestCategory]);
 
   /**
-   * Helper to run all tests in a category
-   */
-  const runTestCategory = useCallback(
-    async (categoryName: string): Promise<void> => {
-      const tests = getTestsByCategory(categoryName);
-
-      for (let i = 0; i < tests.length; i++) {
-        await executeTest(tests[i]);
-
-        // Add delay between tests (except after last test)
-        if (i < tests.length - 1) {
-          await delay(TEST_DELAYS.BETWEEN_TESTS);
-        }
-      }
-    },
-    [executeTest]
-  );
-
-  /**
    * Run only tests that make external requests (require user interaction)
    * This is useful for SCW Release testing
    *
@@ -418,54 +439,72 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       // Execute tests that make external requests following the optimized sequence
       // Note: SDK Initialization tests are skipped - SDK is already loaded on page load
 
+      // Helper to safely execute a test by index
+      const executeTestByIndex = async (categoryName: string, index: number) => {
+        const test = getTestByIndex(categoryName, index);
+        if (test) {
+          await executeTest(test);
+          await delay(TEST_DELAYS.BETWEEN_TESTS);
+        } else {
+          console.warn(`[SCW Release Tests] Test not found: ${categoryName}[${index}]`);
+        }
+      };
+
       // 1. Establish wallet connection - testConnectWallet requires user interaction
-      await executeTest(getTestsByCategory('Wallet Connection')[0]); // testConnectWallet
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTestByIndex('Wallet Connection', TEST_INDICES.WALLET_CONNECTION.CONNECT_WALLET);
 
       // Get remaining wallet connection tests (testGetAccounts, testGetChainId don't need user interaction)
-      await executeTest(getTestsByCategory('Wallet Connection')[1]); // testGetAccounts
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
-      await executeTest(getTestsByCategory('Wallet Connection')[2]); // testGetChainId
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTestByIndex('Wallet Connection', TEST_INDICES.WALLET_CONNECTION.GET_ACCOUNTS);
+      await executeTestByIndex('Wallet Connection', TEST_INDICES.WALLET_CONNECTION.GET_CHAIN_ID);
 
       // testSignMessage requires user interaction
-      await executeTest(getTestsByCategory('Wallet Connection')[3]); // testSignMessage
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTestByIndex('Wallet Connection', TEST_INDICES.WALLET_CONNECTION.SIGN_MESSAGE);
 
       // 2. Sign & Send tests - testSignTypedData and testWalletSendCalls require user interaction
-      await executeTest(getTestsByCategory('Sign & Send')[0]); // testSignTypedData
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
-      await executeTest(getTestsByCategory('Sign & Send')[1]); // testWalletSendCalls
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTestByIndex('Sign & Send', TEST_INDICES.SIGN_AND_SEND.SIGN_TYPED_DATA);
+      await executeTestByIndex('Sign & Send', TEST_INDICES.SIGN_AND_SEND.WALLET_SEND_CALLS);
       // testWalletPrepareCalls doesn't require user interaction - skip
 
       // 3. Spend Permission tests - testRequestSpendPermission requires user interaction
-      await executeTest(getTestsByCategory('Spend Permissions')[0]); // testRequestSpendPermission
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTestByIndex(
+        'Spend Permissions',
+        TEST_INDICES.SPEND_PERMISSIONS.REQUEST_SPEND_PERMISSION
+      );
       // testGetPermissionStatus, testFetchPermission don't require user interaction - skip
       // testFetchPermissions doesn't require user interaction
-      await executeTest(getTestsByCategory('Spend Permissions')[3]); // testFetchPermissions
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTestByIndex(
+        'Spend Permissions',
+        TEST_INDICES.SPEND_PERMISSIONS.FETCH_PERMISSIONS
+      );
       // testPrepareSpendCallData and testPrepareRevokeCallData don't require user interaction - skip
 
       // 4. Sub-Account tests - testCreateSubAccount and testSendCallsFromSubAccount require user interaction
-      await executeTest(getTestsByCategory('Sub-Account Features')[0]); // testCreateSubAccount
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
-      await executeTest(getTestsByCategory('Sub-Account Features')[1]); // testGetSubAccounts
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTestByIndex(
+        'Sub-Account Features',
+        TEST_INDICES.SUB_ACCOUNT_FEATURES.CREATE_SUB_ACCOUNT
+      );
+      await executeTestByIndex(
+        'Sub-Account Features',
+        TEST_INDICES.SUB_ACCOUNT_FEATURES.GET_SUB_ACCOUNTS
+      );
       // testSignWithSubAccount doesn't require user interaction - skip
-      await executeTest(getTestsByCategory('Sub-Account Features')[3]); // testSendCallsFromSubAccount
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTestByIndex(
+        'Sub-Account Features',
+        TEST_INDICES.SUB_ACCOUNT_FEATURES.SEND_CALLS_FROM_SUB_ACCOUNT
+      );
 
       // 5. Payment tests - testPay requires user interaction
-      await executeTest(getTestsByCategory('Payment Features')[0]); // testPay
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
-      await executeTest(getTestsByCategory('Payment Features')[1]); // testGetPaymentStatus
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTestByIndex('Payment Features', TEST_INDICES.PAYMENT_FEATURES.PAY);
+      await executeTestByIndex(
+        'Payment Features',
+        TEST_INDICES.PAYMENT_FEATURES.GET_PAYMENT_STATUS
+      );
 
       // 6. Subscription tests - testSubscribe requires user interaction
-      await executeTest(getTestsByCategory('Subscription Features')[0]); // testSubscribe
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
+      await executeTestByIndex(
+        'Subscription Features',
+        TEST_INDICES.SUBSCRIPTION_FEATURES.SUBSCRIBE
+      );
       // testGetSubscriptionStatus doesn't require user interaction - skip
       // testPrepareCharge doesn't require user interaction - skip
     } catch (error) {

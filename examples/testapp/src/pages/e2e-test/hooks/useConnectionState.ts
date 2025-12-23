@@ -50,10 +50,10 @@ export function useConnectionState(): UseConnectionStateReturn {
 
     try {
       // Get accounts
-      const accounts = await provider.request({
+      const accounts = (await provider.request({
         method: 'eth_accounts',
         params: [],
-      });
+      })) as string[];
 
       if (accounts && accounts.length > 0) {
         setCurrentAccount(accounts[0]);
@@ -66,14 +66,17 @@ export function useConnectionState(): UseConnectionStateReturn {
       }
 
       // Get chain ID
-      const chainIdHex = await provider.request({
+      const chainIdHex = (await provider.request({
         method: 'eth_chainId',
         params: [],
-      });
+      })) as string;
       const chainIdNum = Number.parseInt(chainIdHex, 16);
       setChainId(chainIdNum);
     } catch (error) {
-      console.error('Failed to update connection from provider:', error);
+      // Failed to update connection from provider - reset state
+      setCurrentAccount(null);
+      setAllAccounts([]);
+      setConnected(false);
     }
   }, []);
 

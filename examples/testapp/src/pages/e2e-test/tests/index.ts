@@ -146,6 +146,63 @@ export function categoryRequiresConnection(categoryName: string): boolean {
   return category?.requiresConnection || false;
 }
 
+/**
+ * Get a specific test by category and index with validation
+ * This is safer than directly accessing array indices
+ *
+ * @param categoryName - Name of the category
+ * @param index - Index of the test in the category
+ * @returns The test function, or undefined if not found
+ *
+ * @example
+ * ```typescript
+ * const connectTest = getTestByIndex('Wallet Connection', 0); // testConnectWallet
+ * ```
+ */
+export function getTestByIndex(categoryName: string, index: number): TestFn | undefined {
+  const tests = getTestsByCategory(categoryName);
+  if (index < 0 || index >= tests.length) {
+    console.warn(
+      `[Test Registry] Test index ${index} out of bounds for category "${categoryName}" (has ${tests.length} tests)`
+    );
+    return undefined;
+  }
+  return tests[index];
+}
+
+/**
+ * Test index constants for runSCWReleaseTests
+ * These constants make the test indices more explicit and easier to maintain
+ */
+export const TEST_INDICES = {
+  WALLET_CONNECTION: {
+    CONNECT_WALLET: 0,
+    GET_ACCOUNTS: 1,
+    GET_CHAIN_ID: 2,
+    SIGN_MESSAGE: 3,
+  },
+  SIGN_AND_SEND: {
+    SIGN_TYPED_DATA: 0,
+    WALLET_SEND_CALLS: 1,
+  },
+  SPEND_PERMISSIONS: {
+    REQUEST_SPEND_PERMISSION: 0,
+    FETCH_PERMISSIONS: 3,
+  },
+  SUB_ACCOUNT_FEATURES: {
+    CREATE_SUB_ACCOUNT: 0,
+    GET_SUB_ACCOUNTS: 1,
+    SEND_CALLS_FROM_SUB_ACCOUNT: 3,
+  },
+  PAYMENT_FEATURES: {
+    PAY: 0,
+    GET_PAYMENT_STATUS: 1,
+  },
+  SUBSCRIPTION_FEATURES: {
+    SUBSCRIBE: 0,
+  },
+} as const;
+
 // Export all test functions for direct use
 export { testSDKInitialization } from './sdk-initialization';
 export {

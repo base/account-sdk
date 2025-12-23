@@ -7,6 +7,19 @@
 
 import type { TestConfig, TestContext, TestFunction, TestHandlers, TestStatus } from '../types';
 
+// ============================================================================
+// Constants
+// ============================================================================
+
+/**
+ * Default timeout for test execution (30 seconds)
+ */
+const DEFAULT_TEST_TIMEOUT_MS = 30000;
+
+// ============================================================================
+// Error Classes
+// ============================================================================
+
 /**
  * Custom error class for test cancellation
  */
@@ -14,6 +27,16 @@ export class TestCancelledError extends Error {
   constructor() {
     super('Test cancelled by user');
     this.name = 'TestCancelledError';
+  }
+}
+
+/**
+ * Custom error class for test timeout
+ */
+export class TestTimeoutError extends Error {
+  constructor(testName: string, timeoutMs: number) {
+    super(`Test "${testName}" timed out after ${timeoutMs}ms`);
+    this.name = 'TestTimeoutError';
   }
 }
 
@@ -41,6 +64,37 @@ export function formatTestError(error: unknown): string {
     return JSON.stringify(error, null, 2);
   } catch {
     return String(error);
+  }
+}
+
+/**
+ * Wrap a promise with a timeout
+ *
+ * @param promise - The promise to wrap
+ * @param timeoutMs - Timeout in milliseconds
+ * @param testName - Name of the test (for error message)
+ * @returns Promise that rejects if timeout is reached
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  testName: string
+): Promise<T> {
+  let timeoutId: NodeJS.Timeout;
+
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new TestTimeoutError(testName, timeoutMs));
+    }, timeoutMs);
+  });
+
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutId);
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
 }
 
@@ -155,9 +209,9 @@ export async function runTest<T>(
       await requestUserInteraction(name, context.skipModal);
     }
 
-    // Execute the test
+    // Execute the test with timeout protection
     const startTime = Date.now();
-    const result = await testFn(context);
+    const result = await withTimeout(testFn(context), DEFAULT_TEST_TIMEOUT_MS, name);
     const duration = Date.now() - startTime;
 
     // Mark test as passed
@@ -165,6 +219,12 @@ export async function runTest<T>(
 
     return result;
   } catch (error) {
+    // Handle test timeout
+    if (error instanceof TestTimeoutError) {
+      updateTestStatus(category, name, 'failed', error.message);
+      return undefined;
+    }
+
     // Handle test cancellation
     if (isTestCancelled(error)) {
       updateTestStatus(category, name, 'skipped', 'Cancelled by user');
