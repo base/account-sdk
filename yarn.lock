@@ -221,23 +221,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@base-org/account-npm@npm:@base-org/account@latest":
-  version: 2.5.1
-  resolution: "@base-org/account@npm:2.5.1"
-  dependencies:
-    "@coinbase/cdp-sdk": "npm:^1.0.0"
-    brotli-wasm: "npm:^3.0.0"
-    clsx: "npm:1.2.1"
-    eventemitter3: "npm:5.0.1"
-    idb-keyval: "npm:6.2.1"
-    ox: "npm:0.6.9"
-    preact: "npm:10.24.2"
-    viem: "npm:^2.31.7"
-    zustand: "npm:5.0.3"
-  checksum: 10/6d0423e22c11092b5a2326a6ea863dd43def89bfc069a019b9bbf4189a05b3fd51d782b4eefaa56735318d2b2b94d99cc7e89b8bb7b743bc3a080344cd172d71
-  languageName: node
-  linkType: hard
-
 "@base-org/account-ui@workspace:packages/account-ui":
   version: 0.0.0-use.local
   resolution: "@base-org/account-ui@workspace:packages/account-ui"
@@ -8895,7 +8878,6 @@ __metadata:
   resolution: "sdk-playground@workspace:examples/testapp"
   dependencies:
     "@base-org/account": "workspace:*"
-    "@base-org/account-npm": "npm:@base-org/account@latest"
     "@chakra-ui/icons": "npm:^2.1.1"
     "@chakra-ui/react": "npm:^2.8.0"
     "@emotion/react": "npm:^11.11.1"

@@ -17,8 +17,6 @@ import type { PaymentStatus, PaymentStatusOptions } from './types.js';
  * @param options.testnet - Whether to check on testnet (Base Sepolia). Defaults to false (mainnet)
  * @param options.telemetry - Whether to enable telemetry logging. Defaults to true
  * @param options.bundlerUrl - Optional custom bundler URL to use for status checks. Useful for avoiding rate limits on public endpoints.
- * @param options.maxRetries - Maximum number of retries when status is "not_found". Defaults to 0 (no retries). Set to 10 for ~5 seconds of polling with default delay.
- * @param options.retryDelayMs - Delay in milliseconds between retries. Defaults to 500ms
  * @returns Promise<PaymentStatus> - Status information about the payment
  * @throws Error if unable to connect to the RPC endpoint or if the RPC request fails
  *
@@ -37,14 +35,6 @@ import type { PaymentStatus, PaymentStatusOptions } from './types.js';
  *     bundlerUrl: 'https://my-bundler.example.com/rpc'
  *   })
  *
- *   // With polling for e2e tests (retry up to 10 times with 500ms delay = ~5 seconds)
- *   const status = await getPaymentStatus({
- *     id: "0x1234...5678",
- *     testnet: true,
- *     maxRetries: 10,
- *     retryDelayMs: 500
- *   })
- *
  *   if (status.status === 'failed') {
  *     console.log(`Payment failed: ${status.reason}`)
  *   }
@@ -56,10 +46,17 @@ import type { PaymentStatus, PaymentStatusOptions } from './types.js';
  * @note The id is the userOp hash returned from the pay function
  */
 export async function getPaymentStatus(options: PaymentStatusOptions): Promise<PaymentStatus> {
-  const { id, testnet = false, telemetry = true, bundlerUrl, maxRetries = 0, retryDelayMs = 500 } = options;
+  const { id, testnet = false, telemetry = true, bundlerUrl } = options;
 
-  // Helper function to perform a single status check
-  const checkStatusOnce = async (correlationId: string): Promise<PaymentStatus> => {
+  // Generate correlation ID for this status check
+  const correlationId = crypto.randomUUID();
+
+  // Log status check started
+  if (telemetry) {
+    logPaymentStatusCheckStarted({ testnet, correlationId });
+  }
+
+  try {
     // Get the bundler URL - use custom URL if provided, otherwise use default based on network
     const effectiveBundlerUrl =
       bundlerUrl ||
@@ -266,32 +263,6 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       reason: userFriendlyReason,
     };
     return result;
-  };
-
-  // Generate correlation ID for this status check
-  const correlationId = crypto.randomUUID();
-
-  // Log status check started
-  if (telemetry) {
-    logPaymentStatusCheckStarted({ testnet, correlationId });
-  }
-
-  try {
-    // Attempt initial check
-    let status = await checkStatusOnce(correlationId);
-
-    // Retry logic for "not_found" status
-    let retryCount = 0;
-    while (status.status === 'not_found' && retryCount < maxRetries) {
-      retryCount++;
-      // Wait before retrying
-      await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
-      
-      // Try again
-      status = await checkStatusOnce(correlationId);
-    }
-
-    return status;
   } catch (error) {
     console.error('[getPaymentStatus] Error checking status:', error);
 

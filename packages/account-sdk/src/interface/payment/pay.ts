@@ -3,7 +3,6 @@ import {
   logPaymentError,
   logPaymentStarted,
 } from ':core/telemetry/events/payment.js';
-import { getPaymentStatus } from './getPaymentStatus.js';
 import type { PaymentOptions, PaymentResult } from './types.js';
 import { executePaymentWithSDK } from './utils/sdkManager.js';
 import { translatePaymentToSendCalls } from './utils/translatePayment.js';
@@ -66,55 +65,17 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
       telemetry
     );
 
-    // Step 4: Poll for status updates for up to 2 seconds
-    const transactionHash = executionResult.transactionHash;
-    const pollStartTime = Date.now();
-    const pollTimeout = 2000; // 2 seconds
-    const pollInterval = 300; // Poll every 300ms
-
-    let finalAmount = amount;
-    let finalRecipient = normalizedAddress;
-
-    while (Date.now() - pollStartTime < pollTimeout) {
-      try {
-        const status = await getPaymentStatus({
-          id: transactionHash,
-          testnet,
-          telemetry: false, // Don't emit telemetry for internal polling
-        });
-
-        // Update with latest information if available
-        if (status.amount) {
-          finalAmount = status.amount;
-        }
-        if (status.recipient) {
-          finalRecipient = status.recipient as `0x${string}`;
-        }
-
-        // Exit early if we get a definitive status
-        if (status.status === 'completed' || status.status === 'failed') {
-          break;
-        }
-      } catch (_error) {
-        // Ignore polling errors and continue
-        // The initial transaction was successful, so we'll return that
-      }
-
-      // Wait before next poll
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
-    }
-
     // Log payment completed
     if (telemetry) {
       logPaymentCompleted({ amount, testnet, correlationId });
     }
 
-    // Return success result with latest information
+    // Return success result
     return {
       success: true,
-      id: transactionHash,
-      amount: finalAmount,
-      to: finalRecipient,
+      id: executionResult.transactionHash,
+      amount: amount,
+      to: normalizedAddress,
       payerInfoResponses: executionResult.payerInfoResponses,
     };
   } catch (error) {

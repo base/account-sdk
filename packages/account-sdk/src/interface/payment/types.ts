@@ -102,10 +102,6 @@ export interface PaymentStatusOptions {
   telemetry?: boolean;
   /** Optional custom bundler URL to use for status checks. Useful for avoiding rate limits on public endpoints. */
   bundlerUrl?: string;
-  /** Maximum number of retries when status is "not_found". Defaults to 0 (no retries). Set to 10 for ~5 seconds of polling with default delay. */
-  maxRetries?: number;
-  /** Delay in milliseconds between retries. Defaults to 500ms */
-  retryDelayMs?: number;
 }
 
 /**

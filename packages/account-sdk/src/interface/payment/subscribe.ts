@@ -95,9 +95,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
 
   // Extract the overridePeriodInSecondsForTestnet if present and valid
   const overridePeriodInSecondsForTestnet =
-    testnet && hasOverridePeriod
-      ? (options as { overridePeriodInSecondsForTestnet: number }).overridePeriodInSecondsForTestnet
-      : undefined;
+    testnet && hasOverridePeriod ? (options as any).overridePeriodInSecondsForTestnet : undefined;
 
   // Generate correlation ID for this subscription request
   const correlationId = crypto.randomUUID();
