@@ -1,7 +1,7 @@
 import { createBaseAccountSDK } from '@base-org/account';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
-import { Client, createPublicClient, http } from 'viem';
+import { http, Client, createPublicClient } from 'viem';
 import { SmartAccount, createBundlerClient, createPaymasterClient } from 'viem/account-abstraction';
 import { baseSepolia } from 'viem/chains';
 

@@ -1,5 +1,5 @@
-import { ADDR_TO_FILL, CHAIN_ID_TO_FILL } from './const';
 import { ShortcutType } from './ShortcutType';
+import { ADDR_TO_FILL, CHAIN_ID_TO_FILL } from './const';
 
 const walletSendCallsShortcuts: ShortcutType[] = [
   {

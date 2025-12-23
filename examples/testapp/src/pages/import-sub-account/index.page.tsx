@@ -1,7 +1,7 @@
 import { createBaseAccountSDK } from '@base-org/account';
 import { Alert, AlertIcon, Button, Container, Divider, Text, VStack } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
-import { Client, createPublicClient, http } from 'viem';
+import { http, Client, createPublicClient } from 'viem';
 import { SmartAccount, toCoinbaseSmartAccount } from 'viem/account-abstraction';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
