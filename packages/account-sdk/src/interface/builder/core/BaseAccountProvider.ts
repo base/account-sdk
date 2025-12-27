@@ -26,11 +26,12 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
   private readonly communicator: Communicator;
   private readonly signer: Signer;
 
-  constructor({
-    metadata,
-    preference: { walletUrl, ...preference },
-  }: Readonly<ConstructorOptions>) {
+  constructor(options: Readonly<ConstructorOptions>) {
     super();
+    const {
+      metadata,
+      preference: { walletUrl, ...preference },
+    } = options;
     this.communicator = new Communicator({
       url: walletUrl,
       metadata,
