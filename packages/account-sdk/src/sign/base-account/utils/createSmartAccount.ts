@@ -19,6 +19,7 @@ import {
   encodePacked,
   hashMessage,
   hashTypedData,
+  pad,
   parseSignature,
   size,
   stringToHex,
@@ -57,6 +58,7 @@ export type CoinbaseSmartAccountImplementation = Assign<
   {
     decodeCalls: NonNullable<SmartAccountImplementation['decodeCalls']>;
     sign: NonNullable<SmartAccountImplementation['sign']>;
+    getFactoryArgsWithGeneration: () => Promise<{ factory: Address; factoryData: Hex }>;
   }
 >;
 
@@ -73,7 +75,7 @@ export type CoinbaseSmartAccountImplementation = Assign<
  *   owner: privateKeyToAccount('0x...'),
  *   ownerIndex: 0,
  *   address: '0x...',
- *   factoryData: '0x...',
+ *   factoryData: '0x...', // Optional: if not provided, will be generated automatically
  * })
  */
 export async function createSmartAccount(
@@ -135,10 +137,12 @@ export async function createSmartAccount(
       return address;
     },
 
-    async getFactoryArgs() {
-      if (factoryData) return { factory: factory.address, factoryData };
-      // TODO: support creating factory data
-      return { factory: factory.address, factoryData };
+    async getFactoryArgsWithGeneration() {
+      if (factoryData) return { factory: factoryAddress, factoryData };
+
+      // Generate factory data for owner initialization
+      const generatedFactoryData = createFactoryData(owner);
+      return { factory: factoryAddress, factoryData: generatedFactoryData };
     },
 
     async getStubSignature() {
@@ -385,4 +389,50 @@ export function wrapSignature(parameters: { ownerIndex?: number | undefined; sig
       },
     ]
   );
+}
+
+/**
+ * @description Creates factory data for smart account initialization.
+ *
+ * This function generates the encoded data needed to initialize a smart account
+ * through the factory contract. It supports both local (private key) and WebAuthn
+ * account types.
+ *
+ * @param owner - The owner account to initialize the smart account with
+ * @returns Encoded factory data for the createAccount function call
+ * @throws {BaseError} If the owner type is unsupported or has invalid data
+ *
+ * @example
+ *
+ * const factoryData = createFactoryData(privateKeyToAccount('0x...'));
+ * // Returns: '0x3ffba36f...' (encoded createAccount call)
+ */
+export function createFactoryData(owner: OwnerAccount): Hex {
+  // Convert owner to the format expected by the factory
+  let ownerBytes: Hex;
+
+  if (owner.type === 'webAuthn') {
+    // For WebAuthn accounts, we need to encode the public key
+    // The public key should be 64 bytes (32 bytes x + 32 bytes y)
+    if (!owner.publicKey || owner.publicKey.length !== 130) {
+      // 0x + 64 hex chars = 130
+      throw new BaseError('WebAuthn owner must have a valid 64-byte public key');
+    }
+    ownerBytes = owner.publicKey as Hex;
+  } else if (owner.type === 'local') {
+    // For local accounts (private key accounts), we need the address padded to 32 bytes
+    if (!owner.address) {
+      throw new BaseError('Local owner must have an address');
+    }
+    ownerBytes = pad(owner.address);
+  } else {
+    throw new BaseError(`Unsupported owner type: ${owner.type}`);
+  }
+
+  // Encode the createAccount function call with the owner and nonce 0
+  return encodeFunctionData({
+    abi: factoryAbi,
+    functionName: 'createAccount',
+    args: [[ownerBytes], BigInt(0)],
+  });
 }
