@@ -62,6 +62,11 @@ export function numberToHex(num: number | bigint, opts?: { size?: number }): Hex
     return `0x${hex.padStart(opts.size * 2, '0')}` as Hex;
   }
 
+  // Special case for 0 to match viem behavior
+  if (num === 0 || num === 0n) {
+    return '0x0' as Hex;
+  }
+
   return `0x${hex.length % 2 === 0 ? hex : `0${hex}`}` as Hex;
 }
 
@@ -102,8 +107,29 @@ export function getAddress(address: string): Address {
     throw new Error('Invalid address');
   }
 
-  // Simple validation - in production, you'd want EIP-55 checksum validation
-  return address.toLowerCase() as Address;
+  // Import keccak256 dynamically to avoid circular dependencies
+  // This is needed for proper EIP-55 checksumming
+  const { keccak256 } = require('viem');
+
+  // Remove 0x prefix and convert to lowercase
+  const addressWithoutPrefix = address.slice(2).toLowerCase();
+
+  // Hash the lowercase address
+  const hash = keccak256(stringToBytes(addressWithoutPrefix)).slice(2);
+
+  // Apply EIP-55 checksum
+  let checksummed = '0x';
+  for (let i = 0; i < 40; i++) {
+    // If hash byte is >= 8, uppercase the address character
+    const hashByte = parseInt(hash[i], 16);
+    if (hashByte >= 8) {
+      checksummed += addressWithoutPrefix[i].toUpperCase();
+    } else {
+      checksummed += addressWithoutPrefix[i];
+    }
+  }
+
+  return checksummed as Address;
 }
 
 /**
@@ -162,10 +188,20 @@ export function formatUnits(value: bigint, decimals: number): string {
 }
 
 /**
- * Trim leading zeros from bytes
+ * Trim leading zeros from hex or bytes
  */
-export function trim(bytes: Uint8Array): Uint8Array {
+export function trim(value: Hex): Hex;
+export function trim(value: Uint8Array): Uint8Array;
+export function trim(value: Hex | Uint8Array): Hex | Uint8Array {
+  if (typeof value === 'string') {
+    // Trim leading zeros from hex string
+    let hex = value.startsWith('0x') ? value.slice(2) : value;
+    hex = hex.replace(/^0+/, '') || '0';
+    return `0x${hex}` as Hex;
+  }
+
+  // Trim leading zeros from bytes
   let start = 0;
-  for (; start < bytes.length && bytes[start] === 0; start++);
-  return bytes.slice(start);
+  for (; start < value.length && value[start] === 0; start++);
+  return value.slice(start);
 }

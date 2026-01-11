@@ -1,4 +1,4 @@
-import { formatUnits } from 'viem';
+import { formatUnits } from '../../util/lightweight-encoding';
 import {
   fetchPermission,
   getPermissionStatus,

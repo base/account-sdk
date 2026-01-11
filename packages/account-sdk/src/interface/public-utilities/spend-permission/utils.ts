@@ -1,6 +1,6 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { spendPermissionManagerAddress } from ':sign/base-account/utils/constants.js';
-import { Address, Hex, getAddress } from 'viem';
+import { Address, Hex, getAddress } from '../../../util/lightweight-encoding';
 import { RequestSpendPermissionType } from './methods/requestSpendPermission.js';
 
 const ETERNITY_TIMESTAMP = 281474976710655; // 2^48 - 1

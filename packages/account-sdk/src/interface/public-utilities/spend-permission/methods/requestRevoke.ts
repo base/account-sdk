@@ -4,7 +4,8 @@ import {
   spendPermissionManagerAbi,
   spendPermissionManagerAddress,
 } from ':sign/base-account/utils/constants.js';
-import { Hex, encodeFunctionData, numberToHex } from 'viem';
+import { encodeFunctionData } from 'viem';
+import { Hex, numberToHex } from '../../../../util/lightweight-encoding';
 import { toSpendPermissionArgs } from '../utils.js';
 import { withTelemetry } from '../withTelemetry.js';
 

@@ -1,4 +1,4 @@
-import { type Address, getAddress } from 'viem';
+import { type Address, getAddress } from '../../../util/lightweight-encoding';
 
 /**
  * Validates that the amount is a positive string with max decimal places

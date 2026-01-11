@@ -4,7 +4,7 @@ import {
   logSubscriptionStarted,
 } from ':core/telemetry/events/subscription.js';
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
-import { parseUnits } from 'viem';
+import { parseUnits } from '../../util/lightweight-encoding';
 import { getHash } from '../public-utilities/spend-permission/index.js';
 import {
   createSpendPermissionTypedData,
