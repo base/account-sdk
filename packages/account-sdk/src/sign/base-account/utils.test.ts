@@ -1,22 +1,22 @@
 import { store } from ':store/store.js';
 import { hashTypedData, hexToBigInt, numberToHex } from 'viem';
 import {
-  SpendPermissionBatch,
-  addSenderToRequest,
-  appendWithoutDuplicates,
-  assertFetchPermissionsRequest,
-  assertGetCapabilitiesParams,
-  assertParamsChainId,
-  createSpendPermissionBatchMessage,
-  createWalletSendCallsRequest,
-  fillMissingParamsForFetchPermissions,
-  getCachedWalletConnectResponse,
-  getSenderFromRequest,
-  initSubAccountConfig,
-  injectRequestCapabilities,
-  isSendCallsParams,
-  prependWithoutDuplicates,
-  requestHasCapability,
+    SpendPermissionBatch,
+    addSenderToRequest,
+    appendWithoutDuplicates,
+    assertFetchPermissionsRequest,
+    assertGetCapabilitiesParams,
+    assertParamsChainId,
+    createSpendPermissionBatchMessage,
+    createWalletSendCallsRequest,
+    fillMissingParamsForFetchPermissions,
+    getCachedWalletConnectResponse,
+    getSenderFromRequest,
+    initSubAccountConfig,
+    injectRequestCapabilities,
+    isSendCallsParams,
+    prependWithoutDuplicates,
+    requestHasCapability,
 } from './utils.js';
 
 // Valid Ethereum addresses for testing
@@ -151,6 +151,7 @@ describe('assertGetCapabilitiesParams', () => {
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1', 123]])).toThrow();
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1', null]])).toThrow();
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['abc123']])).toThrow();
+    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0xgg']])).toThrow();
   });
 
   it('should not throw for valid parameters with filter array', () => {
