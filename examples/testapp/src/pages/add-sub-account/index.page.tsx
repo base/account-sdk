@@ -26,26 +26,36 @@ import { SendCalls } from './components/SendCalls';
 import { SpendPermissions } from './components/SpendPermissions';
 
 type SignerType = 'cryptokey' | 'secp256k1';
+type FundingMode = 'spend-permissions' | 'manual';
 
 export default function SubAccounts() {
   const { sdk } = useEIP1193Provider();
   const { setSubAccountsConfig } = useConfig();
   const [subAccountAddress, setSubAccountAddress] = useState<string>();
   const [signerType, setSignerType] = useState<SignerType>('cryptokey');
+  const [fundingMode, setFundingMode] = useState<FundingMode>('manual');
   const [getSubAccountSigner, setGetSubAccountSigner] = useState<typeof getCryptoKeyAccount>(
     () => getCryptoKeyAccount
   );
 
   useEffect(() => {
-    const stored = localStorage.getItem('signer-type');
-    if (stored !== null) {
-      setSignerType(stored as SignerType);
+    const storedSignerType = localStorage.getItem('signer-type');
+    if (storedSignerType !== null) {
+      setSignerType(storedSignerType as SignerType);
+    }
+    const storedFundingMode = localStorage.getItem('funding-mode');
+    if (storedFundingMode !== null) {
+      setFundingMode(storedFundingMode as FundingMode);
     }
   }, []);
 
   useEffect(() => {
     localStorage.setItem('signer-type', signerType);
   }, [signerType]);
+
+  useEffect(() => {
+    localStorage.setItem('funding-mode', fundingMode);
+  }, [fundingMode]);
 
   useEffect(() => {
     const getSigner =
@@ -61,8 +71,8 @@ export default function SubAccounts() {
           };
 
     setGetSubAccountSigner(() => getSigner);
-    setSubAccountsConfig({ toOwnerAccount: getSigner });
-  }, [signerType, setSubAccountsConfig]);
+    setSubAccountsConfig({ toOwnerAccount: getSigner, funding: fundingMode });
+  }, [signerType, fundingMode, setSubAccountsConfig]);
 
   return (
     <Container mb={16}>
@@ -73,6 +83,16 @@ export default function SubAccounts() {
             <Stack direction="row">
               <Radio value="cryptokey">CryptoKey</Radio>
               <Radio value="secp256k1">secp256k1</Radio>
+            </Stack>
+          </RadioGroup>
+        </FormControl>
+
+        <FormControl>
+          <FormLabel>Funding Mode</FormLabel>
+          <RadioGroup value={fundingMode} onChange={(value: FundingMode) => setFundingMode(value)}>
+            <Stack direction="row">
+              <Radio value="manual">Manual</Radio>
+              <Radio value="spend-permissions">Spend Permissions</Radio>
             </Stack>
           </RadioGroup>
         </FormControl>
