@@ -15,6 +15,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "browser": "dist/base-account.min.js",
+  "module": "dist/index.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -125,13 +126,15 @@
     "prebuild": "rm -rf ./dist",
     "build": "node compile-assets.cjs && tsc -p ./tsconfig.build.json && tsc-alias && yarn build:browser",
     "build:browser": "rollup -c rollup.config.js",
+    "build:payment": "rollup -c rollup.payment.config.js",
     "prepublishOnly": "yarn build",
     "dev": "yarn build && tsc --watch & nodemon --watch dist --delay 1 --exec tsc-alias",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint .",
     "format": "biome format . --write",
     "format:check": "biome check . --formatter-enabled=true --linter-enabled=false --organize-imports-enabled=false",
-    "size": "size-limit"
+    "size": "size-limit",
+    "size:analyze": "node scripts/analyze-bundle.js"
   },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.0.0",
@@ -172,9 +175,21 @@
   },
   "size-limit": [
     {
+      "name": "Main ESM bundle",
       "path": "./dist/index.js",
       "limit": "31 KB",
       "import": "*"
+    },
+    {
+      "name": "Payment API only (browser)",
+      "path": "./dist/interface/payment/index.js",
+      "limit": "20 KB",
+      "import": "{ pay, subscribe, getPaymentStatus }"
+    },
+    {
+      "name": "Browser UMD bundle",
+      "path": "./dist/base-account.umd.js",
+      "limit": "40 KB"
     }
   ]
 }
