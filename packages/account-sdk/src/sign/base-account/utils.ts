@@ -1,7 +1,8 @@
-import { PublicClient, WalletSendCallsParameters, hexToBigInt, isAddress } from 'viem';
+import { PublicClient, WalletSendCallsParameters, hexToBigInt } from 'viem';
 
 import { InsufficientBalanceErrorData } from ':core/error/errors.js';
-import { Hex, keccak256, numberToHex, slice, toHex } from 'viem';
+import { keccak256, slice } from 'viem';
+import { isAddress, numberToHex, toHex, type Hex } from '../../util/lightweight-encoding';
 
 import { standardErrors } from ':core/error/errors.js';
 import { Attribution, RequestArguments } from ':core/provider/interface.js';

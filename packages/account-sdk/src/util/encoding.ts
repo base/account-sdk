@@ -1,5 +1,5 @@
 import { Signature, WebAuthnP256 } from 'ox';
-import { ByteArray, Hex, hexToBytes, numberToHex, stringToBytes, trim } from 'viem';
+import { ByteArray, Hex, hexToBytes, numberToHex, stringToBytes, trim } from './lightweight-encoding';
 
 export function base64ToBase64Url(base64: string): string {
   return base64.replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');

@@ -1,5 +1,5 @@
-import type { Address, Hex } from 'viem';
-import { decodeEventLog, formatUnits, getAddress, isAddressEqual } from 'viem';
+import { decodeEventLog } from 'viem';
+import { formatUnits, getAddress, isAddressEqual, type Address, type Hex } from '../../util/lightweight-encoding';
 
 import {
   logPaymentStatusCheckCompleted,

@@ -1,4 +1,5 @@
-import { encodeFunctionData, parseUnits, toHex, type Address, type Hex } from 'viem';
+import { encodeFunctionData } from 'viem';
+import { parseUnits, toHex, type Address, type Hex } from '../../../util/lightweight-encoding';
 import { CHAIN_IDS, ERC20_TRANSFER_ABI, TOKENS } from '../constants.js';
 import type { PayerInfo } from '../types.js';
 

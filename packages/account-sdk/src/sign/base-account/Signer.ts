@@ -1,5 +1,6 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
-import { Hex, WalletSendCallsParameters, hexToNumber, isAddressEqual, numberToHex } from 'viem';
+import { WalletSendCallsParameters, hexToNumber } from 'viem';
+import { isAddressEqual, numberToHex, type Hex } from '../../util/lightweight-encoding';
 
 import { Communicator } from ':core/communicator/Communicator.js';
 import { isActionableHttpRequestError, isViemError, standardErrors } from ':core/error/errors.js';

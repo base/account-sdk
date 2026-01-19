@@ -1,4 +1,4 @@
-import { parseUnits } from 'viem';
+import { parseUnits } from '../../util/lightweight-encoding';
 import {
   fetchPermission,
   prepareSpendCallData,

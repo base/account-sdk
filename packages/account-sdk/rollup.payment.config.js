@@ -5,19 +5,27 @@ import replace from '@rollup/plugin-replace';
 import typescript from '@rollup/plugin-typescript';
 import { terser } from 'rollup-plugin-terser';
 
-// Optimized terser config for better compression
+/**
+ * Lightweight payment-only bundle configuration
+ *
+ * This creates a minimal bundle with only payment API functionality,
+ * externalizing heavy dependencies like viem and @coinbase/cdp-sdk
+ */
+
 const terserOptions = {
   compress: {
-    passes: 2,
+    passes: 3,
     pure_getters: true,
     unsafe: true,
     unsafe_comps: true,
     unsafe_math: true,
     unsafe_methods: true,
+    drop_console: true,
+    drop_debugger: true,
   },
   mangle: {
     properties: {
-      regex: /^_/,
+      regex: /^_private/,
     },
   },
   format: {
@@ -25,56 +33,39 @@ const terserOptions = {
   },
 };
 
-// Enhanced node resolve for better tree-shaking
-const nodeResolveOptions = {
-  browser: true,
-  preferBuiltins: false,
-  dedupe: ['viem', 'ox', 'preact'],
-  mainFields: ['module', 'jsnext:main', 'main'],
-  extensions: ['.mjs', '.js', '.json', '.ts'],
-};
-
 export default {
-  input: 'src/browser-entry.ts',
+  input: 'src/interface/payment/index.ts',
   output: [
     {
-      file: 'dist/base-account.js',
-      format: 'esm',
-      sourcemap: true,
-      exports: 'named',
-      // Enable code splitting in future
-      // inlineDynamicImports: false,
-      inlineDynamicImports: true,
-    },
-    {
-      file: 'dist/base-account.min.js',
+      file: 'dist/payment-minimal.js',
       format: 'esm',
       sourcemap: true,
       exports: 'named',
       inlineDynamicImports: true,
-      plugins: [terser(terserOptions)],
     },
     {
-      file: 'dist/base-account.umd.js',
-      format: 'umd',
-      name: 'base',
+      file: 'dist/payment-minimal.min.js',
+      format: 'esm',
       sourcemap: true,
-      inlineDynamicImports: true,
       exports: 'named',
+      inlineDynamicImports: true,
       plugins: [terser(terserOptions)],
     },
   ],
   plugins: [
     replace({
       'process.env.NODE_ENV': JSON.stringify('production'),
-      preventAssignment: true,
-      // Remove development-only code
       'process.env.DEBUG': JSON.stringify(false),
+      preventAssignment: true,
     }),
     json(),
-    nodeResolve(nodeResolveOptions),
+    nodeResolve({
+      browser: true,
+      preferBuiltins: false,
+      mainFields: ['module', 'jsnext:main', 'main'],
+      extensions: ['.mjs', '.js', '.json', '.ts'],
+    }),
     commonjs({
-      // Improve tree-shaking for CommonJS modules
       ignoreDynamicRequires: true,
     }),
     typescript({
@@ -88,8 +79,14 @@ export default {
       },
     }),
   ],
-  external: [],
-  // Tree-shaking optimization
+  // Externalize heavy dependencies
+  external: [
+    'viem',
+    'viem/actions',
+    'viem/chains',
+    '@coinbase/cdp-sdk',
+    'ox',
+  ],
   treeshake: {
     moduleSideEffects: false,
     propertyReadSideEffects: false,
@@ -97,15 +94,17 @@ export default {
     unknownGlobalSideEffects: false,
   },
   onwarn(warning, warn) {
-    // Ignore PURE comment warnings from ox and viem
     if (warning.code === 'INVALID_ANNOTATION' && warning.message.includes('/*#__PURE__*/')) {
       return;
     }
-    // Ignore circular dependency warnings from viem and ox (these are handled internally)
     if (
       warning.code === 'CIRCULAR_DEPENDENCY' &&
       (warning.message.includes('node_modules/viem') || warning.message.includes('node_modules/ox'))
     ) {
+      return;
+    }
+    // Don't warn about unresolved external dependencies
+    if (warning.code === 'UNRESOLVED_IMPORT') {
       return;
     }
     warn(warning);

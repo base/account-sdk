@@ -13,7 +13,8 @@ import { SubAccount, ToOwnerAccountFn, store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
-import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
+import { decodeAbiParameters, encodeFunctionData } from 'viem';
+import { toHex } from '../../../util/lightweight-encoding';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
 import { getInjectedProvider } from './getInjectedProvider.js';
 

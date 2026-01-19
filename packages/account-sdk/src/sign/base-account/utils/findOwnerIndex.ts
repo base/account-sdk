@@ -1,5 +1,6 @@
 import { standardErrors } from ':core/error/errors.js';
-import { Address, Client, Hex, decodeFunctionData, isAddress, pad } from 'viem';
+import { Client, decodeFunctionData, pad } from 'viem';
+import { isAddress, type Address, type Hex } from '../../../util/lightweight-encoding';
 import { getCode, readContract } from 'viem/actions';
 import { abi, factoryAbi } from './constants.js';
 
