@@ -36,3 +36,37 @@ export type {
 
 // Export constants
 export { CHAIN_IDS, TOKENS } from './constants.js';
+
+// Export resilience utilities for self-healing transactions
+export {
+  sendUserOpWithResilience,
+  sendUserOpAndWaitWithResilience,
+  // Error classes
+  ResilienceError,
+  MaxRetriesExceededError,
+  UnrecoverableTransactionError,
+  InvalidResilienceConfigError,
+  // Type guards
+  isResilienceError,
+  isMaxRetriesExceededError,
+  isUnrecoverableTransactionError,
+  // Utility functions
+  analyzeFailure,
+  // Constants
+  DEFAULT_RESILIENCE_CONFIG,
+} from './utils/resilience/index.js';
+
+// Export resilience types
+export type {
+  BackoffStrategy,
+  RecoverableFailureType,
+  UnrecoverableFailureType,
+  FailureType,
+  FailureAnalysis,
+  ResilienceConfig,
+  RetryContext,
+  GasAdjustmentContext,
+  RecoveryAction,
+  ResilientResult,
+  SendWithResilienceOptions,
+} from './utils/resilience/index.js';
