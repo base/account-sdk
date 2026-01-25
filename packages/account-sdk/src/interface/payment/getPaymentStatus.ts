@@ -263,7 +263,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       reason: userFriendlyReason,
     };
     return result;
-  } catch (error) {
+ } catch (error: any) {
     console.error('[getPaymentStatus] Error checking status:', error);
 
     const errorMessage = error instanceof Error ? error.message : 'Connection error';
@@ -271,7 +271,13 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
     }
 
-    // Re-throw the error
+    // Identify and structure common network or signer errors
+    if (error.code === 4001 || errorMessage.toLowerCase().includes('user rejected')) {
+      error.code = 'user_rejected';
+    } else if (errorMessage.toLowerCase().includes('rate limit')) {
+      error.code = 'rate_limit_exceeded';
+    }
+
     throw error;
   }
 }
