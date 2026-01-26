@@ -2,6 +2,7 @@ import { isViemError, standardErrors, viemHttpErrorToProviderError } from ':core
 import { RequestArguments } from ':core/provider/interface.js';
 import { PrepareCallsSchema } from ':core/rpc/wallet_prepareCalls.js';
 import { SendPreparedCallsSchema } from ':core/rpc/wallet_sendPreparedCalls.js';
+import type { CallCapabilities } from ':core/rpc/wallet_sendCalls.js';
 import { OwnerAccount } from ':core/type/index.js';
 import { ensureHexString } from ':core/type/util.js';
 import { SubAccount } from ':store/store.js';
@@ -13,6 +14,7 @@ import {
   Hex,
   PublicClient,
   TypedDataDefinition,
+  hexToBigInt,
   hexToString,
   isHex,
   numberToHex,
@@ -23,6 +25,33 @@ import {
   waitForCallsTransactionHash,
 } from '../utils.js';
 import { createSmartAccount } from './createSmartAccount.js';
+
+const MAX_GAS_LIMIT = 30_000_000n;
+
+function validateGasLimitOverrides(calls: { capabilities?: CallCapabilities }[]): void {
+  for (let i = 0; i < calls.length; i++) {
+    const gasLimitOverride = calls[i].capabilities?.gasLimitOverride;
+    if (gasLimitOverride) {
+      const { value } = gasLimitOverride;
+      if (!value || !isHex(value)) {
+        throw standardErrors.rpc.invalidParams(
+          `gasLimitOverride.value must be a hex string at call index ${i}`
+        );
+      }
+      const gasLimit = hexToBigInt(value);
+      if (gasLimit === 0n) {
+        throw standardErrors.rpc.invalidParams(
+          `gasLimitOverride.value cannot be zero at call index ${i}`
+        );
+      }
+      if (gasLimit > MAX_GAS_LIMIT) {
+        throw standardErrors.rpc.invalidParams(
+          `gasLimitOverride.value exceeds maximum allowed gas limit at call index ${i}`
+        );
+      }
+    }
+  }
+}
 
 type CreateSubAccountSignerParams = {
   address: Address;
@@ -118,7 +147,6 @@ export async function createSubAccountSigner({
         }
         case 'wallet_sendCalls': {
           assertArrayPresence(args.params);
-          // Get the client for the chain
           const chainId = get(args.params[0], 'chainId');
           if (!chainId) {
             throw standardErrors.rpc.invalidParams('chainId is required');
@@ -136,16 +164,21 @@ export async function createSubAccountSigner({
             throw standardErrors.rpc.invalidParams('calls are required');
           }
 
+          const calls = args.params[0].calls as {
+            to: Address;
+            data: Hex;
+            value: Hex;
+            capabilities?: CallCapabilities;
+          }[];
+
+          validateGasLimitOverrides(calls);
+
           let prepareCallsRequest: RequestArguments = {
             method: 'wallet_prepareCalls',
             params: [
               {
                 version: '1.0',
-                calls: args.params[0].calls as {
-                  to: Address;
-                  data: Hex;
-                  value: Hex;
-                }[],
+                calls,
                 chainId: chainId,
                 from: subAccount.address,
                 capabilities:
