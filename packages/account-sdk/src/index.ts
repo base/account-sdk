@@ -7,6 +7,8 @@ export type {
 
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
 
+export { externalCorrelationIds } from './store/external-correlation-id/store.js';
+
 export {
   getCryptoKeyAccount,
   removeCryptoKey,
@@ -15,14 +17,14 @@ export {
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 
 export {
-  base,
   CHAIN_IDS,
+  TOKENS,
+  base,
   getPaymentStatus,
   getSubscriptionStatus,
   pay,
   prepareCharge,
   subscribe,
-  TOKENS,
 } from './interface/payment/index.js';
 export type {
   ChargeOptions,

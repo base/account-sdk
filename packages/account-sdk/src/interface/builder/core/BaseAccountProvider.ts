@@ -19,6 +19,7 @@ import { hexStringFromNumber } from ':core/type/util.js';
 import { Signer } from ':sign/base-account/Signer.js';
 import { initSubAccountConfig } from ':sign/base-account/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
+import { externalCorrelationIds } from ':store/external-correlation-id/store.js';
 import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 
@@ -152,6 +153,7 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
   async disconnect() {
     await this.signer.cleanup();
     correlationIds.clear();
+    externalCorrelationIds.clear();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 

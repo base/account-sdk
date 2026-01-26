@@ -28,7 +28,6 @@ const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as cons
  * @param options.periodInDays - The period in days for the subscription (default: 30)
  * @param options.overridePeriodInSecondsForTestnet - TEST ONLY: Override period in seconds (only works when testnet=true)
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
- * @param options.walletUrl - Optional wallet URL to use
  * @param options.telemetry - Whether to enable telemetry logging (default: true)
  * @param options.requireBalance - Whether to require the user has sufficient balance before creating the subscription (default: true)
  * @returns Promise<SubscriptionResult> - Simplified result with subscription details
@@ -77,9 +76,9 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     subscriptionOwner,
     periodInDays = 30,
     testnet = false,
-    walletUrl,
     telemetry = true,
     requireBalance = true,
+    sdkConfig,
   } = options;
 
   // Check if overridePeriodInSecondsForTestnet is present in options
@@ -153,7 +152,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
           });
 
     // Create SDK instance
-    const sdk = createEphemeralSDK(chainId, walletUrl, telemetry);
+    const sdk = createEphemeralSDK(chainId, telemetry, sdkConfig);
     const provider = sdk.getProvider();
 
     try {
