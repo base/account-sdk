@@ -2,8 +2,6 @@
  * Type definitions for E2E Test Suite
  */
 
-// biome-ignore-file lint/suspicious/noExplicitAny: SDK types vary between local and npm versions, using any for flexibility in E2E tests
-
 import type { EIP1193Provider } from 'viem';
 
 // ============================================================================
@@ -148,28 +146,44 @@ export interface FetchPermissionsOptions {
 // We use 'any' strategically here because the SDK has complex types that vary
 // between local and npm versions. Tests will validate actual behavior.
 export interface LoadedSDK {
+  // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   base: any; // Actual type varies, includes pay, subscribe, subscription methods
+  // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   createBaseAccountSDK: (config: SDKConfig) => any; // Returns SDK instance with getProvider
   createProlinkUrl?: (encoded: string) => string;
+  // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   decodeProlink?: (encoded: string) => Promise<any>;
+  // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   encodeProlink?: (request: any) => Promise<string>;
+  // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   getCryptoKeyAccount?: () => Promise<{ account: any }>; // Only available in local SDK
   VERSION: string;
   CHAIN_IDS: Record<string, number>;
+  // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   TOKENS: Record<string, any>;
+  // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   getPaymentStatus: (options: any) => Promise<any>;
+  // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   getSubscriptionStatus?: (options: any) => Promise<any>;
   spendPermission?: {
+    // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
     fetchPermission: (options: { permissionHash: string }) => Promise<any>;
+    // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
     fetchPermissions: (options: any) => Promise<any[]>;
+    // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
     getHash?: (permission: any) => Promise<string>;
+    // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
     getPermissionStatus: (permission: any) => Promise<any>;
+    // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
     prepareRevokeCallData: (permission: any) => Promise<any>;
     prepareSpendCallData: (
+      // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
       permission: any,
       amount: bigint | string,
       recipient?: string
+      // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
     ) => Promise<any>;
+    // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
     requestSpendPermission: (options: any) => Promise<any>;
   };
 }
@@ -180,6 +194,7 @@ export interface SDKConfig {
   appChainIds: number[];
   preference?: {
     walletUrl?: string;
+    // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
     attribution?: any;
     telemetry?: boolean;
   };
