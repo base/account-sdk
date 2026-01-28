@@ -1,4 +1,4 @@
-import { http, Chain, TypedDataDomain, createPublicClient } from 'viem';
+import { Chain, TypedDataDomain, createPublicClient, http } from 'viem';
 
 import { parseMessage } from '../shortcut/ShortcutType';
 import { RpcRequestInput } from './RpcRequestInput';

@@ -1,7 +1,7 @@
 import { createBaseAccountSDK } from '@base-org/account';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
-import { http, createPublicClient, toHex } from 'viem';
+import { createPublicClient, http, toHex } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
 export function PersonalSign({

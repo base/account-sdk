@@ -27,7 +27,7 @@ import {
 } from '@chakra-ui/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
-import { type Address, encodeFunctionData } from 'viem';
+import { encodeFunctionData, type Address } from 'viem';
 
 // Token configuration
 const TOKENS = {

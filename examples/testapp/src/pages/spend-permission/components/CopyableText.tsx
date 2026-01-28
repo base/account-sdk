@@ -1,5 +1,5 @@
-import { CheckIcon, CopyIcon } from '@chakra-ui/icons';
-import { Flex, Icon, Text, type TextProps, Tooltip, useClipboard } from '@chakra-ui/react';
+import { CopyIcon, CheckIcon } from '@chakra-ui/icons';
+import { Flex, Icon, Text, Tooltip, useClipboard, type TextProps } from '@chakra-ui/react';
 
 type CopyableTextProps = {
   /** The full value to copy */

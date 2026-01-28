@@ -1,5 +1,5 @@
-import { ShortcutType } from './ShortcutType';
 import { ADDR_TO_FILL } from './const';
+import { ShortcutType } from './ShortcutType';
 
 const ethSendTransactionShortcuts: ShortcutType[] = [
   {

@@ -1,5 +1,5 @@
-import type { Hex } from 'viem';
 import { generatePrivateKey } from 'viem/accounts';
+import type { Hex } from 'viem';
 
 const STORAGE_KEY = 'base-acc-sdk.demo.sub-accounts.pks';
 
