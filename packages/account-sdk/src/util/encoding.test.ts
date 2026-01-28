@@ -13,7 +13,8 @@ describe('arrayBufferToBase64Url', () => {
 
 describe('convertCredentialToJSON', () => {
   const mockWebauthn = {
-    authenticatorData: '0x49960de5880e8c687434170f6476605b8fe4aeb9a28632c7995cf3ba831d9763' as const,
+    authenticatorData:
+      '0x49960de5880e8c687434170f6476605b8fe4aeb9a28632c7995cf3ba831d9763' as const,
     clientDataJSON: JSON.stringify({ type: 'webauthn.get', challenge: 'test' }),
     challengeIndex: 23,
     typeIndex: 1,
