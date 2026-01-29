@@ -218,3 +218,13 @@ yarn add @base-org/account
   1. Fork this repo and clone it
   1. From the root dir run `yarn install`
   1. From the root dir run `yarn dev`
+ 
+
+### 🧩 connectBaseWallet Helper
+A lightweight function to connect MetaMask to the Base network and return an ethers.js signer.
+
+**Example usage:**
+```ts
+import { connectBaseWallet } from "./helpers/connectBaseWallet";
+const { signer } = await connectBaseWallet();
+
