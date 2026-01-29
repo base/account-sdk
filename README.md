@@ -228,3 +228,6 @@ A lightweight function to connect MetaMask to the Base network and return an eth
 import { connectBaseWallet } from "./helpers/connectBaseWallet";
 const { signer } = await connectBaseWallet();
 
+### 🧠 switchToBaseNetwork
+Quick helper to prompt users to switch their MetaMask network to Base Mainnet.
+
