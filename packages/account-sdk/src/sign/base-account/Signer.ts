@@ -37,7 +37,7 @@ import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
-import { spendPermissions, store } from ':store/store.js';
+import { createStoreHelpers, spendPermissions, store, type StoreInstance } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import {
@@ -72,12 +72,15 @@ type ConstructorOptions = {
   metadata: AppMetadata;
   communicator: Communicator;
   callback: ProviderEventCallback | null;
+  storeInstance?: StoreInstance;
 };
 
 export class Signer {
   private readonly communicator: Communicator;
   private readonly keyManager: SCWKeyManager;
   private callback: ProviderEventCallback | null;
+  private readonly storeHelpers: ReturnType<typeof createStoreHelpers>;
+  private readonly storeInstance: StoreInstance;
 
   private accounts: Address[];
   private chain: SDKChain;
@@ -85,9 +88,15 @@ export class Signer {
   constructor(params: ConstructorOptions) {
     this.communicator = params.communicator;
     this.callback = params.callback;
-    this.keyManager = new SCWKeyManager();
+    // Use provided store instance or fall back to global store
+    this.storeInstance = params.storeInstance ?? store;
+    // Reuse global store helpers if using global store (important for testing/mocking)
+    // Otherwise create new helpers for the custom store instance
+    this.storeHelpers =
+      this.storeInstance === store ? store : createStoreHelpers(this.storeInstance);
+    this.keyManager = new SCWKeyManager(this.storeInstance);
 
-    const { account, chains } = store.getState();
+    const { account, chains } = this.storeInstance.getState();
     this.accounts = account.accounts ?? [];
     this.chain = account.chain ?? {
       id: params.metadata.appChainIds?.[0] ?? 1,
@@ -106,7 +115,7 @@ export class Signer {
 
   async handshake(args: RequestArguments) {
     const correlationId = correlationIds.get(args);
-    logHandshakeStarted({ method: args.method, correlationId });
+    logHandshakeStarted({ method: args.method, correlationId, isEphemeral: false });
 
     try {
       // Open the popup before constructing the request message.
@@ -136,12 +145,13 @@ export class Signer {
       const decrypted = await this.decryptResponseMessage(response);
 
       this.handleResponse(args, decrypted);
-      logHandshakeCompleted({ method: args.method, correlationId });
+      logHandshakeCompleted({ method: args.method, correlationId, isEphemeral: false });
     } catch (error) {
       logHandshakeError({
         method: args.method,
         correlationId,
         errorMessage: parseErrorMessageFromAny(error),
+        isEphemeral: false,
       });
       throw error;
     }
@@ -149,17 +159,18 @@ export class Signer {
 
   async request(request: RequestArguments) {
     const correlationId = correlationIds.get(request);
-    logRequestStarted({ method: request.method, correlationId });
+    logRequestStarted({ method: request.method, correlationId, isEphemeral: false });
 
     try {
       const result = await this._request(request);
-      logRequestCompleted({ method: request.method, correlationId });
+      logRequestCompleted({ method: request.method, correlationId, isEphemeral: false });
       return result;
     } catch (error) {
       logRequestError({
         method: request.method,
         correlationId,
         errorMessage: parseErrorMessageFromAny(error),
+        isEphemeral: false,
       });
       throw error;
     }
@@ -178,7 +189,7 @@ export class Signer {
           await this.communicator.waitForPopupLoaded?.();
           await initSubAccountConfig();
 
-          const subAccountsConfig = store.subAccountsConfig.get();
+          const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
           // Inject capabilities from config (e.g., addSubAccount when creation: 'on-connect')
           const modifiedRequest = injectRequestCapabilities(
             request,
@@ -221,8 +232,8 @@ export class Signer {
     switch (request.method) {
       case 'eth_requestAccounts':
       case 'eth_accounts': {
-        const subAccount = store.subAccounts.get();
-        const subAccountsConfig = store.subAccountsConfig.get();
+        const subAccount = this.storeHelpers.subAccounts.get();
+        const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
         if (subAccount?.address) {
           // if defaultAccount is 'sub' and we have a sub account, we need to return it as the first account
           // otherwise, we just append it to the accounts array
@@ -265,7 +276,7 @@ export class Signer {
         // Wait for the popup to be loaded before making async calls
         await this.communicator.waitForPopupLoaded?.();
         await initSubAccountConfig();
-        const subAccountsConfig = store.subAccountsConfig.get();
+        const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
         const modifiedRequest = injectRequestCapabilities(
           request,
           subAccountsConfig?.capabilities ?? {}
@@ -277,7 +288,7 @@ export class Signer {
       }
       // Sub Account Support
       case 'wallet_getSubAccounts': {
-        const subAccount = store.subAccounts.get();
+        const subAccount = this.storeHelpers.subAccounts.get();
         if (subAccount?.address) {
           return {
             subAccounts: [subAccount],
@@ -296,7 +307,7 @@ export class Signer {
           // cache the sub account
           assertSubAccount(response.subAccounts[0]);
           const subAccount = response.subAccounts[0];
-          store.subAccounts.set({
+          this.storeHelpers.subAccounts.set({
             address: subAccount.address,
             factory: subAccount.factory,
             factoryData: subAccount.factoryData,
@@ -314,7 +325,7 @@ export class Signer {
           CB_WALLET_RPC_URL
         )) as FetchPermissionsResponse;
         const requestedChainId = hexToNumber(completeRequest.params?.[0].chainId);
-        store.spendPermissions.set(
+        this.storeHelpers.spendPermissions.set(
           permissions.permissions.map((permission) => ({
             ...permission,
             chainId: requestedChainId,
@@ -331,7 +342,7 @@ export class Signer {
 
         // Store the single permission if it has a chainId
         if (response.permission && response.permission.chainId) {
-          store.spendPermissions.set([response.permission]);
+          this.storeHelpers.spendPermissions.set([response.permission]);
         }
 
         return response;
@@ -364,7 +375,7 @@ export class Signer {
       case 'eth_requestAccounts': {
         const accounts = result.value as Address[];
         this.accounts = accounts;
-        store.account.set({
+        this.storeHelpers.account.set({
           accounts,
           chain: this.chain,
         });
@@ -375,7 +386,7 @@ export class Signer {
         const response = result.value as WalletConnectResponse;
         const accounts = response.accounts.map((account) => account.address);
         this.accounts = accounts;
-        store.account.set({
+        this.storeHelpers.account.set({
           accounts,
         });
 
@@ -386,15 +397,15 @@ export class Signer {
           const capabilityResponse = capabilities?.subAccounts;
           assertArrayPresence(capabilityResponse, 'subAccounts');
           assertSubAccount(capabilityResponse[0]);
-          store.subAccounts.set({
+          this.storeHelpers.subAccounts.set({
             address: capabilityResponse[0].address,
             factory: capabilityResponse[0].factory,
             factoryData: capabilityResponse[0].factoryData,
           });
         }
 
-        const subAccount = store.subAccounts.get();
-        const subAccountsConfig = store.subAccountsConfig.get();
+        const subAccount = this.storeHelpers.subAccounts.get();
+        const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
 
         if (subAccount?.address) {
           // Sub account should be returned as the default account if defaultAccount is 'sub'
@@ -407,7 +418,7 @@ export class Signer {
         const spendPermissions = response?.accounts?.[0].capabilities?.spendPermissions;
 
         if (spendPermissions && 'permissions' in spendPermissions) {
-          store.spendPermissions.set(spendPermissions?.permissions);
+          this.storeHelpers.spendPermissions.set(spendPermissions?.permissions);
         }
 
         this.callback?.('accountsChanged', this.accounts);
@@ -416,8 +427,8 @@ export class Signer {
       case 'wallet_addSubAccount': {
         assertSubAccount(result.value);
         const subAccount = result.value;
-        store.subAccounts.set(subAccount);
-        const subAccountsConfig = store.subAccountsConfig.get();
+        this.storeHelpers.subAccounts.set(subAccount);
+        const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
         this.accounts =
           subAccountsConfig?.defaultAccount === 'sub'
             ? prependWithoutDuplicates(this.accounts, subAccount.address)
@@ -432,14 +443,18 @@ export class Signer {
   }
 
   async cleanup() {
-    const metadata = store.config.get().metadata;
+    const metadata = this.storeHelpers.config.get().metadata;
     await this.keyManager.clear();
 
-    // clear the store
-    store.account.clear();
-    store.subAccounts.clear();
-    store.spendPermissions.clear();
-    store.chains.clear();
+    // Clear session-specific store data
+    this.storeHelpers.account.clear();
+    this.storeHelpers.subAccounts.clear();
+    this.storeHelpers.spendPermissions.clear();
+
+    // NOTE: We intentionally do NOT clear this.storeHelpers.chains here.
+    // Chains are shared infrastructure used by ChainClients and may be
+    // needed by other SDK instances or subsequent operations.
+    // Clearing them could cause failures in concurrent or subsequent operations.
 
     // reset the signer
     this.accounts = [];
@@ -478,7 +493,7 @@ export class Signer {
       );
     }
 
-    const capabilities = store.getState().account.capabilities;
+    const capabilities = this.storeInstance.getState().account.capabilities;
 
     // Return empty object if capabilities is undefined
     if (!capabilities) {
@@ -572,7 +587,7 @@ export class Signer {
         };
       });
 
-      store.chains.set(chains);
+      this.storeHelpers.chains.set(chains);
 
       this.updateChain(this.chain.id, chains);
       createClients(chains);
@@ -580,7 +595,7 @@ export class Signer {
 
     const walletCapabilities = response.data?.capabilities;
     if (walletCapabilities) {
-      store.account.set({
+      this.storeHelpers.account.set({
         capabilities: walletCapabilities,
       });
     }
@@ -588,14 +603,14 @@ export class Signer {
   }
 
   private updateChain(chainId: number, newAvailableChains?: SDKChain[]): boolean {
-    const state = store.getState();
+    const state = this.storeInstance.getState();
     const chains = newAvailableChains ?? state.chains;
     const chain = chains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
 
     if (chain !== this.chain) {
       this.chain = chain;
-      store.account.set({
+      this.storeHelpers.account.set({
         chain,
       });
       this.callback?.('chainChanged', hexStringFromNumber(chain.id));
@@ -608,9 +623,9 @@ export class Signer {
     factory?: Address;
     factoryData?: Hex;
   }> {
-    const state = store.getState();
+    const state = this.storeInstance.getState();
     const cachedSubAccount = state.subAccount;
-    const subAccountsConfig = store.subAccountsConfig.get();
+    const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
 
     // Extract requested address from params (for deployed/undeployed types)
     const requestedAddress =
@@ -650,7 +665,7 @@ export class Signer {
       if (request.params[0].account.keys && request.params[0].account.keys.length > 0) {
         keys = request.params[0].account.keys;
       } else {
-        const config = store.subAccountsConfig.get() ?? {};
+        const config = this.storeHelpers.subAccountsConfig.get() ?? {};
         const { account: ownerAccount } = config.toOwnerAccount
           ? await config.toOwnerAccount()
           : await getCryptoKeyAccount();
@@ -678,7 +693,7 @@ export class Signer {
 
   private shouldRequestUseSubAccountSigner(request: RequestArguments) {
     const sender = getSenderFromRequest(request);
-    const subAccount = store.subAccounts.get();
+    const subAccount = this.storeHelpers.subAccounts.get();
     if (sender) {
       return sender.toLowerCase() === subAccount?.address.toLowerCase();
     }
@@ -686,9 +701,9 @@ export class Signer {
   }
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
-    const subAccount = store.subAccounts.get();
-    const subAccountsConfig = store.subAccountsConfig.get();
-    const config = store.config.get();
+    const subAccount = this.storeHelpers.subAccounts.get();
+    const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
+    const config = this.storeHelpers.config.get();
 
     assertPresence(
       subAccount?.address,
@@ -748,7 +763,7 @@ export class Signer {
     if (['eth_sendTransaction', 'wallet_sendCalls'].includes(request.method)) {
       // If we have never had a spend permission, we need to do this tx through the global account
       // Only perform this check if funding mode is 'spend-permissions'
-      const subAccountsConfig = store.subAccountsConfig.get();
+      const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
       if (subAccountsConfig?.funding === 'spend-permissions') {
         const storedSpendPermissions = spendPermissions.get();
         if (storedSpendPermissions.length === 0) {
@@ -816,7 +831,7 @@ export class Signer {
       return result;
     } catch (error) {
       // Skip insufficient balance error handling if funding mode is 'manual'
-      const subAccountsConfig = store.subAccountsConfig.get();
+      const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
       if (subAccountsConfig?.funding === 'manual') {
         throw error;
       }

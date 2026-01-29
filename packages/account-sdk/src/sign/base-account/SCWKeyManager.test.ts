@@ -1,11 +1,15 @@
 import { SCWKeyManager } from './SCWKeyManager.js';
 import { generateKeyPair } from ':util/cipher.js';
+import { createStoreInstance } from ':store/store.js';
 
 describe('KeyStorage', () => {
   let keyStorage: SCWKeyManager;
+  let storeInstance: ReturnType<typeof createStoreInstance>;
 
   beforeEach(() => {
-    keyStorage = new SCWKeyManager();
+    // Create a fresh ephemeral store instance for each test
+    storeInstance = createStoreInstance({ persist: false });
+    keyStorage = new SCWKeyManager(storeInstance);
   });
 
   describe('getOwnPublicKey', () => {
@@ -32,7 +36,8 @@ describe('KeyStorage', () => {
     it('should load the same public key from storage with new instance', async () => {
       const firstPublicKey = await keyStorage.getOwnPublicKey();
 
-      const anotherKeyStorage = new SCWKeyManager();
+      // Create a new KeyManager with the same store instance to simulate persistence
+      const anotherKeyStorage = new SCWKeyManager(storeInstance);
       const secondPublicKey = await anotherKeyStorage.getOwnPublicKey();
 
       expect(firstPublicKey).toStrictEqual(secondPublicKey);
@@ -60,7 +65,8 @@ describe('KeyStorage', () => {
 
       const sharedSecret = await keyStorage.getSharedSecret();
 
-      const anotherKeyStorage = new SCWKeyManager();
+      // Create a new KeyManager with the same store instance to simulate persistence
+      const anotherKeyStorage = new SCWKeyManager(storeInstance);
       const sharedSecretFromAnotherStorage = await anotherKeyStorage.getSharedSecret();
 
       expect(sharedSecret).toStrictEqual(sharedSecretFromAnotherStorage);
