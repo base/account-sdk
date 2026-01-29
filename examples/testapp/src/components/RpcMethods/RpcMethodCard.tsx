@@ -77,7 +77,9 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
         )?.data.chain ?? mainnet;
 
       if (method.includes('wallet_sign')) {
+        // biome-ignore lint/suspicious/noExplicitAny: old code, refactor soon
         const type = data.type || (data.request as any).type;
+        // biome-ignore lint/suspicious/noExplicitAny: old code, refactor soon
         const walletSignData = data.data || (data.request as any).data;
         let result: string | null = null;
         if (type === '0x01') {
