@@ -26,8 +26,6 @@ import {
 } from '../utils.js';
 import { createSmartAccount } from './createSmartAccount.js';
 
-const MAX_GAS_LIMIT = 30_000_000n;
-
 function validateGasLimitOverrides(calls: { capabilities?: CallCapabilities }[]): void {
   for (let i = 0; i < calls.length; i++) {
     const gasLimitOverride = calls[i].capabilities?.gasLimitOverride;
@@ -42,11 +40,6 @@ function validateGasLimitOverrides(calls: { capabilities?: CallCapabilities }[])
       if (gasLimit === 0n) {
         throw standardErrors.rpc.invalidParams(
           `gasLimitOverride.value cannot be zero at call index ${i}`
-        );
-      }
-      if (gasLimit > MAX_GAS_LIMIT) {
-        throw standardErrors.rpc.invalidParams(
-          `gasLimitOverride.value exceeds maximum allowed gas limit at call index ${i}`
         );
       }
     }

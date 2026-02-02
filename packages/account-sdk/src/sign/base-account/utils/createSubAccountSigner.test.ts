@@ -576,48 +576,6 @@ describe('createSubAccountSigner', () => {
       ).rejects.toThrow('gasLimitOverride.value cannot be zero');
     });
 
-    it('should throw error for gas limit exceeding max', async () => {
-      const request = vi.fn();
-
-      (getClient as any).mockReturnValue({
-        request,
-        chain: {
-          id: 84532,
-        },
-      });
-
-      const signer = await createSubAccountSigner({
-        address: '0x',
-        client: getClient(84532)!,
-        owner,
-      });
-
-      // 100 million gas - exceeds 30 million max
-      const excessiveGas = '0x5F5E100';
-
-      await expect(
-        signer.request({
-          method: 'wallet_sendCalls',
-          params: [
-            {
-              chainId: numberToHex(84532),
-              calls: [
-                {
-                  to: '0x',
-                  data: '0x',
-                  capabilities: {
-                    gasLimitOverride: { value: excessiveGas },
-                  },
-                },
-              ],
-              from: '0x',
-              version: '1.0',
-            },
-          ],
-        })
-      ).rejects.toThrow('gasLimitOverride.value exceeds maximum allowed gas limit');
-    });
-
     it('should allow calls without gasLimitOverride', async () => {
       const request = vi.fn((args) => {
         if (args.method === 'wallet_prepareCalls') {
