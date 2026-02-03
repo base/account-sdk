@@ -39,16 +39,12 @@ export function AddGlobalOwner({
         transport: http(),
       });
       const paymasterClient = createPaymasterClient({
-        transport: http(
-          'https://example.paymaster.com'
-        ),
+        transport: http('https://example.paymaster.com'),
       });
       const bundlerClient = createBundlerClient({
         account: subAccount,
         client: client as Client,
-        transport: http(
-          'https://example.paymaster.com'
-        ),
+        transport: http('https://example.paymaster.com'),
         paymaster: paymasterClient,
       });
       // @ts-ignore

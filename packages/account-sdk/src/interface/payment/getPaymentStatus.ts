@@ -59,10 +59,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
   try {
     // Get the bundler URL - use custom URL if provided, otherwise use default based on network
     const effectiveBundlerUrl =
-      bundlerUrl ||
-      (testnet
-        ? 'https://example.paymaster.com'
-        : 'https://example.paymaster.com');
+      bundlerUrl || (testnet ? 'https://example.paymaster.com' : 'https://example.paymaster.com');
 
     // Call eth_getUserOperationReceipt via the bundler
     const receipt = await fetch(effectiveBundlerUrl, {

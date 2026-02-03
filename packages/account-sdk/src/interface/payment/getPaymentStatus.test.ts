@@ -212,10 +212,7 @@ describe('getPaymentStatus', () => {
       testnet: true,
     });
 
-    expect(fetch).toHaveBeenCalledWith(
-      'https://example.paymaster.com',
-      expect.any(Object)
-    );
+    expect(fetch).toHaveBeenCalledWith('https://example.paymaster.com', expect.any(Object));
   });
 
   it('should parse user-friendly failure reasons', async () => {
@@ -619,10 +616,7 @@ describe('getPaymentStatus', () => {
       );
 
       // Verify default bundler URL was NOT used
-      expect(fetch).not.toHaveBeenCalledWith(
-        'https://example.paymaster.com',
-        expect.anything()
-      );
+      expect(fetch).not.toHaveBeenCalledWith('https://example.paymaster.com', expect.anything());
     });
 
     it('should use custom bundler URL for both receipt and pending checks', async () => {
@@ -700,10 +694,7 @@ describe('getPaymentStatus', () => {
       });
 
       // Verify default testnet bundler URL was used
-      expect(fetch).toHaveBeenCalledWith(
-        'https://example.paymaster.com',
-        expect.anything()
-      );
+      expect(fetch).toHaveBeenCalledWith('https://example.paymaster.com', expect.anything());
     });
   });
 });
