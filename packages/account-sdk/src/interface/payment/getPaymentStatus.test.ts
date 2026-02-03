@@ -67,7 +67,7 @@ describe('getPaymentStatus', () => {
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+      'https://example.paymaster.com',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -213,7 +213,7 @@ describe('getPaymentStatus', () => {
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+      'https://example.paymaster.com',
       expect.any(Object)
     );
   });
@@ -620,7 +620,7 @@ describe('getPaymentStatus', () => {
 
       // Verify default bundler URL was NOT used
       expect(fetch).not.toHaveBeenCalledWith(
-        'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+        'https://example.paymaster.com',
         expect.anything()
       );
     });
@@ -701,7 +701,7 @@ describe('getPaymentStatus', () => {
 
       // Verify default testnet bundler URL was used
       expect(fetch).toHaveBeenCalledWith(
-        'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+        'https://example.paymaster.com',
         expect.anything()
       );
     });

@@ -31,14 +31,14 @@ export function DeploySubAccount({
       });
       const paymasterClient = createPaymasterClient({
         transport: http(
-          'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
+          'https://example.paymaster.com'
         ),
       });
       const bundlerClient = createBundlerClient({
         account: subAccount,
         client: client as Client,
         transport: http(
-          'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
+          'https://example.paymaster.com'
         ),
         paymaster: paymasterClient,
       });
