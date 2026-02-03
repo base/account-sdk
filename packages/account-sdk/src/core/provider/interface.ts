@@ -62,6 +62,14 @@ export type Attribution =
       dataSuffix: `0x${string}`;
     };
 
+/**
+ * Controls which wallet connection options are shown to users.
+ * - 'all' (default): Shows both Smart Wallet (passkey) and EOA (browser extension/mobile) options
+ * - 'smartWalletOnly': Only shows passkey-based Smart Wallet connection
+ * - 'eoaOnly': Only shows traditional EOA wallet connection (browser extension or mobile Coinbase Wallet)
+ */
+export type WalletConnectionOptions = 'all' | 'smartWalletOnly' | 'eoaOnly';
+
 export type Preference = {
   /**
    * The URL for the wallet popup.
@@ -83,6 +91,14 @@ export type Preference = {
    * @default true
    */
   telemetry?: boolean;
+  /**
+   * Controls which wallet connection options are shown to users.
+   * - 'all' (default): Shows both Smart Wallet (passkey) and EOA (browser extension/mobile) options
+   * - 'smartWalletOnly': Only shows passkey-based Smart Wallet connection
+   * - 'eoaOnly': Only shows traditional EOA wallet connection (browser extension or mobile Coinbase Wallet)
+   * @default 'all'
+   */
+  options?: WalletConnectionOptions;
 } & Record<string, unknown>;
 
 export type SubAccountCreationMode = 'on-connect' | 'manual';

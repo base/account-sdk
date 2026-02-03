@@ -1,6 +1,8 @@
 import { Preference } from ':core/provider/interface.js';
 import { ToOwnerAccountFn } from ':store/store.js';
 
+const VALID_OPTIONS = ['all', 'smartWalletOnly', 'eoaOnly'] as const;
+
 /**
  * Validates user supplied preferences. Throws if keys are not valid.
  * @param preference
@@ -22,6 +24,14 @@ export function validatePreferences(preference?: Preference) {
   if (preference.telemetry) {
     if (typeof preference.telemetry !== 'boolean') {
       throw new Error(`Telemetry must be a boolean`);
+    }
+  }
+
+  if (preference.options !== undefined) {
+    if (!VALID_OPTIONS.includes(preference.options)) {
+      throw new Error(
+        `Invalid options value: '${preference.options}'. Must be one of: ${VALID_OPTIONS.join(', ')}`
+      );
     }
   }
 }

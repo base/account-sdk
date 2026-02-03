@@ -94,3 +94,40 @@ describe('validateTelemetry', () => {
     expect(() => validatePreferences(invalidPreference)).toThrow('Telemetry must be a boolean');
   });
 });
+
+describe('validateOptions', () => {
+  it('should not throw an error if options is "all"', () => {
+    const validPreference: Preference = {
+      options: 'all',
+    };
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should not throw an error if options is "smartWalletOnly"', () => {
+    const validPreference: Preference = {
+      options: 'smartWalletOnly',
+    };
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should not throw an error if options is "eoaOnly"', () => {
+    const validPreference: Preference = {
+      options: 'eoaOnly',
+    };
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should not throw an error if options is undefined', () => {
+    const validPreference: Preference = {};
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should throw an error if options is an invalid value', () => {
+    const invalidPreference: Preference = {
+      options: 'invalid' as any,
+    };
+    expect(() => validatePreferences(invalidPreference)).toThrow(
+      "Invalid options value: 'invalid'. Must be one of: all, smartWalletOnly, eoaOnly"
+    );
+  });
+});

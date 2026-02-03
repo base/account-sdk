@@ -3,6 +3,7 @@ export type {
   AppMetadata,
   Preference,
   ProviderInterface,
+  WalletConnectionOptions,
 } from ':core/provider/interface.js';
 
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';

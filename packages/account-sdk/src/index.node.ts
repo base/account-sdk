@@ -1,7 +1,12 @@
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
 // Node.js-specific exports that include CDP SDK dependencies
-export type { AppMetadata, Preference, ProviderInterface } from ':core/provider/interface.js';
+export type {
+  AppMetadata,
+  Preference,
+  ProviderInterface,
+  WalletConnectionOptions,
+} from ':core/provider/interface.js';
 
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
 
