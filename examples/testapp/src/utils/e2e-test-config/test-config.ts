@@ -6,20 +6,6 @@
  */
 
 // ============================================================================
-// Chain Configuration
-// ============================================================================
-
-export const CHAINS = {
-  BASE_SEPOLIA: {
-    chainId: 84532,
-    chainIdHex: '0x14a34',
-    name: 'Base Sepolia',
-    rpcUrl:
-      'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
-  },
-} as const;
-
-// ============================================================================
 // Test Addresses
 // ============================================================================
 
@@ -101,9 +87,9 @@ export const SDK_CONFIG = {
   APP_NAME: 'E2E Test Suite',
 
   /**
-   * Default chain IDs for SDK initialization
+   * Default chain IDs for SDK initialization (Base Sepolia)
    */
-  DEFAULT_CHAIN_IDS: [CHAINS.BASE_SEPOLIA.chainId],
+  DEFAULT_CHAIN_IDS: [84532],
 
   /**
    * App logo URL (optional)
@@ -177,38 +163,6 @@ export const SPEND_PERMISSION_CONFIG = {
    * Permission period in days
    */
   PERIOD_DAYS: 30,
-} as const;
-
-// ============================================================================
-// Prolink Configuration
-// ============================================================================
-
-export const PROLINK_CONFIG = {
-  /**
-   * Base URL for prolink generation
-   */
-  BASE_URL: 'https://base.app/base-pay',
-
-  /**
-   * Test RPC request for prolink encoding
-   */
-  TEST_REQUEST: {
-    method: 'wallet_sendCalls',
-    params: [
-      {
-        version: '1',
-        from: TEST_ADDRESSES.TEST_RECIPIENT,
-        calls: [
-          {
-            to: TEST_ADDRESSES.TEST_RECIPIENT_2,
-            data: '0x',
-            value: '0x0',
-          },
-        ],
-        chainId: CHAINS.BASE_SEPOLIA.chainIdHex,
-      },
-    ],
-  },
 } as const;
 
 // ============================================================================
@@ -328,16 +282,6 @@ export const UI_COLORS = {
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Get the chain configuration for a given chain ID
- */
-export function getChainConfig(chainId: number) {
-  if (chainId === CHAINS.BASE_SEPOLIA.chainId) {
-    return CHAINS.BASE_SEPOLIA;
-  }
-  throw new Error(`Unsupported chain ID: ${chainId}`);
-}
 
 /**
  * Format chain ID as hex string
