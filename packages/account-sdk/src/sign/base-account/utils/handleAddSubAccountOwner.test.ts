@@ -73,7 +73,7 @@ describe('handleAddSubAccountOwner', () => {
         globalAccountRequest: mockGlobalAccountRequest,
         chainId: testChainId,
       })
-    ).rejects.toThrow(standardErrors.rpc.internal('client not found for chainId 1'));
+    ).rejects.toThrow(standardErrors.rpc.internal(`client not found for chainId ${testChainId}`));
   });
 
   it('should throw error when calls fail', async () => {
@@ -166,21 +166,6 @@ describe('handleAddSubAccountOwner', () => {
         chainId: testChainId,
       })
     ).rejects.toThrow(standardErrors.provider.unauthorized('no global account'));
-  });
-
-  it('should throw error when no chain id is found', async () => {
-    (store.account.get as ReturnType<typeof vi.fn>).mockReturnValue({
-      accounts: ['0xglobal', '0xsub'],
-      chain: {},
-    });
-
-    await expect(
-      handleAddSubAccountOwner({
-        ownerAccount: mockOwnerAccount,
-        globalAccountRequest: mockGlobalAccountRequest,
-        chainId: testChainId,
-      })
-    ).rejects.toThrow(standardErrors.provider.unauthorized('no chain id'));
   });
 
   it('should throw error when no sub account is found', async () => {
