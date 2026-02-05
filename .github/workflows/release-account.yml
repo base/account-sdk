@@ -28,6 +28,10 @@ jobs:
       - name: 'Setup'
         uses: ./.github/actions/setup
 
+      - name: Update npm
+        run: |
+          npm install -g npm@latest
+
       - name: Set version
         run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}
 
@@ -42,5 +46,3 @@ jobs:
         run: |
           cd packages/account-sdk
           npm publish --tag latest --access public
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
