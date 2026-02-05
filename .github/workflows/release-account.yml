@@ -38,9 +38,6 @@ jobs:
       - name: Build Packages
         run: yarn workspace @base-org/account build
 
-      - name: Set deployment token
-        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
-
       - name: Publish to npm
         run: |
           cd packages/account-sdk
