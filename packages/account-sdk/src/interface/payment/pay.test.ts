@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { pay } from './pay.js';
+import * as getPaymentStatusModule from './getPaymentStatus.js';
 import * as sdkManager from './utils/sdkManager.js';
 import * as translatePayment from './utils/translatePayment.js';
 import * as validation from './utils/validation.js';
@@ -16,6 +17,7 @@ vi.mock('./utils/validation.js', async () => {
 });
 vi.mock('./utils/translatePayment.js');
 vi.mock('./utils/sdkManager.js');
+vi.mock('./getPaymentStatus.js');
 
 // Mock telemetry events
 vi.mock(':core/telemetry/events/payment.js', () => ({
@@ -30,6 +32,13 @@ describe('pay', () => {
     // Mock crypto.randomUUID
     vi.stubGlobal('crypto', {
       randomUUID: vi.fn().mockReturnValue('mock-correlation-id'),
+    });
+
+    // Mock getPaymentStatus to return 'pending' by default (simulating still pending after 2 seconds)
+    vi.mocked(getPaymentStatusModule.getPaymentStatus).mockResolvedValue({
+      status: 'pending',
+      id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      message: 'Payment is being processed',
     });
   });
 
@@ -548,6 +557,274 @@ describe('pay', () => {
       testnet: false,
       correlationId: 'mock-correlation-id',
       errorMessage: 'Unknown error occurred',
+    });
+  });
+
+  describe('polling behavior', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should poll for status after initial payment response', async () => {
+      // Setup mocks
+      vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+      vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+        version: '2.0.0',
+        chainId: 8453,
+        calls: [
+          {
+            to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            data: '0xabcdef',
+            value: '0x0',
+          },
+        ],
+        capabilities: {},
+      });
+      vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+        transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      });
+
+      // Mock getPaymentStatus to return pending
+      vi.mocked(getPaymentStatusModule.getPaymentStatus).mockResolvedValue({
+        status: 'pending',
+        id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        message: 'Payment is being processed',
+      });
+
+      const paymentPromise = pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+        testnet: false,
+      });
+
+      // Fast-forward through polling period
+      await vi.advanceTimersByTimeAsync(2500);
+
+      const payment = await paymentPromise;
+
+      expect(payment.success).toBe(true);
+      // Verify getPaymentStatus was called multiple times during polling
+      expect(getPaymentStatusModule.getPaymentStatus).toHaveBeenCalled();
+    });
+
+    it('should exit polling early when payment is completed', async () => {
+      // Setup mocks
+      vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+      vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+        version: '2.0.0',
+        chainId: 8453,
+        calls: [
+          {
+            to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            data: '0xabcdef',
+            value: '0x0',
+          },
+        ],
+        capabilities: {},
+      });
+      vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+        transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      });
+
+      // Mock getPaymentStatus to return completed immediately
+      vi.mocked(getPaymentStatusModule.getPaymentStatus).mockResolvedValue({
+        status: 'completed',
+        id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        message: 'Payment completed successfully',
+      });
+
+      const paymentPromise = pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+        testnet: false,
+      });
+
+      // Fast-forward just enough for one poll
+      await vi.advanceTimersByTimeAsync(300);
+
+      const payment = await paymentPromise;
+
+      expect(payment.success).toBe(true);
+      // Should have exited early, not continuing to poll for 2 seconds
+      expect(getPaymentStatusModule.getPaymentStatus).toHaveBeenCalledTimes(1);
+    });
+
+    it('should exit polling early when payment fails', async () => {
+      // Setup mocks
+      vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+      vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+        version: '2.0.0',
+        chainId: 8453,
+        calls: [
+          {
+            to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            data: '0xabcdef',
+            value: '0x0',
+          },
+        ],
+        capabilities: {},
+      });
+      vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+        transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      });
+
+      // Mock getPaymentStatus to return failed
+      vi.mocked(getPaymentStatusModule.getPaymentStatus).mockResolvedValue({
+        status: 'failed',
+        id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        message: 'Payment failed',
+        reason: 'Insufficient funds',
+      });
+
+      const paymentPromise = pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+        testnet: false,
+      });
+
+      // Fast-forward just enough for one poll
+      await vi.advanceTimersByTimeAsync(300);
+
+      const payment = await paymentPromise;
+
+      expect(payment.success).toBe(true);
+      // Should have exited early
+      expect(getPaymentStatusModule.getPaymentStatus).toHaveBeenCalledTimes(1);
+    });
+
+    it('should continue and return original response if polling errors', async () => {
+      // Setup mocks
+      vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+      vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+        version: '2.0.0',
+        chainId: 8453,
+        calls: [
+          {
+            to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            data: '0xabcdef',
+            value: '0x0',
+          },
+        ],
+        capabilities: {},
+      });
+      vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+        transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      });
+
+      // Mock getPaymentStatus to throw an error
+      vi.mocked(getPaymentStatusModule.getPaymentStatus).mockRejectedValue(
+        new Error('Network error')
+      );
+
+      const paymentPromise = pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+        testnet: false,
+      });
+
+      // Fast-forward just enough for one poll
+      await vi.advanceTimersByTimeAsync(300);
+
+      const payment = await paymentPromise;
+
+      // Payment should still succeed with original response despite polling error
+      expect(payment.success).toBe(true);
+      expect(payment.id).toBe('0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    });
+
+    it('should disable telemetry for status polling calls', async () => {
+      // Setup mocks
+      vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+      vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+        version: '2.0.0',
+        chainId: 8453,
+        calls: [
+          {
+            to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            data: '0xabcdef',
+            value: '0x0',
+          },
+        ],
+        capabilities: {},
+      });
+      vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+        transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      });
+
+      vi.mocked(getPaymentStatusModule.getPaymentStatus).mockResolvedValue({
+        status: 'completed',
+        id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        message: 'Payment completed',
+      });
+
+      const paymentPromise = pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+        testnet: false,
+        telemetry: true,
+      });
+
+      await vi.advanceTimersByTimeAsync(300);
+      await paymentPromise;
+
+      // Verify telemetry was disabled for polling calls
+      expect(getPaymentStatusModule.getPaymentStatus).toHaveBeenCalledWith(
+        expect.objectContaining({
+          telemetry: false,
+        })
+      );
+    });
+
+    it('should pass bundlerUrl to getPaymentStatus during polling', async () => {
+      const customBundlerUrl = 'https://my-custom-bundler.example.com/rpc';
+
+      // Setup mocks
+      vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+      vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+        version: '2.0.0',
+        chainId: 8453,
+        calls: [
+          {
+            to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            data: '0xabcdef',
+            value: '0x0',
+          },
+        ],
+        capabilities: {},
+      });
+      vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+        transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      });
+
+      vi.mocked(getPaymentStatusModule.getPaymentStatus).mockResolvedValue({
+        status: 'completed',
+        id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        message: 'Payment completed',
+      });
+
+      const paymentPromise = pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+        testnet: false,
+        bundlerUrl: customBundlerUrl,
+      });
+
+      await vi.advanceTimersByTimeAsync(300);
+      await paymentPromise;
+
+      // Verify custom bundlerUrl was passed to getPaymentStatus
+      expect(getPaymentStatusModule.getPaymentStatus).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+          testnet: false,
+          telemetry: false,
+          bundlerUrl: customBundlerUrl,
+        })
+      );
     });
   });
 });
