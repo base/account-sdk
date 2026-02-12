@@ -66,6 +66,8 @@ type CCAEventData = {
   subAccountCreation?: 'on-connect' | 'manual';
   subAccountDefaultAccount?: 'sub' | 'universal';
   subAccountFunding?: 'spend-permissions' | 'manual';
+  enableAutoSubAccounts?: boolean;
+  mode?: string;
   // Payment-specific attributes
   amount?: string;
   testnet?: boolean;
