@@ -1,5 +1,12 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
-import { Hex, WalletSendCallsParameters, hexToNumber, isAddressEqual, numberToHex } from 'viem';
+import {
+  Hex,
+  SendCallsReturnType,
+  WalletSendCallsParameters,
+  hexToNumber,
+  isAddressEqual,
+  numberToHex,
+} from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
 import { isActionableHttpRequestError, isViemError, standardErrors } from ':core/error/errors.js';
@@ -55,12 +62,15 @@ import {
   assertFetchPermissionsRequest,
   assertGetCapabilitiesParams,
   assertParamsChainId,
+  createWalletSendCallsRequest,
   fillMissingParamsForFetchPermissions,
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
+  isEthSendTransactionParams,
   makeDataSuffix,
   prependWithoutDuplicates,
+  waitForCallsTransactionHash,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { findOwnerIndex } from './utils/findOwnerIndex.js';
@@ -249,8 +259,9 @@ export class Signer {
       case 'personal_sign':
       case 'wallet_sign':
       case 'personal_ecRecover':
-      case 'eth_signTransaction':
       case 'eth_sendTransaction':
+        return this.handleSendTransaction(request);
+      case 'eth_signTransaction':
       case 'eth_signTypedData_v1':
       case 'eth_signTypedData_v3':
       case 'eth_signTypedData_v4':
@@ -429,6 +440,45 @@ export class Signer {
         break;
     }
     return result.value;
+  }
+
+  /**
+   * Handles eth_sendTransaction by converting to wallet_sendCalls and
+   * waiting for the actual on-chain transaction hash.
+   *
+   * Without this, eth_sendTransaction sent via the popup returns the raw
+   * UserOperation signature (65 bytes) instead of a 32-byte tx hash,
+   * causing waitForTransactionReceipt to fail with InvalidParamsRpcError.
+   */
+  private async handleSendTransaction(request: RequestArguments) {
+    if (!isEthSendTransactionParams(request.params)) {
+      throw standardErrors.rpc.invalidParams('Invalid eth_sendTransaction params');
+    }
+
+    const txParams = request.params[0];
+    const from = txParams.from ?? this.accounts[0];
+
+    if (!from) {
+      throw standardErrors.rpc.invalidParams('No sender address available');
+    }
+
+    const sendCallsRequest = createWalletSendCallsRequest({
+      calls: [txParams],
+      chainId: this.chain.id,
+      from,
+    });
+
+    const result = (await this.sendRequestToPopup(sendCallsRequest)) as SendCallsReturnType;
+
+    const client = getClient(this.chain.id);
+    if (!client) {
+      throw standardErrors.rpc.internal(`No client found for chain ${this.chain.id}`);
+    }
+
+    return waitForCallsTransactionHash({
+      client,
+      id: result.id,
+    });
   }
 
   async cleanup() {
