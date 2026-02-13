@@ -14,6 +14,7 @@ import {
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
+  isEthSendTransactionParams,
   isSendCallsParams,
   prependWithoutDuplicates,
   requestHasCapability,
@@ -625,6 +626,37 @@ describe('isSendCallsParams', () => {
   it('should return false for params with non-object first element', () => {
     expect(isSendCallsParams(['string'])).toBe(false);
     expect(isSendCallsParams([123])).toBe(false);
+  });
+});
+
+describe('isEthSendTransactionParams', () => {
+  it('should return true for contract deployments without to', () => {
+    expect(
+      isEthSendTransactionParams([
+        {
+          data: '0x60006000',
+        },
+      ])
+    ).toBe(true);
+  });
+
+  it('should return true for standard transaction params', () => {
+    expect(
+      isEthSendTransactionParams([
+        {
+          from: VALID_ADDRESS_1,
+          to: VALID_ADDRESS_2,
+          value: '0x1',
+          data: '0x',
+        },
+      ])
+    ).toBe(true);
+  });
+
+  it('should return false for invalid params', () => {
+    expect(isEthSendTransactionParams([])).toBe(false);
+    expect(isEthSendTransactionParams({})).toBe(false);
+    expect(isEthSendTransactionParams(null)).toBe(false);
   });
 });
 

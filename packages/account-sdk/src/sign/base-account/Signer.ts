@@ -41,7 +41,7 @@ import {
 } from ':core/telemetry/events/scw-sub-account.js';
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { Address } from ':core/type/index.js';
-import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
+import { ensureHexString, ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
 import { spendPermissions, store } from ':store/store.js';
@@ -255,12 +255,12 @@ export class Signer {
         return this.handleGetCapabilitiesRequest(request);
       case 'wallet_switchEthereumChain':
         return this.handleSwitchChainRequest(request);
+      case 'eth_sendTransaction':
+        return this.handleSendTransaction(request);
       case 'eth_ecRecover':
       case 'personal_sign':
       case 'wallet_sign':
       case 'personal_ecRecover':
-      case 'eth_sendTransaction':
-        return this.handleSendTransaction(request);
       case 'eth_signTransaction':
       case 'eth_signTypedData_v1':
       case 'eth_signTypedData_v3':
@@ -462,13 +462,24 @@ export class Signer {
       throw standardErrors.rpc.invalidParams('No sender address available');
     }
 
+    const normalizedTxParams = {
+      ...(txParams.to ? { to: txParams.to } : {}),
+      data: ensureHexString(txParams.data ?? '0x', true) as Hex,
+      value: ensureHexString(txParams.value ?? '0x0', true) as Hex,
+    };
+
     const sendCallsRequest = createWalletSendCallsRequest({
-      calls: [txParams],
+      calls: [normalizedTxParams],
       chainId: this.chain.id,
       from,
     });
 
-    const result = (await this.sendRequestToPopup(sendCallsRequest)) as SendCallsReturnType;
+    const result = (await this.sendRequestToPopup(sendCallsRequest)) as SendCallsReturnType | string;
+    const callsId = typeof result === 'string' ? result : result.id;
+
+    if (!callsId) {
+      throw standardErrors.rpc.internal('wallet_sendCalls response is missing id');
+    }
 
     const client = getClient(this.chain.id);
     if (!client) {
@@ -477,7 +488,7 @@ export class Signer {
 
     return waitForCallsTransactionHash({
       client,
-      id: result.id,
+      id: callsId,
     });
   }
 

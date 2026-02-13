@@ -23,6 +23,17 @@ import { waitForCallsStatus } from 'viem/actions';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 import { spendPermissionManagerAddress } from './utils/constants.js';
 
+type WalletSendCall = NonNullable<WalletSendCallsParameters[0]['calls']>[number];
+
+export type EthSendTransactionParams = [
+  {
+    from?: Address;
+    to?: Address;
+    data?: Hex;
+    value?: Hex;
+  },
+];
+
 // ***************************************************************
 // Utility
 // ***************************************************************
@@ -391,7 +402,7 @@ export function createWalletSendCallsRequest({
   chainId,
   capabilities,
 }: {
-  calls: { to: Address; data: Hex; value: Hex }[];
+  calls: WalletSendCall[];
   from: Address;
   chainId: number;
   capabilities?: Record<string, unknown>;
@@ -503,20 +514,12 @@ export function isSendCallsParams(params: unknown): params is WalletSendCallsPar
     'calls' in params[0]
   );
 }
-export function isEthSendTransactionParams(params: unknown): params is [
-  {
-    to: Address;
-    data: Hex;
-    from: Address;
-    value: Hex;
-  },
-] {
+export function isEthSendTransactionParams(params: unknown): params is EthSendTransactionParams {
   return (
     Array.isArray(params) &&
     params.length === 1 &&
     typeof params[0] === 'object' &&
-    params[0] !== null &&
-    'to' in params[0]
+    params[0] !== null
   );
 }
 export function compute16ByteHash(input: string): Hex {
