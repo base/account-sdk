@@ -1,4 +1,4 @@
-import { PublicClient, WalletSendCallsParameters, hexToBigInt, isAddress } from 'viem';
+import { PublicClient, WalletSendCallsParameters, hexToBigInt, isAddress, isHex } from 'viem';
 
 import { InsufficientBalanceErrorData } from ':core/error/errors.js';
 import { Hex, keccak256, numberToHex, slice, toHex } from 'viem';
@@ -98,7 +98,7 @@ export function assertGetCapabilitiesParams(
     }
 
     for (const param of params[1]) {
-      if (typeof param !== 'string' || !param.startsWith('0x')) {
+      if (typeof param !== 'string' || !isHex(param)) {
         throw standardErrors.rpc.invalidParams();
       }
     }
