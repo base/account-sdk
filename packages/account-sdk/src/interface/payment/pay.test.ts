@@ -339,7 +339,8 @@ describe('pay', () => {
       expect.any(Object),
       false,
       undefined,
-      false
+      false,
+      undefined
     );
   });
 
@@ -387,7 +388,8 @@ describe('pay', () => {
       }),
       true,
       undefined,
-      true
+      true,
+      undefined
     );
   });
 
@@ -459,6 +461,33 @@ describe('pay', () => {
       '10.50',
       false,
       payerInfo
+    );
+  });
+
+  it('should pass dataSuffix through to SDK manager', async () => {
+    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+    vi.mocked(translatePayment.translatePaymentToSendCalls).mockReturnValue({
+      version: '2.0.0',
+      chainId: 8453,
+      calls: [],
+      capabilities: {},
+    });
+    vi.mocked(sdkManager.executePaymentWithSDK).mockResolvedValue({
+      transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    });
+
+    await pay({
+      amount: '10.50',
+      to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      dataSuffix: '0xabc123',
+    });
+
+    expect(sdkManager.executePaymentWithSDK).toHaveBeenCalledWith(
+      expect.any(Object),
+      false,
+      undefined,
+      true,
+      '0xabc123'
     );
   });
 

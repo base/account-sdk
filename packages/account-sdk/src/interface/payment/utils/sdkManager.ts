@@ -3,6 +3,13 @@ import { createBaseAccountSDK } from '../../builder/core/createBaseAccountSDK.js
 import { CHAIN_IDS } from '../constants.js';
 import type { PayerInfoResponses } from '../types.js';
 
+function validateDataSuffix(dataSuffix: string): Hex {
+  if (!/^0x[0-9a-fA-F]*$/.test(dataSuffix)) {
+    throw new Error('Invalid dataSuffix: expected a 0x-prefixed hex string');
+  }
+  return dataSuffix as Hex;
+}
+
 /**
  * Type for wallet_sendCalls request parameters
  */
@@ -41,9 +48,15 @@ export interface PaymentExecutionResult {
  * @param chainId - The chain ID to use
  * @param walletUrl - Optional wallet URL to use
  * @param telemetry - Whether to enable telemetry (defaults to true)
+ * @param dataSuffix - Optional attribution data suffix
  * @returns The configured SDK instance
  */
-export function createEphemeralSDK(chainId: number, walletUrl?: string, telemetry: boolean = true) {
+export function createEphemeralSDK(
+  chainId: number,
+  walletUrl?: string,
+  telemetry: boolean = true,
+  dataSuffix?: string
+) {
   const appName = typeof window !== 'undefined' ? window.location.origin : 'Base Pay SDK';
 
   const sdk = createBaseAccountSDK({
@@ -52,6 +65,7 @@ export function createEphemeralSDK(chainId: number, walletUrl?: string, telemetr
     preference: {
       telemetry: telemetry,
       walletUrl,
+      attribution: dataSuffix ? { dataSuffix: validateDataSuffix(dataSuffix) } : undefined,
     },
   });
 
@@ -118,18 +132,20 @@ export async function executePayment(
  * @param testnet - Whether to use testnet
  * @param walletUrl - Optional wallet URL to use
  * @param telemetry - Whether to enable telemetry (defaults to true)
+ * @param dataSuffix - Optional attribution data suffix
  * @returns The payment execution result
  */
 export async function executePaymentWithSDK(
   requestParams: WalletSendCallsRequestParams,
   testnet: boolean,
   walletUrl?: string,
-  telemetry: boolean = true
+  telemetry: boolean = true,
+  dataSuffix?: string
 ): Promise<PaymentExecutionResult> {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
 
-  const sdk = createEphemeralSDK(chainId, walletUrl, telemetry);
+  const sdk = createEphemeralSDK(chainId, walletUrl, telemetry, dataSuffix);
   const provider = sdk.getProvider();
 
   try {

@@ -523,6 +523,13 @@ export function compute16ByteHash(input: string): Hex {
   return slice(keccak256(toHex(input)), 0, 16);
 }
 
+export function validateDataSuffix(dataSuffix: string): Hex {
+  if (!/^0x[0-9a-fA-F]*$/.test(dataSuffix)) {
+    throw new Error('Invalid dataSuffix: expected a 0x-prefixed hex string');
+  }
+  return dataSuffix as Hex;
+}
+
 export function makeDataSuffix({
   attribution,
   dappOrigin,
@@ -535,8 +542,8 @@ export function makeDataSuffix({
     return compute16ByteHash(dappOrigin);
   }
 
-  if ('dataSuffix' in attribution) {
-    return attribution.dataSuffix;
+  if ('dataSuffix' in attribution && typeof attribution.dataSuffix === 'string') {
+    return validateDataSuffix(attribution.dataSuffix);
   }
 
   return;
