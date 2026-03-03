@@ -65,7 +65,7 @@ export interface PaymentOptions {
    * Optional attribution data suffix to append to wallet call data.
    * Must be a 0x-prefixed hex string (e.g., "0xabc123").
    */
-  dataSuffix?: `0x${string}`;
+  dataSuffix?: Hex;
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
   /** Optional payer information configuration for data callbacks */

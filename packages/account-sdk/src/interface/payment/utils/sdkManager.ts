@@ -3,13 +3,6 @@ import { createBaseAccountSDK } from '../../builder/core/createBaseAccountSDK.js
 import { CHAIN_IDS } from '../constants.js';
 import type { PayerInfoResponses } from '../types.js';
 
-function validateDataSuffix(dataSuffix: string): Hex {
-  if (!/^0x[0-9a-fA-F]*$/.test(dataSuffix)) {
-    throw new Error('Invalid dataSuffix: expected a 0x-prefixed hex string');
-  }
-  return dataSuffix as Hex;
-}
-
 /**
  * Type for wallet_sendCalls request parameters
  */
@@ -55,7 +48,7 @@ export function createEphemeralSDK(
   chainId: number,
   walletUrl?: string,
   telemetry: boolean = true,
-  dataSuffix?: string
+  dataSuffix?: Hex
 ) {
   const appName = typeof window !== 'undefined' ? window.location.origin : 'Base Pay SDK';
 
@@ -65,7 +58,7 @@ export function createEphemeralSDK(
     preference: {
       telemetry: telemetry,
       walletUrl,
-      attribution: dataSuffix ? { dataSuffix: validateDataSuffix(dataSuffix) } : undefined,
+      attribution: dataSuffix ? { dataSuffix } : undefined,
     },
   });
 
@@ -140,7 +133,7 @@ export async function executePaymentWithSDK(
   testnet: boolean,
   walletUrl?: string,
   telemetry: boolean = true,
-  dataSuffix?: string
+  dataSuffix?: Hex
 ): Promise<PaymentExecutionResult> {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];

@@ -120,7 +120,7 @@ const status = await getPaymentStatus({
 
 - `amount: string` - Amount of USDC to send as a string (e.g., "10.50")
 - `to: string` - Ethereum address to send payment to
-- `dataSuffix?: string` - Optional attribution data suffix as 0x-prefixed hex
+- `dataSuffix?: Hex` - Optional attribution data suffix as 0x-prefixed hex (viem `Hex` type)
 - `testnet?: boolean` - Whether to use Base Sepolia testnet (default: false)
 - `payerInfo?: PayerInfo` - Optional payer information configuration for data callbacks
 - `telemetry?: boolean` - Whether to enable telemetry logging (default: true)

@@ -59,7 +59,7 @@ export type Attribution =
     }
   | {
       auto?: never;
-      dataSuffix: `0x${string}`;
+      dataSuffix: Hex;
     };
 
 export type Preference = {
