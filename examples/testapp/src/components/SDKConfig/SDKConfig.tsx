@@ -96,8 +96,8 @@ export function SDKConfig() {
                 <Code ml={2}>attribution.dataSuffix</Code>
               </Flex>
               <Text mt={2} fontSize="sm">
-                A 0x-prefixed hex string to identify your onchain activity. Update the text
-                box below to have your data suffix applied
+                A 0x-prefixed hex string to identify your onchain activity. Update the text box
+                below to have your data suffix applied
               </Text>
               <FormControl mt={2}>
                 <Input
