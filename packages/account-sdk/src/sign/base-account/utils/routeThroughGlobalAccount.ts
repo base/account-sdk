@@ -57,10 +57,26 @@ export async function routeThroughGlobalAccount({
     request.method === 'eth_sendTransaction' &&
     isEthSendTransactionParams(request.params)
   ) {
+    const from = request.params[0].from;
+    if (!from) {
+      throw new Error('Could not get sender from eth_sendTransaction request');
+    }
+
+    const to = request.params[0].to;
+    if (!to) {
+      throw new Error('Could not route contract deployment through global account');
+    }
+
     const sendCallsRequest = createWalletSendCallsRequest({
-      calls: [request.params[0]],
+      calls: [
+        {
+          to,
+          data: request.params[0].data ?? '0x',
+          value: request.params[0].value ?? '0x0',
+        },
+      ],
       chainId,
-      from: request.params[0].from,
+      from,
     });
 
     originalSendCallsParams = sendCallsRequest.params[0];
@@ -108,17 +124,20 @@ export async function routeThroughGlobalAccount({
     }
   );
 
-  const result = (await globalAccountRequest(requestToParent)) as SendCallsReturnType;
-
-  let callsId = result.id;
+  const result = (await globalAccountRequest(requestToParent)) as SendCallsReturnType | string;
+  const callsId = typeof result === 'string' ? result : result.id;
 
   // Cache returned spend permissions
-  if (result.capabilities?.spendPermissions) {
+  if (typeof result !== 'string' && result.capabilities?.spendPermissions) {
     spendPermissions.set(result.capabilities.spendPermissions.permissions);
   }
 
   // Wait for transaction hash if sending a transaction
   if (request.method === 'eth_sendTransaction') {
+    if (!callsId) {
+      throw new Error('wallet_sendCalls response is missing id');
+    }
+
     return waitForCallsTransactionHash({
       client,
       id: callsId,

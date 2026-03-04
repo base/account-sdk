@@ -17,6 +17,7 @@ import {
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { HttpRequestError, numberToHex } from 'viem';
+import { waitForCallsStatus } from 'viem/actions';
 import { SCWKeyManager } from './SCWKeyManager.js';
 import { Signer } from './Signer.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
@@ -64,6 +65,12 @@ vi.mock('../../kms/crypto-key/index.js', () => ({
 
 vi.mock(':util/provider');
 vi.mock(':store/chain-clients/utils');
+vi.mock('viem/actions', () => ({
+  waitForCallsStatus: vi.fn().mockResolvedValue({
+    status: 'success',
+    receipts: [{ transactionHash: `0x${'a'.repeat(64)}` }],
+  }),
+}));
 vi.mock('./SCWKeyManager');
 vi.mock(':core/communicator/Communicator', () => ({
   Communicator: vi.fn(() => ({
@@ -189,6 +196,21 @@ describe('Signer', () => {
       metadata: mockMetadata,
       communicator: mockCommunicator,
       callback: mockCallback,
+    });
+
+    (getClient as Mock).mockImplementation((chainId) => {
+      if (chainId === 84532 || chainId === 1) {
+        return {
+          request: vi.fn(),
+          chain: {
+            id: chainId,
+          },
+          waitForTransaction: vi.fn().mockResolvedValue({
+            status: 'success',
+          }),
+        };
+      }
+      return null;
     });
   });
 
@@ -415,7 +437,6 @@ describe('Signer', () => {
       'wallet_sign',
       'personal_ecRecover',
       'eth_signTransaction',
-      'eth_sendTransaction',
       'eth_signTypedData_v1',
       'eth_signTypedData_v3',
       'eth_signTypedData_v4',
@@ -445,6 +466,105 @@ describe('Signer', () => {
           content: { encrypted: encryptedData },
         })
       );
+    });
+
+    it('should convert eth_sendTransaction to wallet_sendCalls and wait for transaction hash', async () => {
+      const txHash = `0x${'b'.repeat(64)}`;
+      const mockRequest: RequestArguments = {
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+          },
+        ],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: { id: '0x1234ca11' },
+        },
+      });
+      (waitForCallsStatus as Mock).mockResolvedValueOnce({
+        status: 'success',
+        receipts: [{ transactionHash: txHash }],
+      });
+
+      const result = await signer.request(mockRequest);
+
+      expect(encryptContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: expect.objectContaining({
+            method: 'wallet_sendCalls',
+            params: [
+              expect.objectContaining({
+                from: '0xAddress',
+                chainId: '0x1',
+                calls: [{ to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', data: '0x', value: '0x0' }],
+              }),
+            ],
+          }),
+        }),
+        expect.anything()
+      );
+      expect(waitForCallsStatus).toHaveBeenCalledWith(expect.any(Object), { id: '0x1234ca11' });
+      expect(result).toEqual(txHash);
+    });
+
+    it('should handle legacy wallet_sendCalls string responses for eth_sendTransaction', async () => {
+      const txHash = `0x${'c'.repeat(64)}`;
+      const mockRequest: RequestArguments = {
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+            from: '0xAddress',
+          },
+        ],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: '0xlegacycallsid',
+        },
+      });
+      (waitForCallsStatus as Mock).mockResolvedValueOnce({
+        status: 'success',
+        receipts: [{ transactionHash: txHash }],
+      });
+
+      const result = await signer.request(mockRequest);
+
+      expect(waitForCallsStatus).toHaveBeenCalledWith(expect.any(Object), { id: '0xlegacycallsid' });
+      expect(result).toEqual(txHash);
+    });
+
+    it('should support contract deployment transactions without to', async () => {
+      const txHash = `0x${'d'.repeat(64)}`;
+      const mockRequest: RequestArguments = {
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            data: '0x60006000',
+          },
+        ],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: { id: '0xdeploycallsid' },
+        },
+      });
+      (waitForCallsStatus as Mock).mockResolvedValueOnce({
+        status: 'success',
+        receipts: [{ transactionHash: txHash }],
+      });
+
+      const result = await signer.request(mockRequest);
+      const sentAction = (encryptContent as Mock).mock.calls[0][0].action;
+
+      expect(sentAction.params[0].calls[0]).toEqual({ data: '0x60006000', value: '0x0' });
+      expect(waitForCallsStatus).toHaveBeenCalledWith(expect.any(Object), { id: '0xdeploycallsid' });
+      expect(result).toEqual(txHash);
     });
 
     it.each([
