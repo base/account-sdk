@@ -429,6 +429,7 @@ describe('routeThroughGlobalAccount', () => {
     });
 
     it('should not set gasLimitOverride on batch call when no calls have overrides', async () => {
+      // @ts-ignore - testing with mock args
       args.request.params[0].calls = [
         { to: '0xaaaa', data: '0x', value: '0x1' },
         { to: '0xbbbb', data: '0x', value: '0x0' },
@@ -452,6 +453,7 @@ describe('routeThroughGlobalAccount', () => {
     });
 
     it('should aggregate gasLimitOverride when all calls have overrides', async () => {
+      // @ts-ignore - testing with mock args
       args.request.params[0].calls = [
         {
           to: '0xaaaa',
@@ -476,6 +478,7 @@ describe('routeThroughGlobalAccount', () => {
     });
 
     it('should estimate gas for calls without overrides and aggregate', async () => {
+      // @ts-ignore - testing with mock args
       args.request.params[0].calls = [
         {
           to: '0xaaaa',
@@ -509,6 +512,7 @@ describe('routeThroughGlobalAccount', () => {
     });
 
     it('should estimate gas for all calls when only one has override', async () => {
+      // @ts-ignore - testing with mock args
       args.request.params[0].calls = [
         {
           to: '0xaaaa',
@@ -542,6 +546,7 @@ describe('routeThroughGlobalAccount', () => {
     });
 
     it('should pass aggregated gasLimitOverride on the executeBatch call', async () => {
+      // @ts-ignore - testing with mock args
       args.request.params[0].calls = [
         {
           to: '0xaaaa',
