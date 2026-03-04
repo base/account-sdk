@@ -3,6 +3,7 @@ import { store } from ':store/store.js';
 import * as checkCrossOriginModule from ':util/checkCrossOriginOpenerPolicy.js';
 import * as validatePreferencesModule from ':util/validatePreferences.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Hex } from 'viem';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
 import { CreateProviderOptions, createBaseAccountSDK } from './createBaseAccountSDK.js';
 import * as getInjectedProviderModule from './getInjectedProvider.js';
@@ -491,7 +492,7 @@ describe('createProvider', () => {
 
     it('should handle complex nested preference objects', () => {
       const complexPreference = {
-        attribution: { dataSuffix: '0x1234567890123456' as `0x${string}` },
+        attribution: { dataSuffix: '0x1234567890123456' as Hex },
         telemetry: false,
         customProperty: 'custom value',
       };

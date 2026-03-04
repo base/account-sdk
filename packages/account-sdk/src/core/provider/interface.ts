@@ -59,7 +59,7 @@ export type Attribution =
     }
   | {
       auto?: never;
-      dataSuffix: `0x${string}`;
+      dataSuffix: Hex;
     };
 
 export type Preference = {
@@ -74,8 +74,7 @@ export type Preference = {
    * @type {Attribution}
    * @note Smart Wallet only
    * @description This option only applies to Coinbase Smart Wallet. When a valid data suffix is supplied, it is appended to the initCode and executeBatch calldata.
-   * Coinbase Smart Wallet expects a 16 byte hex string. If the data suffix is not a 16 byte hex string, the Smart Wallet will ignore the property. If auto is true,
-   * the Smart Wallet will generate a 16 byte hex string from the apps origin.
+   * If auto is true, the Smart Wallet will generate a deterministic hex suffix from the app's origin.
    */
   attribution?: Attribution;
   /**

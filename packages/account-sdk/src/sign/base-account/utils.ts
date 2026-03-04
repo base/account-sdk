@@ -1,7 +1,7 @@
 import { PublicClient, WalletSendCallsParameters, hexToBigInt, isAddress } from 'viem';
 
 import { InsufficientBalanceErrorData } from ':core/error/errors.js';
-import { Hex, keccak256, numberToHex, slice, toHex } from 'viem';
+import { Hex, isHex, keccak256, numberToHex, slice, toHex } from 'viem';
 
 import { standardErrors } from ':core/error/errors.js';
 import { Attribution, RequestArguments } from ':core/provider/interface.js';
@@ -523,6 +523,13 @@ export function compute16ByteHash(input: string): Hex {
   return slice(keccak256(toHex(input)), 0, 16);
 }
 
+export function validateDataSuffix(dataSuffix: string): Hex {
+  if (!isHex(dataSuffix)) {
+    throw new Error('Invalid dataSuffix: expected a 0x-prefixed hex string');
+  }
+  return dataSuffix;
+}
+
 export function makeDataSuffix({
   attribution,
   dappOrigin,
@@ -535,8 +542,8 @@ export function makeDataSuffix({
     return compute16ByteHash(dappOrigin);
   }
 
-  if ('dataSuffix' in attribution) {
-    return attribution.dataSuffix;
+  if ('dataSuffix' in attribution && typeof attribution.dataSuffix === 'string') {
+    return validateDataSuffix(attribution.dataSuffix);
   }
 
   return;
