@@ -1,4 +1,5 @@
 import { RequestArguments } from ':core/provider/interface.js';
+import type { CallCapabilities } from ':core/rpc/wallet_sendCalls.js';
 import { spendPermissions } from ':store/store.js';
 import {
   Address,
@@ -8,6 +9,7 @@ import {
   WalletSendCallsParameters,
   encodeFunctionData,
   hexToBigInt,
+  numberToHex,
 } from 'viem';
 
 import {
@@ -44,7 +46,9 @@ export async function routeThroughGlobalAccount({
   /** The chain id to use to send the request. */
   chainId: number;
   /** Optional calls to prepend to the request. */
-  prependCalls?: { to: Address; data: Hex; value: Hex }[] | undefined;
+  prependCalls?:
+    | { to: Address; data: Hex; value: Hex; capabilities?: CallCapabilities }[]
+    | undefined;
   /** The function to use to send the request to the global account. */
   globalAccountRequest: (request: RequestArguments) => Promise<unknown>;
 }) {
@@ -80,10 +84,27 @@ export async function routeThroughGlobalAccount({
     ],
   });
 
+  // Aggregate per-call gas limit overrides onto the executeBatch call.
+  // When any original call has a gasLimitOverride, we estimate gas for calls
+  // without one, sum everything, and set the total on the batch call sent to
+  // the global account popup.
+  const batchCallCapabilities = await aggregateGasLimitOverrides({
+    calls: originalSendCallsParams.calls,
+    client,
+    subAccountAddress,
+  });
+
   // Send using wallet_sendCalls
-  const calls: { to: Address; data: Hex; value: Hex }[] = [
+  const batchCall: { to: Address; data: Hex; value: Hex; capabilities?: CallCapabilities } = {
+    data: subAccountCallData,
+    to: subAccountAddress,
+    value: '0x0',
+    ...(batchCallCapabilities ? { capabilities: batchCallCapabilities } : {}),
+  };
+
+  const calls: { to: Address; data: Hex; value: Hex; capabilities?: CallCapabilities }[] = [
     ...(prependCalls ?? []),
-    { data: subAccountCallData, to: subAccountAddress, value: '0x0' },
+    batchCall,
   ];
 
   const requestToParent = injectRequestCapabilities(
@@ -126,4 +147,73 @@ export async function routeThroughGlobalAccount({
   }
 
   return result;
+}
+
+/**
+ * Per-call overhead for executeBatch processing.
+ * Accounts for cold access, memory expansion, and loop costs.
+ */
+const BATCH_PER_CALL_OVERHEAD = 3000n;
+
+/**
+ * Fixed overhead for executeBatch invocation.
+ */
+const BATCH_BASE_OVERHEAD = 5000n;
+
+/**
+ * Aggregates per-call gasLimitOverride values from the original calls into a
+ * single gasLimitOverride for the executeBatch call. For calls without an
+ * override, gas is estimated via eth_estimateGas. The total includes batch
+ * processing overhead.
+ *
+ * Returns undefined if no original calls have gasLimitOverride set.
+ */
+async function aggregateGasLimitOverrides({
+  calls,
+  client,
+  subAccountAddress,
+}: {
+  calls: WalletSendCallsParameters[0]['calls'];
+  client: PublicClient;
+  subAccountAddress: Address;
+}): Promise<CallCapabilities | undefined> {
+  const hasAnyOverride = calls.some(
+    (call) =>
+      call.capabilities &&
+      'gasLimitOverride' in call.capabilities &&
+      (call.capabilities as { gasLimitOverride?: { value?: Hex } }).gasLimitOverride?.value
+  );
+
+  if (!hasAnyOverride) {
+    return undefined;
+  }
+
+  const gasLimits = await Promise.all(
+    calls.map(async (call) => {
+      const override = (call.capabilities as { gasLimitOverride?: { value?: Hex } } | undefined)
+        ?.gasLimitOverride?.value;
+
+      if (override) {
+        return hexToBigInt(override);
+      }
+
+      // Estimate gas for calls without an explicit override
+      return client.estimateGas({
+        account: subAccountAddress,
+        to: call.to!,
+        data: call.data ?? '0x',
+        value: hexToBigInt(call.value ?? '0x0'),
+      });
+    })
+  );
+
+  const totalGas = gasLimits.reduce((sum, gas) => sum + gas, 0n);
+  const batchOverhead = BigInt(calls.length) * BATCH_PER_CALL_OVERHEAD + BATCH_BASE_OVERHEAD;
+  const totalWithOverhead = totalGas + batchOverhead;
+
+  return {
+    gasLimitOverride: {
+      value: numberToHex(totalWithOverhead),
+    },
+  };
 }
