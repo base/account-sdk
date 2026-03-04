@@ -2016,6 +2016,45 @@ describe('Signer', () => {
         },
       });
     });
+
+    it('should preserve gasLimitOverride when storedCapabilities has 0x0 key', async () => {
+      stateSpy.mockImplementation(() => ({
+        account: {
+          accounts: [globalAccountAddress],
+          capabilities: {
+            '0x0': {
+              atomicBatch: { supported: true },
+            },
+            '0x14a34': {
+              paymasterService: { supported: true },
+            },
+          },
+        },
+        chains: [],
+        keys: {},
+        spendPermissions: [],
+        config: {
+          metadata: mockMetadata,
+          preference: { walletUrl: CB_KEYS_URL, options: 'all' },
+          version: '1.0.0',
+        },
+      }));
+
+      const request = {
+        method: 'wallet_getCapabilities',
+        params: [globalAccountAddress],
+      };
+
+      const result = await signer.request(request);
+
+      expect(result['0x0']).toEqual({
+        atomicBatch: { supported: true },
+        gasLimitOverride: { supported: true },
+      });
+      expect(result['0x14a34']).toEqual({
+        paymasterService: { supported: true },
+      });
+    });
   });
 
   describe('coinbase_fetchPermissions', () => {

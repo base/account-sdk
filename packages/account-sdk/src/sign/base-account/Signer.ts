@@ -480,15 +480,20 @@ export class Signer {
 
     const storedCapabilities = store.getState().account.capabilities ?? {};
 
-    const allChainsCapabilities = {
-      '0x0': {
-        gasLimitOverride: { supported: true },
-      },
+    const sdkWildcardCapabilities = {
+      gasLimitOverride: { supported: true },
+    };
+
+    // Deep-merge the 0x0 wildcard key so that stored capabilities under 0x0
+    // (e.g. from the host app) don't overwrite SDK-provided capabilities.
+    const mergedWildcard = {
+      ...(storedCapabilities['0x0'] ?? {}),
+      ...sdkWildcardCapabilities,
     };
 
     const capabilities = {
-      ...allChainsCapabilities,
       ...storedCapabilities,
+      '0x0': mergedWildcard,
     };
 
     if (!filterChainIds || filterChainIds.length === 0) {
