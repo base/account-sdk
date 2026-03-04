@@ -150,15 +150,16 @@ export async function routeThroughGlobalAccount({
 }
 
 /**
- * Per-call overhead for executeBatch processing.
- * Accounts for cold access, memory expansion, and loop costs.
+ * Per-call safety buffer (gas). Matches the backend config
+ * `safety_buffer_per_call`.
  */
-const BATCH_PER_CALL_OVERHEAD = 3000n;
+const SAFETY_BUFFER_PER_CALL = 500n;
 
 /**
- * Fixed overhead for executeBatch invocation.
+ * Input data cost per byte (gas). Matches the backend config
+ * `proportional_input_cost_per_byte`.
  */
-const BATCH_BASE_OVERHEAD = 5000n;
+const PROPORTIONAL_INPUT_COST_PER_BYTE = 2n;
 
 /**
  * Aggregates per-call gasLimitOverride values from the original calls into a
@@ -208,7 +209,15 @@ async function aggregateGasLimitOverrides({
   );
 
   const totalGas = gasLimits.reduce((sum, gas) => sum + gas, 0n);
-  const batchOverhead = BigInt(calls.length) * BATCH_PER_CALL_OVERHEAD + BATCH_BASE_OVERHEAD;
+
+  // Calculate input data overhead: 2 gas per byte of calldata per call
+  const inputDataOverhead = calls.reduce((sum, call) => {
+    const dataLength = call.data ? BigInt((call.data.length - 2) / 2) : 0n; // hex string minus 0x prefix, 2 chars per byte
+    return sum + dataLength * PROPORTIONAL_INPUT_COST_PER_BYTE;
+  }, 0n);
+
+  // Per-call safety buffer (500 gas per call) + input data overhead
+  const batchOverhead = BigInt(calls.length) * SAFETY_BUFFER_PER_CALL + inputDataOverhead;
   const totalWithOverhead = totalGas + batchOverhead;
 
   return {

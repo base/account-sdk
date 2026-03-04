@@ -472,8 +472,8 @@ describe('routeThroughGlobalAccount', () => {
 
       await routeThroughGlobalAccount(args);
 
-      // 21000 + 30000 = 51000, + batch overhead (2 * 3000 + 5000 = 11000) = 62000 = 0xf230
-      expect(numberToHex).toHaveBeenCalledWith(62000n);
+      // 21000 + 30000 = 51000, + overhead (2 * 500 safety + 0 input data) = 52000
+      expect(numberToHex).toHaveBeenCalledWith(52000n);
       expect(mockClient.estimateGas).not.toHaveBeenCalled();
     });
 
@@ -507,8 +507,8 @@ describe('routeThroughGlobalAccount', () => {
         value: BigInt('0x1'),
       });
 
-      // 21000 + 50000 = 71000, + batch overhead (2 * 3000 + 5000 = 11000) = 82000
-      expect(numberToHex).toHaveBeenCalledWith(82000n);
+      // 21000 + 50000 = 71000, + overhead (2 * 500 safety + 2 bytes * 2 input cost) = 72004
+      expect(numberToHex).toHaveBeenCalledWith(72004n);
     });
 
     it('should estimate gas for all calls when only one has override', async () => {
@@ -541,8 +541,8 @@ describe('routeThroughGlobalAccount', () => {
       // Should estimate for call 0 and call 2
       expect(mockClient.estimateGas).toHaveBeenCalledTimes(2);
 
-      // 30000 + 10000 + 30000 = 70000, + batch overhead (3 * 3000 + 5000 = 14000) = 84000
-      expect(numberToHex).toHaveBeenCalledWith(84000n);
+      // 30000 + 10000 + 30000 = 70000, + overhead (3 * 500 safety + 0 input data) = 71500
+      expect(numberToHex).toHaveBeenCalledWith(71500n);
     });
 
     it('should pass aggregated gasLimitOverride on the executeBatch call', async () => {
