@@ -68,6 +68,9 @@ import { handleAddSubAccountOwner } from './utils/handleAddSubAccountOwner.js';
 import { handleInsufficientBalanceError } from './utils/handleInsufficientBalance.js';
 import { routeThroughGlobalAccount } from './utils/routeThroughGlobalAccount.js';
 
+/** ERC-5792 wildcard chain ID — capabilities under this key apply to all chains. */
+const ALL_CHAINS_KEY = '0x0';
+
 type ConstructorOptions = {
   metadata: AppMetadata;
   communicator: Communicator;
@@ -484,16 +487,14 @@ export class Signer {
       gasLimitOverride: { supported: true },
     };
 
-    // Deep-merge the 0x0 wildcard key so that stored capabilities under 0x0
-    // (e.g. from the host app) don't overwrite SDK-provided capabilities.
     const mergedWildcard = {
-      ...(storedCapabilities['0x0'] ?? {}),
+      ...(storedCapabilities[ALL_CHAINS_KEY] ?? {}),
       ...sdkWildcardCapabilities,
     };
 
     const capabilities = {
       ...storedCapabilities,
-      '0x0': mergedWildcard,
+      [ALL_CHAINS_KEY]: mergedWildcard,
     };
 
     if (!filterChainIds || filterChainIds.length === 0) {
@@ -504,7 +505,7 @@ export class Signer {
 
     const filteredCapabilities = Object.fromEntries(
       Object.entries(capabilities).filter(([capabilityKey]) => {
-        if (capabilityKey === '0x0') {
+        if (capabilityKey === ALL_CHAINS_KEY) {
           return true;
         }
         try {
