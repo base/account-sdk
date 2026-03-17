@@ -74,6 +74,7 @@ describe('pay', () => {
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       '10.50',
       false,
+      undefined,
       undefined
     );
 
@@ -134,6 +135,7 @@ describe('pay', () => {
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51', // checksummed address passed to translate
       '10.50',
       false,
+      undefined,
       undefined
     );
   });
@@ -202,6 +204,18 @@ describe('pay', () => {
       correlationId: 'mock-correlation-id',
       errorMessage: 'Invalid amount: must be greater than 0',
     });
+  });
+
+  it('should reject invalid dataSuffix format', async () => {
+    vi.mocked(validation.validateStringAmount).mockReturnValue(undefined);
+
+    await expect(
+      pay({
+        amount: '10.50',
+        to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+        dataSuffix: 'not-hex' as any,
+      })
+    ).rejects.toThrow('Invalid dataSuffix: expected a 0x-prefixed hex string');
   });
 
   it('should handle SDK execution errors', async () => {
@@ -377,6 +391,7 @@ describe('pay', () => {
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       '5.00',
       true,
+      undefined,
       undefined
     );
     expect(sdkManager.executePaymentWithSDK).toHaveBeenCalledWith(
@@ -460,7 +475,8 @@ describe('pay', () => {
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       '10.50',
       false,
-      payerInfo
+      payerInfo,
+      undefined
     );
   });
 
@@ -481,6 +497,14 @@ describe('pay', () => {
       to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       dataSuffix: '0xabc123',
     });
+
+    expect(translatePayment.translatePaymentToSendCalls).toHaveBeenCalledWith(
+      '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
+      '10.50',
+      false,
+      undefined,
+      '0xabc123'
+    );
 
     expect(sdkManager.executePaymentWithSDK).toHaveBeenCalledWith(
       expect.any(Object),

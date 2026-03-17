@@ -6,7 +6,7 @@ import {
 import type { PaymentOptions, PaymentResult } from './types.js';
 import { executePaymentWithSDK } from './utils/sdkManager.js';
 import { translatePaymentToSendCalls } from './utils/translatePayment.js';
-import { normalizeAddress, validateStringAmount } from './utils/validation.js';
+import { normalizeAddress, validateDataSuffix, validateStringAmount } from './utils/validation.js';
 
 /**
  * Pay a specified address with USDC on Base network using an ephemeral wallet
@@ -57,13 +57,17 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
   try {
     validateStringAmount(amount, 6);
     const normalizedAddress = normalizeAddress(to);
+    if (dataSuffix !== undefined) {
+      validateDataSuffix(dataSuffix);
+    }
 
     // Step 2: Translate payment to sendCalls format
     const requestParams = translatePaymentToSendCalls(
       normalizedAddress,
       amount,
       testnet,
-      payerInfo
+      payerInfo,
+      dataSuffix
     );
 
     // Step 3: Execute payment with SDK
