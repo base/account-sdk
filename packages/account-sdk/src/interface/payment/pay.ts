@@ -63,7 +63,8 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
       normalizedAddress,
       amount,
       testnet,
-      payerInfo
+      payerInfo,
+      dataSuffix
     );
 
     // Step 3: Execute payment with SDK

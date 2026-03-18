@@ -62,8 +62,12 @@ export interface PaymentOptions {
   /** Ethereum address to send payment to */
   to: string;
   /**
-   * Optional attribution data suffix to append to wallet call data.
-   * Must be a 0x-prefixed hex string (e.g., "0xabc123").
+   * Optional hex data to append to the inner ERC-20 transfer calldata.
+   * This is useful for embedding on-chain commitments (e.g. a Merkle root)
+   * alongside the payment. The suffix is appended after the standard
+   * transfer(address,uint256) calldata and is also forwarded to the
+   * wallet as an attribution preference.
+   * Must be a 0x-prefixed hex string (e.g., "0xdeadbeef...").
    */
   dataSuffix?: Hex;
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
