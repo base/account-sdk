@@ -17,6 +17,34 @@ describe('translatePayment', () => {
 
       expect(result).toMatch(/^0x[a-fA-F0-9]+$/);
       expect(result.length).toBeGreaterThan(2);
+      // Standard transfer calldata is 4 (selector) + 32 (address) + 32 (uint256) = 68 bytes = 138 hex chars
+      expect(result.length).toBe(2 + 68 * 2); // 0x prefix + 136 hex chars
+    });
+
+    it('should append dataSuffix to the transfer calldata', () => {
+      const recipient = '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51';
+      const amount = '10.50';
+      const dataSuffix = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+
+      const withoutSuffix = encodeTransferCall(recipient, amount);
+      const withSuffix = encodeTransferCall(recipient, amount, dataSuffix);
+
+      // The result should start with the same transfer calldata
+      expect(withSuffix.startsWith(withoutSuffix)).toBe(true);
+      // And be longer by the suffix (32 bytes = 64 hex chars)
+      expect(withSuffix.length).toBe(withoutSuffix.length + 64);
+      // The suffix should appear at the end
+      expect(withSuffix.endsWith(dataSuffix.slice(2))).toBe(true);
+    });
+
+    it('should return unchanged calldata when dataSuffix is undefined', () => {
+      const recipient = '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51';
+      const amount = '10.50';
+
+      const result = encodeTransferCall(recipient, amount, undefined);
+      const baseline = encodeTransferCall(recipient, amount);
+
+      expect(result).toBe(baseline);
     });
   });
 
@@ -254,6 +282,37 @@ describe('translatePayment', () => {
           },
         },
       });
+    });
+
+    it('should append dataSuffix to the inner transfer calldata', () => {
+      const recipient = '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51';
+      const amount = '10.50';
+      const testnet = true;
+      const dataSuffix = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+
+      const withSuffix = translatePaymentToSendCalls(recipient, amount, testnet, undefined, dataSuffix);
+      const withoutSuffix = translatePaymentToSendCalls(recipient, amount, testnet);
+
+      const callDataWith = withSuffix.calls[0].data;
+      const callDataWithout = withoutSuffix.calls[0].data;
+
+      // Inner calldata should be longer when dataSuffix is provided
+      expect(callDataWith.length).toBeGreaterThan(callDataWithout.length);
+      // Should start with the same transfer encoding
+      expect(callDataWith.startsWith(callDataWithout)).toBe(true);
+      // Suffix should be appended at the end
+      expect(callDataWith.endsWith(dataSuffix.slice(2))).toBe(true);
+    });
+
+    it('should not modify calldata when dataSuffix is not provided', () => {
+      const recipient = '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51';
+      const amount = '10.50';
+      const testnet = false;
+
+      const result = translatePaymentToSendCalls(recipient, amount, testnet, undefined, undefined);
+      const baseline = translatePaymentToSendCalls(recipient, amount, testnet);
+
+      expect(result.calls[0].data).toBe(baseline.calls[0].data);
     });
   });
 });
