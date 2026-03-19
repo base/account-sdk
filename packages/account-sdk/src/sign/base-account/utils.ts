@@ -391,7 +391,7 @@ export function createWalletSendCallsRequest({
   chainId,
   capabilities,
 }: {
-  calls: { to: Address; data: Hex; value: Hex }[];
+  calls: { to: Address; data: Hex; value: Hex; capabilities?: Record<string, unknown> }[];
   from: Address;
   chainId: number;
   capabilities?: Record<string, unknown>;

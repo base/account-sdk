@@ -1,5 +1,5 @@
 import { spendPermissions } from ':store/store.js';
-import { encodeFunctionData, hexToBigInt } from 'viem';
+import { encodeFunctionData, hexToBigInt, numberToHex } from 'viem';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createWalletSendCallsRequest,
@@ -21,6 +21,7 @@ vi.mock(':store/store.js', () => ({
 vi.mock('viem', () => ({
   encodeFunctionData: vi.fn(),
   hexToBigInt: vi.fn(),
+  numberToHex: vi.fn(),
 }));
 
 vi.mock('../utils.js', () => ({
@@ -53,6 +54,7 @@ describe('routeThroughGlobalAccount', () => {
   beforeEach(() => {
     mockClient = {
       chain: { id: chainId },
+      estimateGas: vi.fn(),
     };
 
     mockGlobalAccountRequest = vi.fn();
@@ -416,6 +418,166 @@ describe('routeThroughGlobalAccount', () => {
           ],
         ],
       });
+    });
+  });
+
+  describe('gasLimitOverride aggregation', () => {
+    beforeEach(() => {
+      // Use real hexToBigInt for gas limit tests
+      vi.mocked(hexToBigInt).mockImplementation((hex) => BigInt(hex));
+      vi.mocked(numberToHex).mockImplementation((n) => `0x${(n as bigint).toString(16)}` as any);
+    });
+
+    it('should not set gasLimitOverride on batch call when no calls have overrides', async () => {
+      // @ts-ignore - testing with mock args
+      args.request.params[0].calls = [
+        { to: '0xaaaa', data: '0x', value: '0x1' },
+        { to: '0xbbbb', data: '0x', value: '0x0' },
+      ];
+      mockGlobalAccountRequest.mockResolvedValue('0x1234ca11');
+
+      await routeThroughGlobalAccount(args);
+
+      // The batch call should not have capabilities
+      expect(injectRequestCapabilities).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: [
+            expect.objectContaining({
+              calls: [expect.not.objectContaining({ capabilities: expect.anything() })],
+            }),
+          ],
+        }),
+        expect.anything()
+      );
+      expect(mockClient.estimateGas).not.toHaveBeenCalled();
+    });
+
+    it('should aggregate gasLimitOverride when all calls have overrides', async () => {
+      // @ts-ignore - testing with mock args
+      args.request.params[0].calls = [
+        {
+          to: '0xaaaa',
+          data: '0x',
+          value: '0x0',
+          capabilities: { gasLimitOverride: { value: '0x5208' } }, // 21000
+        },
+        {
+          to: '0xbbbb',
+          data: '0x',
+          value: '0x0',
+          capabilities: { gasLimitOverride: { value: '0x7530' } }, // 30000
+        },
+      ];
+      mockGlobalAccountRequest.mockResolvedValue('0x1234ca11');
+
+      await routeThroughGlobalAccount(args);
+
+      // 21000 + 30000 = 51000, + overhead (2 * 500 safety + 0 input data) = 52000
+      expect(numberToHex).toHaveBeenCalledWith(52000n);
+      expect(mockClient.estimateGas).not.toHaveBeenCalled();
+    });
+
+    it('should estimate gas for calls without overrides and aggregate', async () => {
+      // @ts-ignore - testing with mock args
+      args.request.params[0].calls = [
+        {
+          to: '0xaaaa',
+          data: '0x',
+          value: '0x0',
+          capabilities: { gasLimitOverride: { value: '0x5208' } }, // 21000
+        },
+        {
+          to: '0xbbbb',
+          data: '0xabcd',
+          value: '0x1',
+          // No gasLimitOverride — needs estimation
+        },
+      ];
+      mockClient.estimateGas.mockResolvedValue(50000n);
+      mockGlobalAccountRequest.mockResolvedValue('0x1234ca11');
+
+      await routeThroughGlobalAccount(args);
+
+      // Should estimate gas for the second call
+      expect(mockClient.estimateGas).toHaveBeenCalledTimes(1);
+      expect(mockClient.estimateGas).toHaveBeenCalledWith({
+        account: subAccountAddress,
+        to: '0xbbbb',
+        data: '0xabcd',
+        value: BigInt('0x1'),
+      });
+
+      // 21000 + 50000 = 71000, + overhead (2 * 500 safety + 2 bytes * 2 input cost) = 72004
+      expect(numberToHex).toHaveBeenCalledWith(72004n);
+    });
+
+    it('should estimate gas for all calls when only one has override', async () => {
+      // @ts-ignore - testing with mock args
+      args.request.params[0].calls = [
+        {
+          to: '0xaaaa',
+          data: '0x',
+          value: '0x0',
+          // No gasLimitOverride
+        },
+        {
+          to: '0xbbbb',
+          data: '0x',
+          value: '0x0',
+          capabilities: { gasLimitOverride: { value: '0x2710' } }, // 10000
+        },
+        {
+          to: '0xcccc',
+          data: '0x',
+          value: '0x0',
+          // No gasLimitOverride
+        },
+      ];
+      mockClient.estimateGas.mockResolvedValue(30000n);
+      mockGlobalAccountRequest.mockResolvedValue('0x1234ca11');
+
+      await routeThroughGlobalAccount(args);
+
+      // Should estimate for call 0 and call 2
+      expect(mockClient.estimateGas).toHaveBeenCalledTimes(2);
+
+      // 30000 + 10000 + 30000 = 70000, + overhead (3 * 500 safety + 0 input data) = 71500
+      expect(numberToHex).toHaveBeenCalledWith(71500n);
+    });
+
+    it('should pass aggregated gasLimitOverride on the executeBatch call', async () => {
+      // @ts-ignore - testing with mock args
+      args.request.params[0].calls = [
+        {
+          to: '0xaaaa',
+          data: '0x',
+          value: '0x0',
+          capabilities: { gasLimitOverride: { value: '0x5208' } },
+        },
+      ];
+      mockGlobalAccountRequest.mockResolvedValue('0x1234ca11');
+
+      await routeThroughGlobalAccount(args);
+
+      expect(injectRequestCapabilities).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: [
+            expect.objectContaining({
+              calls: [
+                expect.objectContaining({
+                  to: subAccountAddress,
+                  capabilities: {
+                    gasLimitOverride: {
+                      value: expect.any(String),
+                    },
+                  },
+                }),
+              ],
+            }),
+          ],
+        }),
+        expect.anything()
+      );
     });
   });
 });
