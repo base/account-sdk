@@ -21,17 +21,17 @@
   "files": [
     "dist",
     "skills",
-    "README.md",
-    "LICENSE"
+    "README.md"
   ],
   "repository": "https://github.com/base/account-sdk.git",
   "author": "Base",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "scripts": {
     "clean": "rm -rf dist && rm -rf node_modules",
     "test": "vitest run",
     "prebuild": "rm -rf ./dist",
     "build": "tsc -p ./tsconfig.build.json",
+    "postbuild": "printf '#!/usr/bin/env node\n' | cat - dist/index.js > dist/index.tmp && mv dist/index.tmp dist/index.js",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint .",
