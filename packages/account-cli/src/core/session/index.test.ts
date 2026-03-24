@@ -2,7 +2,7 @@ import { chmodSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'nod
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChainId } from '../../types/caip.js';
 import { CLIError } from '../../types/errors.js';
 import { SESSION_VERSION } from '../../types/session.js';
@@ -21,9 +21,15 @@ import {
   listSessions,
   loadSession,
   resolveSession,
+  resolveSessionInteractive,
   sessionKey,
   writeSession,
 } from './index.js';
+
+vi.mock('@clack/prompts', () => ({
+  select: vi.fn(),
+  isCancel: vi.fn(() => false),
+}));
 
 function makeSmartWalletSession(overrides: Partial<SmartWalletSession> = {}): SmartWalletSession {
   return {
@@ -467,6 +473,51 @@ describe('session management', () => {
       expect(resolved.mode).toBe('external-eoa');
       expect((resolved as ExternalEoaSession).eoa).toBe('0xEoaB');
       expect(resolved.resolvedVia).toBe('env_var');
+    });
+  });
+
+  describe('resolveSessionInteractive', () => {
+    it('returns single session without prompting', async () => {
+      writeSession(makeSmartWalletSession());
+
+      const resolved = await resolveSessionInteractive(false);
+      expect(resolved.mode).toBe('smart-wallet');
+      expect(resolved.resolvedVia).toBe('auto_select');
+    });
+
+    it('throws MULTIPLE_SESSIONS when json=true', async () => {
+      writeSession(makeSmartWalletSession());
+      writeSession(makeOperatorSession());
+
+      await expect(resolveSessionInteractive(true)).rejects.toThrow(CLIError);
+      try {
+        await resolveSessionInteractive(true);
+      } catch (e) {
+        expect((e as CLIError).code).toBe('MULTIPLE_SESSIONS');
+      }
+    });
+
+    it('throws NO_SESSION when no sessions exist regardless of json flag', async () => {
+      await expect(resolveSessionInteractive(false)).rejects.toThrow(CLIError);
+      try {
+        await resolveSessionInteractive(false);
+      } catch (e) {
+        expect((e as CLIError).code).toBe('NO_SESSION');
+      }
+    });
+
+    it('prompts and returns interactive selection when json=false and multiple sessions', async () => {
+      const { select } = await import('@clack/prompts');
+      const operator = makeOperatorSession();
+      writeSession(makeSmartWalletSession());
+      writeSession(operator);
+
+      vi.mocked(select).mockResolvedValueOnce({ session: operator });
+
+      const resolved = await resolveSessionInteractive(false);
+      expect(resolved.resolvedVia).toBe('interactive');
+      expect(resolved.mode).toBe('operator');
+      expect(resolved.account).toBe(operator.account);
     });
   });
 

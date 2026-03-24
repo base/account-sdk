@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import { CLIError } from '../../types/errors.js';
 import type { ResolvedSession, Session, SessionMode } from '../../types/session.js';
 import { verifyDirectoryPermissions, verifyFilePermissions } from '../../utils/permissions.js';
+import { promptSessionPicker } from '../../utils/prompt.js';
 import { secureDelete } from '../../utils/secure-delete.js';
 import { appendAuditLog } from '../audit/index.js';
 import { sessionFile, sessionsDir } from '../paths.js';
@@ -76,6 +77,19 @@ export function resolveSession(): ResolvedSession {
     'MULTIPLE_SESSIONS',
     `Multiple sessions found. Set BASE_SESSION=<address>. Available: ${labels}`
   );
+}
+
+export async function resolveSessionInteractive(json: boolean): Promise<ResolvedSession> {
+  try {
+    return resolveSession();
+  } catch (error) {
+    if (error instanceof CLIError && error.code === 'MULTIPLE_SESSIONS' && !json) {
+      const sessions = listSessions();
+      const selected = await promptSessionPicker(sessions);
+      return { ...selected, resolvedVia: 'interactive' };
+    }
+    throw error;
+  }
 }
 
 export function loadSession(mode: SessionMode, identifier: string): Session | null {

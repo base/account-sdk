@@ -226,6 +226,7 @@ __metadata:
   resolution: "@base-org/account-cli@workspace:packages/account-cli"
   dependencies:
     "@base-org/account": "workspace:*"
+    "@clack/prompts": "npm:^1.1.0"
     "@types/node": "npm:^20.0.0"
     commander: "npm:^13.0.0"
     typescript: "npm:^5.1.6"
@@ -1611,6 +1612,25 @@ __metadata:
     "@chakra-ui/system": ">=2.0.0"
     react: ">=18"
   checksum: 10/57ecb40c8ba5ffe30beb037557a158c2dfe5e09f12e841cc2f4403837fdb4b44ea497dfe74d67a0d125e5c120e3b241ae8f8bb8159a811f2ab00b072ac03001a
+  languageName: node
+  linkType: hard
+
+"@clack/core@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@clack/core@npm:1.1.0"
+  dependencies:
+    sisteransi: "npm:^1.0.5"
+  checksum: 10/572828cf198350ddc05fc7429fec2eefff48e76b73c053678e70237dae5d56d9853cc5d5a884104e2df458ffd871537337d1d37a90289d81457e3f675531459c
+  languageName: node
+  linkType: hard
+
+"@clack/prompts@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@clack/prompts@npm:1.1.0"
+  dependencies:
+    "@clack/core": "npm:1.1.0"
+    sisteransi: "npm:^1.0.5"
+  checksum: 10/a8bf871716d0250902a8fcc45cdd1674205ed5c6390f9e6a13e4368926af5fdfa85500195cb21aa7f0ebaa1dc812bebde560a1bd038442343d8ef166d92dd54d
   languageName: node
   linkType: hard
 
@@ -9043,6 +9063,13 @@ __metadata:
   dependencies:
     semver: "npm:^7.5.3"
   checksum: 10/40bd4f96aa89aedbf717ae9f4ab8fca70e8f7511e8b766feb15471cca3f6fe4fe673743309b08b4ba8abfe0965c9cd927e1de46550a757b819b70fc7430cc85d
+  languageName: node
+  linkType: hard
+
+"sisteransi@npm:^1.0.5":
+  version: 1.0.5
+  resolution: "sisteransi@npm:1.0.5"
+  checksum: 10/aba6438f46d2bfcef94cf112c835ab395172c75f67453fe05c340c770d3c402363018ae1ab4172a1026a90c47eaccf3af7b6ff6fa749a680c2929bd7fa2b37a4
   languageName: node
   linkType: hard
 
