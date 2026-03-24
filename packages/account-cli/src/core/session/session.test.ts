@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { setBaseDir } from './paths.js';
+import { setBaseDir } from '../paths.js';
 import {
   listSessions,
   loadSession,
@@ -12,14 +12,18 @@ import {
   writeSession,
   destroySession,
   destroyAllSessions,
-} from './session.js';
-import { appendAuditLog } from './audit/index.js';
-import { verifyDirectoryPermissions, verifyFilePermissions } from '../utils/permissions.js';
-import { secureDelete } from '../utils/secure-delete.js';
-import { SESSION_VERSION } from '../types/session.js';
-import type { OperatorSession, SmartWalletSession, ExternalEoaSession } from '../types/session.js';
-import type { ChainId } from '../types/caip.js';
-import { CLIError } from '../types/errors.js';
+} from './index.js';
+import { appendAuditLog } from '../audit/index.js';
+import { verifyDirectoryPermissions, verifyFilePermissions } from '../../utils/permissions.js';
+import { secureDelete } from '../../utils/secure-delete.js';
+import { SESSION_VERSION } from '../../types/session.js';
+import type {
+  OperatorSession,
+  SmartWalletSession,
+  ExternalEoaSession,
+} from '../../types/session.js';
+import type { ChainId } from '../../types/caip.js';
+import { CLIError } from '../../types/errors.js';
 
 function makeSmartWalletSession(overrides: Partial<SmartWalletSession> = {}): SmartWalletSession {
   return {

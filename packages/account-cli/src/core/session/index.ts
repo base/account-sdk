@@ -7,12 +7,12 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
-import type { ResolvedSession, Session, SessionMode } from '../types/session.js';
-import { CLIError } from '../types/errors.js';
-import { sessionFile, sessionsDir } from './paths.js';
-import { appendAuditLog } from './audit/index.js';
-import { verifyDirectoryPermissions, verifyFilePermissions } from '../utils/permissions.js';
-import { secureDelete } from '../utils/secure-delete.js';
+import type { ResolvedSession, Session, SessionMode } from '../../types/session.js';
+import { CLIError } from '../../types/errors.js';
+import { sessionFile, sessionsDir } from '../paths.js';
+import { appendAuditLog } from '../audit/index.js';
+import { verifyDirectoryPermissions, verifyFilePermissions } from '../../utils/permissions.js';
+import { secureDelete } from '../../utils/secure-delete.js';
 
 const SESSION_FILE_RE = /^(operator|smart-wallet|external-eoa)-(.+)\.json$/;
 

@@ -5,7 +5,7 @@ import {
   listSessions,
   resolveSession,
   sessionKey,
-} from '../../core/session.js';
+} from '../../core/session/index.js';
 import { CLIError } from '../../types/errors.js';
 import { SESSION_MODES, type SessionMode } from '../../types/session.js';
 import { formatError, formatOutput } from '../../utils/index.js';
