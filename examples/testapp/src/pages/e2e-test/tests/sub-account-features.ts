@@ -10,6 +10,9 @@ import { baseSepolia } from 'viem/chains';
 import type { TestContext, TestHandlers } from '../types';
 import { runTest } from '../utils/test-helpers';
 
+const DEFAULT_TESTNET_PAYMASTER_URL =
+  'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O';
+
 /**
  * Test creating a sub-account with wallet_addSubAccount
  */
@@ -234,7 +237,7 @@ export async function testSendCallsFromSubAccount(
             ],
             capabilities: {
               paymasterService: {
-                url: 'https://example.paymaster.com',
+                url: DEFAULT_TESTNET_PAYMASTER_URL,
               },
             },
           },

@@ -59,7 +59,10 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
   try {
     // Get the bundler URL - use custom URL if provided, otherwise use default based on network
     const effectiveBundlerUrl =
-      bundlerUrl || (testnet ? 'https://example.paymaster.com' : 'https://example.paymaster.com');
+      bundlerUrl ||
+      (testnet
+        ? 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
+        : 'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O');
 
     // Call eth_getUserOperationReceipt via the bundler
     const receipt = await fetch(effectiveBundlerUrl, {
