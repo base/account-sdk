@@ -39,11 +39,29 @@
   margin-bottom: 4rem;
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .sectionTitle {
   font-size: 2rem;
   font-weight: 700;
   color: #1e293b;
   margin-bottom: 0.5rem;
+}
+
+.docsLink {
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.docsLink:hover {
+  color: #2563eb;
+  text-decoration: underline;
 }
 
 .sectionDescription {

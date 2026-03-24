@@ -78,7 +78,17 @@ try {
       <main className={styles.main}>
         {/* pay Section */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>pay Function</h2>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>pay Function</h2>
+            <a
+              href="https://docs.base.org/base-account/reference/base-pay/pay"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.docsLink}
+            >
+              Docs ↗
+            </a>
+          </div>
           <p className={styles.sectionDescription}>Send USDC payments on Base</p>
 
           <div className={styles.playground}>
@@ -109,7 +119,17 @@ try {
 
         {/* getPaymentStatus Section */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>getPaymentStatus Function</h2>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>getPaymentStatus Function</h2>
+            <a
+              href="https://docs.base.org/base-account/reference/base-pay/getPaymentStatus"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.docsLink}
+            >
+              Docs ↗
+            </a>
+          </div>
           <p className={styles.sectionDescription}>Check the status of a payment</p>
 
           <div className={styles.playground}>

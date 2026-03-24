@@ -40,7 +40,9 @@ describe('prepareCharge', () => {
     });
 
     expect(fetchPermission).toHaveBeenCalledWith({ permissionHash: '0xhash123' });
-    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, undefined);
+    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, undefined, {
+      rpcUrl: undefined,
+    });
     expect(result).toEqual(mockCallData);
   });
 
@@ -60,7 +62,8 @@ describe('prepareCharge', () => {
     expect(prepareSpendCallData).toHaveBeenCalledWith(
       mockPermission,
       'max-remaining-allowance',
-      undefined
+      undefined,
+      { rpcUrl: undefined }
     );
     expect(result).toEqual(mockCallData);
   });
@@ -83,7 +86,9 @@ describe('prepareCharge', () => {
       testnet: true,
     });
 
-    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n, undefined);
+    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n, undefined, {
+      rpcUrl: undefined,
+    });
   });
 
   it('should throw error for network mismatch', async () => {
@@ -127,7 +132,9 @@ describe('prepareCharge', () => {
 
     expect(fetchPermission).toHaveBeenCalledWith({ permissionHash: '0xhash123' });
     // Now prepareSpendCallData handles the recipient and transfer logic
-    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, recipient);
+    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, recipient, {
+      rpcUrl: undefined,
+    });
     expect(result).toEqual(mockCallData);
   });
 
@@ -154,7 +161,9 @@ describe('prepareCharge', () => {
     });
 
     // Now prepareSpendCallData handles the recipient and transfer logic
-    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n, recipient);
+    expect(prepareSpendCallData).toHaveBeenCalledWith(testnetPermission, 5000000n, recipient, {
+      rpcUrl: undefined,
+    });
     expect(result).toEqual(mockCallData);
   });
 
@@ -178,8 +187,31 @@ describe('prepareCharge', () => {
     expect(prepareSpendCallData).toHaveBeenCalledWith(
       mockPermission,
       'max-remaining-allowance',
-      recipient
+      recipient,
+      { rpcUrl: undefined }
     );
+    expect(result).toEqual(mockCallData);
+  });
+
+  it('should pass rpcUrl to prepareSpendCallData when provided', async () => {
+    const { fetchPermission, prepareSpendCallData } = await import(
+      '../public-utilities/spend-permission/index.js'
+    );
+    vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
+    vi.mocked(prepareSpendCallData).mockResolvedValue(mockCallData);
+
+    const customRpcUrl = 'https://my-custom-rpc.example.com';
+    const result = await prepareCharge({
+      id: '0xhash123',
+      amount: '10.50',
+      testnet: false,
+      rpcUrl: customRpcUrl,
+    });
+
+    expect(fetchPermission).toHaveBeenCalledWith({ permissionHash: '0xhash123' });
+    expect(prepareSpendCallData).toHaveBeenCalledWith(mockPermission, 10500000n, undefined, {
+      rpcUrl: customRpcUrl,
+    });
     expect(result).toEqual(mockCallData);
   });
 });

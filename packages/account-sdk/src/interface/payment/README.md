@@ -11,6 +11,7 @@ import { pay } from '@base-org/account';
 const payment = await pay({
   amount: "10.50",
   to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
+  dataSuffix: "0xabc123",
   testnet: true
 });
 
@@ -119,6 +120,7 @@ const status = await getPaymentStatus({
 
 - `amount: string` - Amount of USDC to send as a string (e.g., "10.50")
 - `to: string` - Ethereum address to send payment to
+- `dataSuffix?: Hex` - Optional attribution data suffix as 0x-prefixed hex (viem `Hex` type)
 - `testnet?: boolean` - Whether to use Base Sepolia testnet (default: false)
 - `payerInfo?: PayerInfo` - Optional payer information configuration for data callbacks
 - `telemetry?: boolean` - Whether to enable telemetry logging (default: true)

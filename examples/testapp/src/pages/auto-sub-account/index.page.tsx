@@ -1,4 +1,5 @@
 import { getCryptoKeyAccount } from '@base-org/account';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
@@ -8,6 +9,7 @@ import {
   FormLabel,
   HStack,
   Input,
+  Link,
   Radio,
   RadioGroup,
   Select,
@@ -634,7 +636,18 @@ export default function AutoSubAccount() {
           </RadioGroup>
         </FormControl>
         <FormControl>
-          <FormLabel>Sub-Account Creation</FormLabel>
+          <FormLabel>
+            Sub-Account Creation{' '}
+            <Link
+              href="https://docs.base.org/base-account/improve-ux/sub-accounts"
+              isExternal
+              color="blue.500"
+              fontSize="sm"
+              fontWeight="normal"
+            >
+              Docs <ExternalLinkIcon mx="2px" />
+            </Link>
+          </FormLabel>
           <RadioGroup
             value={subAccountsConfig?.creation || 'manual'}
             onChange={(value) =>

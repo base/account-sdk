@@ -221,6 +221,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@base-org/account-cli@workspace:packages/account-cli":
+  version: 0.0.0-use.local
+  resolution: "@base-org/account-cli@workspace:packages/account-cli"
+  dependencies:
+    "@base-org/account": "workspace:*"
+    "@types/node": "npm:^20.0.0"
+    commander: "npm:^13.0.0"
+    typescript: "npm:^5.1.6"
+    viem: "npm:^2.31.7"
+    vitest: "npm:^2.1.9"
+  bin:
+    base-account: ./dist/index.js
+  languageName: unknown
+  linkType: soft
+
 "@base-org/account-ui@workspace:packages/account-ui":
   version: 0.0.0-use.local
   resolution: "@base-org/account-ui@workspace:packages/account-ui"
@@ -3612,6 +3627,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^20.0.0":
+  version: 20.19.37
+  resolution: "@types/node@npm:20.19.37"
+  dependencies:
+    undici-types: "npm:~6.21.0"
+  checksum: 10/7e0d561d0d980109a0b64c6f797584a69d706421f18c0b24850206a15a4286443e676032abfa438590f25e4dfc3561ffc8d7f5c0c90edf08b705f6f9c35febba
+  languageName: node
+  linkType: hard
+
 "@types/parse-json@npm:^4.0.0":
   version: 4.0.2
   resolution: "@types/parse-json@npm:4.0.2"
@@ -3623,6 +3647,15 @@ __metadata:
   version: 15.7.13
   resolution: "@types/prop-types@npm:15.7.13"
   checksum: 10/8935cad87c683c665d09a055919d617fe951cb3b2d5c00544e3a913f861a2bd8d2145b51c9aa6d2457d19f3107ab40784c40205e757232f6a80cc8b1c815513c
+  languageName: node
+  linkType: hard
+
+"@types/qrcode.react@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@types/qrcode.react@npm:3.0.0"
+  dependencies:
+    qrcode.react: "npm:*"
+  checksum: 10/8ce11d0455fca9a898f6e9d499529526671c5e398f44cf2bc507ad84e1e4982ff0f384261e52b16b933bdd1d6db6bef27b437f90bb804a039ddfe21112d19da5
   languageName: node
   linkType: hard
 
@@ -5014,6 +5047,13 @@ __metadata:
   version: 12.1.0
   resolution: "commander@npm:12.1.0"
   checksum: 10/cdaeb672d979816853a4eed7f1310a9319e8b976172485c2a6b437ed0db0a389a44cfb222bfbde772781efa9f215bdd1b936f80d6b249485b465c6cb906e1f93
+  languageName: node
+  linkType: hard
+
+"commander@npm:^13.0.0":
+  version: 13.1.0
+  resolution: "commander@npm:13.1.0"
+  checksum: 10/d3b4b79e6be8471ddadacbb8cd441fe82154d7da7393b50e76165a9e29ccdb74fa911a186437b9a211d0fc071db6051915c94fb8ef16d77511d898e9dbabc6af
   languageName: node
   linkType: hard
 
@@ -8241,6 +8281,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"qrcode.react@npm:*, qrcode.react@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "qrcode.react@npm:4.2.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10/665036d88b160e6d5de4e24d101bc63bd2b76712802e874bbffe56c6b6e5fe50c63f02c3cba2975b2e2b555c1f1e112cbb42987f8cb3a626ce2d17023cfde6ac
+  languageName: node
+  linkType: hard
+
 "queue-lit@npm:^1.5.1":
   version: 1.5.2
   resolution: "queue-lit@npm:1.5.2"
@@ -8867,10 +8916,12 @@ __metadata:
     "@metamask/eth-sig-util": "npm:^7.0.0"
     "@testing-library/react": "npm:^16.2.0"
     "@types/acorn": "npm:^4.0.6"
+    "@types/qrcode.react": "npm:^3.0.0"
     "@types/react": "npm:18.2.15"
     acorn: "npm:^8.15.0"
     framer-motion: "npm:^10.13.1"
     next: "npm:^14.2.10"
+    qrcode.react: "npm:^4.2.0"
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
     react-hook-form: "npm:7.45.2"
@@ -9658,6 +9709,13 @@ __metadata:
   version: 6.19.8
   resolution: "undici-types@npm:6.19.8"
   checksum: 10/cf0b48ed4fc99baf56584afa91aaffa5010c268b8842f62e02f752df209e3dea138b372a60a963b3b2576ed932f32329ce7ddb9cb5f27a6c83040d8cd74b7a70
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.21.0":
+  version: 6.21.0
+  resolution: "undici-types@npm:6.21.0"
+  checksum: 10/ec8f41aa4359d50f9b59fa61fe3efce3477cc681908c8f84354d8567bb3701fafdddf36ef6bff307024d3feb42c837cf6f670314ba37fc8145e219560e473d14
   languageName: node
   linkType: hard
 

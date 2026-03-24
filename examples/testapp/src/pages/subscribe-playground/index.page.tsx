@@ -86,7 +86,17 @@ try {
       <main className={styles.main}>
         {/* subscribe Section */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>subscribe Function</h2>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>subscription.subscribe</h2>
+            <a
+              href="https://docs.base.org/base-account/reference/base-pay/subscribe"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.docsLink}
+            >
+              Docs ↗
+            </a>
+          </div>
           <p className={styles.sectionDescription}>Create recurring USDC subscriptions on Base</p>
 
           <div className={styles.variantSelector}>
@@ -147,7 +157,17 @@ try {
 
         {/* getSubscriptionStatus Section */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>getSubscriptionStatus Function</h2>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>subscription.getStatus</h2>
+            <a
+              href="https://docs.base.org/base-account/reference/base-pay/getStatus"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.docsLink}
+            >
+              Docs ↗
+            </a>
+          </div>
           <p className={styles.sectionDescription}>Check the status of a subscription</p>
 
           <div className={styles.playground}>

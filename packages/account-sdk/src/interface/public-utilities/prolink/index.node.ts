@@ -177,13 +177,11 @@ export async function decodeProlink(payload: string): Promise<ProlinkDecoded> {
       throw new Error('wallet_sendCalls requires chainId');
     }
 
-    const params = decodeWalletSendCalls(rpcPayload.body.value, rpcPayload.chainId);
+    const params = decodeWalletSendCalls(rpcPayload.body.value, rpcPayload.chainId, capabilities);
 
     return {
       method: 'wallet_sendCalls',
       params: [params],
-      chainId: rpcPayload.chainId,
-      capabilities,
     };
   }
 
@@ -196,13 +194,11 @@ export async function decodeProlink(payload: string): Promise<ProlinkDecoded> {
       throw new Error('wallet_sign requires chainId');
     }
 
-    const params = decodeWalletSign(rpcPayload.body.value, rpcPayload.chainId);
+    const params = decodeWalletSign(rpcPayload.body.value, rpcPayload.chainId, capabilities);
 
     return {
       method: 'wallet_sign',
       params: [params],
-      chainId: rpcPayload.chainId,
-      capabilities,
     };
   }
 

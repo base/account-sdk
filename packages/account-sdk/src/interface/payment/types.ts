@@ -61,6 +61,11 @@ export interface PaymentOptions {
   amount: string;
   /** Ethereum address to send payment to */
   to: string;
+  /**
+   * Optional attribution data suffix to append to wallet call data.
+   * Must be a 0x-prefixed hex string (e.g., "0xabc123").
+   */
+  dataSuffix?: Hex;
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
   /** Optional payer information configuration for data callbacks */
@@ -100,6 +105,8 @@ export interface PaymentStatusOptions {
   testnet?: boolean;
   /** Whether to enable telemetry logging. Defaults to true */
   telemetry?: boolean;
+  /** Optional custom bundler URL to use for status checks. Useful for avoiding rate limits on public endpoints. */
+  bundlerUrl?: string;
 }
 
 /**
@@ -255,6 +262,8 @@ export interface SubscriptionStatusOptions {
   id: string;
   /** Whether to check on testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
+  /** Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints. */
+  rpcUrl?: string;
 }
 
 /**
@@ -289,6 +298,8 @@ export interface PrepareChargeOptions {
   testnet?: boolean;
   /** Optional recipient address to receive the charged USDC */
   recipient?: Address;
+  /** Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints. */
+  rpcUrl?: string;
 }
 
 /**

@@ -1,3 +1,4 @@
+import { toHex } from 'viem';
 import { ShortcutType } from './ShortcutType';
 
 const walletConnectShortcuts: ShortcutType[] = [
@@ -7,7 +8,7 @@ const walletConnectShortcuts: ShortcutType[] = [
       version: '1',
       capabilities: {
         signInWithEthereum: {
-          chainId: 84532,
+          chainId: toHex(84532),
           nonce: Math.random().toString(36).substring(2, 15),
         },
       },

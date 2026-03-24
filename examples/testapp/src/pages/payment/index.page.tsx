@@ -1,4 +1,5 @@
 import { type PaymentResult, type PaymentStatus, getPaymentStatus, pay } from '@base-org/account';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
 import {
   Accordion,
   AccordionButton,
@@ -16,6 +17,7 @@ import {
   HStack,
   Heading,
   Input,
+  Link,
   Select,
   Switch,
   Text,
@@ -228,7 +230,17 @@ export default function Payment() {
         {/* Pay Section */}
         <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
           <VStack spacing={6} align="stretch">
-            <Heading size="md">Send Payment</Heading>
+            <HStack justify="space-between" align="center">
+              <Heading size="md">Send Payment</Heading>
+              <Link
+                href="https://docs.base.org/base-account/reference/base-pay/pay"
+                isExternal
+                color="blue.500"
+                fontSize="sm"
+              >
+                Docs <ExternalLinkIcon mx="2px" />
+              </Link>
+            </HStack>
 
             <HStack spacing={4} align="start">
               <FormControl flex={1}>
@@ -451,7 +463,17 @@ export default function Payment() {
         {/* Status Check Section */}
         <Box borderWidth="1px" borderRadius="lg" p={6} bg={bgColor} borderColor={borderColor}>
           <VStack spacing={4} align="stretch">
-            <Heading size="md">Check Payment Status</Heading>
+            <HStack justify="space-between" align="center">
+              <Heading size="md">Check Payment Status</Heading>
+              <Link
+                href="https://docs.base.org/base-account/reference/base-pay/getPaymentStatus"
+                isExternal
+                color="blue.500"
+                fontSize="sm"
+              >
+                Docs <ExternalLinkIcon mx="2px" />
+              </Link>
+            </HStack>
 
             <FormControl display="flex" alignItems="center" mb={4}>
               <FormLabel mb="0">Use Testnet</FormLabel>

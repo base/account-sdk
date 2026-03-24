@@ -31,6 +31,7 @@ import { sendUserOpAndWait } from './utils/sendUserOpAndWait.js';
  * @param options.walletName - Custom wallet name. Defaults to "subscription owner"
  * @param options.paymasterUrl - Paymaster URL for sponsorship. Falls back to PAYMASTER_URL env var
  * @param options.recipient - Optional recipient address to receive the charged USDC
+ * @param options.rpcUrl - Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints.
  * @returns Promise<ChargeResult> - Result of the charge transaction
  * @throws Error if CDP credentials are missing, subscription not found, or charge fails
  *
@@ -72,6 +73,14 @@ import { sendUserOpAndWait } from './utils/sendUserOpAndWait.js';
  *   recipient: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb8',
  *   testnet: false
  * });
+ *
+ * // With custom RPC URL to avoid rate limits
+ * const charge = await base.subscription.charge({
+ *   id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+ *   amount: '9.99',
+ *   testnet: false,
+ *   rpcUrl: 'https://my-custom-rpc.example.com'
+ * });
  * ```
  */
 export async function charge(options: ChargeOptions): Promise<ChargeResult> {
@@ -85,6 +94,7 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
     walletName = 'subscription owner',
     paymasterUrl = process.env.PAYMASTER_URL,
     recipient,
+    rpcUrl,
   } = options;
 
   // Step 1: Initialize CDP client with provided credentials or environment variables
@@ -98,8 +108,8 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
   // The wallet should have been created prior to executing a charge on it.
   const smartWallet = await getExistingSmartWalletOrThrow(cdpClient, walletName, 'charge');
 
-  // Step 3: Prepare the charge call data (including optional recipient transfer)
-  const chargeCalls = await prepareCharge({ id, amount, testnet, recipient });
+  // Step 3: Prepare the charge call data (including optional recipient transfer and custom RPC URL)
+  const chargeCalls = await prepareCharge({ id, amount, testnet, recipient, rpcUrl });
 
   // Step 4: Get the network-scoped smart wallet
   const network = testnet ? 'base-sepolia' : 'base';

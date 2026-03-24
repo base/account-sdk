@@ -1765,6 +1765,9 @@ describe('Signer', () => {
       const result = await signer.request(request);
 
       expect(result).toEqual({
+        '0x0': {
+          gasLimitOverride: { supported: true },
+        },
         '0x1': {
           atomicBatch: { supported: true },
           paymasterService: { supported: true },
@@ -1787,6 +1790,9 @@ describe('Signer', () => {
       const result = await signer.request(request);
 
       expect(result).toEqual({
+        '0x0': {
+          gasLimitOverride: { supported: true },
+        },
         '0x1': {
           atomicBatch: { supported: true },
           paymasterService: { supported: true },
@@ -1807,6 +1813,9 @@ describe('Signer', () => {
       const result = await signer.request(request);
 
       expect(result).toEqual({
+        '0x0': {
+          gasLimitOverride: { supported: true },
+        },
         '0x1': {
           atomicBatch: { supported: true },
           paymasterService: { supported: true },
@@ -1817,7 +1826,7 @@ describe('Signer', () => {
       });
     });
 
-    it('should return empty object when filter matches no capabilities', async () => {
+    it('should return 0x0 capability when filter matches no chain-specific capabilities', async () => {
       const request = {
         method: 'wallet_getCapabilities',
         params: [globalAccountAddress, ['0x99', '0x100']],
@@ -1825,36 +1834,15 @@ describe('Signer', () => {
 
       const result = await signer.request(request);
 
-      expect(result).toEqual({});
+      // 0x0 (all chains) is always included even when no chain-specific capabilities match
+      expect(result).toEqual({
+        '0x0': {
+          gasLimitOverride: { supported: true },
+        },
+      });
     });
 
-    it('should return empty object when capabilities is undefined', async () => {
-      stateSpy.mockImplementation(() => ({
-        account: {
-          accounts: [globalAccountAddress],
-          capabilities: undefined,
-        },
-        chains: [],
-        keys: {},
-        spendPermissions: [],
-        config: {
-          metadata: mockMetadata,
-          preference: { walletUrl: CB_KEYS_URL, options: 'all' },
-          version: '1.0.0',
-        },
-      }));
-
-      const request = {
-        method: 'wallet_getCapabilities',
-        params: [globalAccountAddress],
-      };
-
-      const result = await signer.request(request);
-
-      expect(result).toEqual({});
-    });
-
-    it('should return empty object when empty filter array is provided', async () => {
+    it('should return all capabilities including 0x0 when empty filter array is provided', async () => {
       const request = {
         method: 'wallet_getCapabilities',
         params: [globalAccountAddress, []],
@@ -1863,6 +1851,9 @@ describe('Signer', () => {
       const result = await signer.request(request);
 
       expect(result).toEqual({
+        '0x0': {
+          gasLimitOverride: { supported: true },
+        },
         '0x1': {
           atomicBatch: { supported: true },
           paymasterService: { supported: true },
@@ -1904,6 +1895,7 @@ describe('Signer', () => {
       const result = await signer.request(request);
 
       expect(result).toEqual({
+        '0x0': { gasLimitOverride: { supported: true } },
         '0x1': { atomicBatch: { supported: true } },
       });
     });
@@ -1933,6 +1925,136 @@ describe('Signer', () => {
       };
 
       await expect(signer.request(request)).rejects.toThrow();
+    });
+
+    // ERC-8132: gasLimitOverride capability tests
+    it('should include gasLimitOverride capability under 0x0 (all chains)', async () => {
+      const request = {
+        method: 'wallet_getCapabilities',
+        params: [globalAccountAddress],
+      };
+
+      const result = await signer.request(request);
+
+      expect(result).toHaveProperty('0x0');
+      expect(result['0x0']).toEqual({
+        gasLimitOverride: { supported: true },
+      });
+    });
+
+    it('should always include 0x0 gasLimitOverride even when filtering by chain', async () => {
+      const request = {
+        method: 'wallet_getCapabilities',
+        params: [globalAccountAddress, ['0x1']],
+      };
+
+      const result = await signer.request(request);
+
+      // Should include both the filtered chain and 0x0
+      expect(result).toHaveProperty('0x0');
+      expect(result['0x0']).toEqual({
+        gasLimitOverride: { supported: true },
+      });
+      expect(result).toHaveProperty('0x1');
+    });
+
+    it('should include gasLimitOverride when capabilities is empty', async () => {
+      stateSpy.mockImplementation(() => ({
+        account: {
+          accounts: [globalAccountAddress],
+          capabilities: {},
+        },
+        chains: [],
+        keys: {},
+        spendPermissions: [],
+        config: {
+          metadata: mockMetadata,
+          preference: { walletUrl: CB_KEYS_URL, options: 'all' },
+          version: '1.0.0',
+        },
+      }));
+
+      const request = {
+        method: 'wallet_getCapabilities',
+        params: [globalAccountAddress],
+      };
+
+      const result = await signer.request(request);
+
+      expect(result).toEqual({
+        '0x0': {
+          gasLimitOverride: { supported: true },
+        },
+      });
+    });
+
+    it('should include gasLimitOverride when capabilities is undefined', async () => {
+      stateSpy.mockImplementation(() => ({
+        account: {
+          accounts: [globalAccountAddress],
+          capabilities: undefined,
+        },
+        chains: [],
+        keys: {},
+        spendPermissions: [],
+        config: {
+          metadata: mockMetadata,
+          preference: { walletUrl: CB_KEYS_URL, options: 'all' },
+          version: '1.0.0',
+        },
+      }));
+
+      const request = {
+        method: 'wallet_getCapabilities',
+        params: [globalAccountAddress],
+      };
+
+      const result = await signer.request(request);
+
+      expect(result).toEqual({
+        '0x0': {
+          gasLimitOverride: { supported: true },
+        },
+      });
+    });
+
+    it('should preserve gasLimitOverride when storedCapabilities has 0x0 key', async () => {
+      stateSpy.mockImplementation(() => ({
+        account: {
+          accounts: [globalAccountAddress],
+          capabilities: {
+            '0x0': {
+              atomicBatch: { supported: true },
+            },
+            '0x14a34': {
+              paymasterService: { supported: true },
+            },
+          },
+        },
+        chains: [],
+        keys: {},
+        spendPermissions: [],
+        config: {
+          metadata: mockMetadata,
+          preference: { walletUrl: CB_KEYS_URL, options: 'all' },
+          version: '1.0.0',
+        },
+      }));
+
+      const request = {
+        method: 'wallet_getCapabilities',
+        params: [globalAccountAddress],
+      };
+
+      const result = await signer.request(request);
+
+      expect(result['0x0']).toEqual({
+        atomicBatch: { supported: true },
+        gasLimitOverride: { supported: true },
+      });
+      expect(result['0x14a34']).toEqual({
+        paymasterService: { supported: true },
+      });
     });
   });
 

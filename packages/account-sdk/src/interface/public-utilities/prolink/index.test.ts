@@ -29,10 +29,10 @@ describe('prolink end-to-end', () => {
 
       const decoded = await decodeProlink(encoded);
       expect(decoded.method).toBe('wallet_sendCalls');
-      expect(decoded.chainId).toBe(8453);
       expect(Array.isArray(decoded.params)).toBe(true);
 
-      const params = (decoded.params as Array<{ calls: unknown[] }>)[0];
+      const params = (decoded.params as Array<{ chainId: string; calls: unknown[] }>)[0];
+      expect(params.chainId).toBe('0x2105'); // hex string
       expect(params.calls.length).toBe(1);
     });
 
@@ -58,7 +58,8 @@ describe('prolink end-to-end', () => {
       const decoded = await decodeProlink(encoded);
 
       expect(decoded.method).toBe('wallet_sendCalls');
-      expect(decoded.chainId).toBe(1);
+      const params = (decoded.params as Array<{ chainId: string }>)[0];
+      expect(params.chainId).toBe('0x1');
     });
 
     it('should encode and decode with capabilities', async () => {
@@ -88,8 +89,9 @@ describe('prolink end-to-end', () => {
       const encoded = await encodeProlink(request);
       const decoded = await decodeProlink(encoded);
 
-      expect(decoded.capabilities).toBeDefined();
-      expect(decoded.capabilities?.dataCallback).toEqual({
+      const params = (decoded.params as Array<{ capabilities?: Record<string, unknown> }>)[0];
+      expect(params.capabilities).toBeDefined();
+      expect(params.capabilities?.dataCallback).toEqual({
         callbackURL: 'https://example.com',
         events: ['initiated'],
       });
@@ -147,9 +149,10 @@ describe('prolink end-to-end', () => {
 
       const decoded = await decodeProlink(encoded);
       expect(decoded.method).toBe('wallet_sign');
-      expect(decoded.chainId).toBe(84532);
-
-      const params = (decoded.params as Array<{ data: { primaryType: string } }>)[0];
+      const params = (
+        decoded.params as Array<{ chainId: string; data: { primaryType: string } }>
+      )[0];
+      expect(params.chainId).toBe('0x14a34'); // hex string for 84532
       expect(params.data.primaryType).toBe('SpendPermission');
     });
   });
@@ -295,10 +298,16 @@ describe('prolink end-to-end', () => {
       const decoded = await decodeProlink(encoded);
 
       expect(decoded.method).toBe(request.method);
-      expect(decoded.chainId).toBe(8453);
-      expect(decoded.capabilities).toEqual(request.capabilities);
-
-      const params = (decoded.params as Array<{ version?: string; from?: string }>)[0];
+      const params = (
+        decoded.params as Array<{
+          version?: string;
+          from?: string;
+          chainId: string;
+          capabilities?: Record<string, unknown>;
+        }>
+      )[0];
+      expect(params.chainId).toBe('0x2105'); // hex string for 8453
+      expect(params.capabilities).toEqual(request.capabilities);
       expect(params.version).toBe('2.0');
       expect(params.from?.toLowerCase()).toBe(request.params[0].from.toLowerCase());
     });

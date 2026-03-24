@@ -1,4 +1,5 @@
 import { RequestArguments } from ':core/provider/interface.js';
+import type { CallCapabilities } from ':core/rpc/wallet_sendCalls.js';
 import { spendPermissions } from ':store/store.js';
 import {
   Address,
@@ -8,6 +9,7 @@ import {
   WalletSendCallsParameters,
   encodeFunctionData,
   hexToBigInt,
+  numberToHex,
 } from 'viem';
 
 import {
@@ -44,7 +46,9 @@ export async function routeThroughGlobalAccount({
   /** The chain id to use to send the request. */
   chainId: number;
   /** Optional calls to prepend to the request. */
-  prependCalls?: { to: Address; data: Hex; value: Hex }[] | undefined;
+  prependCalls?:
+    | { to: Address; data: Hex; value: Hex; capabilities?: CallCapabilities }[]
+    | undefined;
   /** The function to use to send the request to the global account. */
   globalAccountRequest: (request: RequestArguments) => Promise<unknown>;
 }) {
@@ -80,10 +84,27 @@ export async function routeThroughGlobalAccount({
     ],
   });
 
+  // Aggregate per-call gas limit overrides onto the executeBatch call.
+  // When any original call has a gasLimitOverride, we estimate gas for calls
+  // without one, sum everything, and set the total on the batch call sent to
+  // the global account popup.
+  const batchCallCapabilities = await aggregateGasLimitOverrides({
+    calls: originalSendCallsParams.calls,
+    client,
+    subAccountAddress,
+  });
+
   // Send using wallet_sendCalls
-  const calls: { to: Address; data: Hex; value: Hex }[] = [
+  const batchCall: { to: Address; data: Hex; value: Hex; capabilities?: CallCapabilities } = {
+    data: subAccountCallData,
+    to: subAccountAddress,
+    value: '0x0',
+    ...(batchCallCapabilities ? { capabilities: batchCallCapabilities } : {}),
+  };
+
+  const calls: { to: Address; data: Hex; value: Hex; capabilities?: CallCapabilities }[] = [
     ...(prependCalls ?? []),
-    { data: subAccountCallData, to: subAccountAddress, value: '0x0' },
+    batchCall,
   ];
 
   const requestToParent = injectRequestCapabilities(
@@ -126,4 +147,82 @@ export async function routeThroughGlobalAccount({
   }
 
   return result;
+}
+
+/**
+ * Per-call safety buffer (gas). Matches the backend config
+ * `safety_buffer_per_call`.
+ */
+const SAFETY_BUFFER_PER_CALL = 500n;
+
+/**
+ * Input data cost per byte (gas). Matches the backend config
+ * `proportional_input_cost_per_byte`.
+ */
+const PROPORTIONAL_INPUT_COST_PER_BYTE = 2n;
+
+/**
+ * Aggregates per-call gasLimitOverride values from the original calls into a
+ * single gasLimitOverride for the executeBatch call. For calls without an
+ * override, gas is estimated via eth_estimateGas. The total includes batch
+ * processing overhead.
+ *
+ * Returns undefined if no original calls have gasLimitOverride set.
+ */
+async function aggregateGasLimitOverrides({
+  calls,
+  client,
+  subAccountAddress,
+}: {
+  calls: WalletSendCallsParameters[0]['calls'];
+  client: PublicClient;
+  subAccountAddress: Address;
+}): Promise<CallCapabilities | undefined> {
+  const hasAnyOverride = calls.some(
+    (call) =>
+      call.capabilities &&
+      'gasLimitOverride' in call.capabilities &&
+      (call.capabilities as { gasLimitOverride?: { value?: Hex } }).gasLimitOverride?.value
+  );
+
+  if (!hasAnyOverride) {
+    return undefined;
+  }
+
+  const gasLimits = await Promise.all(
+    calls.map(async (call) => {
+      const override = (call.capabilities as { gasLimitOverride?: { value?: Hex } } | undefined)
+        ?.gasLimitOverride?.value;
+
+      if (override) {
+        return hexToBigInt(override);
+      }
+
+      // Estimate gas for calls without an explicit override
+      return client.estimateGas({
+        account: subAccountAddress,
+        to: call.to!,
+        data: call.data ?? '0x',
+        value: hexToBigInt(call.value ?? '0x0'),
+      });
+    })
+  );
+
+  const totalGas = gasLimits.reduce((sum, gas) => sum + gas, 0n);
+
+  // Calculate input data overhead: 2 gas per byte of calldata per call
+  const inputDataOverhead = calls.reduce((sum, call) => {
+    const dataLength = call.data ? BigInt((call.data.length - 2) / 2) : 0n; // hex string minus 0x prefix, 2 chars per byte
+    return sum + dataLength * PROPORTIONAL_INPUT_COST_PER_BYTE;
+  }, 0n);
+
+  // Per-call safety buffer (500 gas per call) + input data overhead
+  const batchOverhead = BigInt(calls.length) * SAFETY_BUFFER_PER_CALL + inputDataOverhead;
+  const totalWithOverhead = totalGas + batchOverhead;
+
+  return {
+    gasLimitOverride: {
+      value: numberToHex(totalWithOverhead),
+    },
+  };
 }

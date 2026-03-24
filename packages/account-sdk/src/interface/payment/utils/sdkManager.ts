@@ -89,7 +89,12 @@ export function _resetEphemeralInitialization(): void {
  */
 const paymentQueue = new Map<string, Promise<PaymentExecutionResult>>();
 
-function getQueueKey(testnet: boolean, walletUrl?: string): string {
+type QueueKeyParams = {
+  testnet: boolean;
+  walletUrl?: string;
+};
+
+function getQueueKey({ testnet, walletUrl }: QueueKeyParams): string {
   const network = testnet ? 'testnet' : 'mainnet';
   return `payment:${network}:${walletUrl ?? 'default'}`;
 }
@@ -119,16 +124,25 @@ async function waitForPendingOperation(queueKey: string): Promise<void> {
  * - Only supports payment-related methods (wallet_sendCalls, wallet_sign)
  * - Cleans up without affecting other SDK instances
  *
- * @param chainId - The chain ID to use
- * @param walletUrl - Optional wallet URL to use
- * @param telemetry - Whether to enable telemetry (defaults to true)
+ * @param params.chainId - The chain ID to use
+ * @param params.walletUrl - Optional wallet URL to use
+ * @param params.telemetry - Whether to enable telemetry (defaults to true)
+ * @param params.dataSuffix - Optional attribution data suffix
  * @returns The configured ephemeral provider
  */
-export function createEphemeralSDK(
-  chainId: number,
-  walletUrl?: string,
-  telemetry: boolean = true
-): { getProvider: () => ProviderInterface } {
+type CreateEphemeralSDKParams = {
+  chainId: number;
+  walletUrl?: string;
+  telemetry?: boolean;
+  dataSuffix?: Hex;
+};
+
+export function createEphemeralSDK({
+  chainId,
+  walletUrl,
+  telemetry = true,
+  dataSuffix,
+}: CreateEphemeralSDKParams): { getProvider: () => ProviderInterface } {
   const appName = typeof window !== 'undefined' ? window.location.origin : 'Base Pay SDK';
 
   // Perform one-time initialization
@@ -150,6 +164,7 @@ export function createEphemeralSDK(
     preference: {
       telemetry,
       walletUrl,
+      attribution: dataSuffix ? { dataSuffix } : undefined,
     },
   });
 
@@ -233,15 +248,17 @@ export async function executePayment(
  * @param testnet - Whether to use testnet
  * @param walletUrl - Optional wallet URL to use
  * @param telemetry - Whether to enable telemetry (defaults to true)
+ * @param dataSuffix - Optional attribution data suffix
  * @returns The payment execution result
  */
 export async function executePaymentWithSDK(
   requestParams: WalletSendCallsRequestParams,
   testnet: boolean,
   walletUrl?: string,
-  telemetry: boolean = true
+  telemetry: boolean = true,
+  dataSuffix?: Hex
 ): Promise<PaymentExecutionResult> {
-  const queueKey = getQueueKey(testnet, walletUrl);
+  const queueKey = getQueueKey({ testnet, walletUrl });
 
   // Wait for any pending operation to the same destination
   await waitForPendingOperation(queueKey);
@@ -249,7 +266,12 @@ export async function executePaymentWithSDK(
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
 
-  const sdk = createEphemeralSDK(chainId, walletUrl, telemetry);
+  const sdk = createEphemeralSDK({
+    chainId,
+    walletUrl,
+    telemetry,
+    dataSuffix,
+  });
   const provider = sdk.getProvider();
 
   // Create the execution promise and add it to the queue

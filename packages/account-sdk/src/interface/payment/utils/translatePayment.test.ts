@@ -41,6 +41,31 @@ describe('translatePayment', () => {
       });
     });
 
+    it('should include attribution suffix when dataSuffix is provided', () => {
+      const transferData = '0xabcdef';
+      const testnet = false;
+      const dataSuffix = '0xfeedbeef';
+
+      const result = buildSendCallsRequest(transferData, testnet, undefined, dataSuffix);
+
+      expect(result).toEqual({
+        version: '2.0.0',
+        chainId: CHAIN_IDS.base,
+        calls: [
+          {
+            to: TOKENS.USDC.addresses.base,
+            data: transferData,
+            value: '0x0',
+          },
+        ],
+        capabilities: {
+          attribution: {
+            suffix: dataSuffix,
+          },
+        },
+      });
+    });
+
     it('should build request with payerInfo', () => {
       const transferData = '0xabcdef';
       const testnet = false;
@@ -251,6 +276,32 @@ describe('translatePayment', () => {
           dataCallback: {
             requests: [{ type: 'name', optional: true }],
             callbackURL: 'https://example.com/callback',
+          },
+        },
+      });
+    });
+
+    it('should translate payment with dataSuffix attribution capability', () => {
+      const recipient = '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51';
+      const amount = '10.50';
+      const testnet = false;
+      const dataSuffix = '0xfeedbeef';
+
+      const result = translatePaymentToSendCalls(recipient, amount, testnet, undefined, dataSuffix);
+
+      expect(result).toEqual({
+        version: '2.0.0',
+        chainId: CHAIN_IDS.base,
+        calls: [
+          {
+            to: TOKENS.USDC.addresses.base,
+            data: expect.stringMatching(/^0x[a-fA-F0-9]+$/),
+            value: '0x0',
+          },
+        ],
+        capabilities: {
+          attribution: {
+            suffix: dataSuffix,
           },
         },
       });
