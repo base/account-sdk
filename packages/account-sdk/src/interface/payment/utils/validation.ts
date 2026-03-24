@@ -1,4 +1,4 @@
-import { type Address, getAddress } from 'viem';
+import { type Address, type Hex, getAddress, isHex } from 'viem';
 
 /**
  * Validates that the amount is a positive string with max decimal places
@@ -49,4 +49,16 @@ export function normalizeAddress(address: string): Address {
   } catch (_error) {
     throw new Error('Invalid address: must be a valid Ethereum address');
   }
+}
+
+/**
+ * Validates data suffix format.
+ * @param dataSuffix - 0x-prefixed hex data suffix
+ * @throws Error if data suffix is invalid
+ */
+export function validateDataSuffix(dataSuffix: string): Hex {
+  if (!isHex(dataSuffix)) {
+    throw new Error('Invalid dataSuffix: expected a 0x-prefixed hex string');
+  }
+  return dataSuffix;
 }

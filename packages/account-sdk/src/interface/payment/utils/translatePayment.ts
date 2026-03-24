@@ -24,9 +24,15 @@ export function encodeTransferCall(recipient: Address, amount: string): Hex {
  * @param transferData - The encoded transfer call data
  * @param testnet - Whether to use testnet
  * @param payerInfo - Optional payer information configuration for data callbacks
+ * @param dataSuffix - Optional 0x-prefixed hex attribution suffix
  * @returns The request parameters for wallet_sendCalls
  */
-export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payerInfo?: PayerInfo) {
+export function buildSendCallsRequest(
+  transferData: Hex,
+  testnet: boolean,
+  payerInfo?: PayerInfo,
+  dataSuffix?: Hex
+) {
   const network = testnet ? 'baseSepolia' : 'base';
   const chainId = CHAIN_IDS[network];
   const usdcAddress = TOKENS.USDC.addresses[network];
@@ -52,6 +58,10 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payer
     };
   }
 
+  if (dataSuffix) {
+    capabilities.attribution = { suffix: dataSuffix };
+  }
+
   // Build the request parameters
   const requestParams = {
     version: '2.0.0',
@@ -69,17 +79,19 @@ export function buildSendCallsRequest(transferData: Hex, testnet: boolean, payer
  * @param amount - The amount to send
  * @param testnet - Whether to use testnet
  * @param payerInfo - Optional payer information configuration for data callbacks
+ * @param dataSuffix - Optional 0x-prefixed hex attribution suffix
  * @returns The complete request parameters
  */
 export function translatePaymentToSendCalls(
   recipient: Address,
   amount: string,
   testnet: boolean,
-  payerInfo?: PayerInfo
+  payerInfo?: PayerInfo,
+  dataSuffix?: Hex
 ) {
   // Encode the transfer call
   const transferData = encodeTransferCall(recipient, amount);
 
   // Build and return the sendCalls request
-  return buildSendCallsRequest(transferData, testnet, payerInfo);
+  return buildSendCallsRequest(transferData, testnet, payerInfo, dataSuffix);
 }

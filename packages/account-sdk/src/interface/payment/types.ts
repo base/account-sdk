@@ -61,6 +61,11 @@ export interface PaymentOptions {
   amount: string;
   /** Ethereum address to send payment to */
   to: string;
+  /**
+   * Optional attribution data suffix to append to wallet call data.
+   * Must be a 0x-prefixed hex string (e.g., "0xabc123").
+   */
+  dataSuffix?: Hex;
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
   /** Optional payer information configuration for data callbacks */

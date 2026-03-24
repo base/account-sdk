@@ -6,7 +6,7 @@ import {
 import type { PaymentOptions, PaymentResult } from './types.js';
 import { executePaymentWithSDK } from './utils/sdkManager.js';
 import { translatePaymentToSendCalls } from './utils/translatePayment.js';
-import { normalizeAddress, validateStringAmount } from './utils/validation.js';
+import { normalizeAddress, validateDataSuffix, validateStringAmount } from './utils/validation.js';
 
 /**
  * Pay a specified address with USDC on Base network using an ephemeral wallet
@@ -14,6 +14,7 @@ import { normalizeAddress, validateStringAmount } from './utils/validation.js';
  * @param options - Payment options
  * @param options.amount - Amount of USDC to send as a string (e.g., "10.50")
  * @param options.to - Ethereum address to send payment to
+ * @param options.dataSuffix - Optional 0x-prefixed hex attribution suffix
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.payerInfo - Optional payer information configuration for data callbacks
  * @returns Promise<PaymentResult> - Result of the payment transaction
@@ -35,7 +36,15 @@ import { normalizeAddress, validateStringAmount } from './utils/validation.js';
  * ```
  */
 export async function pay(options: PaymentOptions): Promise<PaymentResult> {
-  const { amount, to, testnet = false, payerInfo, walletUrl, telemetry = true } = options;
+  const {
+    amount,
+    to,
+    dataSuffix,
+    testnet = false,
+    payerInfo,
+    walletUrl,
+    telemetry = true,
+  } = options;
 
   // Generate correlation ID for this payment request
   const correlationId = crypto.randomUUID();
@@ -48,13 +57,17 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
   try {
     validateStringAmount(amount, 6);
     const normalizedAddress = normalizeAddress(to);
+    if (dataSuffix !== undefined) {
+      validateDataSuffix(dataSuffix);
+    }
 
     // Step 2: Translate payment to sendCalls format
     const requestParams = translatePaymentToSendCalls(
       normalizedAddress,
       amount,
       testnet,
-      payerInfo
+      payerInfo,
+      dataSuffix
     );
 
     // Step 3: Execute payment with SDK
@@ -62,7 +75,8 @@ export async function pay(options: PaymentOptions): Promise<PaymentResult> {
       requestParams,
       testnet,
       walletUrl,
-      telemetry
+      telemetry,
+      dataSuffix
     );
 
     // Log payment completed

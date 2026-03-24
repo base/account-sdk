@@ -15,6 +15,7 @@ import {
   initSubAccountConfig,
   injectRequestCapabilities,
   isSendCallsParams,
+  makeDataSuffix,
   prependWithoutDuplicates,
   requestHasCapability,
 } from './utils.js';
@@ -54,6 +55,35 @@ describe('utils', () => {
         params: expectedParams,
       });
     });
+  });
+});
+
+describe('makeDataSuffix', () => {
+  it('throws for suffixes without a 0x prefix', () => {
+    expect(() =>
+      makeDataSuffix({
+        attribution: { dataSuffix: 'abc123' as any },
+        dappOrigin: 'https://example.com',
+      })
+    ).toThrow('Invalid dataSuffix: expected a 0x-prefixed hex string');
+  });
+
+  it('accepts suffixes with a 0x prefix', () => {
+    expect(
+      makeDataSuffix({
+        attribution: { dataSuffix: '0xabc123' },
+        dappOrigin: 'https://example.com',
+      })
+    ).toBe('0xabc123');
+  });
+
+  it('does not enforce a fixed 16-byte suffix length', () => {
+    expect(
+      makeDataSuffix({
+        attribution: { dataSuffix: '0x1234567890abcdef1234567890abcdef1234567890abcdef' },
+        dappOrigin: 'https://example.com',
+      })
+    ).toBe('0x1234567890abcdef1234567890abcdef1234567890abcdef');
   });
 });
 

@@ -26,7 +26,6 @@ export async function handleAddSubAccountOwner({
   );
 
   assertPresence(globalAccount, standardErrors.provider.unauthorized('no global account'));
-  assertPresence(account.chain?.id, standardErrors.provider.unauthorized('no chain id'));
   assertPresence(subAccount?.address, standardErrors.provider.unauthorized('no sub account'));
 
   const calls = [];
@@ -77,11 +76,8 @@ export async function handleAddSubAccountOwner({
 
   const callsId = (await globalAccountRequest(request)) as string;
 
-  const client = getClient(account.chain.id);
-  assertPresence(
-    client,
-    standardErrors.rpc.internal(`client not found for chainId ${account.chain.id}`)
-  );
+  const client = getClient(chainId);
+  assertPresence(client, standardErrors.rpc.internal(`client not found for chainId ${chainId}`));
 
   const callsResult = await waitForCallsStatus(client, {
     id: callsId,

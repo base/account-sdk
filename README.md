@@ -37,6 +37,7 @@ import { pay } from '@base-org/account';
 const payment = await pay({
   amount: "10.50",                                    // Amount in USDC
   to: "0xYourWalletAddress",                         // Your wallet address
+  dataSuffix: "0xabc123",                             // Optional attribution data suffix
   testnet: true                                       // Use testnet for testing
 });
 

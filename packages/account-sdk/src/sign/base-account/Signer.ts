@@ -68,6 +68,9 @@ import { handleAddSubAccountOwner } from './utils/handleAddSubAccountOwner.js';
 import { handleInsufficientBalanceError } from './utils/handleInsufficientBalance.js';
 import { routeThroughGlobalAccount } from './utils/routeThroughGlobalAccount.js';
 
+/** ERC-5792 wildcard chain ID — capabilities under this key apply to all chains. */
+const ALL_CHAINS_KEY = '0x0';
+
 type ConstructorOptions = {
   metadata: AppMetadata;
   communicator: Communicator;
@@ -470,7 +473,7 @@ export class Signer {
     assertGetCapabilitiesParams(request.params);
 
     const requestedAccount = request.params[0];
-    const filterChainIds = request.params[1]; // Optional second parameter
+    const filterChainIds = request.params[1];
 
     if (!this.accounts.some((account) => isAddressEqual(account, requestedAccount))) {
       throw standardErrors.provider.unauthorized(
@@ -478,29 +481,37 @@ export class Signer {
       );
     }
 
-    const capabilities = store.getState().account.capabilities;
+    const storedCapabilities = store.getState().account.capabilities ?? {};
 
-    // Return empty object if capabilities is undefined
-    if (!capabilities) {
-      return {};
-    }
+    const sdkWildcardCapabilities = {
+      gasLimitOverride: { supported: true },
+    };
 
-    // If no filter is provided, return all capabilities
+    const mergedWildcard = {
+      ...(storedCapabilities[ALL_CHAINS_KEY] ?? {}),
+      ...sdkWildcardCapabilities,
+    };
+
+    const capabilities = {
+      ...storedCapabilities,
+      [ALL_CHAINS_KEY]: mergedWildcard,
+    };
+
     if (!filterChainIds || filterChainIds.length === 0) {
       return capabilities;
     }
 
-    // Convert filter chain IDs to numbers once for efficient lookup
     const filterChainNumbers = new Set(filterChainIds.map((chainId) => hexToNumber(chainId)));
 
-    // Filter capabilities
     const filteredCapabilities = Object.fromEntries(
       Object.entries(capabilities).filter(([capabilityKey]) => {
+        if (capabilityKey === ALL_CHAINS_KEY) {
+          return true;
+        }
         try {
           const capabilityChainNumber = hexToNumber(capabilityKey as `0x${string}`);
           return filterChainNumbers.has(capabilityChainNumber);
         } catch {
-          // If capabilityKey is not a valid hex string, exclude it
           return false;
         }
       })
