@@ -1,4 +1,4 @@
-import { KNOWN_CHAINS, type ChainAlias, type ChainId, type ParsedChainId } from '../types/caip.js';
+import { type ChainAlias, type ChainId, KNOWN_CHAINS, type ParsedChainId } from '../types/caip.js';
 
 const CAIP2_RE = /^[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,64}$/;
 

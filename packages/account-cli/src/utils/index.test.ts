@@ -1,6 +1,6 @@
-import { type MockInstance, describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CLIError } from '../types/errors.js';
-import { formatOutput, formatError } from './index.js';
+import { formatError, formatOutput } from './index.js';
 
 describe('formatOutput', () => {
   // biome-ignore lint/suspicious/noExplicitAny: test spy

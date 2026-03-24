@@ -2,7 +2,7 @@ import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { secureDelete } from './secure-delete.js';
 
 describe('secureDelete', () => {

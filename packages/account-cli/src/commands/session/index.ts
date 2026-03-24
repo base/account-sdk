@@ -1,4 +1,4 @@
-import { Option, type Command } from 'commander';
+import { type Command, Option } from 'commander';
 import {
   destroyAllSessions,
   destroySession,
@@ -93,7 +93,8 @@ export function registerSessionCommands(program: Command) {
           formatOutput({ status: 'destroyed', mode, identifier }, globalOpts.json);
         } else if (identifier) {
           const sessions = listSessions();
-          const match = sessions.find((s) => sessionKey(s) === identifier);
+          const target = identifier.toLowerCase();
+          const match = sessions.find((s) => sessionKey(s).toLowerCase() === target);
           if (!match) {
             throw new CLIError('INVALID_INPUT', `No session found for ${identifier}`);
           }

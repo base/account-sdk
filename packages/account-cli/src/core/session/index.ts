@@ -7,12 +7,12 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
-import type { ResolvedSession, Session, SessionMode } from '../../types/session.js';
 import { CLIError } from '../../types/errors.js';
-import { sessionFile, sessionsDir } from '../paths.js';
-import { appendAuditLog } from '../audit/index.js';
+import type { ResolvedSession, Session, SessionMode } from '../../types/session.js';
 import { verifyDirectoryPermissions, verifyFilePermissions } from '../../utils/permissions.js';
 import { secureDelete } from '../../utils/secure-delete.js';
+import { appendAuditLog } from '../audit/index.js';
+import { sessionFile, sessionsDir } from '../paths.js';
 
 const SESSION_FILE_RE = /^(operator|smart-wallet|external-eoa)-(.+)\.json$/;
 
@@ -53,7 +53,8 @@ export function resolveSession(): ResolvedSession {
 
   if (envValue) {
     const sessions = listSessions();
-    const match = sessions.find((s) => sessionKey(s) === envValue);
+    const target = envValue.toLowerCase();
+    const match = sessions.find((s) => sessionKey(s).toLowerCase() === target);
     if (!match) {
       throw new CLIError('NO_SESSION', `Session not found for ${envValue}. Run 'login' first.`);
     }
@@ -110,14 +111,17 @@ export function destroySession(mode: SessionMode, identifier: string): void {
 }
 
 export function destroyAllSessions(): string[] {
-  const sessions = listSessions();
+  const dir = sessionsDir();
+  if (!existsSync(dir)) return [];
+  verifyDirectoryPermissions(dir);
+
   const labels: string[] = [];
-  for (const session of sessions) {
-    const key = sessionKey(session);
-    const filePath = sessionFile(session.mode, key);
-    if (existsSync(filePath)) secureDelete(filePath);
-    appendAuditLog('session_destroy_all', session.mode, key);
-    labels.push(`${session.mode}:${key}`);
+  for (const f of readdirSync(dir)) {
+    const match = SESSION_FILE_RE.exec(f);
+    if (!match) continue;
+    secureDelete(join(dir, f));
+    appendAuditLog('session_destroy_all', match[1] as SessionMode, match[2]);
+    labels.push(`${match[1]}:${match[2]}`);
   }
   return labels;
 }

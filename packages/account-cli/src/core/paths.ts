@@ -1,10 +1,10 @@
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 
 let baseDir = process.env.BASE_ACCOUNT_DIR || join(homedir(), '.base-account');
 
 export function getBaseDir(): string {
-  return process.env.BASE_ACCOUNT_DIR || baseDir;
+  return baseDir;
 }
 
 /** Override base dir for testing. Returns a restore function. */
@@ -31,7 +31,7 @@ export function logsDir(): string {
 export function sessionFile(mode: string, identifier: string): string {
   const dir = sessionsDir();
   const filePath = resolve(dir, `${mode}-${identifier}.json`);
-  if (!filePath.startsWith(`${dir}/`) && filePath !== dir) {
+  if (!filePath.startsWith(`${dir}${sep}`) && filePath !== dir) {
     throw new Error(`Invalid session identifier: path traversal detected`);
   }
   return filePath;

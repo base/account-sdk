@@ -9,6 +9,7 @@ const REQUIRED_FILE_MODE = 0o600;
  * Throws if the directory is group- or world-readable.
  */
 export function verifyDirectoryPermissions(dir: string): void {
+  if (process.platform === 'win32') return;
   if (!existsSync(dir)) return;
   const stats = statSync(dir);
   const mode = stats.mode & 0o777;
@@ -26,6 +27,7 @@ export function verifyDirectoryPermissions(dir: string): void {
  * Throws if the file is group- or world-readable.
  */
 export function verifyFilePermissions(filePath: string): void {
+  if (process.platform === 'win32') return;
   if (!existsSync(filePath)) return;
   const stats = statSync(filePath);
   const mode = stats.mode & 0o777;
