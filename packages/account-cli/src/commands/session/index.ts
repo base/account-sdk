@@ -57,7 +57,7 @@ export function registerSessionCommands(program: Command) {
               ...(resolved.chainId ? { chain_id: resolved.chainId } : {}),
               signer: resolved.signer,
             },
-            globalOpts.json,
+            globalOpts.json
           );
         } else if (resolved.mode === 'external-eoa') {
           formatOutput(
@@ -65,7 +65,7 @@ export function registerSessionCommands(program: Command) {
               ...base,
               ...(resolved.chainId ? { chain_id: resolved.chainId } : {}),
             },
-            globalOpts.json,
+            globalOpts.json
           );
         } else {
           formatOutput(base, globalOpts.json);
@@ -80,9 +80,7 @@ export function registerSessionCommands(program: Command) {
     .description('Delete a session')
     .argument('[identifier]', 'Sub-account, EOA, or account address of session to destroy')
     .option('--all', 'Destroy all sessions')
-    .addOption(
-      new Option('--mode <mode>', 'Session mode').choices([...SESSION_MODES]),
-    )
+    .addOption(new Option('--mode <mode>', 'Session mode').choices([...SESSION_MODES]))
     .action((identifier, opts, cmd) => {
       const globalOpts = cmd.parent!.parent!.opts();
       try {

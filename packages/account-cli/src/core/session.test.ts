@@ -184,11 +184,9 @@ describe('session management', () => {
       const sessDir = join(tmpDir, 'sessions');
       mkdirSync(sessDir, { mode: 0o700 });
       const session = makeOperatorSession();
-      writeFileSync(
-        join(sessDir, `operator-${session.account}.json`),
-        JSON.stringify(session),
-        { mode: 0o600 },
-      );
+      writeFileSync(join(sessDir, `operator-${session.account}.json`), JSON.stringify(session), {
+        mode: 0o600,
+      });
       chmodSync(sessDir, 0o755);
 
       expect(() => listSessions()).toThrow(CLIError);
@@ -305,7 +303,9 @@ describe('session management', () => {
 
       const logPath = join(tmpDir, 'logs', 'audit.jsonl');
       const lines = readFileSync(logPath, 'utf-8').trim().split('\n');
-      const destroyEntries = lines.map((l) => JSON.parse(l)).filter((e) => e.operation === 'session_destroy_all');
+      const destroyEntries = lines
+        .map((l) => JSON.parse(l))
+        .filter((e) => e.operation === 'session_destroy_all');
       expect(destroyEntries).toHaveLength(2);
     });
   });

@@ -7,7 +7,10 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 const CLI_PATH = join(import.meta.dirname, '../../index.ts');
 
-function run(args: string[], env: Record<string, string> = {}): { stdout: string; exitCode: number } {
+function run(
+  args: string[],
+  env: Record<string, string> = {}
+): { stdout: string; exitCode: number } {
   try {
     const stdout = execFileSync('npx', ['tsx', CLI_PATH, ...args], {
       encoding: 'utf-8',
@@ -157,7 +160,10 @@ describe('session CLI integration', () => {
     });
 
     it('BASE_SESSION resolves operator', () => {
-      const result = runJson(['session', 'info'], { ...envOverride, BASE_SESSION: '0xOperator111' });
+      const result = runJson(['session', 'info'], {
+        ...envOverride,
+        BASE_SESSION: '0xOperator111',
+      });
       expect(result.mode).toBe('operator');
       expect(result.resolved_via).toBe('env_var');
     });

@@ -16,7 +16,7 @@ export function verifyDirectoryPermissions(dir: string): void {
     throw new CLIError(
       'INSECURE_PERMISSIONS',
       `Directory ${dir} has mode ${mode.toString(8).padStart(3, '0')}, expected 700. ` +
-        `Fix with: chmod 700 "${dir}"`,
+        `Fix with: chmod 700 "${dir}"`
     );
   }
 }
@@ -33,7 +33,7 @@ export function verifyFilePermissions(filePath: string): void {
     throw new CLIError(
       'INSECURE_PERMISSIONS',
       `File ${filePath} has mode ${mode.toString(8).padStart(3, '0')}, expected 600. ` +
-        `Fix with: chmod 600 "${filePath}"`,
+        `Fix with: chmod 600 "${filePath}"`
     );
   }
 }

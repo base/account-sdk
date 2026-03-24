@@ -3,7 +3,12 @@ import type { AuditEntry, AuditOperation } from '../../types/audit.js';
 import type { SessionMode } from '../../types/session.js';
 import { auditLogFile, logsDir } from '../paths.js';
 
-export function appendAuditLog(operation: AuditOperation, mode: SessionMode, identifier: string, details?: string): void {
+export function appendAuditLog(
+  operation: AuditOperation,
+  mode: SessionMode,
+  identifier: string,
+  details?: string
+): void {
   const dir = logsDir();
   mkdirSync(dir, { recursive: true, mode: 0o700 });
 

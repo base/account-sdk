@@ -1,4 +1,11 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import type { ResolvedSession, Session, SessionMode } from '../types/session.js';
 import { CLIError } from '../types/errors.js';
@@ -64,7 +71,10 @@ export function resolveSession(): ResolvedSession {
   }
 
   const labels = sessions.map((s) => `${s.mode}:${sessionKey(s)}`).join(', ');
-  throw new CLIError('MULTIPLE_SESSIONS', `Multiple sessions found. Set BASE_SESSION=<address>. Available: ${labels}`);
+  throw new CLIError(
+    'MULTIPLE_SESSIONS',
+    `Multiple sessions found. Set BASE_SESSION=<address>. Available: ${labels}`
+  );
 }
 
 export function loadSession(mode: SessionMode, identifier: string): Session | null {
