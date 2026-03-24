@@ -5,14 +5,14 @@ import {
   destroySession,
   listSessions,
   resolveSession,
-  resolveSessionInteractive,
   sessionKey,
 } from '../../core/session/index.js';
 import { CLIError } from '../../types/errors.js';
-import { SESSION_MODES, type SessionMode } from '../../types/session.js';
 import type { Session } from '../../types/session.js';
+import { SESSION_MODES, type SessionMode } from '../../types/session.js';
+import { chainDisplayName } from '../../utils/caip.js';
 import { formatError, formatKeyValue, formatOutput, formatTable } from '../../utils/index.js';
-import { promptSessionPicker } from '../../utils/prompt.js';
+import { promptSessionPicker, resolveSessionInteractive } from '../../utils/prompt.js';
 
 function sessionSummary(s: { mode: SessionMode } & Record<string, unknown>) {
   const base = { mode: s.mode, account: s.account };
@@ -41,7 +41,7 @@ export function registerSessionCommands(program: Command) {
       try {
         const sessions = listSessions();
         if (globalOpts.json) {
-          formatOutput({ sessions: sessions.map(sessionSummary) }, true);
+          formatOutput({ sessions: sessions.map(sessionSummary) });
         } else if (sessions.length === 0) {
           outro('No sessions found.');
         } else {
@@ -68,24 +68,18 @@ export function registerSessionCommands(program: Command) {
           };
 
           if (resolved.mode === 'smart-wallet') {
-            formatOutput(
-              {
-                ...base,
-                ...(resolved.chainId ? { chain_id: resolved.chainId } : {}),
-                signer: resolved.signer,
-              },
-              true
-            );
+            formatOutput({
+              ...base,
+              ...(resolved.chainId ? { chain: chainDisplayName(resolved.chainId) } : {}),
+              signer: resolved.signer,
+            });
           } else if (resolved.mode === 'external-eoa') {
-            formatOutput(
-              {
-                ...base,
-                ...(resolved.chainId ? { chain_id: resolved.chainId } : {}),
-              },
-              true
-            );
+            formatOutput({
+              ...base,
+              ...(resolved.chainId ? { chain: chainDisplayName(resolved.chainId) } : {}),
+            });
           } else {
-            formatOutput(base, true);
+            formatOutput(base);
           }
         } else {
           const entries: [string, string][] = [
@@ -98,7 +92,7 @@ export function registerSessionCommands(program: Command) {
             entries.push(['EOA', resolved.eoa]);
           }
           if ('chainId' in resolved && resolved.chainId) {
-            entries.push(['Chain', resolved.chainId]);
+            entries.push(['Chain', chainDisplayName(resolved.chainId)]);
           }
           if (resolved.mode === 'smart-wallet') {
             entries.push(['Signer', resolved.signer]);
@@ -124,7 +118,7 @@ export function registerSessionCommands(program: Command) {
         if (opts.all) {
           const destroyed = destroyAllSessions();
           if (globalOpts.json) {
-            formatOutput({ status: 'destroyed', sessions: destroyed }, true);
+            formatOutput({ status: 'destroyed', sessions: destroyed });
           } else {
             outro(`Destroyed ${destroyed.length} session${destroyed.length === 1 ? '' : 's'}.`);
           }
@@ -132,7 +126,7 @@ export function registerSessionCommands(program: Command) {
           const mode = opts.mode as SessionMode;
           destroySession(mode, identifier);
           if (globalOpts.json) {
-            formatOutput({ status: 'destroyed', mode, identifier }, true);
+            formatOutput({ status: 'destroyed', mode, identifier });
           } else {
             outro(`Destroyed ${mode} session: ${identifier}`);
           }
@@ -145,7 +139,7 @@ export function registerSessionCommands(program: Command) {
           }
           destroySession(match.mode, identifier);
           if (globalOpts.json) {
-            formatOutput({ status: 'destroyed', mode: match.mode, identifier }, true);
+            formatOutput({ status: 'destroyed', mode: match.mode, identifier });
           } else {
             outro(`Destroyed ${match.mode} session: ${identifier}`);
           }

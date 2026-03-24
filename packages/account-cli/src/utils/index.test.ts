@@ -14,13 +14,13 @@ describe('formatOutput', () => {
     stdoutSpy.mockRestore();
   });
 
-  it('writes JSON to stdout when json=true', () => {
-    formatOutput({ status: 'ok' }, true);
+  it('writes pretty-printed JSON to stdout', () => {
+    formatOutput({ status: 'ok' });
     expect(stdoutSpy).toHaveBeenCalledWith(`${JSON.stringify({ status: 'ok' }, null, 2)}\n`);
   });
 
-  it('writes output to stdout when json=false', () => {
-    formatOutput({ value: 42 }, false);
+  it('handles nested objects', () => {
+    formatOutput({ value: 42, nested: { a: 1 } });
     expect(stdoutSpy).toHaveBeenCalledOnce();
   });
 });

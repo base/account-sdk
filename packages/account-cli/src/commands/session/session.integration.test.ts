@@ -115,12 +115,12 @@ describe('session CLI integration', () => {
       seedSession(tmpDir, `smart-wallet-${SMART_WALLET.subAccount}.json`, SMART_WALLET);
     });
 
-    it('info shows sub_account, signer, and chain_id', () => {
+    it('info shows sub_account, signer, and chain', () => {
       const result = runJson(['session', 'info'], envOverride);
       expect(result.mode).toBe('smart-wallet');
       expect(result.sub_account).toBe('0xSubAcct222');
       expect(result.signer).toBe('0xSigner333');
-      expect(result.chain_id).toBe('eip155:84532');
+      expect(result.chain).toBe('base-sepolia');
       expect(result.resolved_via).toBe('auto_select');
     });
   });
@@ -130,11 +130,11 @@ describe('session CLI integration', () => {
       seedSession(tmpDir, `external-eoa-${EXTERNAL_EOA.eoa}.json`, EXTERNAL_EOA);
     });
 
-    it('info shows eoa and chain_id', () => {
+    it('info shows eoa and chain', () => {
       const result = runJson(['session', 'info'], envOverride);
       expect(result.mode).toBe('external-eoa');
       expect(result.eoa).toBe('0xEoa444');
-      expect(result.chain_id).toBe('eip155:8453');
+      expect(result.chain).toBe('base');
       expect(result.resolved_via).toBe('auto_select');
     });
   });

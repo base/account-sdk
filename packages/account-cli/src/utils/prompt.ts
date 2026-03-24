@@ -1,7 +1,7 @@
 import { isCancel, select } from '@clack/prompts';
-import { sessionKey } from '../core/session/index.js';
+import { listSessions, resolveSession, sessionKey } from '../core/session/index.js';
 import { CLIError } from '../types/errors.js';
-import type { Session } from '../types/session.js';
+import type { ResolvedSession, Session } from '../types/session.js';
 
 type SessionRef = { session: Session };
 
@@ -20,4 +20,17 @@ export async function promptSessionPicker(sessions: Session[]): Promise<Session>
   }
 
   return selected.session;
+}
+
+export async function resolveSessionInteractive(): Promise<ResolvedSession> {
+  try {
+    return resolveSession();
+  } catch (error) {
+    if (error instanceof CLIError && error.code === 'MULTIPLE_SESSIONS') {
+      const sessions = listSessions();
+      const selected = await promptSessionPicker(sessions);
+      return { ...selected, resolvedVia: 'interactive' };
+    }
+    throw error;
+  }
 }

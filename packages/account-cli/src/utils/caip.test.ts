@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValidChainId, parseChainId, resolveChainId } from './caip.js';
+import { chainDisplayName, isValidChainId, parseChainId, resolveChainId } from './caip.js';
 
 describe('CAIP helpers', () => {
   describe('parseChainId', () => {
@@ -55,6 +55,17 @@ describe('CAIP helpers', () => {
 
     it('returns null for invalid format', () => {
       expect(resolveChainId('')).toBeNull();
+    });
+  });
+
+  describe('chainDisplayName', () => {
+    it('returns alias for known CAIP-2 identifiers', () => {
+      expect(chainDisplayName('eip155:8453')).toBe('base');
+      expect(chainDisplayName('eip155:84532')).toBe('base-sepolia');
+    });
+
+    it('falls back to raw CAIP-2 string for unknown chains', () => {
+      expect(chainDisplayName('eip155:1')).toBe('eip155:1');
     });
   });
 });

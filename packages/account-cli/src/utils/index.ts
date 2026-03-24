@@ -1,11 +1,7 @@
 import { CLIError } from '../types/errors.js';
 
-export function formatOutput(data: unknown, json: boolean): void {
-  if (json) {
-    process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
-  } else {
-    process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
-  }
+export function formatOutput(data: unknown): void {
+  process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
 }
 
 export function formatError(error: unknown, json: boolean): never {
