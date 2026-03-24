@@ -78,7 +78,7 @@ export function registerSessionCommands(program: Command) {
   session
     .command('destroy')
     .description('Delete a session')
-    .argument('[identifier]', 'Sub-account, EOA, or account address of session to destroy')
+    .argument('[identifier]', "The session's wallet address to destroy")
     .option('--all', 'Destroy all sessions')
     .addOption(new Option('--mode <mode>', 'Session mode').choices([...SESSION_MODES]))
     .action((identifier, opts, cmd) => {

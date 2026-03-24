@@ -14,7 +14,7 @@ export type SessionMode = (typeof SESSION_MODES)[number];
 export type OperatorSession = {
   version: typeof SESSION_VERSION;
   mode: 'operator';
-  account: `0x${string}`;
+  account: string;
   createdAt: string;
 };
 
@@ -26,7 +26,7 @@ export type OperatorSession = {
 export type SmartWalletSession = {
   version: typeof SESSION_VERSION;
   mode: 'smart-wallet';
-  account: `0x${string}`;
+  account: string;
   subAccount: `0x${string}`;
   chainId?: ChainId;
   signer: `0x${string}`;
@@ -41,7 +41,7 @@ export type SmartWalletSession = {
 export type ExternalEoaSession = {
   version: typeof SESSION_VERSION;
   mode: 'external-eoa';
-  account: `0x${string}`;
+  account: string;
   eoa: `0x${string}`;
   chainId?: ChainId;
   createdAt: string;
