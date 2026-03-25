@@ -480,33 +480,18 @@ describe('session management', () => {
     it('returns single session without prompting', async () => {
       writeSession(makeSmartWalletSession());
 
-      const resolved = await resolveSessionInteractive(false);
+      const resolved = await resolveSessionInteractive();
       expect(resolved.mode).toBe('smart-wallet');
       expect(resolved.resolvedVia).toBe('auto_select');
     });
 
-    it('throws MULTIPLE_SESSIONS when json=true', async () => {
-      writeSession(makeSmartWalletSession());
-      writeSession(makeOperatorSession());
-
-      await expect(resolveSessionInteractive(true)).rejects.toThrow(CLIError);
-      try {
-        await resolveSessionInteractive(true);
-      } catch (e) {
-        expect((e as CLIError).code).toBe('MULTIPLE_SESSIONS');
-      }
+    it('throws NO_SESSION when no sessions exist', async () => {
+      await expect(resolveSessionInteractive()).rejects.toThrow(
+        expect.objectContaining({ code: 'NO_SESSION' })
+      );
     });
 
-    it('throws NO_SESSION when no sessions exist regardless of json flag', async () => {
-      await expect(resolveSessionInteractive(false)).rejects.toThrow(CLIError);
-      try {
-        await resolveSessionInteractive(false);
-      } catch (e) {
-        expect((e as CLIError).code).toBe('NO_SESSION');
-      }
-    });
-
-    it('prompts and returns interactive selection when json=false and multiple sessions', async () => {
+    it('prompts and returns interactive selection when multiple sessions exist', async () => {
       const { select } = await import('@clack/prompts');
       const operator = makeOperatorSession();
       writeSession(makeSmartWalletSession());
@@ -514,7 +499,7 @@ describe('session management', () => {
 
       vi.mocked(select).mockResolvedValueOnce({ session: operator });
 
-      const resolved = await resolveSessionInteractive(false);
+      const resolved = await resolveSessionInteractive();
       expect(resolved.resolvedVia).toBe('interactive');
       expect(resolved.mode).toBe('operator');
       expect(resolved.account).toBe(operator.account);

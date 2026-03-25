@@ -4,6 +4,7 @@ import {
   destroyAllSessions,
   destroySession,
   listSessions,
+  resolveSession,
   resolveSessionInteractive,
   sessionKey,
 } from '../../core/session/index.js';
@@ -58,7 +59,9 @@ export function registerSessionCommands(program: Command) {
     .action(async (_opts, cmd) => {
       const globalOpts = cmd.parent!.parent!.opts();
       try {
-        const resolved = await resolveSessionInteractive(globalOpts.json);
+        const resolved = globalOpts.json
+          ? resolveSession()
+          : await resolveSessionInteractive();
 
         if (globalOpts.json) {
           const base = {

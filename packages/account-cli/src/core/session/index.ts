@@ -79,11 +79,11 @@ export function resolveSession(): ResolvedSession {
   );
 }
 
-export async function resolveSessionInteractive(json: boolean): Promise<ResolvedSession> {
+export async function resolveSessionInteractive(): Promise<ResolvedSession> {
   try {
     return resolveSession();
   } catch (error) {
-    if (error instanceof CLIError && error.code === 'MULTIPLE_SESSIONS' && !json) {
+    if (error instanceof CLIError && error.code === 'MULTIPLE_SESSIONS') {
       const sessions = listSessions();
       const selected = await promptSessionPicker(sessions);
       return { ...selected, resolvedVia: 'interactive' };
