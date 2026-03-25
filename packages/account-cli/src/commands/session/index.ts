@@ -59,9 +59,7 @@ export function registerSessionCommands(program: Command) {
     .action(async (_opts, cmd) => {
       const globalOpts = cmd.parent!.parent!.opts();
       try {
-        const resolved = globalOpts.json
-          ? resolveSession()
-          : await resolveSessionInteractive();
+        const resolved = globalOpts.json ? resolveSession() : await resolveSessionInteractive();
 
         if (globalOpts.json) {
           const base = {
