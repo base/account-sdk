@@ -15,13 +15,13 @@ import { verifyDirectoryPermissions, verifyFilePermissions } from '../../utils/p
 import { secureDelete } from '../../utils/secure-delete.js';
 import { appendAuditLog } from '../audit/index.js';
 import { setBaseDir } from '../paths.js';
+import { resolveSessionInteractive } from '../../utils/prompt.js';
 import {
   destroyAllSessions,
   destroySession,
   listSessions,
   loadSession,
   resolveSession,
-  resolveSessionInteractive,
   sessionKey,
   writeSession,
 } from './index.js';

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { registerSessionCommands } from './commands/session/index.js';
+import { registerBalanceCommands } from './commands/balance/index.js';
 
 const program = new Command()
   .name('base-account')
@@ -9,5 +10,6 @@ const program = new Command()
   .option('--json', 'Output JSON (default: human-readable text)', false);
 
 registerSessionCommands(program);
+registerBalanceCommands(program);
 
 program.parseAsync(process.argv);

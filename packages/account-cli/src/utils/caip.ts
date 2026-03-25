@@ -28,3 +28,12 @@ export function resolveChainId(input: string): ChainId | null {
   if (isValidChainId(input)) return input;
   return null;
 }
+
+const CHAIN_ALIASES: ReadonlyMap<string, ChainAlias> = new Map(
+  (Object.entries(KNOWN_CHAINS) as [ChainAlias, string][]).map(([alias, caip2]) => [caip2, alias])
+);
+
+/** Return the human-friendly chain alias (e.g. "base") for a CAIP-2 id, falling back to the raw id. */
+export function chainDisplayName(chainId: string): string {
+  return CHAIN_ALIASES.get(chainId) ?? chainId;
+}
