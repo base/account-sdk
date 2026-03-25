@@ -168,21 +168,10 @@ export default function E2ETestPage() {
     }
   };
 
-  // Initialize SDK on mount with local version
-  // biome-ignore lint/correctness/useExhaustiveDependencies: loadAndInitializeSDK should only run on mount
+  // Initialize/reload SDK when source or wallet URL changes.
   useEffect(() => {
     loadAndInitializeSDK({ walletUrl: scwUrl });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Reload SDK when scwUrl changes
-  // biome-ignore lint/correctness/useExhaustiveDependencies: loadAndInitializeSDK is stable, loadedSDK check is intentional
-  useEffect(() => {
-    if (loadedSDK) {
-      loadAndInitializeSDK({ walletUrl: scwUrl });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scwUrl]);
+  }, [loadAndInitializeSDK, scwUrl, sdkSource]);
 
   // Helper for source change
   const handleSourceChange = (source: SDKSource) => {
