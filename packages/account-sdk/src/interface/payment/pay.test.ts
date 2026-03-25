@@ -74,6 +74,7 @@ describe('pay', () => {
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       '10.50',
       false,
+      undefined,
       undefined
     );
 
@@ -134,6 +135,7 @@ describe('pay', () => {
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51', // checksummed address passed to translate
       '10.50',
       false,
+      undefined,
       undefined
     );
   });
@@ -377,6 +379,7 @@ describe('pay', () => {
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       '5.00',
       true,
+      undefined,
       undefined
     );
     expect(sdkManager.executePaymentWithSDK).toHaveBeenCalledWith(
@@ -460,7 +463,8 @@ describe('pay', () => {
       '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
       '10.50',
       false,
-      payerInfo
+      payerInfo,
+      undefined
     );
   });
 

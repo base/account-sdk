@@ -3,7 +3,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const npmAliasPackageJsonPath = path.join(__dirname, '../../node_modules/@base-org/account-npm/package.json');
+const npmAliasPackageJsonPath = path.join(
+  __dirname,
+  '../../node_modules/@base-org/account-npm/package.json'
+);
 const hasPublishedSdkAlias = existsSync(npmAliasPackageJsonPath);
 
 export default {
