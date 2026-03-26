@@ -6,6 +6,9 @@ import { SmartAccount, createBundlerClient, createPaymasterClient } from 'viem/a
 import { baseSepolia } from 'viem/chains';
 import { abi } from '../../../constants';
 
+// Demo placeholder. Replace with your own paymaster/bundler endpoint in real usage.
+const PAYMASTER_URL = 'https://example.paymaster.com';
+
 export function AddGlobalOwner({
   sdk,
   subAccount,
@@ -39,16 +42,12 @@ export function AddGlobalOwner({
         transport: http(),
       });
       const paymasterClient = createPaymasterClient({
-        transport: http(
-          'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
-        ),
+        transport: http(PAYMASTER_URL),
       });
       const bundlerClient = createBundlerClient({
         account: subAccount,
         client: client as Client,
-        transport: http(
-          'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
-        ),
+        transport: http(PAYMASTER_URL),
         paymaster: paymasterClient,
       });
       // @ts-ignore

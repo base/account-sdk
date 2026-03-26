@@ -4,6 +4,9 @@ import { useCallback, useState } from 'react';
 import { SmartAccount } from 'viem/account-abstraction';
 import { baseSepolia } from 'viem/chains';
 
+// Demo placeholder. Replace with your own paymaster service endpoint in real usage.
+const PAYMASTER_URL = 'https://example.paymaster.com';
+
 export function SendCalls({
   sdk,
   subAccount,
@@ -29,7 +32,7 @@ export function SendCalls({
             version: '1',
             capabilities: {
               paymasterService: {
-                url: 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+                url: PAYMASTER_URL,
               },
             },
           },
