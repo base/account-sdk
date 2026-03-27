@@ -63,10 +63,9 @@ export interface PaymentOptions {
   to: string;
   /**
    * Optional hex data to append to the inner ERC-20 transfer calldata.
-   * This is useful for embedding on-chain commitments (e.g. a Merkle root)
+   * This is useful for embedding on-chain commitments
    * alongside the payment. The suffix is appended after the standard
-   * transfer(address,uint256) calldata and is also forwarded to the
-   * wallet as an attribution preference.
+   * transfer(address,uint256) calldata
    * Must be a 0x-prefixed hex string (e.g., "0xdeadbeef...").
    */
   dataSuffix?: Hex;
