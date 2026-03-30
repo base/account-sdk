@@ -37,6 +37,17 @@ export interface PaymentExecutionResult {
 }
 
 /**
+ * Queue payment operations by network + walletUrl to avoid overlapping flows
+ * sharing the same popup/provider state.
+ */
+const paymentQueue = new Map<string, Promise<PaymentExecutionResult>>();
+
+function getQueueKey(testnet: boolean, walletUrl?: string): string {
+  const networkKey = testnet ? 'baseSepolia' : 'base';
+  return `${networkKey}:${walletUrl ?? 'default'}`;
+}
+
+/**
  * Creates an ephemeral SDK instance configured for payments
  * @param chainId - The chain ID to use
  * @param walletUrl - Optional wallet URL to use
@@ -135,17 +146,37 @@ export async function executePaymentWithSDK(
   telemetry: boolean = true,
   dataSuffix?: Hex
 ): Promise<PaymentExecutionResult> {
-  const network = testnet ? 'baseSepolia' : 'base';
-  const chainId = CHAIN_IDS[network];
+  const queueKey = getQueueKey(testnet, walletUrl);
+  const previousTask = paymentQueue.get(queueKey);
 
-  const sdk = createEphemeralSDK(chainId, walletUrl, telemetry, dataSuffix);
-  const provider = sdk.getProvider();
+  const execution = (async (): Promise<PaymentExecutionResult> => {
+    // Wait for the previous task in this queue (continue even if it failed).
+    if (previousTask) {
+      await previousTask.catch(() => undefined);
+    }
+
+    const network = testnet ? 'baseSepolia' : 'base';
+    const chainId = CHAIN_IDS[network];
+    const sdk = createEphemeralSDK(chainId, walletUrl, telemetry, dataSuffix);
+    const provider = sdk.getProvider();
+
+    try {
+      return await executePayment(sdk, requestParams);
+    } finally {
+      // Clean up provider state for subsequent payments.
+      await provider.disconnect();
+    }
+  })();
+
+  // Set synchronously to avoid an async gap where concurrent calls bypass the queue.
+  paymentQueue.set(queueKey, execution);
 
   try {
-    const result = await executePayment(sdk, requestParams);
-    return result;
+    return await execution;
   } finally {
-    // Clean up provider state for subsequent payments
-    await provider.disconnect();
+    // Only delete if this task is still the newest queue entry.
+    if (paymentQueue.get(queueKey) === execution) {
+      paymentQueue.delete(queueKey);
+    }
   }
 }
