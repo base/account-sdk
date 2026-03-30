@@ -62,11 +62,11 @@ describe('EphemeralBaseAccountProvider', () => {
   it('disconnects when an unsupported method is requested', async () => {
     const disconnectSpy = vi.spyOn(provider, 'disconnect');
 
-    await expect(provider.request({ method: 'eth_requestAccounts' } as RequestArguments)).rejects.toMatchObject(
-      {
-        code: standardErrorCodes.provider.unauthorized,
-      }
-    );
+    await expect(
+      provider.request({ method: 'eth_requestAccounts' } as RequestArguments)
+    ).rejects.toMatchObject({
+      code: standardErrorCodes.provider.unauthorized,
+    });
 
     expect(disconnectSpy).toHaveBeenCalledTimes(1);
   });
