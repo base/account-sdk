@@ -16,6 +16,7 @@ import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider
 import { unsafe_generateOrLoadPrivateKey } from '../../utils/unsafe_generateOrLoadPrivateKey';
 import { AddOwner } from './components/AddOwner';
 import { AddSubAccount } from './components/AddSubAccount';
+import { AddSubAccountUndeployed } from './components/AddSubAccountUndeployed';
 import { AddSubAccountWithoutKeys } from './components/AddSubAccountWithoutKeys';
 import { Connect } from './components/Connect';
 import { GenerateNewSigner } from './components/GenerateNewSigner';
@@ -109,6 +110,7 @@ export default function SubAccounts() {
           onAddSubAccount={setSubAccountAddress}
           signerFn={getSubAccountSigner}
         />
+        <AddSubAccountUndeployed sdk={sdk} onAddSubAccount={setSubAccountAddress} />
         <PersonalSign sdk={sdk} subAccountAddress={subAccountAddress} />
         <SendCalls sdk={sdk} subAccountAddress={subAccountAddress} />
         <GrantSpendPermission sdk={sdk} subAccountAddress={subAccountAddress} />
