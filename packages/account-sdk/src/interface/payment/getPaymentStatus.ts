@@ -80,7 +80,6 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
     // Handle RPC errors
     if (receipt.error) {
-      console.error('[getPaymentStatus] RPC error:', receipt.error);
       const errorMessage = receipt.error.message || 'Network error';
       if (telemetry) {
         logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
@@ -264,8 +263,6 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
     };
     return result;
   } catch (error) {
-    console.error('[getPaymentStatus] Error checking status:', error);
-
     const errorMessage = error instanceof Error ? error.message : 'Connection error';
     if (telemetry) {
       logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
