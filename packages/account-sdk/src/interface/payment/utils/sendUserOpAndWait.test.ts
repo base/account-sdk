@@ -1,5 +1,7 @@
 import type { EvmSmartAccount } from '@coinbase/cdp-sdk';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { PaymentError } from ':core/error/sdkErrors.js';
 import type { PrepareChargeCall } from '../types.js';
 import { sendUserOpAndWait } from './sendUserOpAndWait.js';
 
@@ -135,9 +137,11 @@ describe('sendUserOpAndWait', () => {
 
     await expect(
       sendUserOpAndWait(mockNetworkSmartWallet, mockCalls, undefined, 60, 'charge')
-    ).rejects.toThrow(
-      'Failed to execute charge transaction with smart wallet: User operation failed: 0xUserOpHash123'
-    );
+    ).rejects.toThrow(PaymentError);
+
+    await expect(
+      sendUserOpAndWait(mockNetworkSmartWallet, mockCalls, undefined, 60, 'charge')
+    ).rejects.toThrow('charge user operation was rejected on-chain');
   });
 
   it('should throw error when transaction hash is missing', async () => {
@@ -157,9 +161,7 @@ describe('sendUserOpAndWait', () => {
 
     await expect(
       sendUserOpAndWait(mockNetworkSmartWallet, mockCalls, undefined, 60, 'revoke')
-    ).rejects.toThrow(
-      'Failed to execute revoke transaction with smart wallet: No transaction hash received from operation'
-    );
+    ).rejects.toThrow('no transaction hash was returned');
   });
 
   it('should throw error when transaction hash is null', async () => {
@@ -179,9 +181,7 @@ describe('sendUserOpAndWait', () => {
 
     await expect(
       sendUserOpAndWait(mockNetworkSmartWallet, mockCalls, undefined, 60, 'charge')
-    ).rejects.toThrow(
-      'Failed to execute charge transaction with smart wallet: No transaction hash received from operation'
-    );
+    ).rejects.toThrow('no transaction hash was returned');
   });
 
   it('should wrap errors from sendUserOperation', async () => {
@@ -191,7 +191,7 @@ describe('sendUserOpAndWait', () => {
 
     await expect(
       sendUserOpAndWait(mockNetworkSmartWallet, mockCalls, undefined, 60, 'charge')
-    ).rejects.toThrow('Failed to execute charge transaction with smart wallet: Network error');
+    ).rejects.toThrow('Failed to execute charge transaction: Network error');
   });
 
   it('should wrap errors from waitForUserOperation', async () => {
@@ -209,9 +209,7 @@ describe('sendUserOpAndWait', () => {
 
     await expect(
       sendUserOpAndWait(mockNetworkSmartWallet, mockCalls, undefined, 60, 'revoke')
-    ).rejects.toThrow(
-      'Failed to execute revoke transaction with smart wallet: Timeout waiting for operation'
-    );
+    ).rejects.toThrow('Failed to execute revoke transaction: Timeout waiting for operation');
   });
 
   it('should wrap non-Error exceptions', async () => {
@@ -219,7 +217,7 @@ describe('sendUserOpAndWait', () => {
 
     await expect(
       sendUserOpAndWait(mockNetworkSmartWallet, mockCalls, undefined, 60, 'charge')
-    ).rejects.toThrow('Failed to execute charge transaction with smart wallet: String error');
+    ).rejects.toThrow('Failed to execute charge transaction: String error');
   });
 
   it('should handle multiple calls', async () => {
@@ -270,6 +268,6 @@ describe('sendUserOpAndWait', () => {
 
     await expect(
       sendUserOpAndWait(mockNetworkSmartWallet, mockCalls, undefined, 60, 'payment processing')
-    ).rejects.toThrow('Failed to execute payment processing transaction with smart wallet');
+    ).rejects.toThrow('Failed to execute payment processing transaction');
   });
 });

@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+
+import { ValidationError } from ':core/error/sdkErrors.js';
 import { normalizeAddress, validateStringAmount } from './validation.js';
 
 describe('validateStringAmount', () => {
@@ -12,16 +14,27 @@ describe('validateStringAmount', () => {
   });
 
   it('should reject invalid amounts', () => {
-    expect(() => validateStringAmount('0', 6)).toThrow('Invalid amount: must be greater than 0');
-    expect(() => validateStringAmount('-10', 6)).toThrow('Invalid amount: must be greater than 0');
-    expect(() => validateStringAmount('abc', 6)).toThrow('Invalid amount: must be a valid number');
-    expect(() => validateStringAmount('10.1234567', 6)).toThrow(
-      'Invalid amount: pay only supports up to 6 decimal places'
-    );
+    expect(() => validateStringAmount('0', 6)).toThrow('must be greater than 0');
+    expect(() => validateStringAmount('-10', 6)).toThrow('must be greater than 0');
+    expect(() => validateStringAmount('abc', 6)).toThrow('is not a valid number');
+    expect(() => validateStringAmount('10.1234567', 6)).toThrow('maximum is 6');
   });
 
   it('should reject non-string amounts', () => {
-    expect(() => validateStringAmount(10 as any, 6)).toThrow('Invalid amount: must be a string');
+    expect(() => validateStringAmount(10 as any, 6)).toThrow('must be a string');
+  });
+
+  it('should throw ValidationError with field metadata', () => {
+    try {
+      validateStringAmount('abc', 6);
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError);
+      expect((error as ValidationError).field).toBe('amount');
+      expect((error as ValidationError).providedValue).toBe('abc');
+      expect((error as ValidationError).expectedFormat).toBe(
+        'a positive decimal number (e.g. "10.50")',
+      );
+    }
   });
 
   it('should validate amounts with exactly 6 decimal places', () => {
@@ -41,16 +54,22 @@ describe('validateStringAmount', () => {
 
 describe('normalizeAddress', () => {
   it('should throw error for empty address', () => {
-    expect(() => normalizeAddress('')).toThrow('Invalid address: address is required');
+    expect(() => normalizeAddress('')).toThrow('address is required');
   });
 
   it('should throw error for invalid address', () => {
-    expect(() => normalizeAddress('not-an-address')).toThrow(
-      'Invalid address: must be a valid Ethereum address'
-    );
-    expect(() => normalizeAddress('0x123')).toThrow(
-      'Invalid address: must be a valid Ethereum address'
-    );
+    expect(() => normalizeAddress('not-an-address')).toThrow('is not a valid Ethereum address');
+    expect(() => normalizeAddress('0x123')).toThrow('is not a valid Ethereum address');
+  });
+
+  it('should throw ValidationError with field metadata for invalid address', () => {
+    try {
+      normalizeAddress('0xBAD');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError);
+      expect((error as ValidationError).field).toBe('address');
+      expect((error as ValidationError).providedValue).toBe('0xBAD');
+    }
   });
 
   it('should accept and return checksummed address for valid checksummed address', () => {

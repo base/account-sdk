@@ -495,7 +495,7 @@ describe('charge', () => {
       };
 
       await expect(charge(options)).rejects.toThrow(
-        'Failed to execute charge transaction with smart wallet: Insufficient funds'
+        'Failed to execute charge transaction: Insufficient funds'
       );
     });
 
@@ -516,7 +516,7 @@ describe('charge', () => {
       };
 
       await expect(charge(options)).rejects.toThrow(
-        'User operation failed: 0x9876543210987654321098765432109876543210987654321098765432109876'
+        'charge user operation was rejected on-chain'
       );
     });
   });
