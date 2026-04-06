@@ -289,8 +289,13 @@ export const chains = globalStoreHelpers.chains;
 export const keys = globalStoreHelpers.keys;
 export const config = globalStoreHelpers.config;
 
+/** Persist middleware API — only exists on `sdkstore` because it is always created with `persist: true`. */
+type GlobalSdkPersistApi = {
+  rehydrate: () => Promise<void> | void;
+};
+
 export const store = {
   ...sdkstore,
   ...globalStoreHelpers,
-  persist: (sdkstore as any).persist,
+  persist: (sdkstore as StoreInstance & { persist: GlobalSdkPersistApi }).persist,
 };

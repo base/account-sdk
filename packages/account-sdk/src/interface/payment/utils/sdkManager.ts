@@ -99,19 +99,6 @@ function getQueueKey({ testnet, walletUrl }: QueueKeyParams): string {
   return `payment:${network}:${walletUrl ?? 'default'}`;
 }
 
-/**
- * Waits for any pending operation with the same queue key to complete.
- * This prevents race conditions from concurrent payment calls.
- */
-async function waitForPendingOperation(queueKey: string): Promise<void> {
-  const pending = paymentQueue.get(queueKey);
-  if (pending) {
-    // Wait for the pending operation to complete, ignoring any errors
-    // (we still want to proceed even if the previous one failed)
-    await pending.catch(() => {});
-  }
-}
-
 //  ====================================================================
 //  Ephemeral SDK creation
 //  ====================================================================
@@ -260,38 +247,39 @@ export async function executePaymentWithSDK(
 ): Promise<PaymentExecutionResult> {
   const queueKey = getQueueKey({ testnet, walletUrl });
 
-  // Wait for any pending operation to the same destination
-  await waitForPendingOperation(queueKey);
+  // Chain synchronously before any await so concurrent callers cannot all observe an empty queue,
+  // yield, and then run in parallel. Each task waits on the previous promise for this key.
+  const previousTask = paymentQueue.get(queueKey) ?? Promise.resolve();
 
-  const network = testnet ? 'baseSepolia' : 'base';
-  const chainId = CHAIN_IDS[network];
-
-  const sdk = createEphemeralSDK({
-    chainId,
-    walletUrl,
-    telemetry,
-    dataSuffix,
-  });
-  const provider = sdk.getProvider();
-
-  // Create the execution promise and add it to the queue
   const execution = (async (): Promise<PaymentExecutionResult> => {
+    await previousTask.catch(() => {});
+
+    const network = testnet ? 'baseSepolia' : 'base';
+    const chainId = CHAIN_IDS[network];
+
+    const sdk = createEphemeralSDK({
+      chainId,
+      walletUrl,
+      telemetry,
+      dataSuffix,
+    });
+    const provider = sdk.getProvider();
+
     try {
-      const result = await executePaymentWithProvider(provider, requestParams);
-      return result;
+      return await executePaymentWithProvider(provider, requestParams);
     } finally {
-      // Clean up provider state for subsequent payments
       await provider.disconnect();
     }
   })();
 
-  // Track this operation in the queue
   paymentQueue.set(queueKey, execution);
 
   try {
     return await execution;
   } finally {
-    // Remove from queue when complete
-    paymentQueue.delete(queueKey);
+    // Only clear if we are still the tail of the queue — a newer call may have replaced the entry.
+    if (paymentQueue.get(queueKey) === execution) {
+      paymentQueue.delete(queueKey);
+    }
   }
 }

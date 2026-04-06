@@ -88,8 +88,8 @@ export class Signer {
     this.storeInstance = params.storeInstance ?? store;
     // Reuse global store helpers if using global store (important for testing/mocking)
     // Otherwise create new helpers for the custom store instance
-    const isGloabalStore = this.storeInstance === store;
-    this.storeHelpers = isGloabalStore ? store : createStoreHelpers(this.storeInstance);
+    const isGlobalStore = this.storeInstance === store;
+    this.storeHelpers = isGlobalStore ? store : createStoreHelpers(this.storeInstance);
     this.keyManager = new SCWKeyManager(this.storeInstance);
 
     const { account, chains } = this.storeInstance.getState();
