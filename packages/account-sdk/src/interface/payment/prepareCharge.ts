@@ -3,6 +3,7 @@ import {
   fetchPermission,
   prepareSpendCallData,
 } from '../public-utilities/spend-permission/index.js';
+import { PaymentError } from ':core/error/sdkErrors.js';
 import { TOKENS } from './constants.js';
 import type { PrepareChargeOptions, PrepareChargeResult } from './types.js';
 import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.js';
@@ -82,7 +83,7 @@ export async function prepareCharge(options: PrepareChargeOptions): Promise<Prep
 
   // If no permission found, throw an error
   if (!permission) {
-    throw new Error(`Subscription with ID ${id} not found`);
+    throw new PaymentError(`Subscription with ID ${id} not found`, 'SUBSCRIPTION_NOT_FOUND', false);
   }
 
   // Validate this is a USDC permission on the correct network

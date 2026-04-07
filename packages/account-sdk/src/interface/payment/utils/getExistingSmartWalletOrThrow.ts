@@ -1,6 +1,8 @@
 import type { EvmSmartAccount } from '@coinbase/cdp-sdk';
 import { CdpClient } from '@coinbase/cdp-sdk';
 
+import { PaymentError } from ':core/error/sdkErrors.js';
+
 /**
  * Retrieves an existing smart wallet from CDP by name.
  * Throws detailed errors if the EOA or smart wallet doesn't exist.
@@ -9,7 +11,7 @@ import { CdpClient } from '@coinbase/cdp-sdk';
  * @param walletName - Name of the wallet to retrieve
  * @param context - Context string for error messages (e.g., "charge", "revoke")
  * @returns The smart wallet instance
- * @throws Error if EOA or smart wallet not found
+ * @throws PaymentError if EOA or smart wallet not found
  */
 export async function getExistingSmartWalletOrThrow(
   cdpClient: CdpClient,
@@ -21,8 +23,10 @@ export async function getExistingSmartWalletOrThrow(
     const eoaAccount = await cdpClient.evm.getAccount({ name: walletName });
 
     if (!eoaAccount) {
-      throw new Error(
-        `EOA wallet "${walletName}" not found. The wallet must be created before executing a ${context}. Use getOrCreateSubscriptionOwnerWallet() to create the wallet first.`
+      throw new PaymentError(
+        `EOA wallet "${walletName}" not found. The wallet must be created before executing a ${context}. Use getOrCreateSubscriptionOwnerWallet() to create the wallet first.`,
+        'WALLET_NOT_FOUND',
+        false
       );
     }
 
@@ -35,18 +39,24 @@ export async function getExistingSmartWalletOrThrow(
     });
 
     if (!smartWallet) {
-      throw new Error(
-        `Smart wallet "${walletName}" not found. The wallet must be created before executing a ${context}. Use getOrCreateSubscriptionOwnerWallet() to create the wallet first.`
+      throw new PaymentError(
+        `Smart wallet "${walletName}" not found. The wallet must be created before executing a ${context}. Use getOrCreateSubscriptionOwnerWallet() to create the wallet first.`,
+        'WALLET_NOT_FOUND',
+        false
       );
     }
 
     return smartWallet;
   } catch (error) {
     // If the error is already our custom error, re-throw it
-    if (error instanceof Error && error.message.includes('not found')) {
+    if (error instanceof PaymentError) {
       throw error;
     }
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get ${context} smart wallet "${walletName}": ${errorMessage}`);
+    throw new PaymentError(
+      `Failed to get ${context} smart wallet "${walletName}": ${errorMessage}`,
+      'WALLET_RETRIEVAL_FAILED',
+      true
+    );
   }
 }

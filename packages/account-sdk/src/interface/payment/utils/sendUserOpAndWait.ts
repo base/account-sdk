@@ -1,4 +1,6 @@
 import type { EvmSmartAccount } from '@coinbase/cdp-sdk';
+
+import { PaymentError } from ':core/error/sdkErrors.js';
 import type { PrepareChargeCall } from '../types.js';
 
 /**
@@ -11,7 +13,7 @@ import type { PrepareChargeCall } from '../types.js';
  * @param timeoutSeconds - Timeout in seconds (default: 60)
  * @param context - Context string for error messages (e.g., "charge", "revoke")
  * @returns Transaction hash of the completed operation
- * @throws Error if operation fails or times out
+ * @throws PaymentError if operation fails or times out
  */
 export async function sendUserOpAndWait(
   networkSmartWallet: Awaited<ReturnType<EvmSmartAccount['useNetwork']>>,
@@ -38,19 +40,35 @@ export async function sendUserOpAndWait(
 
     // Check if the operation was successful
     if (completedOp.status === 'failed') {
-      throw new Error(`User operation failed: ${userOpResult.userOpHash}`);
+      throw new PaymentError(
+        `${context} user operation was rejected on-chain (hash: ${userOpResult.userOpHash}). This may be due to insufficient gas, invalid calldata, or a contract revert.`,
+        'USER_OP_FAILED',
+        true
+      );
     }
 
     // For completed operations, we have the transaction hash
     const transactionHash = completedOp.transactionHash;
 
     if (!transactionHash) {
-      throw new Error('No transaction hash received from operation');
+      throw new PaymentError(
+        `${context} user operation completed with status "${completedOp.status}" but no transaction hash was returned (hash: ${userOpResult.userOpHash}). Please retry or contact support if this persists.`,
+        'NO_TX_HASH',
+        true
+      );
     }
 
     return transactionHash;
   } catch (error) {
+    if (error instanceof PaymentError) {
+      throw error;
+    }
+
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to execute ${context} transaction with smart wallet: ${errorMessage}`);
+    throw new PaymentError(
+      `Failed to execute ${context} transaction: ${errorMessage}`,
+      'EXECUTION_FAILED',
+      true
+    );
   }
 }
