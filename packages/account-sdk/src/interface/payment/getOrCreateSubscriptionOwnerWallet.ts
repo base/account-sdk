@@ -1,4 +1,6 @@
 import { CdpClient } from '@coinbase/cdp-sdk';
+
+import { PaymentError } from ':core/error/sdkErrors.js';
 import type {
   GetOrCreateSubscriptionOwnerWalletOptions,
   GetOrCreateSubscriptionOwnerWalletResult,
@@ -25,7 +27,7 @@ import type {
  * @param options.cdpWalletSecret - CDP wallet secret. Falls back to CDP_WALLET_SECRET env var
  * @param options.walletName - Custom wallet name. Defaults to "subscription owner"
  * @returns Promise<GetOrCreateSubscriptionOwnerWalletResult> - The smart wallet address and metadata
- * @throws Error if CDP credentials are missing or invalid
+ * @throws PaymentError if CDP credentials are missing or invalid
  *
  * @example
  * ```typescript
@@ -78,8 +80,10 @@ export async function getOrCreateSubscriptionOwnerWallet(
   } catch (error) {
     // Re-throw with more context about what credentials are missing
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Failed to initialize CDP client for subscription owner wallet. ${errorMessage}\n\nPlease ensure you have set the required CDP credentials either:\n1. As environment variables: CDP_API_KEY_ID, CDP_API_KEY_SECRET, CDP_WALLET_SECRET\n2. As function parameters: cdpApiKeyId, cdpApiKeySecret, cdpWalletSecret\n\nYou can get these credentials from https://portal.cdp.coinbase.com/projects/api-keys`
+    throw new PaymentError(
+      `Failed to initialize CDP client for subscription owner wallet. ${errorMessage}\n\nPlease ensure you have set the required CDP credentials either:\n1. As environment variables: CDP_API_KEY_ID, CDP_API_KEY_SECRET, CDP_WALLET_SECRET\n2. As function parameters: cdpApiKeyId, cdpApiKeySecret, cdpWalletSecret\n\nYou can get these credentials from https://portal.cdp.coinbase.com/projects/api-keys`,
+      'CDP_INIT_FAILED',
+      false
     );
   }
 
@@ -106,10 +110,16 @@ export async function getOrCreateSubscriptionOwnerWallet(
       eoaAddress: eoaAccount.address, // Include EOA address for reference
     };
   } catch (error) {
+    // If the error is already our custom error, re-throw it
+    if (error instanceof PaymentError) {
+      throw error;
+    }
     // Handle CDP API errors
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Failed to get or create subscription owner smart wallet "${walletName}": ${errorMessage}`
+    throw new PaymentError(
+      `Failed to get or create subscription owner smart wallet "${walletName}": ${errorMessage}`,
+      'WALLET_CREATION_FAILED',
+      true
     );
   }
 }
