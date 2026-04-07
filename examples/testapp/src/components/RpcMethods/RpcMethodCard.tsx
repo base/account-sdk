@@ -124,7 +124,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
         method,
         from: typeof data.address === 'string' ? data.address.toLowerCase() : undefined,
         sign: response,
-        message: typeof data.message === 'string' ? data.message : undefined,
+        message: data.message,
         chain: chain as Chain,
       });
 
