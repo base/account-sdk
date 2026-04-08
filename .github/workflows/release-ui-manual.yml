@@ -1,10 +1,13 @@
-name: Release Account UI
+# DEPRECATED: This workflow is superseded by the release-please automation (release-please.yml).
+# Use this only as a fallback if release-please fails.
+# To be removed after the first successful automated release.
+name: "[DEPRECATED] Release Account UI (Manual)"
 
 on:
   workflow_dispatch:
     inputs:
       packageVersion:
-        description: "The version to publish in MAJOR.MINOR.PATCH format"
+        description: "The version to publish in MAJOR.MINOR.PATCH format (e.g., 1.1.0)"
         required: true
         default: ""
 
