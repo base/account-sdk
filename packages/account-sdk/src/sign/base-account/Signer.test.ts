@@ -431,9 +431,14 @@ describe('Signer', () => {
         params: [],
       };
 
+      // eth_sendTransaction requires a valid 32-byte tx hash response
+      const mockValue = method === 'eth_sendTransaction'
+        ? '0x' + 'a'.repeat(64)  // valid 32-byte tx hash
+        : '0xSignature';
+
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
-          value: '0xSignature',
+          value: mockValue,
         },
       });
 
