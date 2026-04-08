@@ -23,12 +23,26 @@ export type CreateProviderOptions = Partial<AppMetadata> & {
   paymasterUrls?: Record<number, string>;
 };
 
+export type BaseAccountSDK = {
+  getProvider: () => ProviderInterface | null;
+  subAccount: {
+    create(accountParam: AddSubAccountAccount): Promise<SubAccount>;
+    get(): Promise<SubAccount | null>;
+    addOwner(params: {
+      address?: `0x${string}`;
+      publicKey?: `0x${string}`;
+      chainId: number;
+    }): Promise<string>;
+    setToOwnerAccount(toSubAccountOwner: ToOwnerAccountFn): void;
+  };
+};
+
 /**
  * Create Base AccountSDK instance with EIP-1193 compliant provider
  * @param params - Options to create a base account SDK instance.
- * @returns An SDK object with a getProvider method that returns an EIP-1193 compliant provider.
+ * @returns BaseAccountSDK - An SDK object with a getProvider method that returns an EIP-1193 compliant provider.
  */
-export function createBaseAccountSDK(params: CreateProviderOptions) {
+export function createBaseAccountSDK(params: CreateProviderOptions): BaseAccountSDK {
   const options: ConstructorOptions = {
     metadata: {
       appName: params.appName || 'App',
