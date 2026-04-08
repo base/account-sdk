@@ -48,6 +48,9 @@ jobs:
             echo "base=$VERSION" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Set version
         run: yarn workspace @base-org/account version ${{ steps.version.outputs.base }}-canary.$(date +'%Y%m%d%H%M%S')
 
@@ -57,12 +60,7 @@ jobs:
       - name: Build Packages
         run: yarn workspace @base-org/account build
 
-      - name: Set deployment token
-        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
-
       - name: Publish to npm
         run: |
           cd packages/account-sdk
           npm publish --tag canary --access public
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
