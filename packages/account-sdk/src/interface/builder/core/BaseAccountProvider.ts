@@ -140,11 +140,24 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
       }
       const result = await this.signer.request(args);
       return result as T;
-    } catch (error) {
+    } catch (error: any) {
       const { code } = error as { code?: number };
+      
+      // 1. Authorization check (Maintain existing logic)
       if (code === standardErrorCodes.provider.unauthorized) {
         await this.disconnect();
       }
+
+      // 2. User Rejection handling (Fix for the issue)
+      // According to EIP-1193, code 4001 represents a user rejection.
+      if (code === 4001 || error.message?.toLowerCase().includes('user rejected')) {
+        const enrichedError = error instanceof Error ? error : new Error(error.message || 'User rejected the request');
+        (enrichedError as any).code = 'user_rejected';
+        (enrichedError as any).rawError = error;
+        return Promise.reject(serializeError(enrichedError));
+      }
+
+      // 3. Fallback to standard error serialization
       return Promise.reject(serializeError(error));
     }
   }
