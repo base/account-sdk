@@ -1,10 +1,13 @@
-name: Release Account
+# DEPRECATED: This workflow is superseded by the release-please automation (release-please.yml).
+# Use this only as a fallback if release-please fails.
+# To be removed after the first successful automated release.
+name: "[DEPRECATED] Release Account UI (Manual)"
 
 on:
   workflow_dispatch:
     inputs:
       packageVersion:
-        description: "The version to publish in MAJOR.MINOR.PATCH format"
+        description: "The version to publish in MAJOR.MINOR.PATCH format (e.g., 1.1.0)"
         required: true
         default: ""
 
@@ -29,20 +32,15 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Update npm
-        run: |
-          npm install -g npm@latest
+        run: npm install -g npm@latest
 
       - name: Set version
-        run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}
-
-      # Build the package
-      - name: Prebuild Packages
-        run: yarn workspace @base-org/account prebuild
+        run: yarn workspace @base-org/account-ui version ${{ env.PACKAGE_VERSION }}
 
       - name: Build Packages
-        run: yarn workspace @base-org/account build
+        run: yarn build:packages
 
       - name: Publish to npm
         run: |
-          cd packages/account-sdk
+          cd packages/account-ui
           npm publish --tag latest --access public
