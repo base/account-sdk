@@ -1,5 +1,6 @@
 import type { Hex } from 'viem';
 import { createBaseAccountSDK } from '../../builder/core/createBaseAccountSDK.js';
+import { PaymentError } from ':core/error/sdkErrors.js';
 import { CHAIN_IDS } from '../constants.js';
 import type { PayerInfoResponses } from '../types.js';
 
@@ -74,6 +75,7 @@ export function createEphemeralSDK(
  * @param sdk - The SDK instance
  * @param requestParams - The wallet_sendCalls request parameters
  * @returns The payment execution result with transaction hash and optional info responses
+ * @throws PaymentError if the response format is unexpected
  */
 export async function executePayment(
   sdk: ReturnType<typeof createBaseAccountSDK>,
@@ -106,13 +108,17 @@ export async function executePayment(
         payerInfoResponses = resultObj.capabilities.dataCallback;
       }
     } else {
-      throw new Error(
-        `Could not extract transaction hash from object response. Available fields: ${Object.keys(resultObj).join(', ')}`
+      throw new PaymentError(
+        `Could not extract transaction hash from object response. Available fields: ${Object.keys(resultObj).join(', ')}`,
+        'INVALID_RESPONSE',
+        false
       );
     }
   } else {
-    throw new Error(
-      `Unexpected response format from wallet_sendCalls: expected string with length > 66 or object with id, got ${typeof result}`
+    throw new PaymentError(
+      `Unexpected response format from wallet_sendCalls: expected string with length > 66 or object with id, got ${typeof result}`,
+      'INVALID_RESPONSE',
+      false
     );
   }
 

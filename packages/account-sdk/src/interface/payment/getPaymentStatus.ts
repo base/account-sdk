@@ -1,6 +1,7 @@
 import type { Address, Hex } from 'viem';
 import { decodeEventLog, formatUnits, getAddress, isAddressEqual } from 'viem';
 
+import { PaymentError } from ':core/error/sdkErrors.js';
 import {
   logPaymentStatusCheckCompleted,
   logPaymentStatusCheckError,
@@ -86,7 +87,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
       }
       // Re-throw error for RPC failures
-      throw new Error(`RPC error: ${errorMessage}`);
+      throw new PaymentError(`RPC error: ${errorMessage}`, 'RPC_ERROR', true);
     }
 
     // If no result, payment is still pending or not found
@@ -208,9 +209,11 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
           if (senderTransfers.length === 0) {
             // No transfer from the sender wallet was found
-            throw new Error(
+            throw new PaymentError(
               `Unable to find USDC transfer from sender wallet ${receipt.result.sender}. ` +
-                `Found ${usdcTransfers.length} USDC transfer(s) but none originated from the sender wallet.`
+                `Found ${usdcTransfers.length} USDC transfer(s) but none originated from the sender wallet.`,
+              'NO_TRANSFER_FOUND',
+              false
             );
           }
           if (senderTransfers.length > 1) {
@@ -218,8 +221,10 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
             const transferDetails = senderTransfers
               .map((t) => `${t.formattedAmount} USDC to ${t.to}`)
               .join(', ');
-            throw new Error(
-              `Found multiple USDC transfers from sender wallet ${receipt.result.sender}: ${transferDetails}. Expected exactly one transfer.`
+            throw new PaymentError(
+              `Found multiple USDC transfers from sender wallet ${receipt.result.sender}: ${transferDetails}. Expected exactly one transfer.`,
+              'MULTIPLE_TRANSFERS',
+              false
             );
           }
           // Exactly one transfer from sender found
