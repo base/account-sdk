@@ -113,6 +113,9 @@
     "README.md",
     "LICENSE"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "sideEffects": false,
   "repository": "https://github.com/base/account-sdk.git",
   "author": "Base",

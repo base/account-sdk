@@ -35,6 +35,9 @@
       "default": "./dist/frameworks/svelte/index.js"
     }
   },
+  "engines": {
+    "node": ">=20"
+  },
   "sideEffects": false,
   "repository": "https://github.com/base/account-sdk.git",
   "author": "Base",
