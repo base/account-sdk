@@ -153,7 +153,7 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
           });
 
     // Create SDK instance
-    const sdk = createEphemeralSDK(chainId, walletUrl, telemetry);
+    const sdk = createEphemeralSDK({ chainId, walletUrl, telemetry });
     const provider = sdk.getProvider();
 
     try {
