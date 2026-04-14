@@ -29,7 +29,7 @@ import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
-import { type StoreInstance, createStoreHelpers, spendPermissions, store } from ':store/store.js';
+import { type StoreInstance, createStoreHelpers, store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import {
@@ -748,7 +748,7 @@ export class Signer {
       // Only perform this check if funding mode is 'spend-permissions'
       const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
       if (subAccountsConfig?.funding === 'spend-permissions') {
-        const storedSpendPermissions = spendPermissions.get();
+        const storedSpendPermissions = this.storeHelpers.spendPermissions.get();
         if (storedSpendPermissions.length === 0) {
           const result = await routeThroughGlobalAccount({
             request,
