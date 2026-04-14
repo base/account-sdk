@@ -5,7 +5,11 @@ import * as validatePreferencesModule from ':util/validatePreferences.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Hex } from 'viem';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
-import { CreateProviderOptions, createBaseAccountSDK } from './createBaseAccountSDK.js';
+import {
+  CreateProviderOptions,
+  createBaseAccountSDK,
+  _resetGlobalInitialization,
+} from './createBaseAccountSDK.js';
 import * as getInjectedProviderModule from './getInjectedProvider.js';
 
 // Mock all dependencies
@@ -55,6 +59,8 @@ const mockGetInjectedProvider = getInjectedProviderModule.getInjectedProvider as
 describe('createProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset the one-time initialization state so each test can verify initialization behavior
+    _resetGlobalInitialization();
     mockBaseAccountProvider.mockReturnValue({
       mockProvider: true,
     });

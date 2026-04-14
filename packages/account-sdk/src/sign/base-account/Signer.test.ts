@@ -176,7 +176,8 @@ describe('Signer', () => {
     mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
 
     mockCallback = vi.fn();
-    mockKeyManager = new SCWKeyManager() as Mocked<SCWKeyManager>;
+    // Mock SCWKeyManager - the actual store instance doesn't matter since it's mocked
+    mockKeyManager = new SCWKeyManager(store) as Mocked<SCWKeyManager>;
     (SCWKeyManager as Mock).mockImplementation(() => mockKeyManager);
 
     (importKeyFromHexString as Mock).mockResolvedValue(mockCryptoKey);
@@ -1296,7 +1297,7 @@ describe('Signer', () => {
       });
 
       // Request same address (isAddressEqual handles case-insensitive comparison)
-      const result = await signer.request({
+      const result = (await signer.request({
         method: 'wallet_addSubAccount',
         params: [
           {
@@ -1308,7 +1309,7 @@ describe('Signer', () => {
             },
           },
         ],
-      });
+      })) as { address: string };
 
       // Should return cached without calling backend
       expect(result.address).toBe(subAccountAddress);
@@ -1353,7 +1354,7 @@ describe('Signer', () => {
         },
       });
 
-      const result = await signer.request({
+      const result = (await signer.request({
         method: 'wallet_addSubAccount',
         params: [
           {
@@ -1365,7 +1366,7 @@ describe('Signer', () => {
             },
           },
         ],
-      });
+      })) as { address: string };
 
       // Should call backend and return new sub account
       expect(result.address).toBe(secondSubAccountAddress);
@@ -1398,7 +1399,7 @@ describe('Signer', () => {
       });
 
       // Request create type (no specific address)
-      const result = await signer.request({
+      const result = (await signer.request({
         method: 'wallet_addSubAccount',
         params: [
           {
@@ -1409,7 +1410,7 @@ describe('Signer', () => {
             },
           },
         ],
-      });
+      })) as { address: string };
 
       // Should return cached without calling backend
       expect(result.address).toBe(subAccountAddress);
@@ -1761,7 +1762,7 @@ describe('Signer', () => {
         params: [globalAccountAddress],
       };
 
-      const result = await signer.request(request);
+      const result = (await signer.request(request)) as Record<string, unknown>;
 
       expect(result).toEqual({
         '0x0': {
@@ -1786,7 +1787,7 @@ describe('Signer', () => {
         params: [globalAccountAddress, ['0x1', '0xa']],
       };
 
-      const result = await signer.request(request);
+      const result = (await signer.request(request)) as Record<string, unknown>;
 
       expect(result).toEqual({
         '0x0': {
@@ -1809,7 +1810,7 @@ describe('Signer', () => {
         params: [globalAccountAddress, ['0x01', '0x05']],
       };
 
-      const result = await signer.request(request);
+      const result = (await signer.request(request)) as Record<string, unknown>;
 
       expect(result).toEqual({
         '0x0': {
@@ -1831,7 +1832,7 @@ describe('Signer', () => {
         params: [globalAccountAddress, ['0x99', '0x100']],
       };
 
-      const result = await signer.request(request);
+      const result = (await signer.request(request)) as Record<string, unknown>;
 
       // 0x0 (all chains) is always included even when no chain-specific capabilities match
       expect(result).toEqual({
@@ -1847,7 +1848,7 @@ describe('Signer', () => {
         params: [globalAccountAddress, []],
       };
 
-      const result = await signer.request(request);
+      const result = (await signer.request(request)) as Record<string, unknown>;
 
       expect(result).toEqual({
         '0x0': {
@@ -1891,7 +1892,7 @@ describe('Signer', () => {
         params: [globalAccountAddress, ['0x1']],
       };
 
-      const result = await signer.request(request);
+      const result = (await signer.request(request)) as Record<string, unknown>;
 
       expect(result).toEqual({
         '0x0': { gasLimitOverride: { supported: true } },
@@ -1933,7 +1934,7 @@ describe('Signer', () => {
         params: [globalAccountAddress],
       };
 
-      const result = await signer.request(request);
+      const result = (await signer.request(request)) as Record<string, unknown>;
 
       expect(result).toHaveProperty('0x0');
       expect(result['0x0']).toEqual({
@@ -1947,7 +1948,7 @@ describe('Signer', () => {
         params: [globalAccountAddress, ['0x1']],
       };
 
-      const result = await signer.request(request);
+      const result = (await signer.request(request)) as Record<string, unknown>;
 
       // Should include both the filtered chain and 0x0
       expect(result).toHaveProperty('0x0');
@@ -2045,7 +2046,7 @@ describe('Signer', () => {
         params: [globalAccountAddress],
       };
 
-      const result = await signer.request(request);
+      const result = (await signer.request(request)) as Record<string, unknown>;
 
       expect(result['0x0']).toEqual({
         atomicBatch: { supported: true },
