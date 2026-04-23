@@ -411,6 +411,17 @@ export class Signer {
         this.callback?.('accountsChanged', this.accounts);
         break;
       }
+      case 'eth_sendTransaction': {
+        const txHash = result.value as string;
+        // Validate that the response is a 32-byte tx hash (64 hex chars + 0x prefix = 66 chars)
+        // If the popup returns a 65-byte ECDSA signature instead of a tx hash, throw an error
+        if (typeof txHash === 'string' && txHash.startsWith('0x') && txHash.length !== 66) {
+          throw standardErrors.rpc.internal(
+            `eth_sendTransaction returned invalid response: expected 32-byte tx hash (66 chars) but got ${txHash.length} chars. The popup may have returned a signature instead of a transaction hash.`
+          );
+        }
+        break;
+      }
       default:
         break;
     }
