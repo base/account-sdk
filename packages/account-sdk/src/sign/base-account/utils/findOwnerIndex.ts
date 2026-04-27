@@ -56,14 +56,19 @@ export async function findOwnerIndex({
     });
   }
 
-  const ownerCount = await readContract(client, {
+  const nextOwnerIndex = await readContract(client, {
     address,
     abi,
-    functionName: 'ownerCount',
+    functionName: 'nextOwnerIndex',
   });
 
-  // Iterate from highest index down and return early when found
-  for (let i = Number(ownerCount) - 1; i >= 0; i--) {
+  // Iterate from highest index down and return early when found.
+  // We use nextOwnerIndex instead of ownerCount because ownerCount
+  // excludes removed owners (ownerCount = nextOwnerIndex - removedOwnersCount),
+  // which causes us to miss owners at higher indices when previous owners
+  // have been removed. Removed owner slots return empty bytes (0x) and are
+  // skipped naturally by the comparison below.
+  for (let i = Number(nextOwnerIndex) - 1; i >= 0; i--) {
     const owner = await readContract(client, {
       address,
       abi,

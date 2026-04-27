@@ -17,7 +17,7 @@ describe('findOwnerIndex', () => {
   it('returns correct index when owner found', async () => {
     const mockReadContract = vi
       .fn()
-      .mockResolvedValueOnce(BigInt(3)) // ownerCount
+      .mockResolvedValueOnce(BigInt(3)) // nextOwnerIndex
       .mockResolvedValueOnce('0x00000000000000000000000046440ECd6746f7612809eFED388347d476369f6D') // owner at index 2
       .mockResolvedValueOnce('0x000000000000000000000000d9Ec1a8603125732c1ee35147619BbFA769A062b') // owner at index 1
       .mockResolvedValueOnce('0x0000000000000000000000007838d2724FC686813CAf81d4429beff1110c739a'); // owner at index 0
@@ -37,7 +37,7 @@ describe('findOwnerIndex', () => {
   it('only calls readContract as needed', async () => {
     const mockReadContract = vi
       .fn()
-      .mockResolvedValueOnce(BigInt(3)) // ownerCount
+      .mockResolvedValueOnce(BigInt(3)) // nextOwnerIndex
       .mockResolvedValueOnce('0x00000000000000000000000046440ECd6746f7612809eFED388347d476369f6D') // owner at index 2
       .mockResolvedValueOnce('0x000000000000000000000000d9Ec1a8603125732c1ee35147619BbFA769A062b') // owner at index 1
       .mockResolvedValueOnce('0x0000000000000000000000007838d2724FC686813CAf81d4429beff1110c739a'); // owner at index 0
@@ -57,7 +57,7 @@ describe('findOwnerIndex', () => {
   it('handles 64 byte public keys', async () => {
     const mockReadContract = vi
       .fn()
-      .mockResolvedValueOnce(BigInt(2)) // ownerCount
+      .mockResolvedValueOnce(BigInt(2)) // nextOwnerIndex
       .mockResolvedValueOnce(
         '0xe7575170745fe55d7a26190c6d5504743496c49498b129d2b3660da3697e81d4daebb2496f89aa4a05f1705e1d5d316153211c198f80d3100b51489bf4963f47'
       ) // owner at index 1
@@ -79,7 +79,7 @@ describe('findOwnerIndex', () => {
   it('is case insensitive when matching owners', async () => {
     const mockReadContract = vi
       .fn()
-      .mockResolvedValueOnce(BigInt(2)) // ownerCount
+      .mockResolvedValueOnce(BigInt(2)) // nextOwnerIndex
       .mockResolvedValueOnce('0xAAA') // owner at index 1
       .mockResolvedValueOnce('0xBBB'); // owner at index 0
 
@@ -97,7 +97,7 @@ describe('findOwnerIndex', () => {
   it('throws error when owner not found', async () => {
     const mockReadContract = vi
       .fn()
-      .mockResolvedValueOnce(BigInt(2)) // ownerCount
+      .mockResolvedValueOnce(BigInt(2)) // nextOwnerIndex
       .mockResolvedValueOnce('0xaaa') // owner at index 1
       .mockResolvedValueOnce('0xbbb'); // owner at index 0
 
@@ -112,7 +112,7 @@ describe('findOwnerIndex', () => {
   });
 
   it('handles empty owner list', async () => {
-    const mockReadContract = vi.fn().mockResolvedValueOnce(BigInt(0)); // ownerCount
+    const mockReadContract = vi.fn().mockResolvedValueOnce(BigInt(0)); // nextOwnerIndex
 
     (readContract as Mock).mockImplementation(mockReadContract);
 
@@ -122,6 +122,28 @@ describe('findOwnerIndex', () => {
       publicKey: '0xccc',
     });
     expect(result).toBe(-1);
+  });
+
+  it('finds owner at high index when previous owners have been removed', async () => {
+    // Simulates: nextOwnerIndex=3, but owner at index 1 was removed (returns 0x)
+    // Owner at index 2 should still be found
+    const mockReadContract = vi
+      .fn()
+      .mockResolvedValueOnce(BigInt(3)) // nextOwnerIndex
+      .mockResolvedValueOnce('0xCCC') // owner at index 2 (the one we're looking for)
+      .mockResolvedValueOnce('0x') // owner at index 1 (removed, empty bytes)
+      .mockResolvedValueOnce('0xAAA'); // owner at index 0
+
+    (readContract as Mock).mockImplementation(mockReadContract);
+
+    const result = await findOwnerIndex({
+      address: '0xabc',
+      client,
+      publicKey: '0xCCC',
+    });
+
+    expect(result).toBe(2);
+    expect(mockReadContract).toHaveBeenCalledTimes(2); // nextOwnerIndex + ownerAtIndex(2)
   });
 
   it('finds owner index from factory data when contract not deployed', async () => {
