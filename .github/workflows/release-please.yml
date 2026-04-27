@@ -19,7 +19,11 @@ jobs:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use a PAT (or GitHub App token) instead of GITHUB_TOKEN so that
+          # release-please's release PRs trigger CI. Events from GITHUB_TOKEN
+          # do not start new workflow runs:
+          # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
   publish-account:
     needs: release-please
