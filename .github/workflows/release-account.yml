@@ -1,7 +1,14 @@
-# DEPRECATED: This workflow is superseded by the release-please automation (release-please.yml).
-# Use this only as a fallback if release-please fails.
-# To be removed after the first successful automated release.
-name: "[DEPRECATED] Release Account (Manual)"
+# Manual publish workflow for @base-org/account.
+#
+# This is the canonical workflow tied to the npm Trusted Publisher entry
+# for @base-org/account (workflow filename: release-account.yml,
+# environment: publish). The OIDC token minted by this workflow is the
+# only one npm will accept for publishing this package.
+#
+# Use this workflow to publish a specific version that was prepared (and
+# already tagged on master) by release-please but not yet pushed to npm,
+# or for any out-of-band publish.
+name: Release Account
 
 on:
   workflow_dispatch:
