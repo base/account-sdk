@@ -18,15 +18,17 @@ import {
   Textarea,
   VStack,
 } from '@chakra-ui/react';
-import React, { useCallback } from 'react';
+import React, { type ReactNode, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { Chain, hexToNumber } from 'viem';
 import { mainnet } from 'viem/chains';
 
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
+import { RpcRequestInput } from './method/RpcRequestInput';
 import { verifySignMsg } from './method/signMessageMethods';
 import { ADDR_TO_FILL, CHAIN_ID_TO_FILL } from './shortcut/const';
 import { multiChainShortcutsMap } from './shortcut/multipleChainShortcuts';
+import { ShortcutType } from './shortcut/ShortcutType';
 
 type ResponseType = string;
 type RequestFormData = Record<string, unknown>;
@@ -65,7 +67,19 @@ const replaceAddressInValue = async (
   return value;
 };
 
-export function RpcMethodCard({ format, method, params, shortcuts }) {
+export function RpcMethodCard({
+  format,
+  method,
+  params,
+  shortcuts,
+  children = null,
+}: {
+  format?: RpcRequestInput['format'];
+  method: RpcRequestInput['method'];
+  params?: RpcRequestInput['params'];
+  shortcuts?: ShortcutType[];
+  children?: ReactNode;
+}) {
   const [response, setResponse] = React.useState<unknown>(null);
   const [verifyResult, setVerifyResult] = React.useState<string | null>(null);
   const [error, setError] = React.useState<Record<string, unknown> | string | number | null>(null);
@@ -144,7 +158,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
       if (!provider) return;
 
       const dataToSubmit = { ...data };
-      let values = dataToSubmit;
+      let values: object | readonly unknown[] = dataToSubmit;
       if (format) {
         const getCurrentAddress = async () =>
           (await provider.request({ method: 'eth_accounts' })) as [string];
@@ -159,7 +173,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
             }
           }
         }
-        values = format(dataToSubmit);
+        values = format(dataToSubmit as Record<string, string>);
       }
       try {
         const response = await provider.request({
@@ -313,6 +327,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
             </Code>
           </VStack>
         )}
+        {children}
       </CardBody>
     </Card>
   );

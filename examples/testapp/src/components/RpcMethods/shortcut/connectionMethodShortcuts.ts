@@ -16,6 +16,6 @@ const walletConnectShortcuts: ShortcutType[] = [
   },
 ];
 
-export const connectionMethodShortcutsMap = {
+export const connectionMethodShortcutsMap: Record<string, ShortcutType[]> = {
   wallet_connect: walletConnectShortcuts,
 };

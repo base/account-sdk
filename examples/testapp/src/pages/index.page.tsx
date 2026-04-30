@@ -1,9 +1,11 @@
-import { Box, Container, Grid, Heading } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import { Box, Container, Flex, Grid, GridItem, Heading, Switch, Text } from '@chakra-ui/react';
+import React, { useCallback, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 import { EventListenersCard } from '../components/EventListeners/EventListenersCard';
 import { WIDTH_2XL } from '../components/Layout';
 import { MethodsSection } from '../components/MethodsSection/MethodsSection';
+import { RpcMethodCard } from '../components/RpcMethods/RpcMethodCard';
 import { connectionMethods } from '../components/RpcMethods/method/connectionMethods';
 import { ephemeralMethods } from '../components/RpcMethods/method/ephemeralMethods';
 import { experimentalMethods } from '../components/RpcMethods/method/experimentalMethods';
@@ -23,8 +25,58 @@ import { walletTxShortcutsMap } from '../components/RpcMethods/shortcut/walletTx
 import { SDKConfig } from '../components/SDKConfig/SDKConfig';
 import { useEIP1193Provider } from '../context/EIP1193ProviderContextProvider';
 
+const COOP_QUERY_KEY = 'coop';
+const COOP_QUERY_VALUE = 'same-origin';
+
+async function ensureCoopServiceWorkerReady(basePath: string) {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+
+  await navigator.serviceWorker.register(`${basePath}/coop-service-worker.js`);
+  await navigator.serviceWorker.ready;
+
+  if (navigator.serviceWorker.controller) {
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    const timeout = window.setTimeout(resolve, 1000);
+    navigator.serviceWorker.addEventListener(
+      'controllerchange',
+      () => {
+        window.clearTimeout(timeout);
+        resolve();
+      },
+      { once: true }
+    );
+  });
+}
+
 export default function Home() {
   const { provider } = useEIP1193Provider();
+  const router = useRouter();
+  const simulateCoop = router.query[COOP_QUERY_KEY] === COOP_QUERY_VALUE;
+
+  const handleSimulateCoopToggle = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const url = new URL(window.location.href);
+
+      if (event.target.checked) {
+        url.searchParams.set(COOP_QUERY_KEY, COOP_QUERY_VALUE);
+        try {
+          await ensureCoopServiceWorkerReady(router.basePath);
+        } catch {
+          // Still navigate so the URL reflects the requested simulation state.
+        }
+      } else {
+        url.searchParams.delete(COOP_QUERY_KEY);
+      }
+
+      window.location.assign(url.toString());
+    },
+    [router.basePath]
+  );
   const [connected, setConnected] = React.useState(false);
   const [chainId, setChainId] = React.useState<number | undefined>(undefined);
   // This is for Extension compatibility, Extension with SDK3.9 does not emit connect event
@@ -75,11 +127,46 @@ export default function Home() {
       <Box mt={4}>
         <SDKConfig />
       </Box>
-      <MethodsSection
-        title="Wallet Connection"
-        methods={connectionMethods}
-        shortcutsMap={connectionMethodShortcutsMap}
-      />
+      <Box mt={4}>
+        <Heading size="md">Wallet Connection</Heading>
+        <Grid
+          mt={2}
+          templateColumns={{
+            base: '100%',
+            md: 'repeat(2, 50%)',
+            xl: 'repeat(3, 33%)',
+          }}
+          gap={2}
+        >
+          <GridItem w="100%" key="eth_requestAccounts">
+            <RpcMethodCard
+              method="eth_requestAccounts"
+              params={[]}
+              format={undefined}
+              shortcuts={connectionMethodShortcutsMap.eth_requestAccounts}
+            >
+              <Flex align="center" justify="space-between" mt={4} pt={3} borderTopWidth={1}>
+                <Text fontSize="sm" fontWeight="medium">
+                  Simulate COOP
+                </Text>
+                <Switch isChecked={simulateCoop} onChange={handleSimulateCoopToggle} />
+              </Flex>
+            </RpcMethodCard>
+          </GridItem>
+          {connectionMethods
+            .filter((rpc) => rpc.method !== 'eth_requestAccounts')
+            .map((rpc) => (
+              <GridItem w="100%" key={rpc.method}>
+                <RpcMethodCard
+                  method={rpc.method}
+                  params={rpc.params}
+                  format={rpc.format}
+                  shortcuts={connectionMethodShortcutsMap[rpc.method]}
+                />
+              </GridItem>
+            ))}
+        </Grid>
+      </Box>
       <MethodsSection
         title="Ephemeral Methods"
         methods={ephemeralMethods}
