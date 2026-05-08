@@ -1,16 +1,20 @@
-# Manual publish workflow for @base-org/account.
+# Canonical release workflow for @base-org/account.
 #
 # This is the canonical workflow tied to the npm Trusted Publisher entry
 # for @base-org/account (workflow filename: release-account.yml,
 # environment: publish). The OIDC token minted by this workflow is the
 # only one npm will accept for publishing this package.
 #
-# Use this workflow to publish a specific version that was prepared (and
-# already tagged on master) by release-please but not yet pushed to npm,
-# or for any out-of-band publish.
+# On push to master this runs release-please and publishes created releases.
+# Use the manual fallback only to publish a specific version that was prepared
+# by release-please but not pushed to npm.
 name: Release Account
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('Release Account manual {0}', github.event.inputs.packageVersion) || 'Release Account automated' }}
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
     inputs:
       packageVersion:
@@ -18,11 +22,31 @@ on:
         required: true
         default: ""
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
-  release:
-    env:
-      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
-    name: Release
+  release-please:
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    outputs:
+      account--release_created: ${{ steps.release.outputs['packages/account-sdk--release_created'] }}
+      account-ui--release_created: ${{ steps.release.outputs['packages/account-ui--release_created'] }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # Use a PAT (or GitHub App token) instead of GITHUB_TOKEN so that
+          # release-please's release PRs trigger CI. Events from GITHUB_TOKEN
+          # do not start new workflow runs:
+          # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+  publish-account:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.account--release_created == 'true' }}
+    name: Publish @base-org/account
     runs-on: ubuntu-latest
     environment: publish
     permissions:
@@ -35,7 +59,110 @@ jobs:
         with:
           submodules: recursive
 
-      - name: 'Setup'
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Prebuild Packages
+        run: yarn workspace @base-org/account prebuild
+
+      - name: Build Packages
+        run: yarn workspace @base-org/account build
+
+      - name: Publish to npm
+        run: |
+          cd packages/account-sdk
+          npm publish --tag latest --access public
+
+  publish-account-ui:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.account-ui--release_created == 'true' }}
+    name: Publish @base-org/account-ui
+    runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Build Packages
+        run: yarn build:packages
+
+      - name: Publish to npm
+        run: |
+          cd packages/account-ui
+          npm publish --tag latest --access public
+
+  manual-publish-account:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    env:
+      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
+    name: Manual Publish @base-org/account
+    runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: master
+          submodules: recursive
+
+      - name: Verify release state
+        run: |
+          set -euo pipefail
+
+          if [[ ! "${PACKAGE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::packageVersion must be a valid semver value. Received '${PACKAGE_VERSION}'."
+            exit 1
+          fi
+
+          PACKAGE_JSON_VERSION="$(node -p "require('./packages/account-sdk/package.json').version")"
+          RELEASE_TAG="account-v${PACKAGE_VERSION}"
+
+          if git rev-parse -q --verify "refs/tags/${RELEASE_TAG}" >/dev/null; then
+            TAG_COMMIT="$(git rev-list -n 1 "${RELEASE_TAG}")"
+
+            if ! git merge-base --is-ancestor "${TAG_COMMIT}" HEAD; then
+              echo "::error::Release tag '${RELEASE_TAG}' is not contained in master."
+              exit 1
+            fi
+
+            git checkout --detach "${RELEASE_TAG}"
+            git submodule update --init --recursive
+            TAG_PACKAGE_JSON_VERSION="$(node -p "require('./packages/account-sdk/package.json').version")"
+
+            if [[ "${TAG_PACKAGE_JSON_VERSION}" != "${PACKAGE_VERSION}" ]]; then
+              echo "::error::Release tag '${RELEASE_TAG}' has package version '${TAG_PACKAGE_JSON_VERSION}', expected '${PACKAGE_VERSION}'."
+              exit 1
+            fi
+
+            exit 0
+          fi
+
+          if [[ "${PACKAGE_JSON_VERSION}" != "${PACKAGE_VERSION}" ]]; then
+            echo "::error::Master has @base-org/account version '${PACKAGE_JSON_VERSION}', expected '${PACKAGE_VERSION}', and release tag '${RELEASE_TAG}' was not found."
+            exit 1
+          fi
+
+      - name: Setup
         uses: ./.github/actions/setup
 
       - name: Update npm
@@ -45,7 +172,6 @@ jobs:
       - name: Set version
         run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}
 
-      # Build the package
       - name: Prebuild Packages
         run: yarn workspace @base-org/account prebuild
 
