@@ -74,7 +74,7 @@ jobs:
       - name: Publish to npm
         run: |
           cd packages/account-sdk
-          npm publish --tag latest --access public
+          npm publish --tag latest --access public --provenance
 
   publish-account-ui:
     needs: release-please
@@ -104,7 +104,7 @@ jobs:
       - name: Publish to npm
         run: |
           cd packages/account-ui
-          npm publish --tag latest --access public
+          npm publish --tag latest --access public --provenance
 
   manual-publish-account:
     if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -170,7 +170,7 @@ jobs:
           npm install -g npm@latest
 
       - name: Set version
-        run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}
+        run: yarn workspace @base-org/account version "$PACKAGE_VERSION"
 
       - name: Prebuild Packages
         run: yarn workspace @base-org/account prebuild
@@ -181,4 +181,4 @@ jobs:
       - name: Publish to npm
         run: |
           cd packages/account-sdk
-          npm publish --tag latest --access public
+          npm publish --tag latest --access public --provenance
