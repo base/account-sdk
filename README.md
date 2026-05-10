@@ -118,6 +118,23 @@ For applications that need full wallet connectivity and blockchain interactions 
 1. [Base Account](https://account.base.app)
    - [Docs](https://docs.base.org/base-account/quickstart/web)
 
+### Runtime Compatibility
+
+The Base Account SDK is designed for modern browser environments and supported Node.js runtimes.
+
+#### Supported environments
+
+- Node.js 18+
+- Modern Chromium-based browsers
+- Firefox
+- Safari
+
+#### Notes
+
+- Some SDK features require browser APIs such as `window`, popup communication, and cross-origin messaging.
+- Server-side rendering (SSR) environments may require conditional imports or client-side execution guards.
+- React Native and non-browser JavaScript runtimes may require additional polyfills and are not officially supported.
+- 
 ### Installing the SDK
 
 ```bash
