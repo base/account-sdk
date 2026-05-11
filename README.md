@@ -159,6 +159,8 @@ yarn add @base-org/account
 1. Initialize the SDK
 
    ```js
+   import { createBaseAccountSDK } from '@base-org/account';
+
    const sdk = createBaseAccountSDK({
      appName: 'SDK Playground',
    });
@@ -181,8 +183,10 @@ yarn add @base-org/account
 4. Make more requests
 
    ```js
+   import { stringToHex } from 'viem';
+
    provider.request('personal_sign', [
-     `0x${Buffer.from('test message', 'utf8').toString('hex')}`,
+     stringToHex('test message'),
      addresses[0],
    ]);
    ```
