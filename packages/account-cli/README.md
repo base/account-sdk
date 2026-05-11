@@ -39,7 +39,7 @@ yarn workspace @base-org/account-cli test --run
 
 ```bash
 yarn workspace @base-org/account-cli typecheck
-npx biome lint packages/account-cli/
+yarn workspace @base-org/account-cli lint
 ```
 
 ## Architecture
