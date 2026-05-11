@@ -15,11 +15,7 @@ const payment = await pay({
   testnet: true
 });
 
-if (payment.success) {
-  console.log(`Payment sent! Transaction ID: ${payment.id}`);
-} else {
-  console.error(`Payment failed: ${payment.error}`);
-}
+console.log(`Payment sent! Transaction ID: ${payment.id}`);
 ```
 
 ## Checking Payment Status
@@ -27,7 +23,7 @@ if (payment.success) {
 You can check the status of a payment using the transaction ID returned from the pay function:
 
 ```typescript
-import { getPaymentStatus } from '@base/account-sdk';
+import { getPaymentStatus } from '@base-org/account';
 
 // Check payment status
 const status = await getPaymentStatus({
