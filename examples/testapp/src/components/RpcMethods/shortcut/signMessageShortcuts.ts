@@ -248,76 +248,38 @@ const ERC20_PERMIT_DATA = (chainId: number) => ({
 });
 
 /**
- * Seaport order — OpenSea's marketplace protocol.
- * Simplified order for NFT listing.
+ * 1inch Limit Order — has a descriptor in the ERC-7730 registry on Base.
+ * Contract: 0x111111125421cA6dc452d289314280a0f8842A65
  */
-const SEAPORT_ORDER_DATA = (chainId: number) => ({
+const ONEINCH_ORDER_DATA = (chainId: number) => ({
   domain: {
-    name: 'Seaport',
-    version: '1.6',
+    name: '1inch Aggregation Router',
+    version: '6',
     chainId: Number(chainId),
-    verifyingContract: '0x0000000000000068F116a894984e2DB1123eB395',
+    verifyingContract: '0x111111125421cA6dc452d289314280a0f8842A65',
   },
   types: {
-    OrderComponents: [
-      { name: 'offerer', type: 'address' },
-      { name: 'zone', type: 'address' },
-      { name: 'offer', type: 'OfferItem[]' },
-      { name: 'consideration', type: 'ConsiderationItem[]' },
-      { name: 'orderType', type: 'uint8' },
-      { name: 'startTime', type: 'uint256' },
-      { name: 'endTime', type: 'uint256' },
-      { name: 'zoneHash', type: 'bytes32' },
+    Order: [
       { name: 'salt', type: 'uint256' },
-      { name: 'conduitKey', type: 'bytes32' },
-      { name: 'counter', type: 'uint256' },
-    ],
-    OfferItem: [
-      { name: 'itemType', type: 'uint8' },
-      { name: 'token', type: 'address' },
-      { name: 'identifierOrCriteria', type: 'uint256' },
-      { name: 'startAmount', type: 'uint256' },
-      { name: 'endAmount', type: 'uint256' },
-    ],
-    ConsiderationItem: [
-      { name: 'itemType', type: 'uint8' },
-      { name: 'token', type: 'address' },
-      { name: 'identifierOrCriteria', type: 'uint256' },
-      { name: 'startAmount', type: 'uint256' },
-      { name: 'endAmount', type: 'uint256' },
-      { name: 'recipient', type: 'address' },
+      { name: 'maker', type: 'address' },
+      { name: 'receiver', type: 'address' },
+      { name: 'makerAsset', type: 'address' },
+      { name: 'takerAsset', type: 'address' },
+      { name: 'makingAmount', type: 'uint256' },
+      { name: 'takingAmount', type: 'uint256' },
+      { name: 'makerTraits', type: 'uint256' },
     ],
   },
-  primaryType: 'OrderComponents',
+  primaryType: 'Order',
   message: {
-    offerer: ADDR_TO_FILL,
-    zone: '0x0000000000000000000000000000000000000000',
-    offer: [
-      {
-        itemType: 2, // ERC721
-        token: '0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D', // BAYC
-        identifierOrCriteria: '1234',
-        startAmount: '1',
-        endAmount: '1',
-      },
-    ],
-    consideration: [
-      {
-        itemType: 0, // ETH
-        token: '0x0000000000000000000000000000000000000000',
-        identifierOrCriteria: '0',
-        startAmount: '1000000000000000000', // 1 ETH
-        endAmount: '1000000000000000000',
-        recipient: ADDR_TO_FILL,
-      },
-    ],
-    orderType: 0,
-    startTime: '1700000000',
-    endTime: '1735689600',
-    zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
-    salt: '12345',
-    conduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
-    counter: '0',
+    salt: '1234567890',
+    maker: ADDR_TO_FILL,
+    receiver: '0x0000000000000000000000000000000000000000',
+    makerAsset: USDC_BY_CHAIN[chainId] ?? USDC_BY_CHAIN[8453],
+    takerAsset: '0x4200000000000000000000000000000000000006', // WETH on Base
+    makingAmount: '1000000000', // 1,000 USDC
+    takingAmount: '400000000000000000', // 0.4 WETH
+    makerTraits: '0',
   },
 });
 
@@ -344,9 +306,9 @@ const ethSignTypedDataV4Shortcuts: (chainId: number) => ShortcutType[] = (chainI
     },
   },
   {
-    key: 'Seaport Order (Clear Signing)',
+    key: '1inch Order (Clear Signing)',
     data: {
-      message: SEAPORT_ORDER_DATA(chainId),
+      message: ONEINCH_ORDER_DATA(chainId),
       address: ADDR_TO_FILL,
     },
   },
