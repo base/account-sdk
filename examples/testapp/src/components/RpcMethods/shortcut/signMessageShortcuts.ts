@@ -176,6 +176,15 @@ const ethSignTypedDataV3Shortcuts: (chainId) => ShortcutType[] = (chainId: numbe
  * Permit2 PermitSingle — Uniswap's canonical approval mechanism.
  * Descriptor: https://github.com/ethereum/clear-signing-erc7730-registry
  */
+// USDC contract addresses per chain
+const USDC_BY_CHAIN: Record<number, string> = {
+  1: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base
+  84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Base Sepolia
+  10: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', // Optimism
+  42161: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum
+};
+
 const PERMIT2_DATA = (chainId: number) => ({
   domain: {
     name: 'Permit2',
@@ -198,13 +207,13 @@ const PERMIT2_DATA = (chainId: number) => ({
   primaryType: 'PermitSingle',
   message: {
     details: {
-      token: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC on mainnet
-      amount: '1461501637330902918203684832716283019655932542975', // max uint160
-      expiration: '1735689600', // 2025-01-01
+      token: USDC_BY_CHAIN[chainId] ?? USDC_BY_CHAIN[8453],
+      amount: '1000000000', // 1,000 USDC (6 decimals)
+      expiration: '1767225600', // 2026-01-01
       nonce: '0',
     },
     spender: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD', // Uniswap Universal Router
-    sigDeadline: '1735689600',
+    sigDeadline: '1767225600',
   },
 });
 
@@ -217,7 +226,7 @@ const ERC20_PERMIT_DATA = (chainId: number) => ({
     name: 'USD Coin',
     version: '2',
     chainId: Number(chainId),
-    verifyingContract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC
+    verifyingContract: USDC_BY_CHAIN[chainId] ?? USDC_BY_CHAIN[8453],
   },
   types: {
     Permit: [
@@ -234,7 +243,7 @@ const ERC20_PERMIT_DATA = (chainId: number) => ({
     spender: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45', // Uniswap SwapRouter02
     value: '1000000', // 1 USDC (6 decimals)
     nonce: '0',
-    deadline: '1735689600',
+    deadline: '1767225600', // 2026-01-01
   },
 });
 
