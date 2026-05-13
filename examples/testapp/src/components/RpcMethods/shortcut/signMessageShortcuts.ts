@@ -176,6 +176,15 @@ const ethSignTypedDataV3Shortcuts: (chainId) => ShortcutType[] = (chainId: numbe
  * Permit2 PermitSingle — Uniswap's canonical approval mechanism.
  * Descriptor: https://github.com/ethereum/clear-signing-erc7730-registry
  */
+// WETH contract addresses per chain
+const WETH_BY_CHAIN: Record<number, string> = {
+  1: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  8453: '0x4200000000000000000000000000000000000006',
+  84532: '0x4200000000000000000000000000000000000006',
+  10: '0x4200000000000000000000000000000000000006',
+  42161: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+};
+
 // USDC contract addresses per chain
 const USDC_BY_CHAIN: Record<number, string> = {
   1: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
@@ -275,8 +284,8 @@ const ONEINCH_ORDER_DATA = (chainId: number) => ({
     salt: '1234567890',
     maker: ADDR_TO_FILL,
     receiver: '0x0000000000000000000000000000000000000000',
-    makerAsset: USDC_BY_CHAIN[chainId] ?? USDC_BY_CHAIN[8453],
-    takerAsset: '0x4200000000000000000000000000000000000006', // WETH on Base
+    makerAsset: USDC_BY_CHAIN[chainId] ?? USDC_BY_CHAIN[1],
+    takerAsset: WETH_BY_CHAIN[chainId] ?? WETH_BY_CHAIN[1],
     makingAmount: '1000000000', // 1,000 USDC
     takingAmount: '400000000000000000', // 0.4 WETH
     makerTraits: '0',
