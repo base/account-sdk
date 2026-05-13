@@ -267,7 +267,7 @@ export function RpcMethodCard({
                   <AccordionIcon />
                 </AccordionButton>
                 <AccordionPanel pb={4}>
-                  <HStack spacing={2}>
+                  <HStack spacing={2} overflowX="auto" maxW="100%" pb={2}>
                     {shortcuts.map((shortcut) => (
                       <VStack key={shortcut.key} spacing={1}>
                         <Button onClick={() => submit(shortcut.data)}>{shortcut.key}</Button>
