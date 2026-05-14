@@ -12,7 +12,11 @@ import { abi } from ':sign/base-account/utils/constants.js';
 import { SubAccount, ToOwnerAccountFn, store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
-import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
+import {
+  validatePreferences,
+  validateSDKConfig,
+  validateSubAccount,
+} from ':util/validatePreferences.js';
 import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
 import { getInjectedProvider } from './getInjectedProvider.js';
@@ -88,6 +92,9 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
     paymasterUrls: params.paymasterUrls,
   };
 
+  validateSDKConfig(options, params.subAccounts);
+  validatePreferences(options.preference);
+
   //  ====================================================================
   //  If we have a toOwnerAccount function, set it in the non-persisted config
   //  ====================================================================
@@ -120,8 +127,6 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   if (options.preference.telemetry !== false) {
     initializeTelemetryOnce();
   }
-
-  validatePreferences(options.preference);
 
   //  ====================================================================
   //  Return the provider
