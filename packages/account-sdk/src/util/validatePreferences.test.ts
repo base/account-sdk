@@ -24,40 +24,70 @@ describe('validatePreferences', () => {
     expect(() => validatePreferences(validPreference)).not.toThrow();
   });
 
-  it('should throw an error if both auto and dataSuffix are defined in attribution', () => {
-    const invalidPreference: Preference = {
-      options: 'all',
-      attribution: {
-        auto: true,
-        // @ts-expect-error passing two values to attribution
-        dataSuffix: 'suffix',
-      },
-    };
-    expect(() => validatePreferences(invalidPreference)).toThrow(
-      'Attribution cannot contain both auto and dataSuffix properties'
-    );
-  });
+ it('should throw an error if both auto and dataSuffix are defined in attribution', () => {
+  const invalidPreference: Preference = {
+    options: 'all',
+    attribution: {
+      auto: true,
+      // @ts-expect-error passing two values to attribution
+      dataSuffix: 'suffix',
+    },
+  };
 
-  it('should not throw an error if only auto is defined in attribution', () => {
-    const validPreference: Preference = {
-      options: 'all',
-      attribution: {
-        auto: true,
-      },
-    };
-    expect(() => validatePreferences(validPreference)).not.toThrow();
-  });
-
-  it('should not throw an error if only dataSuffix is defined in attribution', () => {
-    const validPreference: Preference = {
-      options: 'all',
-      attribution: {
-        dataSuffix: '0xsuffix',
-      },
-    };
-    expect(() => validatePreferences(validPreference)).not.toThrow();
-  });
+  expect(() => validatePreferences(invalidPreference)).toThrow(
+    'Attribution cannot contain both auto and dataSuffix properties'
+  );
 });
+
+it('should not throw an error if only auto is defined in attribution', () => {
+  const validPreference: Preference = {
+    options: 'all',
+    attribution: {
+      auto: true,
+    },
+  };
+
+  expect(() => validatePreferences(validPreference)).not.toThrow();
+});
+
+it('should not throw an error if only dataSuffix is defined in attribution', () => {
+  const validPreference: Preference = {
+    options: 'all',
+    attribution: {
+      dataSuffix: '0xsuffix',
+    },
+  };
+
+  expect(() => validatePreferences(validPreference)).not.toThrow();
+});
+
+it('should throw an error if dataSuffix is empty', () => {
+  const invalidPreference: Preference = {
+    options: 'all',
+    attribution: {
+      dataSuffix: '',
+    },
+  };
+
+  expect(() => validatePreferences(invalidPreference)).toThrow(
+    'Attribution dataSuffix cannot be empty'
+  );
+});
+
+it('should throw an error if dataSuffix contains only whitespace', () => {
+  const invalidPreference: Preference = {
+    options: 'all',
+    attribution: {
+      dataSuffix: '   ',
+    },
+  };
+
+  expect(() => validatePreferences(invalidPreference)).toThrow(
+    'Attribution dataSuffix cannot be empty'
+  );
+});
+});
+  
 
 describe('validateSubAccount', () => {
   it('should throw an error if toSubAccountSigner is not a function', () => {
