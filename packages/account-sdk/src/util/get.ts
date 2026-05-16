@@ -1,5 +1,7 @@
 export function get(obj: unknown, path: string): unknown {
   if (typeof obj !== 'object' || obj === null) return undefined;
+  if (!path.trim()) return undefined;
+  
   return path
     .split(/[.[\]]+/)
     .filter(Boolean)
