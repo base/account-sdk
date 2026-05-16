@@ -26,4 +26,11 @@ export function assertArrayPresence<T>(
       data: value,
     });
   }
+
+    if (value.some((item) => item === null || item === undefined)) {
+    throw standardErrors.rpc.invalidParams({
+      message: message ?? 'array values must be present',
+      data: value,
+    });
+  }
 }
