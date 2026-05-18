@@ -19,7 +19,8 @@
     "format": "yarn workspaces foreach -A -pt run format",
     "format:check": "yarn workspaces foreach -A -pt run format:check",
     "test": "yarn workspaces foreach -A -ipv run test",
-    "typecheck": "yarn workspaces foreach -A -pt run typecheck"
+    "typecheck": "yarn workspaces foreach -A -pt run typecheck",
+    "format:check": "pnpm biome check ."
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4"
