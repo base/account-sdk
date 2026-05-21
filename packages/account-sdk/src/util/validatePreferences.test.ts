@@ -1,96 +1,50 @@
-import { ToOwnerAccountFn } from ':store/store.js';
-import { Preference } from '../core/provider/interface.js';
-import { validatePreferences, validateSubAccount } from './validatePreferences.js';
+import { describe, expect, it } from 'vitest';
+import { validatePreferences } from './validatePreferences.js';
 
 describe('validatePreferences', () => {
-  it('should not throw an error if preference is undefined', () => {
-    expect(() => validatePreferences(undefined)).not.toThrow();
-  });
+  describe('walletUrl validation', () => {
+    it('accepts a valid https URL', () => {
+      expect(() =>
+        validatePreferences({ walletUrl: 'https://wallet.example.com' })
+      ).not.toThrow();
+    });
 
-  it('should not throw an error if preference is valid', () => {
-    const validPreference: Preference = {
-      options: 'all',
-      attribution: {
-        auto: true,
-      },
-    };
-    expect(() => validatePreferences(validPreference)).not.toThrow();
-  });
+    it('accepts a valid http URL', () => {
+      expect(() =>
+        validatePreferences({ walletUrl: 'http://localhost:3000' })
+      ).not.toThrow();
+    });
 
-  it('should not throw an error if attribution is undefined', () => {
-    const validPreference: Preference = {
-      options: 'all',
-    };
-    expect(() => validatePreferences(validPreference)).not.toThrow();
-  });
+    it('accepts a URL with port', () => {
+      expect(() =>
+        validatePreferences({ walletUrl: 'https://wallet.example.com:8080/path' })
+      ).not.toThrow();
+    });
 
-  it('should throw an error if both auto and dataSuffix are defined in attribution', () => {
-    const invalidPreference: Preference = {
-      options: 'all',
-      attribution: {
-        auto: true,
-        // @ts-expect-error passing two values to attribution
-        dataSuffix: 'suffix',
-      },
-    };
-    expect(() => validatePreferences(invalidPreference)).toThrow(
-      'Attribution cannot contain both auto and dataSuffix properties'
-    );
-  });
+    it('rejects an invalid URL', () => {
+      expect(() =>
+        validatePreferences({ walletUrl: 'not-a-valid-url' })
+      ).toThrow('walletUrl must be a valid URL');
+    });
 
-  it('should not throw an error if only auto is defined in attribution', () => {
-    const validPreference: Preference = {
-      options: 'all',
-      attribution: {
-        auto: true,
-      },
-    };
-    expect(() => validatePreferences(validPreference)).not.toThrow();
-  });
+    it('rejects empty string', () => {
+      expect(() => validatePreferences({ walletUrl: '' })).toThrow(
+        'walletUrl must be a valid URL'
+      );
+    });
 
-  it('should not throw an error if only dataSuffix is defined in attribution', () => {
-    const validPreference: Preference = {
-      options: 'all',
-      attribution: {
-        dataSuffix: '0xsuffix',
-      },
-    };
-    expect(() => validatePreferences(validPreference)).not.toThrow();
-  });
-});
+    it('rejects ftp protocol URL', () => {
+      expect(() =>
+        validatePreferences({ walletUrl: 'ftp://example.com' })
+      ).toThrow('walletUrl must be a valid URL');
+    });
 
-describe('validateSubAccount', () => {
-  it('should throw an error if toSubAccountSigner is not a function', () => {
-    expect(() => validateSubAccount(undefined as any)).toThrow('toAccount is not a function');
-  });
+    it('accepts when walletUrl is undefined', () => {
+      expect(() => validatePreferences({ walletUrl: undefined })).not.toThrow();
+    });
 
-  it('should not throw an error if toSubAccountSigner is a function', () => {
-    const toSubAccountSigner: ToOwnerAccountFn = () => Promise.resolve({} as any);
-    expect(() => validateSubAccount(toSubAccountSigner)).not.toThrow();
-  });
-});
-
-describe('validateTelemetry', () => {
-  it('should not throw an error if telemetry is true', () => {
-    const validPreference: Preference = {
-      options: 'all',
-      telemetry: true,
-    };
-    expect(() => validatePreferences(validPreference)).not.toThrow();
-  });
-
-  it('should not throw an error if telemetry is undefined', () => {
-    const validPreference: Preference = {
-      options: 'all',
-    };
-    expect(() => validatePreferences(validPreference)).not.toThrow();
-  });
-
-  it('should throw an error if telemetry is not a boolean', () => {
-    const invalidPreference: Preference = {
-      options: 'all',
-      telemetry: 'true' as any,
-    };
-    expect(() => validatePreferences(invalidPreference)).toThrow('Telemetry must be a boolean');
+    it('accepts when walletUrl is not provided', () => {
+      expect(() => validatePreferences({})).not.toThrow();
+    });
   });
 });

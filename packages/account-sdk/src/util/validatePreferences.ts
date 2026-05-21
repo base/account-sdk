@@ -24,6 +24,14 @@ export function validatePreferences(preference?: Preference) {
       throw new Error(`Telemetry must be a boolean`);
     }
   }
+
+  if (preference.walletUrl !== undefined) {
+    try {
+      new URL(preference.walletUrl);
+    } catch {
+      throw new Error(`walletUrl must be a valid URL`);
+    }
+  }
 }
 
 /**
