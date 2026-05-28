@@ -37,8 +37,16 @@ const createCoopChecker = () => {
 
       try {
         const url = `${window.location.origin}${window.location.pathname}`;
-        const response = await fetch(url, {
-          method: 'HEAD',
+        
+const controller = new AbortController();
+
+const timeout = window.setTimeout(() => {
+  controller.abort();
+}, 5000);
+
+       const response = await fetch(url, {
+       method: 'HEAD',
+       signal: controller.signal,
         });
 
         if (!response.ok) {
@@ -55,6 +63,9 @@ const createCoopChecker = () => {
         console.error('Error checking Cross-Origin-Opener-Policy:', (error as Error).message);
         crossOriginOpenerPolicy = 'error';
       }
+      finally {
+  window.clearTimeout(timeout);
+}
     },
   };
 };
