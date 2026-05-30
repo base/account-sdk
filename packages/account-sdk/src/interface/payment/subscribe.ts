@@ -14,7 +14,7 @@ import {
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { SubscriptionOptions, SubscriptionResult } from './types.js';
 import { createEphemeralSDK } from './utils/sdkManager.js';
-import { normalizeAddress, validateStringAmount } from './utils/validation.js';
+import { normalizeAddress, validatePeriodInDays, validatePeriodInSeconds, validateStringAmount } from './utils/validation.js';
 
 // Placeholder address for mutable data - will be replaced by wallet with actual account
 const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as const;
@@ -118,6 +118,10 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
     // Validate inputs
     validateStringAmount(recurringCharge, 6);
     const spenderAddress = normalizeAddress(subscriptionOwner);
+    validatePeriodInDays(periodInDays);
+    if (overridePeriodInSecondsForTestnet !== undefined) {
+      validatePeriodInSeconds(overridePeriodInSecondsForTestnet);
+    }
 
     // Setup network configuration
     const network = testnet ? 'baseSepolia' : 'base';
