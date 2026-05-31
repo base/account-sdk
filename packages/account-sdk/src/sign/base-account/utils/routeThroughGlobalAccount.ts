@@ -153,13 +153,13 @@ export async function routeThroughGlobalAccount({
  * Per-call safety buffer (gas). Matches the backend config
  * `safety_buffer_per_call`.
  */
-const SAFETY_BUFFER_PER_CALL = 500n;
+export const SAFETY_BUFFER_PER_CALL = 500n;
 
 /**
  * Input data cost per byte (gas). Matches the backend config
  * `proportional_input_cost_per_byte`.
  */
-const PROPORTIONAL_INPUT_COST_PER_BYTE = 2n;
+export const PROPORTIONAL_INPUT_COST_PER_BYTE = 2n;
 
 /**
  * Aggregates per-call gasLimitOverride values from the original calls into a
