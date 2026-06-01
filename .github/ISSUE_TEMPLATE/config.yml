@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Base Account Developer Docs
-    url: https://www.base.org/builders/smart-wallet
+    url: https://docs.base.org/base-account/overview/what-is-base-account
     about: Base Account's developer documentation
