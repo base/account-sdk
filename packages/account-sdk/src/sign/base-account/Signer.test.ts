@@ -1717,6 +1717,262 @@ describe('Signer', () => {
 
       (createSubAccountSigner as Mock).mockRestore();
     });
+
+    it('should throw (reject) when handleAddSubAccountOwner rejects', async () => {
+      await signer.cleanup();
+
+      store.subAccounts.set({
+        address: subAccountAddress,
+      });
+
+      // Force the add-owner path: findOwnerIndex returns -1
+      (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
+      // handleAddSubAccountOwner throws — simulates on-chain failure
+      (handleAddSubAccountOwner as Mock).mockRejectedValueOnce(
+        new Error('on-chain add-owner failed')
+      );
+
+      // Mock that spend permissions exist so the request routes through
+      // sendRequestToSubAccountSigner rather than routeThroughGlobalAccount
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      signer['accounts'] = [subAccountAddress, globalAccountAddress];
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            version: '1',
+            calls: [],
+            from: subAccountAddress,
+            chainId: '0x14a34', // 84532 base-sepolia
+          },
+        ],
+      };
+
+      // The fix: promise must REJECT, not resolve to an error object
+      await expect(signer.request(mockRequest)).rejects.toThrow();
+    });
+
+    it('should propagate the unauthorized error message when handleAddSubAccountOwner throws', async () => {
+      await signer.cleanup();
+
+      store.subAccounts.set({
+        address: subAccountAddress,
+      });
+
+      (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
+      (handleAddSubAccountOwner as Mock).mockRejectedValueOnce(
+        new Error('upstream failure')
+      );
+
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      signer['accounts'] = [subAccountAddress, globalAccountAddress];
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            version: '1',
+            calls: [],
+            from: subAccountAddress,
+            chainId: '0x14a34',
+          },
+        ],
+      };
+
+      // Verify the exact error message from standardErrors.provider.unauthorized
+      await expect(signer.request(mockRequest)).rejects.toThrow(
+        'failed to add sub account owner when sending request to sub account signer'
+      );
+    });
+
+    it('should NOT resolve to an error object when handleAddSubAccountOwner throws', async () => {
+      await signer.cleanup();
+
+      store.subAccounts.set({
+        address: subAccountAddress,
+      });
+
+      (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
+      (handleAddSubAccountOwner as Mock).mockRejectedValueOnce(
+        new Error('trigger catch block')
+      );
+
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      signer['accounts'] = [subAccountAddress, globalAccountAddress];
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            version: '1',
+            calls: [],
+            from: subAccountAddress,
+            chainId: '0x14a34',
+          },
+        ],
+      };
+
+      // Explicitly assert the resolved value is never an Error instance
+      // (this would catch a regression back to `return standardErrors...`)
+      let resolvedValue: unknown;
+      let threw = false;
+      try {
+        resolvedValue = await signer.request(mockRequest);
+      } catch {
+        threw = true;
+      }
+
+      expect(threw).toBe(true);
+      expect(resolvedValue).toBeUndefined();
+    });
+
+    it('should resolve normally when handleAddSubAccountOwner succeeds (happy path unchanged)', async () => {
+      await signer.cleanup();
+
+      store.subAccounts.set({
+        address: subAccountAddress,
+      });
+
+      // ownerIndex=-1 triggers add-owner, which succeeds
+      (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
+      (handleAddSubAccountOwner as Mock).mockResolvedValueOnce(0);
+
+      (createSubAccountSigner as Mock).mockResolvedValueOnce({
+        request: vi.fn().mockResolvedValue('0xHappyPathResult'),
+      });
+
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      signer['accounts'] = [subAccountAddress, globalAccountAddress];
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            version: '1',
+            calls: [],
+            from: subAccountAddress,
+            chainId: '0x14a34',
+          },
+        ],
+      };
+
+      // Fix must not break the success path
+      const result = await signer.request(mockRequest);
+      expect(result).toBe('0xHappyPathResult');
+    });
   });
 
   describe('wallet_getCapabilities', () => {
