@@ -90,18 +90,21 @@ export type PrepareSpendCallDataResponseType = Call[];
  *   }],
  * });
  *
- * // Or send the calls using eth_sendTransaction to submit both calls in exact order
- * const promises = spendCalls.map((call) => provider.request({
- *   method: 'eth_sendTransaction',
- *   params: [
- *     {
- *       ...call,
- *       from: permission.permission.spender, // Must be the spender!
- *     }
- *   ]
- * }))
- *
- * await Promise.all(promises);
+ * // Or send the calls using eth_sendTransaction — note: calls must be submitted
+ * // sequentially and awaited one at a time. Using Promise.all here would submit
+ * // both concurrently and risk the spend call landing before approveWithSignature
+ * // is confirmed, causing a revert. wallet_sendCalls with atomicRequired is safer.
+ * for (const call of spendCalls) {
+ *   await provider.request({
+ *     method: 'eth_sendTransaction',
+ *     params: [
+ *       {
+ *         ...call,
+ *         from: permission.permission.spender, // Must be the spender!
+ *       }
+ *     ]
+ *   });
+ * }
  * ```
  */
 // ERC20 transfer function ABI for recipient transfers
