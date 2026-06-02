@@ -20,9 +20,11 @@ export {
   getPaymentStatus,
   getSubscriptionStatus,
   pay,
+  PaymentError,
   prepareCharge,
   subscribe,
   TOKENS,
+  ValidationError,
 } from './interface/payment/index.js';
 export type {
   ChargeOptions,

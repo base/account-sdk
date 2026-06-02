@@ -1,24 +1,41 @@
 import { type Address, type Hex, getAddress, isHex } from 'viem';
 
+import { ValidationError } from ':core/error/sdkErrors.js';
+
 /**
  * Validates that the amount is a positive string with max decimal places
  * @param amount - The amount to validate as a string
  * @param maxDecimals - Maximum number of decimal places allowed
- * @throws Error if amount is invalid
+ * @throws ValidationError if amount is invalid
  */
 export function validateStringAmount(amount: string, maxDecimals: number): void {
   if (typeof amount !== 'string') {
-    throw new Error('Invalid amount: must be a string');
+    throw new ValidationError(
+      `Invalid amount: must be a string, received ${typeof amount}`,
+      'amount',
+      amount,
+      'string'
+    );
   }
 
   const numAmount = parseFloat(amount);
 
   if (isNaN(numAmount)) {
-    throw new Error('Invalid amount: must be a valid number');
+    throw new ValidationError(
+      `Invalid amount: "${amount}" is not a valid number`,
+      'amount',
+      amount,
+      'a positive decimal number (e.g. "10.50")'
+    );
   }
 
   if (numAmount <= 0) {
-    throw new Error('Invalid amount: must be greater than 0');
+    throw new ValidationError(
+      `Invalid amount: ${amount} must be greater than 0`,
+      'amount',
+      amount,
+      'a positive number greater than 0'
+    );
   }
 
   // Only allow specified decimal places
@@ -26,7 +43,12 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
   if (decimalIndex !== -1) {
     const decimalPlaces = amount.length - decimalIndex - 1;
     if (decimalPlaces > maxDecimals) {
-      throw new Error(`Invalid amount: pay only supports up to ${maxDecimals} decimal places`);
+      throw new ValidationError(
+        `Invalid amount: "${amount}" has ${decimalPlaces} decimal places, maximum is ${maxDecimals}`,
+        'amount',
+        amount,
+        `up to ${maxDecimals} decimal places`
+      );
     }
   }
 }
@@ -34,12 +56,17 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
 /**
  * Validates that the address is a valid Ethereum address
  * @param address - The address to validate
- * @throws Error if address is invalid
+ * @throws ValidationError if address is invalid
  * @returns The checksummed address
  */
 export function normalizeAddress(address: string): Address {
   if (!address) {
-    throw new Error('Invalid address: address is required');
+    throw new ValidationError(
+      'Invalid address: address is required',
+      'address',
+      address,
+      '0x-prefixed 20-byte Ethereum address'
+    );
   }
 
   try {
@@ -47,18 +74,28 @@ export function normalizeAddress(address: string): Address {
     // It will throw if the address is invalid
     return getAddress(address);
   } catch (_error) {
-    throw new Error('Invalid address: must be a valid Ethereum address');
+    throw new ValidationError(
+      `Invalid address: "${address}" is not a valid Ethereum address`,
+      'address',
+      address,
+      '0x-prefixed 20-byte Ethereum address (e.g. "0xAb5801a7...")'
+    );
   }
 }
 
 /**
  * Validates data suffix format.
  * @param dataSuffix - 0x-prefixed hex data suffix
- * @throws Error if data suffix is invalid
+ * @throws ValidationError if data suffix is invalid
  */
 export function validateDataSuffix(dataSuffix: string): Hex {
   if (!isHex(dataSuffix)) {
-    throw new Error('Invalid dataSuffix: expected a 0x-prefixed hex string');
+    throw new ValidationError(
+      `Invalid dataSuffix: "${dataSuffix}" is not a valid hex string`,
+      'dataSuffix',
+      dataSuffix,
+      '0x-prefixed hex string (e.g. "0x1234abcd")'
+    );
   }
   return dataSuffix;
 }

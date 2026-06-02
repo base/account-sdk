@@ -44,3 +44,6 @@ export type {
 
 // Export constants
 export { CHAIN_IDS, TOKENS } from './constants.js';
+
+// Export error classes for programmatic error handling
+export { PaymentError, ValidationError } from ':core/error/sdkErrors.js';
