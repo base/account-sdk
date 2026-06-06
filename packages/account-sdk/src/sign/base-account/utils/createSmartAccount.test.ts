@@ -231,9 +231,10 @@ describe('getNonce', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(Date.UTC(2023, 1, 1)));
-    return () => {
-      vi.useRealTimers();
-    };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('default', async () => {
