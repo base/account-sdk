@@ -787,13 +787,14 @@ export class Signer {
         });
         logAddOwnerCompleted({ method: request.method, correlationId });
       } catch (error) {
+        const errorDetail = parseErrorMessageFromAny(error);
         logAddOwnerError({
           method: request.method,
           correlationId,
-          errorMessage: parseErrorMessageFromAny(error),
+          errorMessage: errorDetail,
         });
         return standardErrors.provider.unauthorized(
-          'failed to add sub account owner when sending request to sub account signer'
+          `failed to add sub account owner when sending ${request.method} to sub account signer (${subAccount.address}): ${errorDetail}`
         );
       }
     }

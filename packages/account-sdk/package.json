@@ -19,93 +19,77 @@
     ".": {
       "types": "./dist/index.d.ts",
       "browser": {
-        "import": "./dist/index.js",
-        "require": "./dist/index.js"
+        "import": "./dist/index.js"
       },
       "node": {
-        "import": "./dist/index.node.js",
-        "require": "./dist/index.node.js"
+        "import": "./dist/index.node.js"
       },
       "default": "./dist/index.js"
     },
     "./browser": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js"
     },
     "./node": {
       "types": "./dist/index.node.d.ts",
-      "import": "./dist/index.node.js",
-      "require": "./dist/index.node.js"
+      "import": "./dist/index.node.js"
     },
     "./payment/browser": {
       "types": "./dist/interface/payment/index.d.ts",
-      "import": "./dist/interface/payment/index.js",
-      "require": "./dist/interface/payment/index.js"
+      "import": "./dist/interface/payment/index.js"
     },
     "./payment/node": {
       "types": "./dist/interface/payment/index.node.d.ts",
-      "import": "./dist/interface/payment/index.node.js",
-      "require": "./dist/interface/payment/index.node.js"
+      "import": "./dist/interface/payment/index.node.js"
     },
     "./payment": {
       "types": "./dist/interface/payment/index.d.ts",
       "browser": {
         "types": "./dist/interface/payment/index.d.ts",
-        "import": "./dist/interface/payment/index.js",
-        "require": "./dist/interface/payment/index.js"
+        "import": "./dist/interface/payment/index.js"
       },
       "node": {
         "types": "./dist/interface/payment/index.node.d.ts",
-        "import": "./dist/interface/payment/index.node.js",
-        "require": "./dist/interface/payment/index.node.js"
+        "import": "./dist/interface/payment/index.node.js"
       }
     },
     "./spend-permission/browser": {
       "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
-      "import": "./dist/interface/public-utilities/spend-permission/index.js",
-      "require": "./dist/interface/public-utilities/spend-permission/index.js"
+      "import": "./dist/interface/public-utilities/spend-permission/index.js"
     },
     "./spend-permission/node": {
       "types": "./dist/interface/public-utilities/spend-permission/index.node.d.ts",
-      "import": "./dist/interface/public-utilities/spend-permission/index.node.js",
-      "require": "./dist/interface/public-utilities/spend-permission/index.node.js"
+      "import": "./dist/interface/public-utilities/spend-permission/index.node.js"
     },
     "./spend-permission": {
       "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
       "browser": {
         "types": "./dist/interface/public-utilities/spend-permission/index.d.ts",
-        "import": "./dist/interface/public-utilities/spend-permission/index.js",
-        "require": "./dist/interface/public-utilities/spend-permission/index.js"
+        "import": "./dist/interface/public-utilities/spend-permission/index.js"
       },
       "node": {
         "types": "./dist/interface/public-utilities/spend-permission/index.node.d.ts",
-        "import": "./dist/interface/public-utilities/spend-permission/index.node.js",
-        "require": "./dist/interface/public-utilities/spend-permission/index.node.js"
+        "import": "./dist/interface/public-utilities/spend-permission/index.node.js"
       }
     },
     "./prolink": {
       "types": "./dist/interface/public-utilities/prolink/index.d.ts",
       "browser": {
         "types": "./dist/interface/public-utilities/prolink/index.d.ts",
-        "import": "./dist/interface/public-utilities/prolink/index.js",
-        "require": "./dist/interface/public-utilities/prolink/index.js"
+        "import": "./dist/interface/public-utilities/prolink/index.js"
       },
       "node": {
         "types": "./dist/interface/public-utilities/prolink/index.node.d.ts",
-        "import": "./dist/interface/public-utilities/prolink/index.node.js",
-        "require": "./dist/interface/public-utilities/prolink/index.node.js"
+        "import": "./dist/interface/public-utilities/prolink/index.node.js"
       },
       "default": {
         "types": "./dist/interface/public-utilities/prolink/index.d.ts",
-        "import": "./dist/interface/public-utilities/prolink/index.js",
-        "require": "./dist/interface/public-utilities/prolink/index.js"
+        "import": "./dist/interface/public-utilities/prolink/index.js"
       }
     },
     "./ui-assets": {
       "types": "./dist/ui/assets/index.d.ts",
-      "import": "./dist/ui/assets/index.js",
-      "require": "./dist/ui/assets/index.js"
+      "import": "./dist/ui/assets/index.js"
     }
   },
   "files": [
