@@ -17,6 +17,8 @@ import { normalizeAddress, validateDataSuffix, validateStringAmount } from './ut
  * @param options.dataSuffix - Optional 0x-prefixed hex attribution suffix
  * @param options.testnet - Whether to use Base Sepolia testnet (default: false)
  * @param options.payerInfo - Optional payer information configuration for data callbacks
+ * @param options.walletUrl - Optional wallet URL to use
+ * @param options.telemetry - Whether to enable telemetry logging (default: true)
  * @returns Promise<PaymentResult> - Result of the payment transaction
  * @throws Error if the payment fails
  *
