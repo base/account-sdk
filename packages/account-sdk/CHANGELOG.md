@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.7](https://github.com/base/account-sdk/compare/account-v2.5.6...account-v2.5.7) (2026-06-26)
+
+
+### Bug Fixes
+
+* pin spend permission spender when routing through global account ([#350](https://github.com/base/account-sdk/issues/350)) ([1009130](https://github.com/base/account-sdk/commit/10091303b3c6aad53682645451d2cf276f3c3ee7))
+
 ## [2.5.6](https://github.com/base/account-sdk/compare/account-v2.5.5...account-v2.5.6) (2026-05-08)
 
 
