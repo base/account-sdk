@@ -107,12 +107,19 @@ export async function routeThroughGlobalAccount({
     batchCall,
   ];
 
+  const { capabilities: originalCapabilities, ...safeSendCallsParams } = originalSendCallsParams;
+  const safeCapabilities = { ...(originalCapabilities ?? {}) };
+  // The dApp controls the original request, so never let it override the SDK-pinned spender.
+  delete safeCapabilities.spendPermissions;
+  const hasSafeCapabilities = Object.keys(safeCapabilities).length > 0;
+
   const requestToParent = injectRequestCapabilities(
     {
       method: 'wallet_sendCalls',
       params: [
         {
-          ...originalSendCallsParams,
+          ...safeSendCallsParams,
+          ...(hasSafeCapabilities ? { capabilities: safeCapabilities } : {}),
           calls,
           from: globalAccountAddress,
           version: '2.0.0',

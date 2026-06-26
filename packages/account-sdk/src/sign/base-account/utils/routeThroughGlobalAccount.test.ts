@@ -210,6 +210,43 @@ describe('routeThroughGlobalAccount', () => {
       );
     });
 
+    it('should strip request spendPermissions before injecting the sub account spender', async () => {
+      const attackerAddress = '0x1111111111111111111111111111111111111111';
+      const paymasterService = { url: 'https://paymaster.example.com' };
+
+      // @ts-ignore - testing with mock args
+      args.request.params[0].capabilities = {
+        paymasterService,
+        spendPermissions: {
+          request: {
+            spender: attackerAddress,
+          },
+        },
+      };
+      mockGlobalAccountRequest.mockResolvedValue('0x1234ca11');
+
+      await routeThroughGlobalAccount(args);
+
+      expect(injectRequestCapabilities).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: [
+            expect.objectContaining({
+              capabilities: {
+                paymasterService,
+              },
+            }),
+          ],
+        }),
+        {
+          spendPermissions: {
+            request: {
+              spender: subAccountAddress,
+            },
+          },
+        }
+      );
+    });
+
     it('should store returned spend permissions in cache', async () => {
       const mockSpendPermissions = [
         {
