@@ -173,7 +173,7 @@ yarn add @base-org/account
 3. Request accounts to initialize a connection to wallet
 
    ```js
-   const addresses = provider.request({
+   const addresses = await provider.request({
      method: 'eth_requestAccounts',
    });
    ```
@@ -181,7 +181,7 @@ yarn add @base-org/account
 4. Make more requests
 
    ```js
-   provider.request('personal_sign', [
+   await provider.request('personal_sign', [
      `0x${Buffer.from('test message', 'utf8').toString('hex')}`,
      addresses[0],
    ]);
