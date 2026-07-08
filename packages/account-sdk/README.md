@@ -78,7 +78,7 @@
 3. Request accounts to initialize a connection to wallet
 
    ```js
-   const addresses = provider.request({
+   const addresses = await provider.request({
      method: 'eth_requestAccounts',
    });
    ```
@@ -86,10 +86,13 @@
 4. Make more requests
 
    ```js
-   provider.request('personal_sign', [
-     `0x${Buffer.from('test message', 'utf8').toString('hex')}`,
-     addresses[0],
-   ]);
+   provider.request({
+     method: 'personal_sign',
+     params: [
+       `0x${Buffer.from('test message', 'utf8').toString('hex')}`,
+       addresses[0],
+     ],
+   });
    ```
 
 5. Handle provider events
@@ -127,7 +130,7 @@
 
 ## Script Tag Usage
 
-Base Accunt can be used directly in HTML pages via a script tag, without any build tools:
+Base Account can be used directly in HTML pages via a script tag, without any build tools:
 
 ```html
 <!-- Via unpkg -->

@@ -8,6 +8,7 @@ The payment interface provides a simple way to make USDC payments on Base networ
 import { pay } from '@base-org/account';
 
 // Basic payment
+// pay() resolves on success and throws on failure
 const payment = await pay({
   amount: "10.50",
   to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
@@ -15,11 +16,7 @@ const payment = await pay({
   testnet: true
 });
 
-if (payment.success) {
-  console.log(`Payment sent! Transaction ID: ${payment.id}`);
-} else {
-  console.error(`Payment failed: ${payment.error}`);
-}
+console.log(`Payment sent! Transaction ID: ${payment.id}`);
 ```
 
 ## Checking Payment Status
@@ -27,7 +24,7 @@ if (payment.success) {
 You can check the status of a payment using the transaction ID returned from the pay function:
 
 ```typescript
-import { getPaymentStatus } from '@base/account-sdk';
+import { getPaymentStatus } from '@base-org/account';
 
 // Check payment status
 const status = await getPaymentStatus({
@@ -43,7 +40,7 @@ switch (status.status) {
     console.log(`Payment completed! Amount: ${status.amount} to ${status.recipient}`);
     break;
   case 'failed':
-    console.log(`Payment failed: ${status.error}`);
+    console.log(`Payment failed: ${status.reason}`);
     break;
   case 'not_found':
     console.log('Payment not found');
@@ -160,4 +157,4 @@ The payment result is always a successful payment (errors are thrown as exceptio
 - `sender?: string` - Sender address (present for pending, completed, and failed)
 - `amount?: string` - Amount sent (present for completed transactions, parsed from logs)
 - `recipient?: string` - Recipient address (present for completed transactions, parsed from logs)
-- `error?: string` - Error message (present for failed status - includes both on-chain failure reasons and off-chain errors) 
+- `reason?: string` - Reason for transaction failure (present for failed status - describes why the transaction failed on-chain) 
