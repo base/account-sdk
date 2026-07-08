@@ -165,7 +165,7 @@ If you're using TypeScript with Vue, the package includes full type definitions:
 
 <script setup lang="ts">
 import { SignInWithBaseButton } from '@base-org/account-ui/vue';
-import type { Ref } from 'vue';
+import { ref, type Ref } from 'vue';
 
 interface User {
   id: string;
