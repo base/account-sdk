@@ -327,6 +327,53 @@ describe('requestSpendPermission', () => {
       });
     });
 
+    it('should return the wallet-substituted account in permission when mutableData substitution occurs', async () => {
+      const capabilities: WalletSignCapabilities = {
+        spendPermission: {
+          requireBalance: true,
+        },
+      };
+
+      // The request declares mutableData: { fields: ['message.account'] }, so the
+      // wallet is allowed to substitute account with a different (smart-wallet)
+      // address than the one originally requested.
+      const substitutedAccount = '0x00000000000000000000000000000000000000ab' as `0x${string}`;
+      const substitutedTypedData: SpendPermissionTypedData = {
+        ...mockTypedData,
+        message: {
+          ...mockTypedData.message,
+          account: substitutedAccount,
+        },
+      };
+
+      const mockWalletSignResponse = {
+        signature: mockSignature,
+        signedData: substitutedTypedData,
+      };
+
+      // createSpendPermissionTypedData returns the pre-substitution request data.
+      (createSpendPermissionTypedData as Mock).mockReturnValue(mockTypedData);
+      // The wallet returns the post-substitution signed data.
+      (mockProviderRequest as Mock).mockResolvedValue(mockWalletSignResponse);
+      (getHash as Mock).mockResolvedValue(mockPermissionHash);
+
+      const result = await requestSpendPermission({
+        ...mockRequestData,
+        capabilities,
+      });
+
+      // permissionHash is derived from the post-substitution message, ...
+      expect(getHash).toHaveBeenCalledWith({
+        permission: substitutedTypedData.message,
+        chainId: mockRequestData.chainId,
+      });
+      // ... so the returned permission must describe the same (substituted)
+      // account rather than the original pre-substitution request, otherwise
+      // permission and permissionHash describe different permissions.
+      expect(result.permission).toEqual(substitutedTypedData.message);
+      expect(result.permission.account).toBe(substitutedAccount);
+    });
+
     it('should handle invalid wallet_sign response', async () => {
       const capabilities: WalletSignCapabilities = {
         spendPermission: {
