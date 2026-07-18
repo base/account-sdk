@@ -105,6 +105,11 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         }),
       }).then((res) => res.json());
 
+      if (userOpResponse.error) {
+        const errorMessage = userOpResponse.error.message || 'Network error';
+        throw new Error(`RPC error: ${errorMessage}`);
+      }
+
       if (userOpResponse.result) {
         // UserOp exists but no receipt yet - it's pending
         if (telemetry) {
