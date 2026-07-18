@@ -11,13 +11,11 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
     throw new Error('Invalid amount: must be a string');
   }
 
-  const numAmount = parseFloat(amount);
-
-  if (isNaN(numAmount)) {
+  if (!/^-?\d+(?:\.\d+)?$/.test(amount)) {
     throw new Error('Invalid amount: must be a valid number');
   }
 
-  if (numAmount <= 0) {
+  if (amount.startsWith('-') || !/[1-9]/.test(amount)) {
     throw new Error('Invalid amount: must be greater than 0');
   }
 
