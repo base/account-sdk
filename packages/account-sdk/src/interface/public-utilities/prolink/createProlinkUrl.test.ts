@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { createProlinkUrl } from './createProlinkUrl.js';
-import { encodeProlink } from './index.node.js';
+import { createProlinkUrl as createProlinkUrlFromNodeEntry, encodeProlink } from './index.node.js';
 
 describe('createProlinkUrl', () => {
   const EXAMPLE_PROLINK = 'CAEQhUIgAigFcn0KFKqqqqqqqqqqqqqqqqqqqqqqqqqqEhQxlx8zf';
@@ -250,6 +250,22 @@ describe('createProlinkUrl', () => {
       expect(url.pathname).toBe('/path/to/pay');
       expect(url.hash).toBe('#section');
       expect(url.searchParams.get('p')).toBe(EXAMPLE_PROLINK);
+    });
+  });
+
+  describe('node entry point re-export', () => {
+    it('should be importable from the node entry point and produce the same URL', async () => {
+      expect(typeof createProlinkUrlFromNodeEntry).toBe('function');
+
+      const prolink = await encodeProlink({
+        method: 'personal_sign',
+        params: ['0xdeadbeef', '0xfe21034794a5A574B94fE4fDfD16e005F1C96e51'],
+        chainId: 8453,
+      });
+      const result = createProlinkUrlFromNodeEntry(prolink);
+
+      expect(result).toBe(createProlinkUrl(prolink));
+      expect(new URL(result).searchParams.get('p')).toBe(prolink);
     });
   });
 });
