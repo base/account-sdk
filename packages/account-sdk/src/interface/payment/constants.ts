@@ -20,6 +20,20 @@ export const CHAIN_IDS = {
 } as const;
 
 /**
+ * Default bundler endpoints for payment status checks
+ */
+export const DEFAULT_BUNDLER_URLS = {
+  base: 'https://chain-proxy.wallet.coinbase.com?targetName=base',
+  baseSepolia: 'https://chain-proxy.wallet.coinbase.com?targetName=base-sepolia',
+} as const;
+
+/** Default request headers for payment status checks */
+export const DEFAULT_BUNDLER_HEADERS = {
+  'x-tpp-client-project-name': 'base-pay-sdk',
+  'x-tpp-client-feature-name': 'payment-status',
+} as const;
+
+/**
  * ERC20 transfer function ABI
  */
 export const ERC20_TRANSFER_ABI = [

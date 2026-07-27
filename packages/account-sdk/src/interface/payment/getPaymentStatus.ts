@@ -6,8 +6,24 @@ import {
   logPaymentStatusCheckError,
   logPaymentStatusCheckStarted,
 } from ':core/telemetry/events/payment.js';
-import { ERC20_TRANSFER_ABI, TOKENS } from './constants.js';
+import {
+  DEFAULT_BUNDLER_HEADERS,
+  DEFAULT_BUNDLER_URLS,
+  ERC20_TRANSFER_ABI,
+  TOKENS,
+} from './constants.js';
 import type { PaymentStatus, PaymentStatusOptions } from './types.js';
+
+function getDefaultBundlerUrl(testnet: boolean): string {
+  return testnet ? DEFAULT_BUNDLER_URLS.baseSepolia : DEFAULT_BUNDLER_URLS.base;
+}
+
+function getBundlerRequestHeaders(usingDefaultBundlerUrl: boolean): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    ...(usingDefaultBundlerUrl ? DEFAULT_BUNDLER_HEADERS : {}),
+  };
+}
 
 /**
  * Check the status of a payment transaction using its transaction ID (userOp hash)
@@ -57,19 +73,14 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
   }
 
   try {
-    // Get the bundler URL - use custom URL if provided, otherwise use default based on network
-    const effectiveBundlerUrl =
-      bundlerUrl ||
-      (testnet
-        ? 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
-        : 'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O');
+    const usingDefaultBundlerUrl = !bundlerUrl;
+    const effectiveBundlerUrl = bundlerUrl || getDefaultBundlerUrl(testnet);
+    const headers = getBundlerRequestHeaders(usingDefaultBundlerUrl);
 
     // Call eth_getUserOperationReceipt via the bundler
     const receipt = await fetch(effectiveBundlerUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: 1,
@@ -94,9 +105,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       // Try eth_getUserOperationByHash to see if it's in mempool
       const userOpResponse = await fetch(effectiveBundlerUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           jsonrpc: '2.0',
           id: 2,
