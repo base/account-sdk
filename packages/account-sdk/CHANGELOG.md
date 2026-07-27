@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.8](https://github.com/base/account-sdk/compare/account-v2.5.7...account-v2.5.8) (2026-07-27)
+
+
+### Bug Fixes
+
+* remove embedded RPC keys from getPaymentStatus ([#371](https://github.com/base/account-sdk/issues/371)) ([01d230e](https://github.com/base/account-sdk/commit/01d230ed5b0148193dc47321e8e70bf513c8ec4e))
+
 ## [2.5.7](https://github.com/base/account-sdk/compare/account-v2.5.6...account-v2.5.7) (2026-06-26)
 
 
