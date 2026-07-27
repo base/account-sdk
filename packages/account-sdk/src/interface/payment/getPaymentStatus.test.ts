@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_BUNDLER_HEADERS, DEFAULT_BUNDLER_URLS } from './constants.js';
 import { getPaymentStatus } from './getPaymentStatus.js';
 import type { PaymentStatus } from './types.js';
 
@@ -11,6 +12,11 @@ vi.mock(':core/telemetry/events/payment.js', () => ({
   logPaymentStatusCheckCompleted: vi.fn(),
   logPaymentStatusCheckError: vi.fn(),
 }));
+
+const defaultBundlerHeaders = {
+  'Content-Type': 'application/json',
+  ...DEFAULT_BUNDLER_HEADERS,
+};
 
 describe('getPaymentStatus', () => {
   beforeEach(() => {
@@ -67,10 +73,10 @@ describe('getPaymentStatus', () => {
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
+      DEFAULT_BUNDLER_URLS.base,
       expect.objectContaining({
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: defaultBundlerHeaders,
         body: JSON.stringify({
           jsonrpc: '2.0',
           id: 1,
@@ -213,8 +219,10 @@ describe('getPaymentStatus', () => {
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
-      expect.any(Object)
+      DEFAULT_BUNDLER_URLS.baseSepolia,
+      expect.objectContaining({
+        headers: defaultBundlerHeaders,
+      })
     );
   });
 
@@ -619,10 +627,7 @@ describe('getPaymentStatus', () => {
       );
 
       // Verify default bundler URL was NOT used
-      expect(fetch).not.toHaveBeenCalledWith(
-        'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
-        expect.anything()
-      );
+      expect(fetch).not.toHaveBeenCalledWith(DEFAULT_BUNDLER_URLS.base, expect.anything());
     });
 
     it('should use custom bundler URL for both receipt and pending checks', async () => {
@@ -701,8 +706,10 @@ describe('getPaymentStatus', () => {
 
       // Verify default testnet bundler URL was used
       expect(fetch).toHaveBeenCalledWith(
-        'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O',
-        expect.anything()
+        DEFAULT_BUNDLER_URLS.baseSepolia,
+        expect.objectContaining({
+          headers: defaultBundlerHeaders,
+        })
       );
     });
   });
