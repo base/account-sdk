@@ -32,18 +32,22 @@ import { sendUserOpAndWait } from './utils/sendUserOpAndWait.js';
  * @param options.paymasterUrl - Paymaster URL for sponsorship. Falls back to PAYMASTER_URL env var
  * @param options.recipient - Optional recipient address to receive the charged USDC
  * @param options.rpcUrl - Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints.
+ * @param options.expectedPayer - Optional subscriber address that must own the subscription
  * @returns Promise<ChargeResult> - Result of the charge transaction
  * @throws Error if CDP credentials are missing, subscription not found, or charge fails
  *
  * @example
  * ```typescript
- * import { base } from '@base-org/account/payment';
+ * import { base } from '@base-org/account/node';
  *
- * // Using environment variables for credentials and paymaster
+ * // Using environment variables for credentials and paymaster.
+ * // Prefer a server-stored subscription id bound to the authenticated user.
+ * // Optionally pass expectedPayer to enforce that binding at charge time.
  * const charge = await base.subscription.charge({
- *   id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+ *   id: storedSubscriptionId,
  *   amount: '9.99',
- *   testnet: false
+ *   testnet: false,
+ *   expectedPayer: authenticatedUserAddress,
  * });
  * console.log(`Charged ${charge.amount} - Transaction: ${charge.id}`);
  *
@@ -95,6 +99,8 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
     paymasterUrl = process.env.PAYMASTER_URL,
     recipient,
     rpcUrl,
+    expectedSpender,
+    expectedPayer,
   } = options;
 
   // Step 1: Initialize CDP client with provided credentials or environment variables
@@ -108,8 +114,25 @@ export async function charge(options: ChargeOptions): Promise<ChargeResult> {
   // The wallet should have been created prior to executing a charge on it.
   const smartWallet = await getExistingSmartWalletOrThrow(cdpClient, walletName, 'charge');
 
+  // Always require the permission spender to be this CDP smart wallet. Callers may also
+  // pass expectedSpender explicitly; it must match the wallet used to execute the charge.
+  const chargingSpender = smartWallet.address as Address;
+  if (expectedSpender && expectedSpender.toLowerCase() !== chargingSpender.toLowerCase()) {
+    throw new Error(
+      `expectedSpender ${expectedSpender} does not match charging wallet ${chargingSpender}`
+    );
+  }
+
   // Step 3: Prepare the charge call data (including optional recipient transfer and custom RPC URL)
-  const chargeCalls = await prepareCharge({ id, amount, testnet, recipient, rpcUrl });
+  const chargeCalls = await prepareCharge({
+    id,
+    amount,
+    testnet,
+    recipient,
+    rpcUrl,
+    expectedSpender: chargingSpender,
+    expectedPayer,
+  });
 
   // Step 4: Get the network-scoped smart wallet
   const network = testnet ? 'base-sepolia' : 'base';

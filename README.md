@@ -95,18 +95,37 @@ console.log(`Next charge: ${status.nextPeriodStart}`);
 
 ### Charge a Subscription
 
+Store the subscription `id` on your backend against the authenticated user when they subscribe.
+Do not charge an arbitrary `id` supplied by the browser alone — treat it as a capability handle,
+not proof of ownership.
+
 ```typescript
 import { base } from '@base-org/account';
 
-// Prepare the charge (get the transaction data)
+// Browser / custom wallet path: prepare call data, then send from your subscription owner
 const chargeCalls = await base.subscription.prepareCharge({
-  id: subscription.id,
+  id: storedSubscriptionId,
   amount: '9.99',        // or 'max-remaining-charge'
-  testnet: true
+  testnet: true,
+  expectedSpender: subscriptionOwner,       // your app's spender address
+  expectedPayer: authenticatedUserAddress,  // subscriber wallet from your session
 });
 
 // Execute the charge using your wallet provider
 // (This step requires your app's wallet to execute the transaction)
+```
+
+```typescript
+import { base } from '@base-org/account/node';
+
+// Node path: charge() requires the permission spender to be your CDP smart wallet.
+// Pass expectedPayer to ensure the subscription belongs to the authenticated user.
+const charge = await base.subscription.charge({
+  id: storedSubscriptionId,
+  amount: '9.99',
+  testnet: true,
+  expectedPayer: authenticatedUserAddress,
+});
 ```
 
 

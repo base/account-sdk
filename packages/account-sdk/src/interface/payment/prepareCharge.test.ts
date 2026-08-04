@@ -214,4 +214,85 @@ describe('prepareCharge', () => {
     });
     expect(result).toEqual(mockCallData);
   });
+
+  it('should accept matching expectedSpender and expectedPayer', async () => {
+    const authorizedPermission = {
+      chainId: 8453,
+      permission: {
+        account: '0x1111111111111111111111111111111111111111',
+        spender: '0x2222222222222222222222222222222222222222',
+        token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      },
+      signature: '0xmocksignature',
+    } as SpendPermission;
+    const { fetchPermission, prepareSpendCallData } = await import(
+      '../public-utilities/spend-permission/index.js'
+    );
+    vi.mocked(fetchPermission).mockResolvedValue(authorizedPermission);
+    vi.mocked(prepareSpendCallData).mockResolvedValue(mockCallData);
+
+    const result = await prepareCharge({
+      id: '0xhash123',
+      amount: '10.50',
+      testnet: false,
+      expectedSpender: '0x2222222222222222222222222222222222222222' as any,
+      expectedPayer: '0x1111111111111111111111111111111111111111' as any,
+    });
+
+    expect(result).toEqual(mockCallData);
+  });
+
+  it('should reject mismatched expectedSpender', async () => {
+    const authorizedPermission = {
+      chainId: 8453,
+      permission: {
+        account: '0x1111111111111111111111111111111111111111',
+        spender: '0x2222222222222222222222222222222222222222',
+        token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      },
+      signature: '0xmocksignature',
+    } as SpendPermission;
+    const { fetchPermission, prepareSpendCallData } = await import(
+      '../public-utilities/spend-permission/index.js'
+    );
+    vi.mocked(fetchPermission).mockResolvedValue(authorizedPermission);
+    vi.mocked(prepareSpendCallData).mockClear();
+
+    await expect(
+      prepareCharge({
+        id: '0xhash123',
+        amount: '10.50',
+        testnet: false,
+        expectedSpender: '0x3333333333333333333333333333333333333333' as any,
+      })
+    ).rejects.toThrow(/Subscription spender/);
+    expect(prepareSpendCallData).not.toHaveBeenCalled();
+  });
+
+  it('should reject mismatched expectedPayer', async () => {
+    const authorizedPermission = {
+      chainId: 8453,
+      permission: {
+        account: '0x1111111111111111111111111111111111111111',
+        spender: '0x2222222222222222222222222222222222222222',
+        token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      },
+      signature: '0xmocksignature',
+    } as SpendPermission;
+    const { fetchPermission, prepareSpendCallData } = await import(
+      '../public-utilities/spend-permission/index.js'
+    );
+    vi.mocked(fetchPermission).mockResolvedValue(authorizedPermission);
+    vi.mocked(prepareSpendCallData).mockClear();
+
+    await expect(
+      prepareCharge({
+        id: '0xhash123',
+        amount: '10.50',
+        testnet: false,
+        expectedPayer: '0x3333333333333333333333333333333333333333' as any,
+      })
+    ).rejects.toThrow(/Subscription payer/);
+    expect(prepareSpendCallData).not.toHaveBeenCalled();
+  });
 });
