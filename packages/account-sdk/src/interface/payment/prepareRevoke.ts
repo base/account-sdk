@@ -3,6 +3,7 @@ import {
   prepareRevokeCallData,
 } from '../public-utilities/spend-permission/index.js';
 import type { PrepareRevokeOptions, PrepareRevokeResult } from './types.js';
+import { assertPermissionAuthorization } from './utils/assertPermissionAuthorization.js';
 import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.js';
 
 /**
@@ -14,9 +15,14 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  *
  * The resulting call data includes the encoded transaction to revoke the spend permission.
  *
+ * A subscription ID is not an authorization token by itself. Prefer server-stored IDs bound to the
+ * authenticated user, and pass `expectedSpender` / `expectedPayer` when the ID may be untrusted.
+ *
  * @param options - Options for preparing the revoke
  * @param options.id - The subscription ID (permission hash) returned from subscribe()
  * @param options.testnet - Whether this permission is on testnet (Base Sepolia). Defaults to false (mainnet)
+ * @param options.expectedSpender - Optional address that must match the subscription spender
+ * @param options.expectedPayer - Optional address that must match the subscription payer
  * @returns Promise<PrepareRevokeResult> - Call data for the revoke
  * @throws Error if the subscription cannot be found
  *
@@ -27,7 +33,8 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  * // Prepare to revoke a subscription
  * const revokeCall = await base.subscription.prepareRevoke({
  *   id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
- *   testnet: false
+ *   testnet: false,
+ *   expectedSpender: subscriptionOwner,
  * });
  *
  * // Send the call using your app's subscription owner account
@@ -43,7 +50,7 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  * ```
  */
 export async function prepareRevoke(options: PrepareRevokeOptions): Promise<PrepareRevokeResult> {
-  const { id, testnet = false } = options;
+  const { id, testnet = false, expectedSpender, expectedPayer } = options;
 
   // Fetch the permission using the subscription ID (permission hash)
   const permission = await fetchPermission({
@@ -57,6 +64,9 @@ export async function prepareRevoke(options: PrepareRevokeOptions): Promise<Prep
 
   // Validate this is a USDC permission on the correct network
   validateUSDCBasePermission(permission, testnet);
+
+  // Optionally bind the permission to a known spender and/or payer
+  assertPermissionAuthorization(permission, { expectedSpender, expectedPayer });
 
   // Call the existing prepareRevokeCallData utility
   const callData = await prepareRevokeCallData(permission);

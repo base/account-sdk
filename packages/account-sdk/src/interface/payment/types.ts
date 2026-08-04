@@ -300,6 +300,16 @@ export interface PrepareChargeOptions {
   recipient?: Address;
   /** Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints. */
   rpcUrl?: string;
+  /**
+   * If set, the subscription's spender (subscription owner) must match this address.
+   * `charge()` sets this automatically to your CDP smart wallet.
+   */
+  expectedSpender?: Address;
+  /**
+   * If set, the subscription's payer (subscriber account) must match this address.
+   * Pass the authenticated user's wallet so you only charge subscriptions belonging to them.
+   */
+  expectedPayer?: Address;
 }
 
 /**
@@ -389,6 +399,16 @@ export interface PrepareRevokeOptions {
   id: string;
   /** Whether to use testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
+  /**
+   * If set, the subscription's spender (subscription owner) must match this address.
+   * `revoke()` sets this automatically to your CDP smart wallet.
+   */
+  expectedSpender?: Address;
+  /**
+   * If set, the subscription's payer (subscriber account) must match this address.
+   * Pass the authenticated user's wallet so you only revoke subscriptions belonging to them.
+   */
+  expectedPayer?: Address;
 }
 
 /**

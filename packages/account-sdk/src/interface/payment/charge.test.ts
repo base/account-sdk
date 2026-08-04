@@ -104,13 +104,15 @@ describe('charge', () => {
         owner: mockEoaAccount,
       });
 
-      // Verify charge preparation
+      // Verify charge preparation (spender bound to CDP smart wallet)
       expect(prepareChargeModule.prepareCharge).toHaveBeenCalledWith({
         id: options.id,
         amount: options.amount,
         testnet: options.testnet,
         recipient: undefined,
         rpcUrl: undefined,
+        expectedSpender: mockSmartAccount.address,
+        expectedPayer: undefined,
       });
 
       // Verify network selection
@@ -179,6 +181,8 @@ describe('charge', () => {
         testnet: options.testnet,
         recipient: undefined,
         rpcUrl: undefined,
+        expectedSpender: mockSmartAccount.address,
+        expectedPayer: undefined,
       });
 
       expect(result.amount).toBe('max');
@@ -280,6 +284,8 @@ describe('charge', () => {
         testnet: options.testnet,
         recipient: recipientAddress,
         rpcUrl: undefined,
+        expectedSpender: mockSmartAccount.address,
+        expectedPayer: undefined,
       });
 
       // Verify that sendUserOperation was called with all calls from prepareCharge
@@ -335,6 +341,8 @@ describe('charge', () => {
         testnet: options.testnet,
         recipient: recipientAddress,
         rpcUrl: undefined,
+        expectedSpender: mockSmartAccount.address,
+        expectedPayer: undefined,
       });
 
       // Verify testnet network selection
@@ -374,6 +382,8 @@ describe('charge', () => {
         testnet: options.testnet,
         recipient: recipientAddress,
         rpcUrl: undefined,
+        expectedSpender: mockSmartAccount.address,
+        expectedPayer: undefined,
       });
 
       // Verify result
@@ -405,6 +415,8 @@ describe('charge', () => {
         testnet: options.testnet,
         recipient: undefined,
         rpcUrl: customRpcUrl,
+        expectedSpender: mockSmartAccount.address,
+        expectedPayer: undefined,
       });
 
       // Verify result
@@ -416,9 +428,51 @@ describe('charge', () => {
         subscriptionOwner: mockSmartAccount.address,
       });
     });
+
+    it('should pass expectedPayer through to prepareCharge', async () => {
+      const expectedPayer = '0x1111111111111111111111111111111111111111';
+      const options = {
+        id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+        amount: '9.99',
+        testnet: false,
+        expectedPayer: expectedPayer as any,
+        cdpApiKeyId: 'test-api-key',
+        cdpApiKeySecret: 'test-api-secret',
+        cdpWalletSecret: 'test-wallet-secret',
+      };
+
+      await charge(options);
+
+      expect(prepareChargeModule.prepareCharge).toHaveBeenCalledWith({
+        id: options.id,
+        amount: options.amount,
+        testnet: options.testnet,
+        recipient: undefined,
+        rpcUrl: undefined,
+        expectedSpender: mockSmartAccount.address,
+        expectedPayer,
+      });
+    });
   });
 
   describe('error handling', () => {
+    it('should reject when expectedSpender does not match the charging wallet', async () => {
+      const options = {
+        id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
+        amount: '9.99',
+        testnet: false,
+        expectedSpender: '0x3333333333333333333333333333333333333333' as any,
+        cdpApiKeyId: 'test-api-key',
+        cdpApiKeySecret: 'test-api-secret',
+        cdpWalletSecret: 'test-wallet-secret',
+      };
+
+      await expect(charge(options)).rejects.toThrow(
+        `expectedSpender ${options.expectedSpender} does not match charging wallet ${mockSmartAccount.address}`
+      );
+      expect(prepareChargeModule.prepareCharge).not.toHaveBeenCalled();
+    });
+
     it('should throw error when CDP credentials are missing', async () => {
       (CdpClient as any).mockImplementation(() => {
         throw new Error('Missing required API credentials');

@@ -29,17 +29,19 @@ import { sendUserOpAndWait } from './utils/sendUserOpAndWait.js';
  * @param options.cdpWalletSecret - CDP wallet secret. Falls back to CDP_WALLET_SECRET env var
  * @param options.walletName - Custom wallet name. Defaults to "subscription owner"
  * @param options.paymasterUrl - Paymaster URL for sponsorship. Falls back to PAYMASTER_URL env var
+ * @param options.expectedPayer - Optional subscriber address that must own the subscription
  * @returns Promise<RevokeResult> - Result of the revoke transaction
  * @throws Error if CDP credentials are missing, subscription not found, or revoke fails
  *
  * @example
  * ```typescript
- * import { base } from '@base-org/account/payment';
+ * import { base } from '@base-org/account/node';
  *
  * // Using environment variables for credentials and paymaster
  * const result = await base.subscription.revoke({
- *   id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
- *   testnet: false
+ *   id: storedSubscriptionId,
+ *   testnet: false,
+ *   expectedPayer: authenticatedUserAddress,
  * });
  * console.log(`Revoked subscription - Transaction: ${result.id}`);
  *
@@ -70,6 +72,8 @@ export async function revoke(options: RevokeOptions): Promise<RevokeResult> {
     cdpWalletSecret,
     walletName = 'subscription owner',
     paymasterUrl = process.env.PAYMASTER_URL,
+    expectedSpender,
+    expectedPayer,
   } = options;
 
   // Step 1: Initialize CDP client with provided credentials or environment variables
@@ -83,8 +87,20 @@ export async function revoke(options: RevokeOptions): Promise<RevokeResult> {
   // The wallet should have been created prior to executing a revoke on it.
   const smartWallet = await getExistingSmartWalletOrThrow(cdpClient, walletName, 'revoke');
 
+  const revokingSpender = smartWallet.address as Address;
+  if (expectedSpender && expectedSpender.toLowerCase() !== revokingSpender.toLowerCase()) {
+    throw new Error(
+      `expectedSpender ${expectedSpender} does not match revoking wallet ${revokingSpender}`
+    );
+  }
+
   // Step 3: Prepare the revoke call data
-  const revokeCall = await prepareRevoke({ id, testnet });
+  const revokeCall = await prepareRevoke({
+    id,
+    testnet,
+    expectedSpender: revokingSpender,
+    expectedPayer,
+  });
 
   // Step 4: Get the network-scoped smart wallet
   const network = testnet ? 'base-sepolia' : 'base';

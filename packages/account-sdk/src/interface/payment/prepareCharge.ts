@@ -5,6 +5,7 @@ import {
 } from '../public-utilities/spend-permission/index.js';
 import { TOKENS } from './constants.js';
 import type { PrepareChargeOptions, PrepareChargeResult } from './types.js';
+import { assertPermissionAuthorization } from './utils/assertPermissionAuthorization.js';
 import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.js';
 
 /**
@@ -18,12 +19,18 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  * - An approval call (if the permission is not yet active)
  * - A spend call to charge the subscription
  *
+ * A subscription ID is not an authorization token by itself. Store IDs server-side against the
+ * authenticated user at subscribe time, and pass `expectedSpender` / `expectedPayer` when the ID
+ * may come from an untrusted client.
+ *
  * @param options - Options for preparing the charge
  * @param options.id - The subscription ID (permission hash) returned from subscribe()
  * @param options.amount - Amount to charge as a string (e.g., "10.50") or 'max-remaining-charge'
  * @param options.testnet - Whether this permission is on testnet (Base Sepolia). Defaults to false (mainnet)
  * @param options.recipient - Optional recipient address to receive the charged USDC
  * @param options.rpcUrl - Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints.
+ * @param options.expectedSpender - Optional address that must match the subscription spender
+ * @param options.expectedPayer - Optional address that must match the subscription payer
  * @returns Promise<PrepareChargeResult> - Array of call data for the charge
  * @throws Error if the subscription cannot be found or if the amount exceeds remaining allowance
  *
@@ -35,7 +42,9 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  * const chargeCalls = await base.subscription.prepareCharge({
  *   id: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984',
  *   amount: '9.99',
- *   testnet: false
+ *   testnet: false,
+ *   expectedSpender: subscriptionOwner,
+ *   expectedPayer: authenticatedUserAddress,
  * });
  *
  * // Prepare to charge the full remaining charge
@@ -73,7 +82,15 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  * ```
  */
 export async function prepareCharge(options: PrepareChargeOptions): Promise<PrepareChargeResult> {
-  const { id, amount, testnet = false, recipient, rpcUrl } = options;
+  const {
+    id,
+    amount,
+    testnet = false,
+    recipient,
+    rpcUrl,
+    expectedSpender,
+    expectedPayer,
+  } = options;
 
   // Fetch the permission using the subscription ID (permission hash)
   const permission = await fetchPermission({
@@ -87,6 +104,9 @@ export async function prepareCharge(options: PrepareChargeOptions): Promise<Prep
 
   // Validate this is a USDC permission on the correct network
   validateUSDCBasePermission(permission, testnet);
+
+  // Optionally bind the permission to a known spender and/or payer
+  assertPermissionAuthorization(permission, { expectedSpender, expectedPayer });
 
   // Determine the amount to pass to prepareSpendCallData
   let spendAmount: bigint | 'max-remaining-allowance';
