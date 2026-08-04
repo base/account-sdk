@@ -792,6 +792,13 @@ export class Signer {
           correlationId,
           errorMessage: parseErrorMessageFromAny(error),
         });
+        // Preserve a structured provider/RPC error (for example 'user cancelled'
+        // from the add-owner dialog, or a user rejection bubbling up from the
+        // popup) so callers can tell a rejection from a genuine failure, rather
+        // than collapsing every cause into one generic unauthorized.
+        if (typeof (error as { code?: unknown } | null)?.code === 'number') {
+          throw error;
+        }
         throw standardErrors.provider.unauthorized(
           'failed to add sub account owner when sending request to sub account signer'
         );

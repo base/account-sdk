@@ -1727,7 +1727,7 @@ describe('Signer', () => {
 
       // Force the add-owner path: findOwnerIndex returns -1
       (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
-      // handleAddSubAccountOwner throws — simulates on-chain failure
+      // handleAddSubAccountOwner throws - simulates on-chain failure
       (handleAddSubAccountOwner as Mock).mockRejectedValueOnce(
         new Error('on-chain add-owner failed')
       );
@@ -1840,6 +1840,66 @@ describe('Signer', () => {
       await expect(signer.request(mockRequest)).rejects.toThrow(
         'failed to add sub account owner when sending request to sub account signer'
       );
+    });
+
+    it('should preserve a structured error instead of collapsing it to a generic unauthorized', async () => {
+      await signer.cleanup();
+
+      store.subAccounts.set({
+        address: subAccountAddress,
+      });
+
+      (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
+      // A structured provider error (carries a numeric code), e.g. a user rejection
+      (handleAddSubAccountOwner as Mock).mockRejectedValueOnce(
+        Object.assign(new Error('user cancelled'), { code: 4100 })
+      );
+
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      signer['accounts'] = [subAccountAddress, globalAccountAddress];
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            version: '1',
+            calls: [],
+            from: subAccountAddress,
+            chainId: '0x14a34',
+          },
+        ],
+      };
+
+      // The original message survives instead of the generic wrapper
+      await expect(signer.request(mockRequest)).rejects.toThrow('user cancelled');
     });
 
     it('should NOT resolve to an error object when handleAddSubAccountOwner throws', async () => {
