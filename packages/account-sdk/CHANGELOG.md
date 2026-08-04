@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.9](https://github.com/base/account-sdk/compare/account-v2.5.8...account-v2.5.9) (2026-08-04)
+
+
+### Bug Fixes
+
+* bind subscription charge/revoke to spender and payer ([#373](https://github.com/base/account-sdk/issues/373)) ([5e0add8](https://github.com/base/account-sdk/commit/5e0add8261e69da59f82fcb605f2cb60c5d54c12))
+
 ## [2.5.8](https://github.com/base/account-sdk/compare/account-v2.5.7...account-v2.5.8) (2026-07-27)
 
 
