@@ -78,6 +78,7 @@ const requestSpendPermissionFn = async (
   // Check if we should use wallet_sign (when capabilities are provided) or eth_signTypedData_v4
   let signature: string;
   let permissionHash: string;
+  let signedMessage = typedData.message;
 
   if (capabilities) {
     // Use wallet_sign with capabilities
@@ -122,8 +123,9 @@ const requestSpendPermissionFn = async (
     };
 
     signature = signResult.signature;
+    signedMessage = signResult.signedData.message;
     permissionHash = await getHash({
-      permission: signResult.signedData.message,
+      permission: signedMessage,
       chainId,
     });
   } else {
@@ -142,7 +144,7 @@ const requestSpendPermissionFn = async (
     permissionHash,
     signature,
     chainId,
-    permission: typedData.message,
+    permission: signedMessage,
   };
 
   return permission;
