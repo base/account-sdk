@@ -17,12 +17,13 @@ export function openPopup(url: URL): Promise<Window> {
   appendAppInfoQueryParams(url);
 
   function tryOpenPopup(): Window | null {
-    const popupId = `wallet_${crypto.randomUUID()}`;
+  const popupId = `wallet_${
+  crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)
+  }`;
     const popup = window.open(
       url,
       popupId,
-      `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
-    );
+      `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`);
 
     popup?.focus();
 
