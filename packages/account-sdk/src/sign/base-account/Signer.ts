@@ -94,7 +94,7 @@ export class Signer {
 
     const { account, chains } = this.storeInstance.getState();
     this.accounts = account.accounts ?? [];
-    this.chain = account.chain ?? {
+    this.chain = account.chain ?? chains?.[0] ?? {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
 
@@ -433,7 +433,8 @@ export class Signer {
 
     // reset the signer
     this.accounts = [];
-    this.chain = {
+    const chains = this.storeInstance.getState().chains;
+    this.chain = chains?.[0] ?? {
       id: metadata?.appChainIds?.[0] ?? 1,
     };
   }
