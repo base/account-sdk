@@ -174,6 +174,40 @@ describe('getPaymentStatus', () => {
     });
   });
 
+  it('should propagate RPC errors from the pending user operation lookup', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        json: async () => ({ jsonrpc: '2.0', id: 1, result: null }),
+      } as Response)
+      .mockResolvedValueOnce({
+        json: async () => ({
+          jsonrpc: '2.0',
+          id: 2,
+          error: {
+            code: -32602,
+            message: 'Invalid user operation hash',
+          },
+        }),
+      } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xinvalid',
+        testnet: false,
+      })
+    ).rejects.toThrow('RPC error: Invalid user operation hash');
+
+    const { logPaymentStatusCheckCompleted, logPaymentStatusCheckError } = await import(
+      ':core/telemetry/events/payment.js'
+    );
+    expect(logPaymentStatusCheckCompleted).not.toHaveBeenCalled();
+    expect(logPaymentStatusCheckError).toHaveBeenCalledWith({
+      testnet: false,
+      correlationId: 'mock-correlation-id',
+      errorMessage: 'RPC error: Invalid user operation hash',
+    });
+  });
+
   it('should handle RPC errors gracefully', async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       json: async () => ({
