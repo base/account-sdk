@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@base-org/account": "workspace:*",
+    "@clack/prompts": "^1.1.0",
     "commander": "^13.0.0",
     "viem": "^2.31.7"
   },
