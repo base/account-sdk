@@ -1539,6 +1539,71 @@ describe('Signer', () => {
       expect(handleAddSubAccountOwner).toHaveBeenCalled();
     });
 
+    it('throws when adding the sub account owner fails', async () => {
+      await signer.cleanup();
+
+      store.subAccounts.set({
+        address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+      });
+
+      // Mock that spend permissions exist so we don't route through global account
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
+      (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
+      (handleAddSubAccountOwner as Mock).mockRejectedValueOnce(new Error('user rejected'));
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: null,
+        },
+      });
+
+      await signer.handshake({ method: 'handshake' });
+      expect(signer['accounts']).toEqual([]);
+
+      signer['accounts'] = [
+        '0x7838d2724FC686813CAf81d4429beff1110c739a',
+        '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+      ];
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            to: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+            version: '1',
+            calls: [],
+            from: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+          },
+        ],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+                      factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      // Before the fix this resolved with the error object instead of rejecting
+      await expect(signer.request(mockRequest)).rejects.toThrow();
+    });
+
     it('should not handle insufficient balance error if external funding source data is not provided', async () => {
       (createSubAccountSigner as Mock).mockImplementation(async () => {
         const request = vi.fn((args) => {
