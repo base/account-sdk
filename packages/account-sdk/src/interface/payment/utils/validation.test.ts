@@ -20,6 +20,14 @@ describe('validateStringAmount', () => {
     );
   });
 
+  it('rejects malformed numeric strings that parseFloat would accept', () => {
+    const message = 'Invalid amount: must be a valid number';
+    const malformed = ['1abc', '1.2.3', '1foo', '1e6', '1.', '.', ''];
+    for (const value of malformed) {
+      expect(() => validateStringAmount(value, 6)).toThrow(message);
+    }
+  });
+
   it('should reject non-string amounts', () => {
     expect(() => validateStringAmount(10 as any, 6)).toThrow('Invalid amount: must be a string');
   });
