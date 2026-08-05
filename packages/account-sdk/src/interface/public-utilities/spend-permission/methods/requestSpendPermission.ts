@@ -78,6 +78,7 @@ const requestSpendPermissionFn = async (
   // Check if we should use wallet_sign (when capabilities are provided) or eth_signTypedData_v4
   let signature: string;
   let permissionHash: string;
+  let permissionMessage: typeof typedData.message;
 
   if (capabilities) {
     // Use wallet_sign with capabilities
@@ -122,6 +123,9 @@ const requestSpendPermissionFn = async (
     };
 
     signature = signResult.signature;
+    // Use the wallet-returned (post-substitution) message: mutableData allows the
+    // wallet to replace message.account, and permissionHash below is computed from it.
+    permissionMessage = signResult.signedData.message;
     permissionHash = await getHash({
       permission: signResult.signedData.message,
       chainId,
@@ -135,6 +139,7 @@ const requestSpendPermissionFn = async (
       }) as Promise<string>,
       getHash({ permission: typedData.message, chainId }),
     ]);
+    permissionMessage = typedData.message;
   }
 
   const permission: SpendPermission = {
@@ -142,7 +147,7 @@ const requestSpendPermissionFn = async (
     permissionHash,
     signature,
     chainId,
-    permission: typedData.message,
+    permission: permissionMessage,
   };
 
   return permission;
