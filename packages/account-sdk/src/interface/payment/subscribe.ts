@@ -1,3 +1,4 @@
+import { PaymentError, ValidationError } from ':core/error/sdkErrors.js';
 import {
   logSubscriptionCompleted,
   logSubscriptionError,
@@ -87,9 +88,12 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
 
   // Runtime validation: overridePeriodInSecondsForTestnet requires testnet: true
   if (hasOverridePeriod && !testnet) {
-    throw new Error(
+    throw new ValidationError(
       'overridePeriodInSecondsForTestnet is only available for testing on testnet. ' +
-        'Set testnet: true to use overridePeriodInSecondsForTestnet, or use periodInDays for production.'
+        'Set testnet: true to use overridePeriodInSecondsForTestnet, or use periodInDays for production.',
+      'overridePeriodInSecondsForTestnet',
+      options.testnet,
+      'testnet: true'
     );
   }
 
@@ -186,8 +190,10 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
       // Type guard and validation for the result
       if (!result || typeof result !== 'object') {
         console.error('[SUBSCRIBE] Invalid response - expected object but got:', result);
-        throw new Error(
-          `Invalid response from wallet_sign: expected object but got ${typeof result}`
+        throw new PaymentError(
+          `Invalid response from wallet_sign: expected object but got ${typeof result}`,
+          'INVALID_WALLET_RESPONSE',
+          false
         );
       }
 
@@ -200,8 +206,10 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
           '[SUBSCRIBE] Missing expected properties. Response keys:',
           Object.keys(result)
         );
-        throw new Error(
-          `Invalid response from wallet_sign: missing ${!hasSignature ? 'signature' : ''} ${!hasSignedData ? 'signedData' : ''}`
+        throw new PaymentError(
+          `Invalid response from wallet_sign: missing ${!hasSignature ? 'signature' : ''} ${!hasSignedData ? 'signedData' : ''}`,
+          'INVALID_WALLET_RESPONSE',
+          false
         );
       }
 

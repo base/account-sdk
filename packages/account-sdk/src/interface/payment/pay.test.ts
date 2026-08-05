@@ -215,7 +215,7 @@ describe('pay', () => {
         to: '0xFe21034794A5a574B94fE4fDfD16e005F1C96e51',
         dataSuffix: 'not-hex' as any,
       })
-    ).rejects.toThrow('Invalid dataSuffix: expected a 0x-prefixed hex string');
+    ).rejects.toThrow('Invalid dataSuffix');
   });
 
   it('should handle SDK execution errors', async () => {

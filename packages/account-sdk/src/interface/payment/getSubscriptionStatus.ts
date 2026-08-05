@@ -4,8 +4,9 @@ import {
   getPermissionStatus,
 } from '../public-utilities/spend-permission/index.js';
 import { timestampInSecondsToDate } from '../public-utilities/spend-permission/utils.js';
-import { CHAIN_IDS, TOKENS } from './constants.js';
+import { PaymentError } from ':core/error/sdkErrors.js';
 import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
+import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.js';
 
 /**
  * Gets the current status and details of a subscription.
@@ -18,7 +19,8 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
  * @param options.testnet - Whether to check on testnet (Base Sepolia). Defaults to false (mainnet)
  * @param options.rpcUrl - Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints.
  * @returns Promise<SubscriptionStatus> - Subscription status information
- * @throws Error if the subscription cannot be found or if fetching fails
+ * @throws ValidationError if the subscription chain or token doesn't match expected values
+ * @throws PaymentError if the subscription has not started yet or if fetching fails
  *
  * @example
  * ```typescript
@@ -63,36 +65,7 @@ export async function getSubscriptionStatus(
   }
 
   // Validate this is a USDC permission on Base/Base Sepolia
-  const expectedChainId = testnet ? CHAIN_IDS.baseSepolia : CHAIN_IDS.base;
-  const expectedTokenAddress = testnet
-    ? TOKENS.USDC.addresses.baseSepolia.toLowerCase()
-    : TOKENS.USDC.addresses.base.toLowerCase();
-
-  if (permission.chainId !== expectedChainId) {
-    // Determine if the subscription is on mainnet or testnet
-    const isSubscriptionOnMainnet = permission.chainId === CHAIN_IDS.base;
-    const isSubscriptionOnTestnet = permission.chainId === CHAIN_IDS.baseSepolia;
-
-    let errorMessage: string;
-    if (testnet && isSubscriptionOnMainnet) {
-      errorMessage =
-        'The subscription was requested on testnet but is actually a mainnet subscription';
-    } else if (!testnet && isSubscriptionOnTestnet) {
-      errorMessage =
-        'The subscription was requested on mainnet but is actually a testnet subscription';
-    } else {
-      // Fallback for unexpected chain IDs
-      errorMessage = `Subscription is on chain ${permission.chainId}, expected ${expectedChainId} (${testnet ? 'Base Sepolia' : 'Base'})`;
-    }
-
-    throw new Error(errorMessage);
-  }
-
-  if (permission.permission.token.toLowerCase() !== expectedTokenAddress) {
-    throw new Error(
-      `Subscription is not for USDC token. Got ${permission.permission.token}, expected ${expectedTokenAddress}`
-    );
-  }
+  validateUSDCBasePermission(permission, testnet);
 
   // Get the current permission status (includes period info and active state)
   const status = await getPermissionStatus(permission, { rpcUrl });
@@ -108,8 +81,10 @@ export async function getSubscriptionStatus(
   const permissionStart = Number(permission.permission.start);
 
   if (currentTime < permissionStart) {
-    throw new Error(
-      `Subscription has not started yet. It will begin at ${new Date(permissionStart * 1000).toISOString()}`
+    throw new PaymentError(
+      `Subscription has not started yet. It will begin at ${new Date(permissionStart * 1000).toISOString()}`,
+      'SUBSCRIPTION_NOT_STARTED',
+      false
     );
   }
 

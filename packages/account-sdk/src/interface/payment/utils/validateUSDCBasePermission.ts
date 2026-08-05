@@ -1,4 +1,5 @@
 import type { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import { ValidationError } from ':core/error/sdkErrors.js';
 import { CHAIN_IDS, TOKENS } from '../constants.js';
 
 /**
@@ -7,7 +8,7 @@ import { CHAIN_IDS, TOKENS } from '../constants.js';
  *
  * @param permission - The permission to validate
  * @param testnet - Whether this should be testnet (Base Sepolia) or mainnet (Base)
- * @throws Error if chainId or token address doesn't match expected values
+ * @throws ValidationError if chainId or token address doesn't match expected values
  */
 export function validateUSDCBasePermission(permission: SpendPermission, testnet: boolean): void {
   // Validate this is a USDC permission on the correct network
@@ -33,12 +34,20 @@ export function validateUSDCBasePermission(permission: SpendPermission, testnet:
       errorMessage = `Subscription is on chain ${permission.chainId}, expected ${expectedChainId} (${testnet ? 'Base Sepolia' : 'Base'})`;
     }
 
-    throw new Error(errorMessage);
+    throw new ValidationError(
+      errorMessage,
+      'chainId',
+      permission.chainId,
+      `${expectedChainId} (${testnet ? 'Base Sepolia' : 'Base'})`
+    );
   }
 
   if (permission.permission.token.toLowerCase() !== expectedTokenAddress) {
-    throw new Error(
-      `Subscription is not for USDC token. Got ${permission.permission.token}, expected ${expectedTokenAddress}`
+    throw new ValidationError(
+      `Subscription is not for USDC token. Got ${permission.permission.token}, expected ${expectedTokenAddress}`,
+      'token',
+      permission.permission.token,
+      expectedTokenAddress
     );
   }
 }

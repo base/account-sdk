@@ -13,6 +13,8 @@ export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 export {
   CHAIN_IDS,
   TOKENS,
+  PaymentError,
+  ValidationError,
   base,
   charge,
   getOrCreateSubscriptionOwnerWallet,
