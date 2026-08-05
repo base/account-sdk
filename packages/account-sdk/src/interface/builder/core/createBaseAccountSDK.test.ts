@@ -2,13 +2,13 @@ import * as telemetryModule from ':core/telemetry/initCCA.js';
 import { store } from ':store/store.js';
 import * as checkCrossOriginModule from ':util/checkCrossOriginOpenerPolicy.js';
 import * as validatePreferencesModule from ':util/validatePreferences.js';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Hex } from 'viem';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
 import {
   CreateProviderOptions,
-  createBaseAccountSDK,
   _resetGlobalInitialization,
+  createBaseAccountSDK,
 } from './createBaseAccountSDK.js';
 import * as getInjectedProviderModule from './getInjectedProvider.js';
 
@@ -37,6 +37,7 @@ vi.mock(':util/checkCrossOriginOpenerPolicy.js', () => ({
 
 vi.mock(':util/validatePreferences.js', () => ({
   validatePreferences: vi.fn(),
+  validateSDKConfig: vi.fn(),
   validateSubAccount: vi.fn(),
 }));
 
@@ -52,6 +53,7 @@ const mockStore = store as any;
 const mockLoadTelemetryScript = telemetryModule.loadTelemetryScript as any;
 const mockCheckCrossOriginOpenerPolicy = checkCrossOriginModule.checkCrossOriginOpenerPolicy as any;
 const mockValidatePreferences = validatePreferencesModule.validatePreferences as any;
+const mockValidateSDKConfig = validatePreferencesModule.validateSDKConfig as any;
 const mockValidateSubAccount = validatePreferencesModule.validateSubAccount as any;
 const mockBaseAccountProvider = BaseAccountProvider as any;
 const mockGetInjectedProvider = getInjectedProviderModule.getInjectedProvider as any;
@@ -295,6 +297,29 @@ describe('createProvider', () => {
   });
 
   describe('Validation', () => {
+    it('should validate SDK configuration before writing to the store', () => {
+      const subAccounts = { creation: 'on-connect' as const };
+
+      createBaseAccountSDK({
+        appChainIds: [8453],
+        paymasterUrls: { 8453: 'https://paymaster.example.com' },
+        subAccounts,
+      }).getProvider();
+
+      expect(mockValidateSDKConfig).toHaveBeenCalledWith(
+        {
+          metadata: {
+            appName: 'App',
+            appLogoUrl: '',
+            appChainIds: [8453],
+          },
+          preference: {},
+          paymasterUrls: { 8453: 'https://paymaster.example.com' },
+        },
+        subAccounts
+      );
+    });
+
     it('should validate preferences', () => {
       const preference = { telemetry: true };
       createBaseAccountSDK({ preference }).getProvider();
@@ -345,6 +370,23 @@ describe('createProvider', () => {
   });
 
   describe('Error handling', () => {
+    it('should not write to the store when SDK config validation fails', () => {
+      mockValidateSDKConfig.mockImplementationOnce(() => {
+        throw new Error('appChainIds[0] must be a positive integer chain ID');
+      });
+
+      expect(() => {
+        createBaseAccountSDK({
+          appChainIds: ['8453' as any],
+        });
+      }).toThrow('appChainIds[0] must be a positive integer chain ID');
+
+      expect(mockStore.subAccountsConfig.set).not.toHaveBeenCalled();
+      expect(mockStore.config.set).not.toHaveBeenCalled();
+      expect(mockStore.persist.rehydrate).not.toHaveBeenCalled();
+      expect(mockLoadTelemetryScript).not.toHaveBeenCalled();
+    });
+
     it('should handle sub-account validation errors', () => {
       mockValidateSubAccount.mockImplementationOnce(() => {
         throw new Error('Invalid sub-account function');
