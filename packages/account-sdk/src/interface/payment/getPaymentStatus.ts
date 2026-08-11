@@ -34,7 +34,8 @@ function getBundlerRequestHeaders(usingDefaultBundlerUrl: boolean): Record<strin
  * @param options.telemetry - Whether to enable telemetry logging. Defaults to true
  * @param options.bundlerUrl - Optional custom bundler URL to use for status checks. Useful for avoiding rate limits on public endpoints.
  * @returns Promise<PaymentStatus> - Status information about the payment
- * @throws Error if unable to connect to the RPC endpoint or if the RPC request fails
+ * @throws Error if the RPC request fails or the receipt does not contain exactly one positive
+ * sender-origin USDC transfer
  *
  * @example
  * ```typescript
@@ -144,97 +145,93 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
     const { success, receipt: txReceipt, reason } = receipt.result;
 
     // Determine status based on success flag
-    if (success) {
-      // Parse USDC amount from logs
-      let amount: string | undefined;
-      let recipient: string | undefined;
+    if (success === true) {
+      if (!Array.isArray(txReceipt?.logs)) {
+        throw new Error('Unable to verify payment: transaction receipt is missing logs.');
+      }
 
-      if (txReceipt?.logs) {
-        const network = testnet ? 'baseSepolia' : 'base';
-        const usdcAddress = TOKENS.USDC.addresses[network].toLowerCase();
-        // Normalize sender address for comparison
-        const senderAddress: Address | undefined = receipt.result.sender
-          ? getAddress(receipt.result.sender)
-          : undefined;
+      if (typeof receipt.result.sender !== 'string') {
+        throw new Error('Unable to verify payment: receipt is missing a valid sender address.');
+      }
 
-        // Collect all USDC transfers
-        const usdcTransfers: Array<{
-          from: string;
-          to: string;
-          value: bigint;
-          formattedAmount: string;
-          logIndex: number;
-        }> = [];
+      let senderAddress: Address;
+      try {
+        senderAddress = getAddress(receipt.result.sender);
+      } catch {
+        throw new Error('Unable to verify payment: receipt is missing a valid sender address.');
+      }
 
-        for (let i = 0; i < txReceipt.logs.length; i++) {
-          const log = txReceipt.logs[i];
+      const network = testnet ? 'baseSepolia' : 'base';
+      const usdcAddress = TOKENS.USDC.addresses[network].toLowerCase();
 
-          // Check if this is a USDC log
-          const logAddressLower = log.address?.toLowerCase();
-          const isUsdcLog = logAddressLower === usdcAddress;
+      // Collect all USDC transfers
+      const usdcTransfers: Array<{
+        from: string;
+        to: string;
+        value: bigint;
+        formattedAmount: string;
+      }> = [];
 
-          if (isUsdcLog) {
-            try {
-              const decoded = decodeEventLog({
-                abi: ERC20_TRANSFER_ABI,
-                data: log.data,
-                topics: log.topics,
-              });
+      for (const log of txReceipt.logs) {
+        // Check if this is a USDC log
+        const logAddressLower = log?.address?.toLowerCase();
+        const isUsdcLog = logAddressLower === usdcAddress;
 
-              if (decoded.eventName === 'Transfer' && decoded.args) {
-                const args = decoded.args as { from: string; to: string; value: bigint };
+        if (isUsdcLog) {
+          try {
+            const decoded = decodeEventLog({
+              abi: ERC20_TRANSFER_ABI,
+              data: log.data,
+              topics: log.topics,
+            });
 
-                if (args.value && args.to && args.from) {
-                  const formattedAmount = formatUnits(args.value, 6);
+            if (decoded.eventName === 'Transfer' && decoded.args) {
+              const args = decoded.args as { from: string; to: string; value: bigint };
 
-                  usdcTransfers.push({
-                    from: args.from,
-                    to: args.to,
-                    value: args.value,
-                    formattedAmount,
-                    logIndex: i,
-                  });
-                }
+              if (typeof args.value === 'bigint' && args.to && args.from) {
+                usdcTransfers.push({
+                  from: args.from,
+                  to: args.to,
+                  value: args.value,
+                  formattedAmount: formatUnits(args.value, TOKENS.USDC.decimals),
+                });
               }
-            } catch (_e) {
-              // Do not fail here - fail when we can't find a single valid transfer
             }
+          } catch (_e) {
+            // Do not fail here - fail when we can't find a single valid transfer
           }
         }
+      }
 
-        // Now select the correct transfer
-        // Strategy: Find the transfer from the sender (smart wallet) address
-        if (usdcTransfers.length > 0 && senderAddress) {
-          // Look for transfers from the sender address (smart wallet)
-          // Compare checksummed addresses for consistency
-          const senderTransfers = usdcTransfers.filter((t) => {
-            try {
-              return isAddressEqual(t.from as Address, senderAddress!);
-            } catch {
-              return false;
-            }
-          });
-
-          if (senderTransfers.length === 0) {
-            // No transfer from the sender wallet was found
-            throw new Error(
-              `Unable to find USDC transfer from sender wallet ${receipt.result.sender}. ` +
-                `Found ${usdcTransfers.length} USDC transfer(s) but none originated from the sender wallet.`
-            );
-          }
-          if (senderTransfers.length > 1) {
-            // Multiple transfers from the sender wallet found
-            const transferDetails = senderTransfers
-              .map((t) => `${t.formattedAmount} USDC to ${t.to}`)
-              .join(', ');
-            throw new Error(
-              `Found multiple USDC transfers from sender wallet ${receipt.result.sender}: ${transferDetails}. Expected exactly one transfer.`
-            );
-          }
-          // Exactly one transfer from sender found
-          amount = senderTransfers[0].formattedAmount;
-          recipient = senderTransfers[0].to;
+      // Find the payment transfer from the sender (smart wallet) address.
+      const senderTransfers = usdcTransfers.filter((transfer) => {
+        try {
+          return isAddressEqual(transfer.from as Address, senderAddress);
+        } catch {
+          return false;
         }
+      });
+
+      if (senderTransfers.length === 0) {
+        throw new Error(
+          `Unable to find USDC transfer from sender wallet ${receipt.result.sender}. ` +
+            `Found ${usdcTransfers.length} USDC transfer(s) but none originated from the sender wallet.`
+        );
+      }
+      if (senderTransfers.length > 1) {
+        const transferDetails = senderTransfers
+          .map((transfer) => `${transfer.formattedAmount} USDC to ${transfer.to}`)
+          .join(', ');
+        throw new Error(
+          `Found multiple USDC transfers from sender wallet ${receipt.result.sender}: ${transferDetails}. Expected exactly one transfer.`
+        );
+      }
+
+      const [paymentTransfer] = senderTransfers;
+      if (paymentTransfer.value <= 0n) {
+        throw new Error(
+          'Unable to verify payment: USDC transfer amount must be greater than zero.'
+        );
       }
 
       if (telemetry) {
@@ -245,8 +242,8 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         id: id as Hex,
         message: 'Payment completed successfully',
         sender: receipt.result.sender,
-        amount,
-        recipient,
+        amount: paymentTransfer.formattedAmount,
+        recipient: paymentTransfer.to,
       };
       return result;
     }

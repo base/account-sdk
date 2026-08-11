@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_BUNDLER_HEADERS, DEFAULT_BUNDLER_URLS } from './constants.js';
+import { DEFAULT_BUNDLER_HEADERS, DEFAULT_BUNDLER_URLS, TOKENS } from './constants.js';
 import { getPaymentStatus } from './getPaymentStatus.js';
 import type { PaymentStatus } from './types.js';
 
@@ -17,6 +17,47 @@ const defaultBundlerHeaders = {
   'Content-Type': 'application/json',
   ...DEFAULT_BUNDLER_HEADERS,
 };
+
+const paymentSender = '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce';
+const transferEventTopic = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+const paymentSenderTopic = '0x0000000000000000000000004a7c6899cdcb379e284fbfd045462e751da4c7ce';
+const paymentRecipientTopic = '0x000000000000000000000000f1ddf1fc0310cb11f0ca87508207012f4a9cb336';
+
+function createUsdcTransferLog({
+  testnet = false,
+  value = '0x0000000000000000000000000000000000000000000000000000000000989680',
+}: { testnet?: boolean; value?: string } = {}) {
+  return {
+    address: testnet ? TOKENS.USDC.addresses.baseSepolia : TOKENS.USDC.addresses.base,
+    data: value,
+    topics: [transferEventTopic, paymentSenderTopic, paymentRecipientTopic],
+  };
+}
+
+function createSuccessfulReceipt({
+  logs = [createUsdcTransferLog()],
+  includeLogs = true,
+  sender = paymentSender,
+  includeSender = true,
+}: {
+  logs?: ReturnType<typeof createUsdcTransferLog>[];
+  includeLogs?: boolean;
+  sender?: string;
+  includeSender?: boolean;
+} = {}) {
+  return {
+    jsonrpc: '2.0',
+    id: 1,
+    result: {
+      success: true,
+      receipt: {
+        transactionHash: '0xabc123',
+        ...(includeLogs ? { logs } : {}),
+      },
+      ...(includeSender ? { sender } : {}),
+    },
+  };
+}
 
 describe('getPaymentStatus', () => {
   beforeEach(() => {
@@ -293,6 +334,91 @@ describe('getPaymentStatus', () => {
     expect(status.recipient).toBe('0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336');
   });
 
+  it('should reject a successful user operation with no USDC transfers', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => createSuccessfulReceipt({ logs: [] }),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xno-payment',
+        testnet: false,
+      })
+    ).rejects.toThrow(/Unable to find USDC transfer from sender wallet.*Found 0 USDC transfer/);
+
+    const { logPaymentStatusCheckCompleted, logPaymentStatusCheckError } = await import(
+      ':core/telemetry/events/payment.js'
+    );
+    expect(logPaymentStatusCheckCompleted).not.toHaveBeenCalled();
+    expect(logPaymentStatusCheckError).toHaveBeenCalledWith({
+      testnet: false,
+      correlationId: 'mock-correlation-id',
+      errorMessage: expect.stringContaining('Unable to find USDC transfer'),
+    });
+  });
+
+  it('should reject a successful user operation when receipt logs are missing', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => createSuccessfulReceipt({ includeLogs: false }),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xmissing-logs',
+        testnet: false,
+      })
+    ).rejects.toThrow('Unable to verify payment: transaction receipt is missing logs.');
+  });
+
+  it('should reject a successful user operation when the sender is missing', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => createSuccessfulReceipt({ includeSender: false }),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xmissing-sender',
+        testnet: false,
+      })
+    ).rejects.toThrow('Unable to verify payment: receipt is missing a valid sender address.');
+  });
+
+  it('should reject a zero-value USDC transfer from the sender', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () =>
+        createSuccessfulReceipt({
+          logs: [
+            createUsdcTransferLog({
+              value: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            }),
+          ],
+        }),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xzero-value',
+        testnet: false,
+      })
+    ).rejects.toThrow('Unable to verify payment: USDC transfer amount must be greater than zero.');
+  });
+
+  it('should reject a successful user operation with a malformed USDC transfer log', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () =>
+        createSuccessfulReceipt({
+          logs: [createUsdcTransferLog({ value: '0x' })],
+        }),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xmalformed-transfer',
+        testnet: false,
+      })
+    ).rejects.toThrow(/Unable to find USDC transfer from sender wallet.*Found 0 USDC transfer/);
+  });
+
   it('should throw error when no USDC transfer from sender wallet is found', async () => {
     const mockReceipt = {
       jsonrpc: '2.0',
@@ -442,7 +568,7 @@ describe('getPaymentStatus', () => {
           success: true,
           receipt: {
             transactionHash: '0xabc123',
-            logs: [],
+            logs: [createUsdcTransferLog()],
           },
           sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
         },
@@ -477,7 +603,7 @@ describe('getPaymentStatus', () => {
           success: true,
           receipt: {
             transactionHash: '0xabc123',
-            logs: [],
+            logs: [createUsdcTransferLog()],
           },
           sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
         },
@@ -689,7 +815,7 @@ describe('getPaymentStatus', () => {
           success: true,
           receipt: {
             transactionHash: '0xabc123',
-            logs: [],
+            logs: [createUsdcTransferLog({ testnet: true })],
           },
           sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
         },
