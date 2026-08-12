@@ -75,6 +75,7 @@ function createSuccessfulReceipt({
 describe('getPaymentStatus', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(fetch).mockReset();
     // Mock console methods to avoid noise in tests
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -200,6 +201,7 @@ describe('getPaymentStatus', () => {
         testnet: false,
       })
     ).rejects.toThrow('Unable to verify payment: expected USDC amount is invalid.');
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('should reject an expected amount with more than six decimal places', async () => {
@@ -374,6 +376,17 @@ describe('getPaymentStatus', () => {
       id: '0xnotfound',
       message: 'Payment not found. Please check your transaction ID.',
     });
+  });
+
+  it('should reject an invalid transaction ID before making an RPC request', async () => {
+    await expect(
+      getPaymentStatus({
+        id: '',
+        testnet: false,
+      })
+    ).rejects.toThrow('Unable to verify payment: transaction ID is invalid.');
+
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('should handle RPC errors gracefully', async () => {

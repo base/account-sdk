@@ -15,6 +15,15 @@ import {
 import type { PaymentStatus, PaymentStatusOptions } from './types.js';
 import { validateStringAmount } from './utils/validation.js';
 
+interface JsonRpcResponse {
+  result: Record<string, unknown> | null;
+}
+
+interface ValidatedExpectedPayment {
+  amount: bigint;
+  recipient: Address;
+}
+
 function getDefaultBundlerUrl(testnet: boolean): string {
   return testnet ? DEFAULT_BUNDLER_URLS.baseSepolia : DEFAULT_BUNDLER_URLS.base;
 }
@@ -48,7 +57,7 @@ function getRpcErrorMessage(response: unknown): string | undefined {
   return 'Network error';
 }
 
-async function readJsonRpcResponse(response: Response) {
+async function readJsonRpcResponse(response: Response): Promise<JsonRpcResponse> {
   if (response.ok === false) {
     throw new Error(`RPC request failed with HTTP status ${response.status}`);
   }
@@ -68,7 +77,7 @@ async function readJsonRpcResponse(response: Response) {
     throw new Error('RPC error: Invalid response');
   }
 
-  return body;
+  return body as JsonRpcResponse;
 }
 
 /**
@@ -129,6 +138,42 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
   }
 
   try {
+    if (typeof id !== 'string' || !id) {
+      throw new Error('Unable to verify payment: transaction ID is invalid.');
+    }
+
+    let validatedExpectedPayment: ValidatedExpectedPayment | undefined;
+    if (expectedPayment !== undefined) {
+      // Defend JavaScript callers that do not get the PaymentStatusOptions type checks.
+      if (
+        !expectedPayment ||
+        typeof expectedPayment.amount !== 'string' ||
+        typeof expectedPayment.recipient !== 'string'
+      ) {
+        throw new Error('Unable to verify payment: expected payment details are invalid.');
+      }
+
+      let expectedAmount: bigint;
+      try {
+        validateStringAmount(expectedPayment.amount, TOKENS.USDC.decimals);
+        expectedAmount = parseUnits(expectedPayment.amount, TOKENS.USDC.decimals);
+      } catch {
+        throw new Error('Unable to verify payment: expected USDC amount is invalid.');
+      }
+
+      let expectedRecipient: Address;
+      try {
+        expectedRecipient = getAddress(expectedPayment.recipient);
+      } catch {
+        throw new Error('Unable to verify payment: expected recipient address is invalid.');
+      }
+
+      validatedExpectedPayment = {
+        amount: expectedAmount,
+        recipient: expectedRecipient,
+      };
+    }
+
     const usingDefaultBundlerUrl = !bundlerUrl;
     const effectiveBundlerUrl = bundlerUrl || getDefaultBundlerUrl(testnet);
     const headers = getBundlerRequestHeaders(usingDefaultBundlerUrl);
@@ -196,7 +241,6 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
     const userOpReceipt = receipt.result;
     if (
-      typeof id !== 'string' ||
       typeof userOpReceipt.userOpHash !== 'string' ||
       userOpReceipt.userOpHash.toLowerCase() !== id.toLowerCase()
     ) {
@@ -236,8 +280,8 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
       // Collect all USDC transfers
       const usdcTransfers: Array<{
-        from: string;
-        to: string;
+        from: Address;
+        to: Address;
         value: bigint;
         formattedAmount: string;
       }> = [];
@@ -255,17 +299,14 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
               topics: log.topics,
             });
 
-            if (decoded.eventName === 'Transfer' && decoded.args) {
-              const args = decoded.args as { from: string; to: string; value: bigint };
-
-              if (typeof args.value === 'bigint' && args.to && args.from) {
-                usdcTransfers.push({
-                  from: args.from,
-                  to: args.to,
-                  value: args.value,
-                  formattedAmount: formatUnits(args.value, TOKENS.USDC.decimals),
-                });
-              }
+            if (decoded.eventName === 'Transfer') {
+              const { from, to, value } = decoded.args;
+              usdcTransfers.push({
+                from,
+                to,
+                value,
+                formattedAmount: formatUnits(value, TOKENS.USDC.decimals),
+              });
             }
           } catch (_e) {
             // Do not fail here - fail when we can't find a single valid transfer
@@ -276,7 +317,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       // Find the payment transfer from the sender (smart wallet) address.
       const senderTransfers = usdcTransfers.filter((transfer) => {
         try {
-          return isAddressEqual(transfer.from as Address, senderAddress);
+          return isAddressEqual(transfer.from, senderAddress);
         } catch {
           return false;
         }
@@ -304,38 +345,14 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         );
       }
 
-      if (expectedPayment !== undefined) {
-        // Defend JavaScript callers that do not get the PaymentStatusOptions type checks.
-        if (
-          !expectedPayment ||
-          typeof expectedPayment.amount !== 'string' ||
-          typeof expectedPayment.recipient !== 'string'
-        ) {
-          throw new Error('Unable to verify payment: expected payment details are invalid.');
-        }
-
-        let expectedAmount: bigint;
-        try {
-          validateStringAmount(expectedPayment.amount, TOKENS.USDC.decimals);
-          expectedAmount = parseUnits(expectedPayment.amount, TOKENS.USDC.decimals);
-        } catch {
-          throw new Error('Unable to verify payment: expected USDC amount is invalid.');
-        }
-
-        if (paymentTransfer.value !== expectedAmount) {
+      if (validatedExpectedPayment) {
+        if (paymentTransfer.value !== validatedExpectedPayment.amount) {
           throw new Error(
             'Unable to verify payment: USDC amount does not match the expected amount.'
           );
         }
 
-        let expectedRecipient: Address;
-        try {
-          expectedRecipient = getAddress(expectedPayment.recipient);
-        } catch {
-          throw new Error('Unable to verify payment: expected recipient address is invalid.');
-        }
-
-        if (!isAddressEqual(paymentTransfer.to as Address, expectedRecipient)) {
+        if (!isAddressEqual(paymentTransfer.to, validatedExpectedPayment.recipient)) {
           throw new Error(
             'Unable to verify payment: USDC recipient does not match the expected recipient.'
           );
