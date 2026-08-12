@@ -150,9 +150,18 @@ const result = await window.base.pay({
 // Check payment status
 const status = await window.base.getPaymentStatus({
   id: result.id,
+  expectedPayment: {
+    amount: "10.50",
+    recipient: "0xYourAddress..."
+  },
   testnet: true
 });
 
 // Create Base Account Provider
 const provider = window.createBaseAccountSDK().getProvider()
 ```
+
+For production payment verification, call `getPaymentStatus` on your backend and populate
+`expectedPayment` from trusted server-side order data. Omitting it preserves backward compatibility
+but does not verify the order amount or recipient. Bind each payment ID to one order and reject IDs
+that have already been used for fulfillment.

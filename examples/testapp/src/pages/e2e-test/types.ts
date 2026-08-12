@@ -85,9 +85,11 @@ export interface PrepareChargeOptions {
 
 export interface GetPaymentStatusOptions {
   id: string;
+  expectedPayment?: {
+    amount: string;
+    recipient: string;
+  };
   testnet?: boolean;
-  maxRetries?: number;
-  retryDelayMs?: number;
 }
 
 export interface GetSubscriptionStatusOptions {

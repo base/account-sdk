@@ -53,17 +53,23 @@ function PayPlayground() {
       payExecution.result.id
     ) {
       const transactionId = payExecution.result.id;
+      const amount = payExecution.result.amount;
+      const recipient = payExecution.result.to;
       const updatedCode = `import { base } from '@base-org/account'
 
 try {
   const result = await base.getPaymentStatus({
     id: '${transactionId}', // Automatically filled with your recent transaction
+    expectedPayment: {
+      amount: '${amount}',
+      recipient: '${recipient}'
+    },
     testnet: true
   })
   
   return result;
 } catch (error) {
-  // This will catch network errors if any occur
+  // This catches network and payment verification errors
   console.error('Failed to check payment status:', error.message);
   throw error;
 }`;

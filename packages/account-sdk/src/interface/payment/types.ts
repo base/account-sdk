@@ -101,6 +101,16 @@ export type PaymentResult = PaymentSuccess;
 export interface PaymentStatusOptions {
   /** Transaction ID (userOp hash) to check status for */
   id: string;
+  /**
+   * Optional trusted payment details to verify against the on-chain USDC transfer.
+   * Provide values from the merchant's server-side order, not from the payer.
+   */
+  expectedPayment?: {
+    /** Expected positive USDC amount with at most 6 decimal places (e.g., "10.50") */
+    amount: string;
+    /** Expected USDC recipient address (the `to` address in the server-side order) */
+    recipient: Address;
+  };
   /** Whether to check on testnet (Base Sepolia). Defaults to false (mainnet) */
   testnet?: boolean;
   /** Whether to enable telemetry logging. Defaults to true */
