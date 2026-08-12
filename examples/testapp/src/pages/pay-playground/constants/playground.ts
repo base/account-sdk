@@ -42,12 +42,16 @@ export const DEFAULT_GET_PAYMENT_STATUS_CODE = `import { base } from '@base-org/
 try {
   const result = await base.getPaymentStatus({
     id: '0x...', // Replace with a transaction ID
+    expectedPayment: {
+      amount: '.01', // Load from your server-side order in production
+      recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+    },
     testnet: true
   })
   
   return result;
 } catch (error) {
-  // This will catch network errors if any occur
+  // This catches network and payment verification errors
   console.error('Failed to check payment status:', error.message);
   throw error;
 }`;
@@ -66,6 +70,8 @@ export const GET_PAYMENT_STATUS_QUICK_TIPS = [
   'For completed payments, you can see the amount and recipient',
   'For failed payments, you can see the failure reason',
   'Make sure to use the same testnet setting as the original payment',
+  'In production, verify the server-side order amount and recipient before fulfillment',
+  'Store each completed payment ID and reject reuse',
 ];
 
 export const QUICK_TIPS = PAY_QUICK_TIPS;

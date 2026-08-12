@@ -63,9 +63,11 @@ export async function testGetPaymentStatus(
     async (ctx) => {
       const status = await ctx.loadedSDK.getPaymentStatus({
         id: ctx.paymentId!,
+        expectedPayment: {
+          amount: '0.01',
+          recipient: '0x0000000000000000000000000000000000000001',
+        },
         testnet: true,
-        maxRetries: 10, // Retry up to 10 times
-        retryDelayMs: 500, // 500ms between retries = ~5 seconds total
       });
 
       const details = [

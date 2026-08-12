@@ -61,9 +61,11 @@ const status = await getPaymentStatus({
 console.log(`Payment status: ${status.status}`);
 ```
 
-`expectedPayment` is optional for backward compatibility, but production merchants should always
-provide trusted order values. Without it, `completed` only confirms that the operation contained a
-positive USDC transfer; it does not confirm the order's amount or recipient.
+Run this check on your backend before fulfillment. `expectedPayment` is optional for backward
+compatibility, but production merchants should always provide trusted order values. Without it,
+`completed` only confirms that the operation contained a positive USDC transfer; it does not confirm
+the order's amount or recipient. Bind each payment ID to one order and reject IDs that have already
+been used for fulfillment.
 
 ---
 

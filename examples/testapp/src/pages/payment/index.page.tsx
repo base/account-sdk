@@ -26,6 +26,7 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { useState } from 'react';
+import type { Address } from 'viem';
 import { useConfig } from '../../context/ConfigContextProvider';
 
 export default function Payment() {
@@ -68,6 +69,8 @@ export default function Payment() {
 
   // Status check state
   const [statusId, setStatusId] = useState('');
+  const [statusExpectedAmount, setStatusExpectedAmount] = useState('');
+  const [statusExpectedRecipient, setStatusExpectedRecipient] = useState('');
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusResult, setStatusResult] = useState<PaymentStatus | null>(null);
   const [statusError, setStatusError] = useState<{ error: string; errorDetails?: unknown } | null>(
@@ -132,6 +135,8 @@ export default function Payment() {
         });
         // Auto-populate status check field
         setStatusId(result.id);
+        setStatusExpectedAmount(payAmount);
+        setStatusExpectedRecipient(payTo);
       } else {
         toast({
           title: 'Payment failed',
@@ -181,6 +186,16 @@ export default function Payment() {
       return;
     }
 
+    if (Boolean(statusExpectedAmount) !== Boolean(statusExpectedRecipient)) {
+      toast({
+        title: 'Incomplete expected payment',
+        description: 'Provide both the expected amount and recipient, or leave both empty',
+        status: 'error',
+        duration: 3000,
+      });
+      return;
+    }
+
     setStatusLoading(true);
     setStatusResult(null);
     setStatusError(null);
@@ -188,6 +203,13 @@ export default function Payment() {
     try {
       const result = await getPaymentStatus({
         id: statusId,
+        ...(statusExpectedAmount &&
+          statusExpectedRecipient && {
+            expectedPayment: {
+              amount: statusExpectedAmount,
+              recipient: statusExpectedRecipient as Address,
+            },
+          }),
         testnet: statusTestnet, // Use the separate status check testnet setting
       });
 
@@ -495,6 +517,30 @@ export default function Payment() {
                 fontFamily="mono"
                 size="lg"
               />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Expected Amount (USDC, optional)</FormLabel>
+              <Input
+                placeholder="0.01"
+                value={statusExpectedAmount}
+                onChange={(e) => setStatusExpectedAmount(e.target.value)}
+                size="lg"
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Expected Recipient (optional)</FormLabel>
+              <Input
+                placeholder="0x..."
+                value={statusExpectedRecipient}
+                onChange={(e) => setStatusExpectedRecipient(e.target.value)}
+                fontFamily="mono"
+                size="lg"
+              />
+              <Text mt={2} fontSize="sm" color={noteTextColor}>
+                Production merchants should load both values from their server-side order.
+              </Text>
             </FormControl>
 
             <Button

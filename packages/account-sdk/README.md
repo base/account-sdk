@@ -161,6 +161,7 @@ const status = await window.base.getPaymentStatus({
 const provider = window.createBaseAccountSDK().getProvider()
 ```
 
-For production payment verification, populate `expectedPayment` from trusted server-side order
-data. Omitting it preserves backward compatibility but does not verify the order amount or
-recipient.
+For production payment verification, call `getPaymentStatus` on your backend and populate
+`expectedPayment` from trusted server-side order data. Omitting it preserves backward compatibility
+but does not verify the order amount or recipient. Bind each payment ID to one order and reject IDs
+that have already been used for fulfillment.

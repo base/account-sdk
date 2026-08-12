@@ -13,6 +13,7 @@ import {
   TOKENS,
 } from './constants.js';
 import type { PaymentStatus, PaymentStatusOptions } from './types.js';
+import { validateStringAmount } from './utils/validation.js';
 
 function getDefaultBundlerUrl(testnet: boolean): string {
   return testnet ? DEFAULT_BUNDLER_URLS.baseSepolia : DEFAULT_BUNDLER_URLS.base;
@@ -23,6 +24,28 @@ function getBundlerRequestHeaders(usingDefaultBundlerUrl: boolean): Record<strin
     'Content-Type': 'application/json',
     ...(usingDefaultBundlerUrl ? DEFAULT_BUNDLER_HEADERS : {}),
   };
+}
+
+function getRpcErrorMessage(response: unknown): string | undefined {
+  if (!response || typeof response !== 'object' || !('error' in response)) {
+    return undefined;
+  }
+
+  const rpcError = (response as { error?: unknown }).error;
+  if (rpcError === undefined || rpcError === null) {
+    return undefined;
+  }
+
+  if (
+    typeof rpcError === 'object' &&
+    'message' in rpcError &&
+    typeof rpcError.message === 'string' &&
+    rpcError.message
+  ) {
+    return rpcError.message;
+  }
+
+  return 'Network error';
 }
 
 /**
@@ -50,15 +73,19 @@ function getBundlerRequestHeaders(usingDefaultBundlerUrl: boolean): Record<strin
  *     testnet: true
  *   })
  *
- *   // With custom bundler URL to avoid rate limits
- *   const status = await getPaymentStatus({
+ *   // With a trusted custom bundler URL to avoid rate limits
+ *   const customStatus = await getPaymentStatus({
  *     id: "0x1234...5678",
+ *     expectedPayment: {
+ *       amount: "10.50",
+ *       recipient: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51"
+ *     },
  *     testnet: false,
  *     bundlerUrl: 'https://my-bundler.example.com/rpc'
  *   })
  *
  *   if (status.status === 'failed') {
- *     console.log(`Payment failed: ${status.reason}`)
+ *     console.info(`Payment failed: ${status.reason}`)
  *   }
  * } catch (error) {
  *   console.error('Unable to check payment status:', error.message)
@@ -95,15 +122,9 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       }),
     }).then((res) => res.json());
 
-    // Handle RPC errors
-    if (receipt.error) {
-      console.error('[getPaymentStatus] RPC error:', receipt.error);
-      const errorMessage = receipt.error.message || 'Network error';
-      if (telemetry) {
-        logPaymentStatusCheckError({ testnet, correlationId, errorMessage });
-      }
-      // Re-throw error for RPC failures
-      throw new Error(`RPC error: ${errorMessage}`);
+    const receiptErrorMessage = getRpcErrorMessage(receipt);
+    if (receiptErrorMessage) {
+      throw new Error(`RPC error: ${receiptErrorMessage}`);
     }
 
     // If no result, payment is still pending or not found
@@ -119,6 +140,11 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
           params: [id],
         }),
       }).then((res) => res.json());
+
+      const userOpErrorMessage = getRpcErrorMessage(userOpResponse);
+      if (userOpErrorMessage) {
+        throw new Error(`RPC error: ${userOpErrorMessage}`);
+      }
 
       if (userOpResponse.result) {
         // UserOp exists but no receipt yet - it's pending
@@ -146,22 +172,34 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       return result;
     }
 
-    // Parse the receipt
-    const { success, receipt: txReceipt, reason } = receipt.result;
+    const userOpReceipt = receipt.result;
+    if (
+      typeof id !== 'string' ||
+      typeof userOpReceipt.userOpHash !== 'string' ||
+      userOpReceipt.userOpHash.toLowerCase() !== id.toLowerCase()
+    ) {
+      throw new Error(
+        'Unable to verify payment: receipt does not match the requested transaction.'
+      );
+    }
+
+    const { success, reason } = userOpReceipt;
 
     // Determine status based on success flag
     if (success === true) {
-      if (!Array.isArray(txReceipt?.logs)) {
-        throw new Error('Unable to verify payment: transaction receipt is missing logs.');
+      // ERC-7769 top-level logs are scoped to this UserOperation. Transaction receipt logs include
+      // every UserOperation in the bundle and must not be used for payment verification.
+      if (!Array.isArray(userOpReceipt.logs)) {
+        throw new Error('Unable to verify payment: user operation receipt is missing logs.');
       }
 
-      if (typeof receipt.result.sender !== 'string') {
+      if (typeof userOpReceipt.sender !== 'string') {
         throw new Error('Unable to verify payment: receipt is missing a valid sender address.');
       }
 
       let senderAddress: Address;
       try {
-        senderAddress = getAddress(receipt.result.sender);
+        senderAddress = getAddress(userOpReceipt.sender);
       } catch {
         throw new Error('Unable to verify payment: receipt is missing a valid sender address.');
       }
@@ -177,7 +215,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         formattedAmount: string;
       }> = [];
 
-      for (const log of txReceipt.logs) {
+      for (const log of userOpReceipt.logs) {
         // Check if this is a USDC log
         const logAddressLower = log?.address?.toLowerCase();
         const isUsdcLog = logAddressLower === usdcAddress;
@@ -219,7 +257,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
       if (senderTransfers.length === 0) {
         throw new Error(
-          `Unable to find USDC transfer from sender wallet ${receipt.result.sender}. ` +
+          `Unable to find USDC transfer from sender wallet ${userOpReceipt.sender}. ` +
             `Found ${usdcTransfers.length} USDC transfer(s) but none originated from the sender wallet.`
         );
       }
@@ -228,7 +266,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
           .map((transfer) => `${transfer.formattedAmount} USDC to ${transfer.to}`)
           .join(', ');
         throw new Error(
-          `Found multiple USDC transfers from sender wallet ${receipt.result.sender}: ${transferDetails}. Expected exactly one transfer.`
+          `Found multiple USDC transfers from sender wallet ${userOpReceipt.sender}: ${transferDetails}. Expected exactly one transfer.`
         );
       }
 
@@ -240,6 +278,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       }
 
       if (expectedPayment !== undefined) {
+        // Defend JavaScript callers that do not get the PaymentStatusOptions type checks.
         if (
           !expectedPayment ||
           typeof expectedPayment.amount !== 'string' ||
@@ -250,16 +289,12 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
 
         let expectedAmount: bigint;
         try {
+          validateStringAmount(expectedPayment.amount, TOKENS.USDC.decimals);
           expectedAmount = parseUnits(expectedPayment.amount, TOKENS.USDC.decimals);
         } catch {
           throw new Error('Unable to verify payment: expected USDC amount is invalid.');
         }
 
-        if (expectedAmount <= 0n) {
-          throw new Error(
-            'Unable to verify payment: expected USDC amount must be greater than zero.'
-          );
-        }
         if (paymentTransfer.value !== expectedAmount) {
           throw new Error(
             'Unable to verify payment: USDC amount does not match the expected amount.'
@@ -287,7 +322,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         status: 'completed' as const,
         id: id as Hex,
         message: 'Payment completed successfully',
-        sender: receipt.result.sender,
+        sender: userOpReceipt.sender,
         amount: paymentTransfer.formattedAmount,
         recipient: paymentTransfer.to,
       };
@@ -311,7 +346,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       status: 'failed' as const,
       id: id as Hex,
       message: 'Payment failed',
-      sender: receipt.result.sender,
+      sender: userOpReceipt.sender,
       reason: userFriendlyReason,
     };
     return result;

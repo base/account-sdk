@@ -7,18 +7,17 @@ The payment interface provides a simple way to make USDC payments on Base networ
 ```typescript
 import { pay } from '@base-org/account';
 
-// Basic payment
-const payment = await pay({
-  amount: "10.50",
-  to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
-  dataSuffix: "0xabc123",
-  testnet: true
-});
+try {
+  const payment = await pay({
+    amount: "10.50",
+    to: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51",
+    dataSuffix: "0xabc123",
+    testnet: true
+  });
 
-if (payment.success) {
-  console.log(`Payment sent! Transaction ID: ${payment.id}`);
-} else {
-  console.error(`Payment failed: ${payment.error}`);
+  console.info(`Payment sent! Transaction ID: ${payment.id}`);
+} catch (error) {
+  console.error(`Payment failed: ${error instanceof Error ? error.message : "Unknown error"}`);
 }
 ```
 
@@ -27,7 +26,7 @@ if (payment.success) {
 You can check the status of a payment using the transaction ID returned from the pay function:
 
 ```typescript
-import { getPaymentStatus } from '@base/account-sdk';
+import { getPaymentStatus } from '@base-org/account';
 
 // Check payment status
 const status = await getPaymentStatus({
@@ -47,7 +46,7 @@ switch (status.status) {
     console.log(`Payment completed! Amount: ${status.amount} to ${status.recipient}`);
     break;
   case 'failed':
-    console.log(`Payment failed: ${status.error}`);
+    console.log(`Payment failed: ${status.reason}`);
     break;
   case 'not_found':
     console.log('Payment not found');
@@ -57,7 +56,19 @@ switch (status.status) {
 
 Use trusted server-side order values for `expectedPayment`. It is optional for backward
 compatibility, but omitting it only verifies that the operation contained a positive USDC transfer;
-it does not verify the order amount or recipient.
+it does not verify the order amount or recipient. Bind each payment ID to one order and reject IDs
+that have already been used for fulfillment.
+
+### Production Verification
+
+- Call `getPaymentStatus()` on your backend before fulfilling an order.
+- Load `expectedPayment.amount` and `expectedPayment.recipient` from your server-side order record;
+  never accept these values from the payer.
+- Store the payment ID with the fulfilled order and reject an ID that has already been consumed.
+- Handle verification errors with `try/catch`. A returned `failed` status means the on-chain
+  operation failed; invalid or mismatched payment evidence throws instead.
+- Treat the returned `amount` as a normalized display value. Verification compares exact on-chain
+  USDC units rather than formatted strings.
 
 ## Information Requests (Data Callbacks)
 
@@ -115,6 +126,10 @@ const payment = await pay({
 // Disable telemetry for status check
 const status = await getPaymentStatus({
   id: payment.id,
+  expectedPayment: {
+    amount: "10.50",
+    recipient: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51"
+  },
   testnet: true,
   telemetry: false  // Opt out of telemetry
 });
@@ -158,9 +173,10 @@ The payment result is always a successful payment (errors are thrown as exceptio
 
 - `id: string` - Transaction ID (userOp hash) to check status for
 - `expectedPayment?: { amount: string; recipient: Address }` - Trusted order details to verify
-  against the on-chain USDC transfer
+  against the on-chain USDC transfer; `amount` must be positive with at most 6 decimal places
 - `testnet?: boolean` - Whether to check on testnet (Base Sepolia). Defaults to false (mainnet)
 - `telemetry?: boolean` - Whether to enable telemetry logging (default: true)
+- `bundlerUrl?: string` - Trusted custom bundler URL for status checks
 
 #### PaymentStatus
 
@@ -170,4 +186,4 @@ The payment result is always a successful payment (errors are thrown as exceptio
 - `sender?: string` - Sender address (present for pending, completed, and failed)
 - `amount?: string` - Amount sent (present for completed transactions, parsed from logs)
 - `recipient?: string` - Recipient address (present for completed transactions, parsed from logs)
-- `error?: string` - Error message (present for failed status - includes both on-chain failure reasons and off-chain errors) 
+- `reason?: string` - On-chain failure reason (present for failed status)

@@ -106,9 +106,9 @@ export interface PaymentStatusOptions {
    * Provide values from the merchant's server-side order, not from the payer.
    */
   expectedPayment?: {
-    /** Expected USDC amount as a decimal string (e.g., "10.50") */
+    /** Expected positive USDC amount with at most 6 decimal places (e.g., "10.50") */
     amount: string;
-    /** Expected USDC recipient address */
+    /** Expected USDC recipient address (the `to` address in the server-side order) */
     recipient: Address;
   };
   /** Whether to check on testnet (Base Sepolia). Defaults to false (mainnet) */
