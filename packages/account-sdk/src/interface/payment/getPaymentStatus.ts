@@ -48,6 +48,24 @@ function getRpcErrorMessage(response: unknown): string | undefined {
   return 'Network error';
 }
 
+async function readJsonRpcResponse(response: Response) {
+  if (response.ok === false) {
+    throw new Error(`RPC request failed with HTTP status ${response.status}`);
+  }
+
+  const body = await response.json();
+  const rpcErrorMessage = getRpcErrorMessage(body);
+  if (rpcErrorMessage) {
+    throw new Error(`RPC error: ${rpcErrorMessage}`);
+  }
+
+  if (!body || typeof body !== 'object' || !('result' in body)) {
+    throw new Error('RPC error: Invalid response');
+  }
+
+  return body;
+}
+
 /**
  * Check the status of a payment transaction using its transaction ID (userOp hash)
  *
@@ -120,12 +138,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         method: 'eth_getUserOperationReceipt',
         params: [id],
       }),
-    }).then((res) => res.json());
-
-    const receiptErrorMessage = getRpcErrorMessage(receipt);
-    if (receiptErrorMessage) {
-      throw new Error(`RPC error: ${receiptErrorMessage}`);
-    }
+    }).then(readJsonRpcResponse);
 
     // If no result, payment is still pending or not found
     if (!receipt.result) {
@@ -139,12 +152,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
           method: 'eth_getUserOperationByHash',
           params: [id],
         }),
-      }).then((res) => res.json());
-
-      const userOpErrorMessage = getRpcErrorMessage(userOpResponse);
-      if (userOpErrorMessage) {
-        throw new Error(`RPC error: ${userOpErrorMessage}`);
-      }
+      }).then(readJsonRpcResponse);
 
       if (userOpResponse.result) {
         // UserOp exists but no receipt yet - it's pending

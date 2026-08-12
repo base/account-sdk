@@ -442,6 +442,64 @@ describe('getPaymentStatus', () => {
     });
   });
 
+  it('should reject non-successful HTTP responses', async () => {
+    const json = vi.fn();
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      json,
+    } as unknown as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xhttp-error',
+        testnet: false,
+      })
+    ).rejects.toThrow('RPC request failed with HTTP status 401');
+
+    expect(json).not.toHaveBeenCalled();
+    const { logPaymentStatusCheckCompleted, logPaymentStatusCheckError } = await import(
+      ':core/telemetry/events/payment.js'
+    );
+    expect(logPaymentStatusCheckCompleted).not.toHaveBeenCalled();
+    expect(logPaymentStatusCheckError).toHaveBeenCalledTimes(1);
+  });
+
+  it('should reject a malformed receipt response without a result', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ message: 'Unauthorized' }),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xmalformed-receipt-response',
+        testnet: false,
+      })
+    ).rejects.toThrow('RPC error: Invalid response');
+  });
+
+  it('should reject a malformed pending lookup response without a result', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        json: async () => ({ jsonrpc: '2.0', id: 1, result: null }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ message: 'Unauthorized' }),
+      } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xmalformed-pending-response',
+        testnet: false,
+      })
+    ).rejects.toThrow('RPC error: Invalid response');
+
+    const { logPaymentStatusCheckCompleted } = await import(':core/telemetry/events/payment.js');
+    expect(logPaymentStatusCheckCompleted).not.toHaveBeenCalled();
+  });
+
   it('should handle network errors gracefully', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'));
 
