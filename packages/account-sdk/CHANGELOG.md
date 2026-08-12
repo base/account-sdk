@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.10](https://github.com/base/account-sdk/compare/account-v2.5.9...account-v2.5.10) (2026-08-12)
+
+
+### Bug Fixes
+
+* fail closed on unverifiable payments (SECBUGS-14988) ([#375](https://github.com/base/account-sdk/issues/375)) ([a526fc8](https://github.com/base/account-sdk/commit/a526fc8cf4c317dc1bd99a30a3a6cd355dd7e3c4))
+
 ## [2.5.9](https://github.com/base/account-sdk/compare/account-v2.5.8...account-v2.5.9) (2026-08-04)
 
 
