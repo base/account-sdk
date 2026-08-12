@@ -478,6 +478,23 @@ describe('getPaymentStatus', () => {
     expect(logPaymentStatusCheckError).toHaveBeenCalledTimes(1);
   });
 
+  it('should reject unsuccessful HTTP responses from fetch polyfills without ok', async () => {
+    const json = vi.fn();
+    vi.mocked(fetch).mockResolvedValueOnce({
+      status: 503,
+      json,
+    } as unknown as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xpolyfill-http-error',
+        testnet: false,
+      })
+    ).rejects.toThrow('RPC request failed with HTTP status 503');
+
+    expect(json).not.toHaveBeenCalled();
+  });
+
   it('should reject a malformed receipt response without a result', async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,

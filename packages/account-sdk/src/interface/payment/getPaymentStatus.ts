@@ -58,7 +58,12 @@ function getRpcErrorMessage(response: unknown): string | undefined {
 }
 
 async function readJsonRpcResponse(response: Response): Promise<JsonRpcResponse> {
-  if (response.ok === false) {
+  const hasHttpError =
+    response.ok === false ||
+    (typeof response.ok !== 'boolean' &&
+      typeof response.status === 'number' &&
+      (response.status < 200 || response.status >= 300));
+  if (hasHttpError) {
     throw new Error(`RPC request failed with HTTP status ${response.status}`);
   }
 
