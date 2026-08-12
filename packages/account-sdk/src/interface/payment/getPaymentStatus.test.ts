@@ -500,6 +500,43 @@ describe('getPaymentStatus', () => {
     expect(logPaymentStatusCheckCompleted).not.toHaveBeenCalled();
   });
 
+  it('should reject a scalar receipt result', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ jsonrpc: '2.0', id: 1, result: false }),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xscalar-receipt-result',
+        testnet: false,
+      })
+    ).rejects.toThrow('RPC error: Invalid response');
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('should reject a scalar pending lookup result', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        json: async () => ({ jsonrpc: '2.0', id: 1, result: null }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ jsonrpc: '2.0', id: 2, result: true }),
+      } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xscalar-pending-result',
+        testnet: false,
+      })
+    ).rejects.toThrow('RPC error: Invalid response');
+
+    const { logPaymentStatusCheckCompleted } = await import(':core/telemetry/events/payment.js');
+    expect(logPaymentStatusCheckCompleted).not.toHaveBeenCalled();
+  });
+
   it('should handle network errors gracefully', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'));
 

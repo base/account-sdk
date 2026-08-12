@@ -63,6 +63,11 @@ async function readJsonRpcResponse(response: Response) {
     throw new Error('RPC error: Invalid response');
   }
 
+  const result = (body as { result: unknown }).result;
+  if (result !== null && (typeof result !== 'object' || Array.isArray(result))) {
+    throw new Error('RPC error: Invalid response');
+  }
+
   return body;
 }
 
