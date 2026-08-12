@@ -128,6 +128,105 @@ describe('getPaymentStatus', () => {
     );
   });
 
+  it('should return completed status when expected payment details match', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => createSuccessfulReceipt(),
+    } as Response);
+
+    const status = await getPaymentStatus({
+      id: '0xexpected-payment',
+      expectedPayment: {
+        amount: '10.000000',
+        recipient: '0xf1ddf1fc0310cb11f0ca87508207012f4a9cb336',
+      },
+      testnet: false,
+    });
+
+    expect(status.status).toBe('completed');
+    expect(status.amount).toBe('10');
+    expect(status.recipient).toBe('0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336');
+  });
+
+  it('should reject a payment whose amount does not match the expected amount', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => createSuccessfulReceipt(),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xwrong-amount',
+        expectedPayment: {
+          amount: '9.99',
+          recipient: '0xf1ddf1fc0310cb11f0ca87508207012f4a9cb336',
+        },
+        testnet: false,
+      })
+    ).rejects.toThrow('Unable to verify payment: USDC amount does not match the expected amount.');
+
+    const { logPaymentStatusCheckCompleted, logPaymentStatusCheckError } = await import(
+      ':core/telemetry/events/payment.js'
+    );
+    expect(logPaymentStatusCheckCompleted).not.toHaveBeenCalled();
+    expect(logPaymentStatusCheckError).toHaveBeenCalledWith({
+      testnet: false,
+      correlationId: 'mock-correlation-id',
+      errorMessage: 'Unable to verify payment: USDC amount does not match the expected amount.',
+    });
+  });
+
+  it('should reject a payment whose recipient does not match the expected recipient', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => createSuccessfulReceipt(),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xwrong-recipient',
+        expectedPayment: {
+          amount: '10',
+          recipient: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        },
+        testnet: false,
+      })
+    ).rejects.toThrow(
+      'Unable to verify payment: USDC recipient does not match the expected recipient.'
+    );
+  });
+
+  it('should reject an invalid expected amount', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => createSuccessfulReceipt(),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xinvalid-amount',
+        expectedPayment: {
+          amount: 'not-an-amount',
+          recipient: '0xf1ddf1fc0310cb11f0ca87508207012f4a9cb336',
+        },
+        testnet: false,
+      })
+    ).rejects.toThrow('Unable to verify payment: expected USDC amount is invalid.');
+  });
+
+  it('should reject an invalid expected recipient', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => createSuccessfulReceipt(),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xinvalid-recipient',
+        expectedPayment: {
+          amount: '10',
+          recipient: '0xinvalid',
+        },
+        testnet: false,
+      })
+    ).rejects.toThrow('Unable to verify payment: expected recipient address is invalid.');
+  });
+
   it('should return failed status for failed payment', async () => {
     const mockReceipt = {
       jsonrpc: '2.0',

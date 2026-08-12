@@ -51,11 +51,19 @@ import { getPaymentStatus } from '@base-org/account';
 
 const status = await getPaymentStatus({
   id: payment.id,
+  expectedPayment: {
+    amount: "10.50",                                 // From your server-side order
+    recipient: "0xYourWalletAddress"
+  },
   testnet: true
 });
 
 console.log(`Payment status: ${status.status}`);
 ```
+
+`expectedPayment` is optional for backward compatibility, but production merchants should always
+provide trusted order values. Without it, `completed` only confirms that the operation contained a
+positive USDC transfer; it does not confirm the order's amount or recipient.
 
 ---
 

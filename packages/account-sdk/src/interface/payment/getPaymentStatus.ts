@@ -1,5 +1,5 @@
 import type { Address, Hex } from 'viem';
-import { decodeEventLog, formatUnits, getAddress, isAddressEqual } from 'viem';
+import { decodeEventLog, formatUnits, getAddress, isAddressEqual, parseUnits } from 'viem';
 
 import {
   logPaymentStatusCheckCompleted,
@@ -30,18 +30,23 @@ function getBundlerRequestHeaders(usingDefaultBundlerUrl: boolean): Record<strin
  *
  * @param options - Payment status check options
  * @param options.id - Transaction ID (userOp hash) to check status for
+ * @param options.expectedPayment - Optional trusted amount and recipient to verify
  * @param options.testnet - Whether to check on testnet (Base Sepolia). Defaults to false (mainnet)
  * @param options.telemetry - Whether to enable telemetry logging. Defaults to true
  * @param options.bundlerUrl - Optional custom bundler URL to use for status checks. Useful for avoiding rate limits on public endpoints.
  * @returns Promise<PaymentStatus> - Status information about the payment
- * @throws Error if the RPC request fails or the receipt does not contain exactly one positive
- * sender-origin USDC transfer
+ * @throws Error if the RPC request fails, the receipt does not contain exactly one positive
+ * sender-origin USDC transfer, or the transfer does not match the expected payment
  *
  * @example
  * ```typescript
  * try {
  *   const status = await getPaymentStatus({
  *     id: "0x1234...5678",
+ *     expectedPayment: {
+ *       amount: "10.50",
+ *       recipient: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51"
+ *     },
  *     testnet: true
  *   })
  *
@@ -63,7 +68,7 @@ function getBundlerRequestHeaders(usingDefaultBundlerUrl: boolean): Record<strin
  * @note The id is the userOp hash returned from the pay function
  */
 export async function getPaymentStatus(options: PaymentStatusOptions): Promise<PaymentStatus> {
-  const { id, testnet = false, telemetry = true, bundlerUrl } = options;
+  const { id, expectedPayment, testnet = false, telemetry = true, bundlerUrl } = options;
 
   // Generate correlation ID for this status check
   const correlationId = crypto.randomUUID();
@@ -232,6 +237,47 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         throw new Error(
           'Unable to verify payment: USDC transfer amount must be greater than zero.'
         );
+      }
+
+      if (expectedPayment !== undefined) {
+        if (
+          !expectedPayment ||
+          typeof expectedPayment.amount !== 'string' ||
+          typeof expectedPayment.recipient !== 'string'
+        ) {
+          throw new Error('Unable to verify payment: expected payment details are invalid.');
+        }
+
+        let expectedAmount: bigint;
+        try {
+          expectedAmount = parseUnits(expectedPayment.amount, TOKENS.USDC.decimals);
+        } catch {
+          throw new Error('Unable to verify payment: expected USDC amount is invalid.');
+        }
+
+        if (expectedAmount <= 0n) {
+          throw new Error(
+            'Unable to verify payment: expected USDC amount must be greater than zero.'
+          );
+        }
+        if (paymentTransfer.value !== expectedAmount) {
+          throw new Error(
+            'Unable to verify payment: USDC amount does not match the expected amount.'
+          );
+        }
+
+        let expectedRecipient: Address;
+        try {
+          expectedRecipient = getAddress(expectedPayment.recipient);
+        } catch {
+          throw new Error('Unable to verify payment: expected recipient address is invalid.');
+        }
+
+        if (!isAddressEqual(paymentTransfer.to as Address, expectedRecipient)) {
+          throw new Error(
+            'Unable to verify payment: USDC recipient does not match the expected recipient.'
+          );
+        }
       }
 
       if (telemetry) {

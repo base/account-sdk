@@ -32,6 +32,10 @@ import { getPaymentStatus } from '@base/account-sdk';
 // Check payment status
 const status = await getPaymentStatus({
   id: payment.id,
+  expectedPayment: {
+    amount: "10.50",
+    recipient: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51"
+  },
   testnet: true
 });
 
@@ -50,6 +54,10 @@ switch (status.status) {
     break;
 }
 ```
+
+Use trusted server-side order values for `expectedPayment`. It is optional for backward
+compatibility, but omitting it only verifies that the operation contained a positive USDC transfer;
+it does not verify the order amount or recipient.
 
 ## Information Requests (Data Callbacks)
 
@@ -149,6 +157,8 @@ The payment result is always a successful payment (errors are thrown as exceptio
 #### PaymentStatusOptions
 
 - `id: string` - Transaction ID (userOp hash) to check status for
+- `expectedPayment?: { amount: string; recipient: Address }` - Trusted order details to verify
+  against the on-chain USDC transfer
 - `testnet?: boolean` - Whether to check on testnet (Base Sepolia). Defaults to false (mainnet)
 - `telemetry?: boolean` - Whether to enable telemetry logging (default: true)
 
