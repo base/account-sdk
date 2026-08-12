@@ -160,6 +160,15 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       }).then(readJsonRpcResponse);
 
       if (userOpResponse.result) {
+        if (typeof userOpResponse.result.sender !== 'string') {
+          throw new Error('RPC error: Invalid response');
+        }
+        try {
+          getAddress(userOpResponse.result.sender);
+        } catch {
+          throw new Error('RPC error: Invalid response');
+        }
+
         // UserOp exists but no receipt yet - it's pending
         if (telemetry) {
           logPaymentStatusCheckCompleted({ testnet, status: 'pending', correlationId });
@@ -197,6 +206,22 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
     }
 
     const { success, reason } = userOpReceipt;
+    if (typeof success !== 'boolean') {
+      throw new Error('RPC error: Invalid response');
+    }
+    if (reason !== undefined && reason !== null && typeof reason !== 'string') {
+      throw new Error('RPC error: Invalid response');
+    }
+    if (typeof userOpReceipt.sender !== 'string') {
+      throw new Error('Unable to verify payment: receipt is missing a valid sender address.');
+    }
+
+    let senderAddress: Address;
+    try {
+      senderAddress = getAddress(userOpReceipt.sender);
+    } catch {
+      throw new Error('Unable to verify payment: receipt is missing a valid sender address.');
+    }
 
     // Determine status based on success flag
     if (success === true) {
@@ -204,17 +229,6 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       // every UserOperation in the bundle and must not be used for payment verification.
       if (!Array.isArray(userOpReceipt.logs)) {
         throw new Error('Unable to verify payment: user operation receipt is missing logs.');
-      }
-
-      if (typeof userOpReceipt.sender !== 'string') {
-        throw new Error('Unable to verify payment: receipt is missing a valid sender address.');
-      }
-
-      let senderAddress: Address;
-      try {
-        senderAddress = getAddress(userOpReceipt.sender);
-      } catch {
-        throw new Error('Unable to verify payment: receipt is missing a valid sender address.');
       }
 
       const network = testnet ? 'baseSepolia' : 'base';

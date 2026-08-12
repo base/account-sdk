@@ -333,7 +333,7 @@ describe('getPaymentStatus', () => {
         jsonrpc: '2.0',
         id: 2,
         result: {
-          sender: '0xpendingSender',
+          sender: paymentSender,
           // other userOp fields...
         },
       }),
@@ -348,7 +348,7 @@ describe('getPaymentStatus', () => {
       status: 'pending',
       id: '0xpending123',
       message: 'Your payment is being processed. This usually takes a few seconds.',
-      sender: '0xpendingSender',
+      sender: paymentSender,
     });
 
     expect(fetch).toHaveBeenCalledTimes(2);
@@ -529,6 +529,46 @@ describe('getPaymentStatus', () => {
     await expect(
       getPaymentStatus({
         id: '0xscalar-pending-result',
+        testnet: false,
+      })
+    ).rejects.toThrow('RPC error: Invalid response');
+
+    const { logPaymentStatusCheckCompleted } = await import(':core/telemetry/events/payment.js');
+    expect(logPaymentStatusCheckCompleted).not.toHaveBeenCalled();
+  });
+
+  it('should reject a receipt result without a boolean success field', async () => {
+    const mockReceipt = createSuccessfulReceipt({ userOpHash: '0xmissing-success' });
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => ({
+        ...mockReceipt,
+        result: {
+          ...mockReceipt.result,
+          success: undefined,
+        },
+      }),
+    } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xmissing-success',
+        testnet: false,
+      })
+    ).rejects.toThrow('RPC error: Invalid response');
+  });
+
+  it('should reject a pending lookup result without a sender', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        json: async () => ({ jsonrpc: '2.0', id: 1, result: null }),
+      } as Response)
+      .mockResolvedValueOnce({
+        json: async () => ({ jsonrpc: '2.0', id: 2, result: {} }),
+      } as Response);
+
+    await expect(
+      getPaymentStatus({
+        id: '0xmissing-pending-sender',
         testnet: false,
       })
     ).rejects.toThrow('RPC error: Invalid response');
