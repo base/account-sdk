@@ -88,6 +88,8 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
     paymasterUrls: params.paymasterUrls,
   };
 
+  validatePreferences(options.preference);
+
   //  ====================================================================
   //  If we have a toOwnerAccount function, set it in the non-persisted config
   //  ====================================================================
@@ -120,8 +122,6 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   if (options.preference.telemetry !== false) {
     initializeTelemetryOnce();
   }
-
-  validatePreferences(options.preference);
 
   //  ====================================================================
   //  Return the provider

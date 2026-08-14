@@ -2,13 +2,13 @@ import * as telemetryModule from ':core/telemetry/initCCA.js';
 import { store } from ':store/store.js';
 import * as checkCrossOriginModule from ':util/checkCrossOriginOpenerPolicy.js';
 import * as validatePreferencesModule from ':util/validatePreferences.js';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Hex } from 'viem';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
 import {
   CreateProviderOptions,
-  createBaseAccountSDK,
   _resetGlobalInitialization,
+  createBaseAccountSDK,
 } from './createBaseAccountSDK.js';
 import * as getInjectedProviderModule from './getInjectedProvider.js';
 
@@ -300,6 +300,19 @@ describe('createProvider', () => {
       createBaseAccountSDK({ preference }).getProvider();
 
       expect(mockValidatePreferences).toHaveBeenCalledWith(preference);
+    });
+
+    it('should validate preferences before writing config or initializing telemetry', () => {
+      mockValidatePreferences.mockImplementationOnce(() => {
+        throw new Error('Telemetry must be a boolean');
+      });
+
+      expect(() => {
+        createBaseAccountSDK({ preference: { telemetry: 0 as any } }).getProvider();
+      }).toThrow('Telemetry must be a boolean');
+
+      expect(mockStore.config.set).not.toHaveBeenCalled();
+      expect(mockLoadTelemetryScript).not.toHaveBeenCalled();
     });
 
     it('should validate sub-account when toOwnerAccount is provided', () => {
