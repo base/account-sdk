@@ -1,6 +1,9 @@
 import { ToOwnerAccountFn } from ':store/store.js';
 import { Preference } from '../core/provider/interface.js';
-import { validatePreferences, validateSubAccount } from './validatePreferences.js';
+import {
+  validatePreferences,
+  validateSubAccount,
+} from './validatePreferences.js';
 
 describe('validatePreferences', () => {
   it('should not throw an error if preference is undefined', () => {
@@ -14,6 +17,7 @@ describe('validatePreferences', () => {
         auto: true,
       },
     };
+
     expect(() => validatePreferences(validPreference)).not.toThrow();
   });
 
@@ -21,6 +25,7 @@ describe('validatePreferences', () => {
     const validPreference: Preference = {
       options: 'all',
     };
+
     expect(() => validatePreferences(validPreference)).not.toThrow();
   });
 
@@ -33,8 +38,9 @@ describe('validatePreferences', () => {
         dataSuffix: 'suffix',
       },
     };
+
     expect(() => validatePreferences(invalidPreference)).toThrow(
-      'Attribution cannot contain both auto and dataSuffix properties'
+      'Attribution cannot contain both auto and dataSuffix properties',
     );
   });
 
@@ -45,6 +51,7 @@ describe('validatePreferences', () => {
         auto: true,
       },
     };
+
     expect(() => validatePreferences(validPreference)).not.toThrow();
   });
 
@@ -55,17 +62,22 @@ describe('validatePreferences', () => {
         dataSuffix: '0xsuffix',
       },
     };
+
     expect(() => validatePreferences(validPreference)).not.toThrow();
   });
 });
 
 describe('validateSubAccount', () => {
   it('should throw an error if toSubAccountSigner is not a function', () => {
-    expect(() => validateSubAccount(undefined as any)).toThrow('toAccount is not a function');
+    expect(() => validateSubAccount(undefined as any)).toThrow(
+      'toAccount is not a function',
+    );
   });
 
   it('should not throw an error if toSubAccountSigner is a function', () => {
-    const toSubAccountSigner: ToOwnerAccountFn = () => Promise.resolve({} as any);
+    const toSubAccountSigner: ToOwnerAccountFn = () =>
+      Promise.resolve({} as any);
+
     expect(() => validateSubAccount(toSubAccountSigner)).not.toThrow();
   });
 });
@@ -76,6 +88,16 @@ describe('validateTelemetry', () => {
       options: 'all',
       telemetry: true,
     };
+
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should not throw an error if telemetry is false', () => {
+    const validPreference: Preference = {
+      options: 'all',
+      telemetry: false,
+    };
+
     expect(() => validatePreferences(validPreference)).not.toThrow();
   });
 
@@ -83,6 +105,7 @@ describe('validateTelemetry', () => {
     const validPreference: Preference = {
       options: 'all',
     };
+
     expect(() => validatePreferences(validPreference)).not.toThrow();
   });
 
@@ -91,6 +114,20 @@ describe('validateTelemetry', () => {
       options: 'all',
       telemetry: 'true' as any,
     };
-    expect(() => validatePreferences(invalidPreference)).toThrow('Telemetry must be a boolean');
+
+    expect(() => validatePreferences(invalidPreference)).toThrow(
+      'Telemetry must be a boolean',
+    );
+  });
+
+  it('should throw an error if telemetry is a falsy non-boolean value', () => {
+    const invalidPreference: Preference = {
+      options: 'all',
+      telemetry: 0 as any,
+    };
+
+    expect(() => validatePreferences(invalidPreference)).toThrow(
+      'Telemetry must be a boolean',
+    );
   });
 });
