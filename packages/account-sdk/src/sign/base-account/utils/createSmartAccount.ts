@@ -137,8 +137,9 @@ export async function createSmartAccount(
 
     async getFactoryArgs() {
       if (factoryData) return { factory: factory.address, factoryData };
-      // TODO: support creating factory data
-      return { factory: factory.address, factoryData };
+      throw new BaseError(
+        'factoryData is required for undeployed smart accounts; provide factoryData when creating the account.'
+      );
     },
 
     async getStubSignature() {
