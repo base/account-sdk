@@ -116,6 +116,17 @@
    });
    ```
 
+### Base Sepolia account readiness
+
+> [!NOTE]
+> Newly created Base Accounts may currently connect and report Base Sepolia (84532)
+> capabilities while the hosted wallet rejects transaction or typed-data requests during account
+> provisioning. This is tracked in [#363](https://github.com/base/account-sdk/issues/363). Treat
+> capability discovery as feature support, not proof that the connected account is ready to
+> transact on that chain. Handle provider errors explicitly and use an account or environment
+> known to work on Base Sepolia for integration testing until the hosted-wallet limitation is
+> resolved.
+
 ### Developing locally and running the test dapp
 
 - The Base Account SDK test dapp can be viewed here https://base.github.io/account-sdk/.

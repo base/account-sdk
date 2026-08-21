@@ -44,6 +44,15 @@ const payment = await pay({
 console.log(`Payment successful! ID: ${payment.id}`);
 ```
 
+> [!NOTE]
+> **Base Sepolia and newly created accounts:** `testnet: true` routes Base Pay to Base
+> Sepolia. Newly created Base Accounts may currently connect and sign in but be unable to
+> complete testnet payments because hosted wallet delegation provisioning rejects the request
+> before a Base Pay ID or onchain transaction is created. This is tracked in
+> [#363](https://github.com/base/account-sdk/issues/363). Until resolved, use an account or
+> environment already able to transact on Base Sepolia for integration tests and handle provider
+> rejections explicitly.
+
 ### Check Payment Status
 
 ```typescript
