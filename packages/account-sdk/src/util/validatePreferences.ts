@@ -17,7 +17,13 @@ export function validatePreferences(preference?: Preference) {
     ) {
       throw new Error(`Attribution cannot contain both auto and dataSuffix properties`);
     }
-  }
+    if (
+    preference.attribution.dataSuffix !== undefined &&
+    preference.attribution.dataSuffix.trim() === ''
+    ) {
+    throw new Error(`Attribution dataSuffix cannot be empty`);
+    }
+ }
 
   if (preference.telemetry) {
     if (typeof preference.telemetry !== 'boolean') {
