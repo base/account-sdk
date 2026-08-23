@@ -71,7 +71,7 @@ been used for fulfillment.
 
 ## Base Subscriptions - Quick Start
 
-**Base Subscriptions lets you create recurring USDC payments**
+**Base Subscriptions let you create recurring USDC payments**
 
 ### Create a Subscription
 
