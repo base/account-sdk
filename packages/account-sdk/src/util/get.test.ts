@@ -10,4 +10,11 @@ describe('get', () => {
     const obj = { a: { b: { c: 'd' } } };
     expect(get(obj, 'a.b.c.d')).toBeUndefined();
   });
+  
+  it('should return undefined for empty paths', () => {
+  const obj = { a: { b: { c: 'd' } } };
+
+  expect(get(obj, '')).toBeUndefined();
+  expect(get(obj, '   ')).toBeUndefined();
+  });
 });
