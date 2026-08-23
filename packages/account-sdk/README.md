@@ -127,7 +127,7 @@
 
 ## Script Tag Usage
 
-Base Accunt can be used directly in HTML pages via a script tag, without any build tools:
+Base Account can be used directly in HTML pages via a script tag, without any build tools:
 
 ```html
 <!-- Via unpkg -->
