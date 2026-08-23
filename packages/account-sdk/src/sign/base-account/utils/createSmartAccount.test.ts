@@ -6,7 +6,7 @@ import { baseSepolia } from 'viem/chains';
 import { encodeFunctionData, keccak256 } from 'viem/utils';
 import { beforeEach, describe, expect, vi } from 'vitest';
 
-import { createSmartAccount, sign, wrapSignature } from './createSmartAccount.js';
+import { createFactoryData, createSmartAccount, sign, wrapSignature } from './createSmartAccount.js';
 
 const privateKey = '0x8d0ec8aa1f67f8c11db3c191d3d66408e148759acd617fa22ab5d5d677a234e9';
 const signer = privateKeyToAccount(privateKey);
@@ -503,5 +503,90 @@ describe('wrapSignature', () => {
     ).toMatchInlineSnapshot(
       `"0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000002800000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000000170000000000000000000000000000000000000000000000000000000000000001949fc7c88032b9fcb5f6efc7a7b8c63668eae9871b765e23123bb473ff57aa831a7c0d9276168ebcc29f2875a0239cffdf2a9cd1c2007c5c77c071db9264df1d000000000000000000000000000000000000000000000000000000000000002549960de5880e8c687434170f6476605b8fe4aeb9a28632c7995cf3ba831d97630500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008a7b2274797065223a22776562617574686e2e676574222c226368616c6c656e6765223a2273496a396e6164474850596759334b7156384f7a4a666c726275504b474f716d59576f4d57516869467773222c226f726967696e223a2268747470733a2f2f7369676e2e636f696e626173652e636f6d222c2263726f73734f726967696e223a66616c73657d00000000000000000000000000000000000000000000"`
     );
+  });
+});
+
+describe('createFactoryData', () => {
+  it('should create factory data for local account', () => {
+    const factoryData = createFactoryData(signer);
+    
+    // Verify that the factory data is properly encoded
+    expect(factoryData).toMatch(/^0x/);
+    expect(factoryData.length).toBeGreaterThan(10); // Should be a reasonable length
+    
+    // The factory data should start with the function selector for createAccount
+    // which is 0x3ffba36f (first 4 bytes of keccak256("createAccount(bytes[],uint256)"))
+    expect(factoryData.startsWith('0x3ffba36f')).toBe(true);
+  });
+
+  it('should create factory data for WebAuthn account', () => {
+    const webauthnOwner = toWebAuthnAccount({
+      credential: { 
+        id: 'test-id', 
+        publicKey: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' 
+      },
+    });
+    
+    const factoryData = createFactoryData(webauthnOwner);
+    
+    // Verify that the factory data is properly encoded
+    expect(factoryData).toMatch(/^0x/);
+    expect(factoryData.length).toBeGreaterThan(10);
+    expect(factoryData.startsWith('0x3ffba36f')).toBe(true);
+  });
+
+  it('should throw error for WebAuthn account with invalid public key', () => {
+    const webauthnOwner = toWebAuthnAccount({
+      credential: { 
+        id: 'test-id', 
+        publicKey: '0xinvalid' // Too short
+      },
+    });
+    
+    expect(() => createFactoryData(webauthnOwner)).toThrow('WebAuthn owner must have a valid 64-byte public key');
+  });
+
+  it('should throw error for unsupported owner type', () => {
+    const unsupportedOwner = {
+      type: 'unsupported',
+      address: '0x1234567890123456789012345678901234567890',
+    } as any;
+    
+    expect(() => createFactoryData(unsupportedOwner)).toThrow('Unsupported owner type: unsupported');
+  });
+});
+
+describe('getFactoryArgs with generated factory data', () => {
+  it('should generate factory data when none is provided', async () => {
+    const account = await createSmartAccount({
+      client,
+      owner: signer,
+      ownerIndex: 0,
+      address: '0xBb0c1d5E7f530e8e648150fc7Cf30912575523E8',
+      factoryData: undefined, // No factory data provided
+    });
+
+    const factoryArgs = await account.getFactoryArgsWithGeneration();
+    expect(factoryArgs.factory).toBe('0xba5ed110efdba3d005bfc882d75358acbbb85842');
+    expect(factoryArgs.factoryData).toBeDefined();
+    expect(factoryArgs.factoryData).toMatch(/^0x/);
+    expect(factoryArgs.factoryData!.startsWith('0x3ffba36f')).toBe(true);
+  });
+
+  it('should use provided factory data when available', async () => {
+    const providedFactoryData = '0x3ffba36f00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000f39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+    
+    const account = await createSmartAccount({
+      client,
+      owner: signer,
+      ownerIndex: 0,
+      address: '0xBb0c1d5E7f530e8e648150fc7Cf30912575523E8',
+      factoryData: providedFactoryData,
+    });
+
+    const factoryArgs = await account.getFactoryArgsWithGeneration();
+    
+    expect(factoryArgs.factory).toBe('0xba5ed110efdba3d005bfc882d75358acbbb85842');
+    expect(factoryArgs.factoryData).toBe(providedFactoryData);
   });
 });
