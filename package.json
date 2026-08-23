@@ -15,9 +15,10 @@
     "clean": "yarn workspaces foreach -A -ipv run clean && rm -rf node_modules && yarn",
     "deploy": "yarn build:packages && yarn workspace sdk-playground export",
     "dev": "yarn workspaces foreach -A -ipv run dev",
+    "check": "yarn lint && yarn typecheck && yarn test && yarn format:check",
     "lint": "yarn workspaces foreach -A -pt run lint",
-    "format": "yarn workspaces foreach -A -pt run format",
-    "format:check": "yarn workspaces foreach -A -pt run format:check",
+    "format": "biome format . --write",
+    "format:check": "biome check . --formatter-enabled=true --linter-enabled=false --organize-imports-enabled=false",
     "test": "yarn workspaces foreach -A -ipv run test",
     "typecheck": "yarn workspaces foreach -A -pt run typecheck"
   },
