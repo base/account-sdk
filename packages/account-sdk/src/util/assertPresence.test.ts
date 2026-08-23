@@ -26,4 +26,16 @@ describe('assertArrayPresence', () => {
   it('should throw an error if the value is not an array and an error is provided', () => {
     expect(() => assertArrayPresence(null, 'test')).toThrow();
   });
+
+  it('should throw an error if the array contains null', () => {
+    expect(() => assertArrayPresence([1, null, 3])).toThrow();
+  });
+
+  it('should throw an error if the array contains undefined', () => {
+    expect(() => assertArrayPresence([1, undefined, 3])).toThrow();
+  });
+
+  it('should not throw if all array values are present', () => {
+    expect(() => assertArrayPresence([1, 2, 3])).not.toThrow();
+  });
 });
