@@ -1539,6 +1539,72 @@ describe('Signer', () => {
       expect(handleAddSubAccountOwner).toHaveBeenCalled();
     });
 
+    it('rejects when adding the sub account owner fails', async () => {
+      await signer.cleanup();
+
+      store.subAccounts.set({
+        address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+      });
+
+      const mockSpendPermissions = [createMockSpendPermission()];
+      vi.spyOn(store.spendPermissions, 'get').mockReturnValue(mockSpendPermissions);
+
+      (findOwnerIndex as Mock).mockResolvedValueOnce(-1);
+      (handleAddSubAccountOwner as Mock).mockRejectedValueOnce(new Error('add owner failed'));
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: null,
+        },
+      });
+
+      await signer.handshake({ method: 'handshake' });
+
+      signer['accounts'] = [
+        '0x7838d2724FC686813CAf81d4429beff1110c739a',
+        '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+      ];
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            to: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+            version: '1',
+            calls: [],
+            from: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+          },
+        ],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+                      factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      // The owner-add failure has to surface as a rejection. Returning the error
+      // object instead resolves the request with an Error as its result.
+      await expect(signer.request(mockRequest)).rejects.toThrow(
+        'failed to add sub account owner when sending request to sub account signer'
+      );
+    });
+
     it('should not handle insufficient balance error if external funding source data is not provided', async () => {
       (createSubAccountSigner as Mock).mockImplementation(async () => {
         const request = vi.fn((args) => {

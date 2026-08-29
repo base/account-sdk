@@ -792,7 +792,7 @@ export class Signer {
           correlationId,
           errorMessage: parseErrorMessageFromAny(error),
         });
-        return standardErrors.provider.unauthorized(
+        throw standardErrors.provider.unauthorized(
           'failed to add sub account owner when sending request to sub account signer'
         );
       }
