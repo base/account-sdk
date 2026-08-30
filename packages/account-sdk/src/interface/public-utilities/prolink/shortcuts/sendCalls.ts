@@ -10,6 +10,7 @@ import { SendCallsType } from '../types.js';
 import {
   bytesToHex,
   decodeAddress,
+  decodeAmount,
   encodeAddress,
   encodeAmount,
   hexToBytes,
@@ -177,9 +178,11 @@ export function decodeWalletSendCalls(
   if (payload.transactionData.case === 'erc20Transfer') {
     const { token, recipient, amount } = payload.transactionData.value;
 
+    decodeAmount(amount);
+
     // Reconstruct ERC20 transfer call data with proper 32-byte padding
     const recipientPadded = pad32(recipient);
-    const amountPadded = pad32(amount.length > 0 ? amount : new Uint8Array([0]));
+    const amountPadded = pad32(amount);
 
     // Convert to hex without minimal encoding (keep all padding)
     const recipientHex = Array.from(recipientPadded)
@@ -200,22 +203,27 @@ export function decodeWalletSendCalls(
     ];
   } else if (payload.transactionData.case === 'nativeTransfer') {
     const { recipient, amount } = payload.transactionData.value;
+    const decodedAmount = decodeAmount(amount);
 
     result.calls = [
       {
         to: decodeAddress(recipient),
         data: '0x',
-        value: bytesToHex(amount.length > 0 ? amount : new Uint8Array([0])),
+        value: `0x${decodedAmount.toString(16)}`,
       },
     ];
   } else if (payload.transactionData.case === 'genericCalls') {
     const { calls } = payload.transactionData.value;
 
-    result.calls = calls.map((call) => ({
-      to: decodeAddress(call.to),
-      data: call.data.length > 0 ? bytesToHex(call.data) : '0x',
-      value: bytesToHex(call.value.length > 0 ? call.value : new Uint8Array([0])),
-    }));
+    result.calls = calls.map((call) => {
+      const decodedValue = decodeAmount(call.value);
+
+      return {
+        to: decodeAddress(call.to),
+        data: call.data.length > 0 ? bytesToHex(call.data) : '0x',
+        value: `0x${decodedValue.toString(16)}`,
+      };
+    });
   }
 
   return result;
