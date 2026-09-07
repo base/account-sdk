@@ -240,6 +240,56 @@ yarn add @base-org/account
    });
    ```
 
+### Error handling and retries
+
+Provider and RPC calls reject with Ethereum-compatible errors that include an integer `code` and a `message`. Use `code` to decide whether to retry, fail fast, or prompt the user.
+
+| Category | Typical codes | Guidance |
+| --- | --- | --- |
+| User / auth decisions | `4001` user rejected, `4100` unauthorized | Fail fast. Do not retry; ask the user to approve or reconnect. |
+| Connectivity / chain | `4900` disconnected, `4901` chain disconnected, `4902` unsupported chain | Fail fast or recover by reconnecting / switching chain. Do not blind-retry the original request. |
+| Invalid input / config | `-32600` invalid request, `-32601` method not found, `-32602` invalid params, `-32000` invalid input, `4200` unsupported method | Fail fast. Fix arguments or configuration before calling again. |
+| Transient RPC / capacity | `-32002` resource unavailable, `-32005` limit exceeded, `-32603` internal, network/`HttpRequestError` transport failures | Safe to retry with bounded backoff for **read-only** or otherwise idempotent requests. |
+| Transaction outcome | `-32003` transaction rejected | Fail fast unless your app has an explicit, user-visible resubmit path. |
+
+Keep retries conservative:
+
+- Prefer retries for reads and status checks (for example `getPaymentStatus`).
+- Avoid automatic retries for wallet prompts, signing, and payment submission — those can duplicate user-facing confirmations or onchain effects.
+- Cap attempts (for example 3) with exponential backoff and jitter; surface the last error if all attempts fail.
+- Treat insufficient-funds / spend-permission errors as actionable configuration problems, not transient network failures.
+
+Minimal pattern:
+
+```js
+function getErrorCode(error) {
+  if (typeof error === 'number') return error;
+  if (error && typeof error === 'object' && typeof error.code === 'number') return error.code;
+  return undefined;
+}
+
+function isRetryable(error) {
+  const code = getErrorCode(error);
+  return code === -32002 || code === -32005 || code === -32603 || code === undefined;
+}
+
+async function requestWithRetry(provider, args, { retries = 3 } = {}) {
+  let attempt = 0;
+  for (;;) {
+    try {
+      return await provider.request(args);
+    } catch (error) {
+      attempt += 1;
+      const code = getErrorCode(error);
+      if (code === 4001 || code === 4100 || !isRetryable(error) || attempt > retries) {
+        throw error;
+      }
+      await new Promise((r) => setTimeout(r, 250 * 2 ** (attempt - 1)));
+    }
+  }
+}
+```
+
 ### Developing locally and running the test app
 
 - The Base Account SDK test app can be viewed here https://base.github.io/account-sdk/.
