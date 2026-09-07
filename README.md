@@ -14,6 +14,24 @@ Complete SDK for connecting to Base Account wallets and interacting with the Eth
 
 ---
 
+## Project Status and Support
+
+`@base-org/account` has two release channels:
+
+- **Stable (`latest`)**: the supported release channel for production integrations.
+- **Canary (`canary`)**: prerelease builds for early testing. Do not rely on canary APIs or behavior in production.
+
+Stable releases use `MAJOR.MINOR.PATCH` versioning. Fixes increment the patch version, new
+backward-compatible features increment the minor version, and breaking changes increment the major
+version. Review the [changelog](./packages/account-sdk/CHANGELOG.md) and
+[GitHub releases](https://github.com/base/account-sdk/releases) before upgrading, especially across
+major versions.
+
+To report a problem or request an enhancement, [open an issue](https://github.com/base/account-sdk/issues/new/choose)
+and include the SDK version plus a minimal reproduction when applicable.
+
+---
+
 ## Base Pay - Quick Start
 
 **Base Pay allows you to accept USDC payments with just 3 lines of code.** No SDK instantiation or wallet connection required.
