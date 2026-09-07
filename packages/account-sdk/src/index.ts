@@ -6,6 +6,7 @@ export type {
 } from ':core/provider/interface.js';
 
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
+export { verifyMessage } from './interface/public-utilities/verifyMessage.js';
 
 export {
   getCryptoKeyAccount,
