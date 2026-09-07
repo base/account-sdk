@@ -1,4 +1,4 @@
-import { type PublicClient, createPublicClient, http, size } from 'viem';
+import { http, type PublicClient, createPublicClient, size } from 'viem';
 import { verifyMessage as viemVerifyMessage } from 'viem/actions';
 import { base } from 'viem/chains';
 import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
