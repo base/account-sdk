@@ -5,7 +5,7 @@
 ## Base Account SDK allows dapps to connect to Coinbase Wallet (formerly Base Account)
 
 1. [Coinbase Wallet](https://wallet.coinbase.com)
-   - [Docs](https://docs.base.org/base-account/quickstart/web)
+   - [Docs](https://docs.cdp.coinbase.com/coinbase-wallet/overview)
 
 ### Installing Base Account SDK
 

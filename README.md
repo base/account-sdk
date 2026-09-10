@@ -147,7 +147,7 @@ const charge = await base.subscription.charge({
 For applications that need full wallet connectivity and blockchain interactions beyond payments:
 
 1. [Coinbase Wallet](https://wallet.coinbase.com)
-   - [Docs](https://docs.base.org/base-account/quickstart/web)
+   - [Docs](https://docs.cdp.coinbase.com/coinbase-wallet/overview)
 
 ### Installing the SDK
 
