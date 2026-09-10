@@ -2,6 +2,8 @@
 
 [![npm](https://img.shields.io/npm/v/@base-org/account.svg)](https://www.npmjs.com/package/@base-org/account)
 
+> **Rebrand:** Base Account is now Coinbase Wallet. The npm package remains `@base-org/account` — it has not been renamed or merged. `@base-org/account` is still the current recommended SDK for connecting to Coinbase Wallet until the next-generation Coinbase Wallet SDK is ready. Existing integrations do not need to migrate.
+
 ## Overview
 
 The Base Account SDK provides two distinct sets of functionality:
@@ -10,7 +12,7 @@ The Base Account SDK provides two distinct sets of functionality:
 Purely functional payment and subscription APIs that work immediately without any SDK setup or wallet connection.
 
 ### 2. **Base Account SDK** (Full SDK)
-Complete SDK for connecting to Base Account wallets and interacting with the Ethereum blockchain.
+Complete SDK for connecting to Coinbase Wallet (formerly Base Account) and interacting with the Ethereum blockchain.
 
 ---
 
@@ -144,7 +146,7 @@ const charge = await base.subscription.charge({
 
 For applications that need full wallet connectivity and blockchain interactions beyond payments:
 
-1. [Base Account](https://account.base.app)
+1. [Coinbase Wallet](https://keys.coinbase.com/onboarding)
    - [Docs](https://docs.base.org/base-account/quickstart/web)
 
 ### Installing the SDK
