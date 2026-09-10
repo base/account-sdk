@@ -13,12 +13,24 @@ describe('validateStringAmount', () => {
 
   it('should reject invalid amounts', () => {
     expect(() => validateStringAmount('0', 6)).toThrow('Invalid amount: must be greater than 0');
+    expect(() => validateStringAmount('00.000000', 6)).toThrow(
+      'Invalid amount: must be greater than 0'
+    );
     expect(() => validateStringAmount('-10', 6)).toThrow('Invalid amount: must be greater than 0');
     expect(() => validateStringAmount('abc', 6)).toThrow('Invalid amount: must be a valid number');
     expect(() => validateStringAmount('10.1234567', 6)).toThrow(
       'Invalid amount: pay only supports up to 6 decimal places'
     );
   });
+
+  it.each(['1abc', '1foo', '1.2.3', '1e6', '1.', '.1', '.', '', ' 1', '1 ', 'Infinity'])(
+    'should reject malformed amount %s',
+    (amount) => {
+      expect(() => validateStringAmount(amount, 6)).toThrow(
+        'Invalid amount: must be a valid number'
+      );
+    }
+  );
 
   it('should reject non-string amounts', () => {
     expect(() => validateStringAmount(10 as any, 6)).toThrow('Invalid amount: must be a string');
