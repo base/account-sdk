@@ -1,9 +1,11 @@
 # Base Account SDK
 
-## Base Account SDK allows dapps to connect to Base Account
+> **Rebrand:** Base Account is now Coinbase Wallet. The npm package remains `@base-org/account` — it has not been renamed or merged. `@base-org/account` is still the current recommended SDK for connecting to Coinbase Wallet until the next-generation Coinbase Wallet SDK is ready. Existing integrations do not need to migrate.
 
-1. [Base Account](https://account.base.org/)
-   - [Docs](https://www.base.org/builders/smart-wallet)
+## Base Account SDK allows dapps to connect to Coinbase Wallet (formerly Base Account)
+
+1. [Coinbase Wallet](https://wallet.coinbase.com)
+   - [Docs](https://docs.cdp.coinbase.com/coinbase-wallet/overview)
 
 ### Installing Base Account SDK
 
