@@ -110,7 +110,13 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   store.config.set(options);
 
   //  ====================================================================
-  //  One-time initialization and validation
+  //  Validate preferences before any initialization can use them
+  //  ====================================================================
+
+  validatePreferences(options.preference);
+
+  //  ====================================================================
+  //  One-time initialization
   //  ====================================================================
 
   initializeGlobalOnce();
@@ -120,8 +126,6 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   if (options.preference.telemetry !== false) {
     initializeTelemetryOnce();
   }
-
-  validatePreferences(options.preference);
 
   //  ====================================================================
   //  Return the provider
@@ -137,6 +141,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
 
       return provider;
     },
+
     subAccount: {
       async create(accountParam: AddSubAccountAccount): Promise<SubAccount> {
         return (await sdk.getProvider()?.request({
@@ -149,6 +154,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
           ],
         })) as SubAccount;
       },
+
       async get(): Promise<SubAccount | null> {
         const subAccount = store.subAccounts.get();
 
@@ -167,12 +173,14 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
         })) as WalletConnectResponse;
 
         const subAccounts = response.accounts[0].capabilities?.subAccounts;
+
         if (!Array.isArray(subAccounts)) {
           return null;
         }
 
         return subAccounts[0] as SubAccount;
       },
+
       addOwner: async ({
         address,
         publicKey,
@@ -184,12 +192,18 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
       }) => {
         const subAccount = store.subAccounts.get();
         const account = store.account.get();
+
         assertPresence(account, new Error('account does not exist'));
         assertPresence(subAccount?.address, new Error('subaccount does not exist'));
 
         const calls = [];
+
         if (publicKey) {
-          const [x, y] = decodeAbiParameters([{ type: 'bytes32' }, { type: 'bytes32' }], publicKey);
+          const [x, y] = decodeAbiParameters(
+            [{ type: 'bytes32' }, { type: 'bytes32' }],
+            publicKey,
+          );
+
           calls.push({
             to: subAccount.address,
             data: encodeFunctionData({
@@ -225,8 +239,10 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
           ],
         })) as string;
       },
+
       setToOwnerAccount(toSubAccountOwner: ToOwnerAccountFn): void {
         validateSubAccount(toSubAccountOwner);
+
         store.subAccountsConfig.set({
           toOwnerAccount: toSubAccountOwner,
         });
