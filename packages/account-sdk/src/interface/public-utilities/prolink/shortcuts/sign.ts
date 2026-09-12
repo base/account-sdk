@@ -10,8 +10,11 @@ import { SignType } from '../types.js';
 import {
   bytesToHex,
   decodeAddress,
+  decodeAmount,
+  decodeFixedBytes,
   encodeAddress,
   encodeAmount,
+  encodeFixedBytes,
   hexToBytes,
 } from '../utils/encoding.js';
 
@@ -113,7 +116,7 @@ export function encodeWalletSign(params: WalletSignParams): WalletSign {
           period: BigInt(msg.period as number | bigint),
           start: BigInt(msg.start as number | bigint),
           end: BigInt(msg.end as number | bigint),
-          salt: hexToBytes(msg.salt as string),
+          salt: encodeFixedBytes(msg.salt as string, 32, 'salt'),
           extraData:
             !msg.extraData || msg.extraData === '0x'
               ? new Uint8Array()
@@ -140,7 +143,7 @@ export function encodeWalletSign(params: WalletSignParams): WalletSign {
           value: encodeAmount(msg.value as string | bigint),
           validAfter: encodeAmount(msg.validAfter as string | bigint),
           validBefore: encodeAmount(msg.validBefore as string | bigint),
-          nonce: hexToBytes(msg.nonce as string),
+          nonce: encodeFixedBytes(msg.nonce as string, 32, 'nonce'),
           verifyingContract: encodeAddress(params.data.domain.verifyingContract!),
           domainName: params.data.domain.name || '',
           domainVersion: params.data.domain.version || '',
@@ -212,11 +215,11 @@ export function decodeWalletSign(
         account: decodeAddress(sp.account),
         spender: decodeAddress(sp.spender),
         token: decodeAddress(sp.token),
-        allowance: bytesToHex(sp.allowance.length > 0 ? sp.allowance : new Uint8Array([0])),
+        allowance: `0x${decodeAmount(sp.allowance).toString(16)}`,
         period: Number(sp.period),
         start: Number(sp.start),
         end: Number(sp.end),
-        salt: bytesToHex(sp.salt),
+        salt: decodeFixedBytes(sp.salt, 32, 'salt'),
         extraData: sp.extraData.length > 0 ? bytesToHex(sp.extraData) : '0x',
       },
     };
@@ -260,10 +263,10 @@ export function decodeWalletSign(
       message: {
         from: decodeAddress(rwa.from),
         to: decodeAddress(rwa.to),
-        value: bytesToHex(rwa.value.length > 0 ? rwa.value : new Uint8Array([0])),
-        validAfter: bytesToHex(rwa.validAfter.length > 0 ? rwa.validAfter : new Uint8Array([0])),
-        validBefore: bytesToHex(rwa.validBefore.length > 0 ? rwa.validBefore : new Uint8Array([0])),
-        nonce: bytesToHex(rwa.nonce),
+        value: `0x${decodeAmount(rwa.value).toString(16)}`,
+        validAfter: `0x${decodeAmount(rwa.validAfter).toString(16)}`,
+        validBefore: `0x${decodeAmount(rwa.validBefore).toString(16)}`,
+        nonce: decodeFixedBytes(rwa.nonce, 32, 'nonce'),
       },
     };
 
