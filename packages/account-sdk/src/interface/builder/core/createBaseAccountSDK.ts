@@ -113,6 +113,8 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   //  One-time initialization and validation
   //  ====================================================================
 
+  validatePreferences(options.preference);
+
   initializeGlobalOnce();
 
   // Telemetry is initialized separately so it can be enabled by later SDK instances
@@ -120,8 +122,6 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   if (options.preference.telemetry !== false) {
     initializeTelemetryOnce();
   }
-
-  validatePreferences(options.preference);
 
   //  ====================================================================
   //  Return the provider
