@@ -7,6 +7,7 @@ import { encodeFunctionData, keccak256 } from 'viem/utils';
 import { beforeEach, describe, expect, vi } from 'vitest';
 
 import { createSmartAccount, sign, wrapSignature } from './createSmartAccount.js';
+import { factoryAddress } from './constants.js';
 
 const privateKey = '0x8d0ec8aa1f67f8c11db3c191d3d66408e148759acd617fa22ab5d5d677a234e9';
 const signer = privateKeyToAccount(privateKey);
@@ -17,6 +18,38 @@ const signerWebauthn = toWebAuthnAccount({
 const client = createClient({
   transport: http(),
   chain: baseSepolia,
+});
+
+describe('getFactoryArgs', () => {
+  it('returns the factory and factoryData when factoryData is provided', async () => {
+    const factoryData = '0x1234';
+    const account = await createSmartAccount({
+      client,
+      owner: signer,
+      ownerIndex: 0,
+      address: '0xBb0c1d5E7f530e8e648150fc7Cf30912575523E8',
+      factoryData,
+    });
+
+    await expect(account.getFactoryArgs()).resolves.toEqual({
+      factory: factoryAddress,
+      factoryData,
+    });
+  });
+
+  it('throws a clear error when factoryData is missing', async () => {
+    const account = await createSmartAccount({
+      client,
+      owner: signer,
+      ownerIndex: 0,
+      address: '0xBb0c1d5E7f530e8e648150fc7Cf30912575523E8',
+      factoryData: undefined,
+    });
+
+    await expect(account.getFactoryArgs()).rejects.toThrow(
+      'factoryData was not provided',
+    );
+  });
 });
 
 describe('encodeCalls', () => {
