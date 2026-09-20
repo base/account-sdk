@@ -505,3 +505,19 @@ describe('wrapSignature', () => {
     );
   });
 });
+
+describe('getFactoryArgs', () => {
+  it('throws a clear error when factoryData is missing', async () => {
+    const account = await createSmartAccount({
+      client,
+      owner: signer,
+      ownerIndex: 0,
+      address: '0xBb0c1d5E7f530e8e648150fc7Cf30912575523E8',
+      factoryData: undefined,
+    });
+
+    await expect(account.getFactoryArgs()).rejects.toThrow(
+      'factoryData is required for undeployed smart accounts; provide factoryData when creating the account.'
+    );
+  });
+});
