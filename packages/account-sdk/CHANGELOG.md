@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.12](https://github.com/base/account-sdk/compare/account-v2.5.11...account-v2.5.12) (2026-09-24)
+
+
+### Bug Fixes
+
+* **account-sdk:** label popup action Continue ([#410](https://github.com/base/account-sdk/issues/410)) ([d5c7153](https://github.com/base/account-sdk/commit/d5c71533bb333ef80d368a2418b8969ebee66925))
+
 ## [2.5.11](https://github.com/base/account-sdk/compare/account-v2.5.10...account-v2.5.11) (2026-09-24)
 
 
