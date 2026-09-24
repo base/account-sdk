@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.13](https://github.com/base/account-sdk/compare/account-v2.5.12...account-v2.5.13) (2026-09-24)
+
+
+### Bug Fixes
+
+* **account-sdk:** bump @coinbase/cdp-sdk to ^1.56.0 to patch axios vulnerabilities ([#412](https://github.com/base/account-sdk/issues/412)) ([da3378b](https://github.com/base/account-sdk/commit/da3378bfa7778da382c428a1fd26eda371afdd66))
+
 ## [2.5.12](https://github.com/base/account-sdk/compare/account-v2.5.11...account-v2.5.12) (2026-09-24)
 
 
