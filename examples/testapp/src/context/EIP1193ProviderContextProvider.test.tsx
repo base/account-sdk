@@ -43,7 +43,7 @@ describe('EIP1193ProviderContextProvider', () => {
   beforeEach(() => {
     vi.spyOn(ConfigContext, 'useConfig').mockReturnValue({
       version: 'HEAD',
-      scwUrl: 'https://keys-dev.coinbase.com/connect',
+      scwUrl: 'https://keys-beta.coinbase.com/connect',
       config: { attribution: { dataSuffix: '0xtestattribution' } },
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
@@ -87,7 +87,7 @@ describe('EIP1193ProviderContextProvider', () => {
       appChainIds: [84532, 8452],
       preference: {
         attribution: { dataSuffix: '0xtestattribution' },
-        walletUrl: 'https://keys-dev.coinbase.com/connect',
+        walletUrl: 'https://keys-beta.coinbase.com/connect',
       },
       subAccounts: {
         creation: 'on-connect',
@@ -104,7 +104,7 @@ describe('EIP1193ProviderContextProvider', () => {
   it('initializes SDK with latest version when version is not HEAD', () => {
     vi.spyOn(ConfigContext, 'useConfig').mockReturnValue({
       version: 'HEAD',
-      scwUrl: 'https://keys-dev.coinbase.com/connect',
+      scwUrl: 'https://keys-beta.coinbase.com/connect',
       config: { attribution: { dataSuffix: '0xtestattribution' } },
       subAccountsConfig: {
         creation: 'on-connect',
@@ -128,7 +128,7 @@ describe('EIP1193ProviderContextProvider', () => {
       appChainIds: [84532, 8452],
       preference: {
         attribution: { dataSuffix: '0xtestattribution' },
-        walletUrl: 'https://keys-dev.coinbase.com/connect',
+        walletUrl: 'https://keys-beta.coinbase.com/connect',
       },
       subAccounts: {
         creation: 'on-connect',
