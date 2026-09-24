@@ -81,7 +81,7 @@ function openPopupWithDialog(tryOpenPopup: () => Window | null) {
       },
       actionItems: [
         {
-          text: 'Try again',
+          text: 'Continue',
           variant: 'primary',
           onClick: () => {
             logDialogActionClicked({
