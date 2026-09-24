@@ -99,7 +99,7 @@ describe('PopupManager', () => {
           message: 'This action requires your permission to open a new window.',
           actionItems: expect.arrayContaining([
             expect.objectContaining({
-              text: 'Try again',
+              text: 'Continue',
               variant: 'primary',
             }),
           ]),
@@ -129,7 +129,7 @@ describe('PopupManager', () => {
           message: 'This action requires your permission to open a new window.',
           actionItems: expect.arrayContaining([
             expect.objectContaining({
-              text: 'Try again',
+              text: 'Continue',
               variant: 'primary',
             }),
           ]),
