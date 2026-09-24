@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.11](https://github.com/base/account-sdk/compare/account-v2.5.10...account-v2.5.11) (2026-09-24)
+
+
+### Bug Fixes
+
+* **account-sdk:** name Coinbase Wallet in popup retry dialog ([#408](https://github.com/base/account-sdk/issues/408)) ([d63f821](https://github.com/base/account-sdk/commit/d63f821d95d013e318f95fc50e32ceec612c8c3d))
+
 ## [2.5.10](https://github.com/base/account-sdk/compare/account-v2.5.9...account-v2.5.10) (2026-08-12)
 
 
