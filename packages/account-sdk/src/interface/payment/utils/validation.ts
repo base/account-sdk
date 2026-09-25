@@ -11,13 +11,14 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
     throw new Error('Invalid amount: must be a string');
   }
 
-  const numAmount = parseFloat(amount);
-
-  if (isNaN(numAmount)) {
+  // parseFloat is too lenient: it reads a leading numeric prefix and accepts values
+  // like "1abc", "1.2.3" or "1e6", which then fail later in parseUnits. Require a
+  // plain decimal string instead.
+  if (!/^-?\d+(\.\d+)?$/.test(amount)) {
     throw new Error('Invalid amount: must be a valid number');
   }
 
-  if (numAmount <= 0) {
+  if (Number(amount) <= 0) {
     throw new Error('Invalid amount: must be greater than 0');
   }
 
