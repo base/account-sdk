@@ -327,6 +327,45 @@ describe('requestSpendPermission', () => {
       });
     });
 
+    it('returns the wallet-substituted account from signedData, not the original', async () => {
+      const capabilities: WalletSignCapabilities = {
+        spendPermission: {
+          requireBalance: true,
+        },
+      };
+
+      // Wallet substitutes message.account via mutableData (e.g. EOA to smart wallet)
+      const substitutedAccount = '0xabcdef0123456789abcdef0123456789abcdef01' as `0x${string}`;
+      const substitutedTypedData: SpendPermissionTypedData = {
+        ...mockTypedData,
+        message: {
+          ...mockTypedData.message,
+          account: substitutedAccount,
+        },
+      };
+
+      (createSpendPermissionTypedData as Mock).mockReturnValue(mockTypedData);
+      (mockProviderRequest as Mock).mockResolvedValue({
+        signature: mockSignature,
+        signedData: substitutedTypedData,
+      });
+      (getHash as Mock).mockResolvedValue(mockPermissionHash);
+
+      const result = await requestSpendPermission({
+        ...mockRequestData,
+        capabilities,
+      });
+
+      // permissionHash is derived from the substituted message
+      expect(getHash).toHaveBeenCalledWith({
+        permission: substitutedTypedData.message,
+        chainId: mockRequestData.chainId,
+      });
+      // the returned permission reflects the substituted account, not the original
+      expect(result.permission).toEqual(substitutedTypedData.message);
+      expect(result.permission).not.toEqual(mockTypedData.message);
+    });
+
     it('should handle invalid wallet_sign response', async () => {
       const capabilities: WalletSignCapabilities = {
         spendPermission: {
