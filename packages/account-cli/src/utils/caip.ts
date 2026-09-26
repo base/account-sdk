@@ -1,6 +1,6 @@
 import { type ChainAlias, type ChainId, KNOWN_CHAINS, type ParsedChainId } from '../types/caip.js';
 
-const CAIP2_RE = /^[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,64}$/;
+const CAIP2_RE = /^[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}$/;
 
 /** Parse a CAIP-2 chain identifier into namespace and reference. Returns null if invalid. */
 export function parseChainId(chainId: string): ParsedChainId | null {
