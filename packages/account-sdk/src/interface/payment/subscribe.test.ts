@@ -355,3 +355,66 @@ describe('subscribe with overridePeriodInSecondsForTestnet', () => {
     expect(result.overridePeriodInSecondsForTestnet).toBeUndefined(); // Should not have overridePeriodInSecondsForTestnet on mainnet
   });
 });
+
+// Regression for https://github.com/base/account-sdk/issues/314
+describe('subscribe period validation', () => {
+  const baseOptions = {
+    recurringCharge: '10.00',
+    subscriptionOwner: '0x1234567890123456789012345678901234567890',
+  } as const;
+
+  it.each([
+    ['zero', 0],
+    ['negative', -1],
+    ['non-integer', 1.5],
+    ['NaN', Number.NaN],
+    ['Infinity', Infinity],
+  ])('rejects %s periodInDays before any wallet interaction', async (_label, value) => {
+    await expect(
+      subscribe({
+        ...baseOptions,
+        periodInDays: value as number,
+        testnet: true,
+      })
+    ).rejects.toThrow('periodInDays must be a positive integer');
+  });
+
+  it.each([
+    ['zero', 0],
+    ['negative', -300],
+    ['non-integer', 1.5],
+    ['NaN', Number.NaN],
+  ])(
+    'rejects %s overridePeriodInSecondsForTestnet before any wallet interaction',
+    async (_label, value) => {
+      await expect(
+        subscribe({
+          ...baseOptions,
+          overridePeriodInSecondsForTestnet: value as number,
+          testnet: true,
+        } as SubscriptionOptions)
+      ).rejects.toThrow('overridePeriodInSecondsForTestnet must be a positive integer');
+    }
+  );
+
+  it('rejects periodInDays above uint48 max', async () => {
+    // 2^48 = 281474976710656
+    await expect(
+      subscribe({
+        ...baseOptions,
+        periodInDays: 281474976710656,
+        testnet: true,
+      })
+    ).rejects.toThrow('periodInDays must be at most');
+  });
+
+  it('rejects overridePeriodInSecondsForTestnet above uint48 max', async () => {
+    await expect(
+      subscribe({
+        ...baseOptions,
+        overridePeriodInSecondsForTestnet: 281474976710656,
+        testnet: true,
+      } as SubscriptionOptions)
+    ).rejects.toThrow('overridePeriodInSecondsForTestnet must be at most');
+  });
+});
