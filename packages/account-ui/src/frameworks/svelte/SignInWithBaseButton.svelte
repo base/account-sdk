@@ -30,8 +30,12 @@ const unmountWidget = () => {
 };
 
 const hasPropsChanged = () => {
-  const currentProps = { align, variant, colorScheme, onClick };
-  return JSON.stringify(currentProps) !== JSON.stringify(previousProps);
+  return (
+    align !== previousProps.align ||
+    variant !== previousProps.variant ||
+    colorScheme !== previousProps.colorScheme ||
+    onClick !== previousProps.onClick
+  );
 };
 
 onMount(() => {
@@ -50,4 +54,4 @@ onDestroy(() => {
 });
 </script>
 
-<div bind:this={mountPoint} style="display: block; width: 100%;"></div> 
+<div bind:this={mountPoint} style="display: block; width: 100%;"></div>
