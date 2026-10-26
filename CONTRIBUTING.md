@@ -15,6 +15,7 @@
 - [Releasing](#releasing)
   - [How it works](#how-it-works)
   - [Stable release](#stable-release)
+  - [Manual account publish fallback](#manual-account-publish-fallback)
   - [Canary release](#canary-release)
 
 ## How to Contribute
@@ -115,11 +116,45 @@ Releases are automated using [release-please](https://github.com/googleapis/rele
    - `fix:` -> patch (e.g., 2.5.3 -> 2.5.4)
    - `feat:` -> minor (e.g., 2.5.3 -> 2.6.0)
    - `feat!:` or `BREAKING CHANGE:` footer -> major (e.g., 2.5.3 -> 3.0.0)
-4. When you're ready to release, **merge the Release PR**. This triggers npm publish, git tag creation, and a GitHub Release automatically.
+4. When you're ready to release, **merge the Release PR**. This triggers the **Release Account**
+   workflow on `master`, which creates the GitHub Release and publishes packages to npm when
+   release-please reports that a package release was created.
+
+The canonical stable release workflow is `.github/workflows/release-account.yml`. The
+`@base-org/account` npm Trusted Publisher entry is tied to this workflow filename and the `publish`
+environment, so account publishes must happen through **Release Account**.
 
 ### Stable release
 
-Merge the release-please PR for the package you want to release. No other steps needed.
+Merge the release-please PR for the package you want to release. The push to `master` runs
+**Release Account** automatically:
+
+1. The `release-please` job creates the release, tag, and changelog updates for any package with a
+   pending release.
+2. `publish-account` publishes `@base-org/account` if release-please created an account release.
+3. `publish-account-ui` publishes `@base-org/account-ui` if release-please created an account UI release.
+
+Do not run the manual fallback for a normal stable release.
+
+### Manual account publish fallback
+
+Use the manual fallback only when release-please already prepared the `@base-org/account` release,
+but the npm publish step did not complete. For example, use it if the GitHub Release/tag exists but
+the package version is missing from npm.
+
+To publish the prepared account release:
+
+1. Go to **Actions** -> **Release Account** -> **Run workflow**.
+2. Enter the prepared `@base-org/account` version in `packageVersion`, for example `2.6.0`.
+3. Run the workflow.
+
+The manual path skips release-please and runs only the account publish fallback. Before publishing,
+it checks that the requested version matches the release state on `master` by looking for the
+expected `account-v<version>` tag or matching `packages/account-sdk/package.json` version. If the
+checked-out release state does not match the input version, the workflow fails before publishing.
+
+If release-please failed before creating the release, tag, or version bump, fix and rerun the
+automated release-please path instead of using the manual fallback.
 
 ### Canary release
 
