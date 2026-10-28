@@ -70,7 +70,7 @@ Then, from the root folder run:
 The SDK is built using yarn workspaces. 
 
 - `packages/account-sdk` - The main package that exports the SDK
-- `examples/test-app` - An example React app that is used to test the SDK in a real browser environment
+- `examples/testapp` - An example React app that is used to test the SDK in a real browser environment
 
 Use `yarn dev` to start the example app and build the package with hot reloading.
 
