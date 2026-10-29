@@ -1294,6 +1294,7 @@ describe('Signer', () => {
         address: subAccountAddress,
         factory: globalAccountAddress,
         factoryData: '0x',
+        chainId: 84532,
       });
 
       // Request same address (isAddressEqual handles case-insensitive comparison)
@@ -1371,6 +1372,152 @@ describe('Signer', () => {
       // Should call backend and return new sub account
       expect(result.address).toBe(secondSubAccountAddress);
       expect(decryptContent).toHaveBeenCalledTimes(3); // handshake + connect + addSubAccount
+    });
+    it('should not short-circuit from localStorage when requested chainId differs from cached (8453 vs 56)', async () => {
+      await signer.cleanup();
+
+      // Setup initial connection
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [{ address: globalAccountAddress, capabilities: {} }],
+          },
+        },
+      });
+      await signer.request({ method: 'wallet_connect', params: [] });
+
+      // Cache a sub account on Base (8453)
+      store.subAccounts.set({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+        chainId: 8453,
+      });
+
+      // Mock popup response for BSC (56) deployed subaccount import
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: subAccountAddress,
+          },
+        },
+      });
+
+      const result = (await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'deployed',
+              address: subAccountAddress,
+              chainId: 56,
+            },
+          },
+        ],
+      })) as { address: string };
+
+      // Should NOT short-circuit from cache because chainId differs (8453 vs 56)
+      expect(result.address).toBe(subAccountAddress);
+      expect(decryptContent).toHaveBeenCalledTimes(3); // handshake + connect + addSubAccount
+      expect(store.subAccounts.get()?.chainId).toBe(56);
+    });
+    it('should clear stale chainId when a subsequent sub account is added without chainId', async () => {
+      await signer.cleanup();
+
+      const secondSubAccountAddress = '0x9999999999999999999999999999999999999999';
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [{ address: globalAccountAddress, capabilities: {} }],
+          },
+        },
+      });
+      await signer.request({ method: 'wallet_connect', params: [] });
+
+      // Cache a sub account on BSC (56)
+      store.subAccounts.set({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+        chainId: 56,
+      });
+
+      // Add a different sub account without specifying chainId in request or response
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: secondSubAccountAddress,
+          },
+        },
+      });
+      await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'deployed',
+              address: secondSubAccountAddress,
+            },
+          },
+        ],
+      });
+      expect(store.subAccounts.get()?.address).toBe(secondSubAccountAddress);
+      expect(store.subAccounts.get()?.chainId).toBeUndefined();
+    });
+
+    it('should normalize hex response chainId and ignore malformed chainId strings', async () => {
+      await signer.cleanup();
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [{ address: globalAccountAddress, capabilities: {} }],
+          },
+        },
+      });
+      await signer.request({ method: 'wallet_connect', params: [] });
+
+      // Response chainId (0x38 = 56) overrides malformed request chainId ('invalid')
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: subAccountAddress,
+            chainId: '0x38',
+          },
+        },
+      });
+      await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'deployed',
+              address: subAccountAddress,
+              chainId: 'invalid' as unknown as number,
+            },
+          },
+        ],
+      });
+      expect(store.subAccounts.get()?.chainId).toBe(56);
     });
 
     it('should return cached sub account for create type (no address specified)', async () => {
