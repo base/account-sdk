@@ -44,3 +44,14 @@ export type {
   SubscriptionStatus,
   SubscriptionStatusOptions,
 } from './interface/payment/index.node.js';
+
+// Prolink exports - Node version using Node.js zlib compression
+export {
+  createProlinkUrl,
+  decodeProlink,
+  encodeProlink,
+} from './interface/public-utilities/prolink/index.node.js';
+export type {
+  ProlinkDecoded,
+  ProlinkRequest,
+} from './interface/public-utilities/prolink/index.node.js';
