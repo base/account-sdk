@@ -7,14 +7,19 @@ import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { parseUnits } from 'viem';
 import { getHash } from '../public-utilities/spend-permission/index.js';
 import {
+  type SpendPermissionTypedData,
   createSpendPermissionTypedData,
   createSpendPermissionTypedDataWithSeconds,
-  type SpendPermissionTypedData,
 } from '../public-utilities/spend-permission/utils.js';
 import { CHAIN_IDS, TOKENS } from './constants.js';
 import type { SubscriptionOptions, SubscriptionResult } from './types.js';
 import { createEphemeralSDK } from './utils/sdkManager.js';
-import { normalizeAddress, validateStringAmount } from './utils/validation.js';
+import {
+  UINT48_MAX,
+  normalizeAddress,
+  validatePositiveSafeInteger,
+  validateStringAmount,
+} from './utils/validation.js';
 
 // Placeholder address for mutable data - will be replaced by wallet with actual account
 const PLACEHOLDER_ADDRESS = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as const;
@@ -117,6 +122,22 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
   try {
     // Validate inputs
     validateStringAmount(recurringCharge, 6);
+
+    // Bound the period parameter that will land in the EIP-712 typed data
+    // before we touch the wallet. uint48 is the on-chain slot width for the
+    // spend-permission period; anything outside that range (or 0, negative,
+    // fractional, NaN, Infinity) would otherwise reach wallet_sign and fail
+    // there with a far less actionable error.
+    if (testnet && overridePeriodInSecondsForTestnet !== undefined) {
+      validatePositiveSafeInteger(
+        overridePeriodInSecondsForTestnet,
+        'overridePeriodInSecondsForTestnet',
+        UINT48_MAX
+      );
+    } else {
+      validatePositiveSafeInteger(periodInDays, 'periodInDays', UINT48_MAX);
+    }
+
     const spenderAddress = normalizeAddress(subscriptionOwner);
 
     // Setup network configuration
