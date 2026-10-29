@@ -1,7 +1,11 @@
 {
   "name": "account-sdk",
   "version": "0.0.1",
-  "repository": "https://github.com/base/account-sdk",
+  "description": "Base Account SDK monorepo",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/base/account-sdk"
+  },
   "author": "Base",
   "license": "MIT",
   "private": true,
@@ -11,18 +15,52 @@
     "examples/*"
   ],
   "scripts": {
+    "build": "yarn workspaces foreach --all --topological-dev --parallel run build",
     "build:packages": "yarn workspace @base-org/account build && yarn workspace @base-org/account-ui build",
-    "clean": "yarn workspaces foreach -A -ipv run clean && rm -rf node_modules && yarn",
+    "build:production": "NODE_ENV=production yarn build",
+    "dev": "yarn workspaces foreach --all --interlaced --parallel --verbose run dev",
+    "lint": "yarn workspaces foreach --all --parallel --topological run lint",
+    "lint:fix": "yarn workspaces foreach --all --parallel --topological run lint --fix",
+    "format": "yarn workspaces foreach --all --parallel --topological run format",
+    "format:check": "yarn workspaces foreach --all --parallel --topological run format:check",
+    "test": "yarn workspaces foreach --all --interlaced --parallel --verbose run test",
+    "test:watch": "yarn workspaces foreach --all run test --watch",
+    "test:coverage": "yarn workspaces foreach --all run test --coverage",
+    "typecheck": "yarn workspaces foreach --all --parallel --topological run typecheck",
+    "clean": "yarn workspaces foreach --all --parallel run clean",
+    "clean:all": "yarn clean && rm -rf node_modules .yarn/cache && yarn install",
+    "clean:cache": "rm -rf .yarn/cache node_modules/.cache",
     "deploy": "yarn build:packages && yarn workspace sdk-playground export",
-    "dev": "yarn workspaces foreach -A -ipv run dev",
-    "lint": "yarn workspaces foreach -A -pt run lint",
-    "format": "yarn workspaces foreach -A -pt run format",
-    "format:check": "yarn workspaces foreach -A -pt run format:check",
-    "test": "yarn workspaces foreach -A -ipv run test",
-    "typecheck": "yarn workspaces foreach -A -pt run typecheck"
+    "deploy:production": "yarn build:production && yarn workspace sdk-playground export",
+    "validate": "yarn format:check && yarn lint && yarn typecheck && yarn test",
+    "validate:quick": "yarn format:check && yarn lint && yarn typecheck",
+    "prepare": "husky install || true",
+    "precommit": "lint-staged",
+    "version:check": "yarn workspaces foreach --all exec yarn version check",
+    "deps:check": "yarn workspaces foreach --all exec yarn outdated",
+    "deps:update": "yarn workspaces foreach --all exec yarn upgrade-interactive"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4"
+    "@biomejs/biome": "^1.9.4",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0"
   },
-  "packageManager": "yarn@4.8.1"
+  "engines": {
+    "node": ">=18.0.0",
+    "yarn": ">=4.8.1"
+  },
+  "packageManager": "yarn@4.8.1",
+  "resolutions": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "biome check --apply",
+      "biome format --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "biome format --write"
+    ]
+  }
 }
