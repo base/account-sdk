@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RequestSpendPermissionType } from './methods/requestSpendPermission.js';
 import {
   createSpendPermissionTypedData,
+  createSpendPermissionTypedDataWithSeconds,
   dateToTimestampInSeconds,
   timestampInSecondsToDate,
   toSpendPermissionArgs,
@@ -462,5 +463,109 @@ describe('timestampInSecondsToDate', () => {
     const timestamp = 1640995200.999; // Decimal timestamp
     const result = timestampInSecondsToDate(timestamp);
     expect(result).toEqual(new Date('2022-01-01T00:00:00.999Z'));
+  });
+});
+
+describe('createSpendPermissionTypedDataWithSeconds — production guard', () => {
+  // Re-use the same base fixture pattern already established in this file.
+  const baseRequestWithSeconds = {
+    account:          '0x1234567890123456789012345678901234567890',
+    spender:          '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+    token:            '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    chainId:          8453,
+    allowance:        BigInt('1000000000000000000'),
+    periodInSeconds:  60,   // 60 s — smallest meaningful value for the test
+  };
+
+  let savedNodeEnv: string | undefined;
+
+  beforeEach(() => {
+    savedNodeEnv = process.env.NODE_ENV;
+    // Freeze crypto mock the same way the outer suite does so salt generation
+    // doesn't blow up during the non-production path tests.
+    Object.defineProperty(global, 'crypto', {
+      value: {
+        getRandomValues: vi.fn((array: Uint8Array) => {
+          for (let i = 0; i < array.length; i++) array[i] = 0xab;
+          return array;
+        }),
+      },
+      writable: true,
+    });
+  });
+
+  afterEach(() => {
+    process.env.NODE_ENV = savedNodeEnv;
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
+  });
+
+  // ── 1. Hard throw in production ────────────────────────────────────────────
+  it('throws an Error when NODE_ENV is "production"', () => {
+    process.env.NODE_ENV = 'production';
+
+    expect(() => {
+      createSpendPermissionTypedDataWithSeconds(baseRequestWithSeconds);
+    }).toThrow(Error);
+  });
+
+  // ── 2. Error message signals test-only restriction ─────────────────────────
+  it('thrown error message identifies the test-only restriction', () => {
+    process.env.NODE_ENV = 'production';
+
+    expect(() => {
+      createSpendPermissionTypedDataWithSeconds(baseRequestWithSeconds);
+    }).toThrow('testing only');
+  });
+
+  // ── 3. Error message names the production-safe alternative ─────────────────
+  it('thrown error message names createSpendPermissionTypedDataWithDays as the alternative', () => {
+    process.env.NODE_ENV = 'production';
+
+    expect(() => {
+      createSpendPermissionTypedDataWithSeconds(baseRequestWithSeconds);
+    }).toThrow('createSpendPermissionTypedDataWithDays');
+  });
+
+  // ── 4. console.warn is NOT called (old soft-path removed) ──────────────────
+  it('does NOT call console.warn before throwing in production', () => {
+    process.env.NODE_ENV = 'production';
+    const warnSpy = vi.spyOn(console, 'warn');
+
+    try {
+      createSpendPermissionTypedDataWithSeconds(baseRequestWithSeconds);
+    } catch {
+      // expected
+    }
+
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  // ── 5. Does NOT throw in development ───────────────────────────────────────
+  it('does not throw and returns typed data when NODE_ENV is "development"', () => {
+    process.env.NODE_ENV = 'development';
+
+    let result: ReturnType<typeof createSpendPermissionTypedDataWithSeconds> | undefined;
+    expect(() => {
+      result = createSpendPermissionTypedDataWithSeconds(baseRequestWithSeconds);
+    }).not.toThrow();
+
+    // Verify the return value is a valid SpendPermissionTypedData shape
+    expect(result).toBeDefined();
+    expect(result?.primaryType).toBe('SpendPermission');
+    expect(result?.message.period).toBe(60);
+  });
+
+  // ── 6. Does NOT throw when NODE_ENV is undefined ────────────────────────────
+  it('does not throw and returns typed data when NODE_ENV is undefined', () => {
+    delete process.env.NODE_ENV;
+
+    let result: ReturnType<typeof createSpendPermissionTypedDataWithSeconds> | undefined;
+    expect(() => {
+      result = createSpendPermissionTypedDataWithSeconds(baseRequestWithSeconds);
+    }).not.toThrow();
+
+    expect(result).toBeDefined();
+    expect(result?.message.period).toBe(60);
   });
 });
