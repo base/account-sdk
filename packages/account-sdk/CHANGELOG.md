@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.0](https://github.com/base/account-sdk/compare/account-v2.5.13...account-v2.6.0) (2026-10-29)
+
+
+### Features
+
+* add multi-chain deployed subaccount support ([#419](https://github.com/base/account-sdk/issues/419)) ([69d93bd](https://github.com/base/account-sdk/commit/69d93bd8bee07c4bd0b2a524163dc3f85b1ce718))
+
 ## [2.5.13](https://github.com/base/account-sdk/compare/account-v2.5.12...account-v2.5.13) (2026-09-24)
 
 
