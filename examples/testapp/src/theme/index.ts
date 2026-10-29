@@ -33,7 +33,7 @@ export const theme = extendTheme({
  * playground will default to the current system color mode.
  */
 export const systemStorageManager = {
-  get: () => undefined,
-  set: () => {},
+  get: () => null,
+  set: (_value: string) => {},
   type: 'localStorage' as const,
 };
