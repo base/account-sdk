@@ -19,10 +19,8 @@ export function validatePreferences(preference?: Preference) {
     }
   }
 
-  if (preference.telemetry) {
-    if (typeof preference.telemetry !== 'boolean') {
-      throw new Error(`Telemetry must be a boolean`);
-    }
+  if (preference.telemetry !== undefined && typeof preference.telemetry !== 'boolean') {
+    throw new Error(`Telemetry must be a boolean`);
   }
 }
 

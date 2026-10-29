@@ -93,4 +93,12 @@ describe('validateTelemetry', () => {
     };
     expect(() => validatePreferences(invalidPreference)).toThrow('Telemetry must be a boolean');
   });
+
+  it('should throw an error if telemetry is a falsy non-boolean value', () => {
+    const invalidPreference: Preference = {
+      options: 'all',
+      telemetry: 0 as any,
+    };
+    expect(() => validatePreferences(invalidPreference)).toThrow('Telemetry must be a boolean');
+  });
 });
