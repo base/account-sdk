@@ -118,6 +118,38 @@
    });
    ```
 
+### Error handling and retries
+
+Handle errors at the boundary where your app calls the SDK or provider. Error objects may expose a `code`, `message`, or `cause`; inspect the fields that are available rather than assuming every SDK method returns the same error shape.
+
+```ts
+try {
+  const accounts = await provider.request({
+    method: 'eth_requestAccounts',
+  });
+  // Continue with the connected account.
+} catch (error: unknown) {
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? error.code
+      : undefined;
+  const message = error instanceof Error ? error.message : String(error);
+
+  // Handle the error in your application; do not silently treat it as success.
+  console.error('Wallet request failed', { code, message });
+}
+```
+
+Use the cause of the failure to decide what to do next:
+
+- **Invalid input or configuration:** fix the input or configuration before retrying. Repeating the same request usually will not help.
+- **User rejection or an authorization decision:** stop and let the user choose whether to try again. Do not automatically reopen a wallet prompt in a loop.
+- **Transient network, RPC, timeout, or rate-limit errors:** a bounded retry with backoff may be appropriate for read-only operations, such as fetching status. Respect any retry guidance returned by the service.
+- **State-changing operations:** do not blindly retry a payment, transaction submission, signature request, or subscription creation after a timeout. The original operation may have succeeded even if the response was lost. First check the operation's status or the relevant on-chain state using a stable operation identifier, where available.
+- **Unknown errors:** preserve useful diagnostic information for logs, show a safe message to the user, and avoid exposing secrets or sensitive request data.
+
+For retryable read-only requests, cap the number of attempts and use increasing delays rather than retrying continuously. Keep retries separate from user-driven actions and avoid assuming that an operation is safe to repeat unless its semantics guarantee that.
+
 ### Developing locally and running the test dapp
 
 - The Base Account SDK test dapp can be viewed here https://base.github.io/account-sdk/.
