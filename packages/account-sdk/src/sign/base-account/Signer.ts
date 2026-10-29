@@ -12,6 +12,7 @@ import {
 } from ':core/rpc/coinbase_fetchPermission.js';
 import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
+import { WalletAddSubAccountResponse } from ':core/rpc/wallet_addSubAccount.js';
 import { GetSubAccountsResponse } from ':core/rpc/wallet_getSubAccount.js';
 import {
   logAddOwnerCompleted,
@@ -66,10 +67,23 @@ const ALL_CHAINS_KEY = '0x0';
 
 function normalizeChainId(chainId: unknown): number | undefined {
   if (typeof chainId === 'number') {
-    return chainId;
+    return Number.isFinite(chainId) ? chainId : undefined;
   }
   if (typeof chainId === 'string') {
-    return chainId.startsWith('0x') ? hexToNumber(chainId as Hex) : Number(chainId);
+    const trimmed = chainId.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+    if (trimmed.startsWith('0x') || trimmed.startsWith('0X')) {
+      try {
+        const parsed = hexToNumber(trimmed as Hex);
+        return Number.isFinite(parsed) ? parsed : undefined;
+      } catch {
+        return undefined;
+      }
+    }
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : undefined;
   }
   return undefined;
 }
@@ -416,12 +430,17 @@ export class Signer {
           ? normalizeChainId(request.params[0]?.account?.chainId)
           : undefined;
         const responseChainId = normalizeChainId(
-          (subAccount as { chainId?: Hex | number }).chainId
+          (subAccount as WalletAddSubAccountResponse).chainId
         );
         const chainId = responseChainId ?? requestedChainId;
+        const existingSubAccount = this.storeHelpers.subAccounts.get();
         this.storeHelpers.subAccounts.set({
           ...subAccount,
-          ...(chainId !== undefined ? { chainId } : {}),
+          ...(chainId !== undefined
+            ? { chainId }
+            : existingSubAccount?.chainId !== undefined
+              ? { chainId: undefined }
+              : {}),
         });
         const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
         this.accounts =
@@ -625,7 +644,7 @@ export class Signer {
     address: Address;
     factory?: Address;
     factoryData?: Hex;
-    chainId?: number;
+    chainId?: Hex | number;
   }> {
     const state = this.storeInstance.getState();
     const cachedSubAccount = state.subAccount;
