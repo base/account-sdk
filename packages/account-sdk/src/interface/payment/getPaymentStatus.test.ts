@@ -104,6 +104,7 @@ describe('getPaymentStatus', () => {
       sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
       amount: '10',
       recipient: '0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336',
+      transactionHash: '0xabc123',
     });
 
     expect(fetch).toHaveBeenCalledWith(
@@ -119,6 +120,23 @@ describe('getPaymentStatus', () => {
         }),
       })
     );
+  });
+
+  it('should omit transactionHash when the receipt has no transaction hash', async () => {
+    const mockReceipt = createSuccessfulReceipt({ userOpHash: '0xnotxhash' });
+    delete (mockReceipt.result.receipt as { transactionHash?: string }).transactionHash;
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => mockReceipt,
+    } as Response);
+
+    const status = await getPaymentStatus({
+      id: '0xnotxhash',
+      testnet: false,
+    });
+
+    expect(status.status).toBe('completed');
+    expect(status.transactionHash).toBeUndefined();
   });
 
   it('should return completed status when expected payment details match', async () => {
@@ -320,6 +338,7 @@ describe('getPaymentStatus', () => {
       message: 'Payment failed',
       sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
       reason: 'Insufficient USDC balance',
+      transactionHash: '0xdef456',
     });
   });
 
@@ -914,6 +933,7 @@ describe('getPaymentStatus', () => {
       sender: '0x4A7c6899cdcB379e284fBFd045462e751da4C7ce',
       amount: '1', // Should pick the 1 USDC from sender, not the 4500 USDC gas payment
       recipient: '0xf1DdF1fc0310Cb11F0Ca87508207012F4a9CB336',
+      transactionHash: '0xabc123',
     });
   });
 
