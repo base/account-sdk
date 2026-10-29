@@ -195,6 +195,33 @@ describe('session CLI integration', () => {
       expect((list.sessions as unknown[]).length).toBe(1);
     });
 
+    it('destroys a session when identifier casing differs', () => {
+      const result = runJson(['session', 'destroy', '0xeoa444'], envOverride);
+      expect(result.status).toBe('destroyed');
+
+      const list = runJson(['session', 'list'], envOverride);
+      expect((list.sessions as unknown[]).length).toBe(1);
+
+      const logPath = join(tmpDir, 'logs', 'audit.jsonl');
+      const entry = JSON.parse(readFileSync(logPath, 'utf-8').trim());
+      expect(entry.identifier).toBe(EXTERNAL_EOA.eoa);
+    });
+
+    it('destroys a session by mode when identifier casing differs', () => {
+      const result = runJson(
+        ['session', 'destroy', '0xeoa444', '--mode', 'external-eoa'],
+        envOverride
+      );
+      expect(result.status).toBe('destroyed');
+
+      const list = runJson(['session', 'list'], envOverride);
+      expect((list.sessions as unknown[]).length).toBe(1);
+
+      const logPath = join(tmpDir, 'logs', 'audit.jsonl');
+      const entry = JSON.parse(readFileSync(logPath, 'utf-8').trim());
+      expect(entry.identifier).toBe(EXTERNAL_EOA.eoa);
+    });
+
     it('destroys all sessions', () => {
       const result = runJson(['session', 'destroy', '--all'], envOverride);
       expect(result.status).toBe('destroyed');
