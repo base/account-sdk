@@ -124,9 +124,8 @@ export function createSpendPermissionTypedDataWithSeconds(
 
   // Runtime check to prevent misuse
   if (process.env.NODE_ENV === 'production') {
-    console.warn(
-      '⚠️ createSpendPermissionTypedDataWithSeconds is being used. ' +
-        'This function is intended for testing purposes only.'
+    throw new Error(
+      'createSpendPermissionTypedDataWithSeconds is for testing only and must not be called in production.'
     );
   }
 
