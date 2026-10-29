@@ -2,6 +2,7 @@ import { Mock, MockInstance, Mocked, vi } from 'vitest';
 
 import { Communicator } from ':core/communicator/Communicator.js';
 import { CB_KEYS_URL } from ':core/constants.js';
+import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { EncryptedData, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
@@ -477,6 +478,22 @@ describe('Signer', () => {
       });
 
       await expect(signer.request(mockRequest)).rejects.toThrowError(mockError);
+    });
+
+    it('should reject wallet_switchEthereumChain with an empty hex chainId', async () => {
+      // '0x' is truthy and a string, so it clears assertParamsChainId and reaches
+      // ensureIntNumber, where BigInt('0x') threw a raw SyntaxError at the caller
+      // instead of the provider's invalidParams.
+      for (const chainId of ['0x', '0X']) {
+        const mockRequest: RequestArguments = {
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId }],
+        };
+
+        await expect(signer.request(mockRequest)).rejects.toMatchObject({
+          code: standardErrorCodes.rpc.invalidParams,
+        });
+      }
     });
 
     it('should update internal state for successful wallet_switchEthereumChain', async () => {
