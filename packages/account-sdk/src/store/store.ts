@@ -24,6 +24,7 @@ export type SubAccount = {
   address: Address;
   factory?: Address;
   factoryData?: Hex;
+  chainId?: number;
 };
 
 type SubAccountConfig = SubAccountOptions & {

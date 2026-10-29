@@ -11,6 +11,8 @@ type AccountCreate = {
 type AccountDeployed = {
   type: 'deployed';
   address: Address;
+  chainId?: Hex | number;
+  label?: string;
 };
 
 type AccountUndeployed = {

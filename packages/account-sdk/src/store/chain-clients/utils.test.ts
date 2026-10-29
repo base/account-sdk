@@ -1,7 +1,7 @@
 import { base, baseSepolia, optimismSepolia, sepolia } from 'viem/chains';
 
 import { ChainClients } from './store.js';
-import { createClients } from './utils.js';
+import { SUPPORTED_MAINNET_CHAINS, createClients, robinhoodChain } from './utils.js';
 
 describe('chain-clients/utils', () => {
   beforeEach(() => {
@@ -78,6 +78,22 @@ describe('chain-clients/utils', () => {
       expect(ChainClients.getState()[baseSepolia.id]).toBeDefined();
       expect(ChainClients.getState()[baseSepolia.id].client).toBeDefined();
       expect(ChainClients.getState()[baseSepolia.id].bundlerClient).toBeDefined();
+    });
+    it('should include robinhoodChain (4663) in SUPPORTED_MAINNET_CHAINS and use its fallback RPC URL', () => {
+      expect(SUPPORTED_MAINNET_CHAINS).toContainEqual(robinhoodChain);
+      expect(robinhoodChain.id).toBe(4663);
+      expect(robinhoodChain.rpcUrls.default.http).toEqual([
+        'https://rpc.mainnet.chain.robinhood.com',
+      ]);
+
+      createClients([
+        {
+          id: robinhoodChain.id,
+        },
+      ]);
+      expect(ChainClients.getState()[4663]).toBeDefined();
+      expect(ChainClients.getState()[4663].client).toBeDefined();
+      expect(ChainClients.getState()[4663].bundlerClient).toBeDefined();
     });
 
     it('should prefer wallet-provided RPC URL over fallback for Base mainnet', () => {

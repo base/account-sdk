@@ -64,6 +64,16 @@ import { withHandshakeMeasurement, withSignerRequestMeasurement } from './withSi
 /** ERC-5792 wildcard chain ID — capabilities under this key apply to all chains. */
 const ALL_CHAINS_KEY = '0x0';
 
+function normalizeChainId(chainId: unknown): number | undefined {
+  if (typeof chainId === 'number') {
+    return chainId;
+  }
+  if (typeof chainId === 'string') {
+    return chainId.startsWith('0x') ? hexToNumber(chainId as Hex) : Number(chainId);
+  }
+  return undefined;
+}
+
 type ConstructorOptions = {
   metadata: AppMetadata;
   communicator: Communicator;
@@ -402,7 +412,17 @@ export class Signer {
       case 'wallet_addSubAccount': {
         assertSubAccount(result.value);
         const subAccount = result.value;
-        this.storeHelpers.subAccounts.set(subAccount);
+        const requestedChainId = Array.isArray(request.params)
+          ? normalizeChainId(request.params[0]?.account?.chainId)
+          : undefined;
+        const responseChainId = normalizeChainId(
+          (subAccount as { chainId?: Hex | number }).chainId
+        );
+        const chainId = responseChainId ?? requestedChainId;
+        this.storeHelpers.subAccounts.set({
+          ...subAccount,
+          ...(chainId !== undefined ? { chainId } : {}),
+        });
         const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
         this.accounts =
           subAccountsConfig?.defaultAccount === 'sub'
@@ -605,25 +625,28 @@ export class Signer {
     address: Address;
     factory?: Address;
     factoryData?: Hex;
+    chainId?: number;
   }> {
     const state = this.storeInstance.getState();
     const cachedSubAccount = state.subAccount;
     const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
 
-    // Extract requested address from params (for deployed/undeployed types)
-    const requestedAddress =
-      Array.isArray(request.params) &&
-      request.params.length > 0 &&
-      request.params[0]?.account?.address
-        ? request.params[0].account.address
+    // Extract requested address and chainId from params (for deployed/undeployed types)
+    const requestedAccount =
+      Array.isArray(request.params) && request.params.length > 0
+        ? request.params[0]?.account
         : undefined;
+    const requestedAddress = requestedAccount?.address;
+    const requestedChainId = normalizeChainId(requestedAccount?.chainId);
 
     // Only return cached if:
     // 1. Cache exists AND
-    // 2. No specific address requested (create type) OR requested address matches cached
+    // 2. No specific address requested (create type) OR requested address matches cached AND
+    // 3. No specific chainId requested OR requested chainId matches cached
     if (cachedSubAccount?.address) {
       const shouldUseCache =
-        !requestedAddress || isAddressEqual(requestedAddress, cachedSubAccount.address);
+        (!requestedAddress || isAddressEqual(requestedAddress, cachedSubAccount.address)) &&
+        (!requestedChainId || cachedSubAccount.chainId === requestedChainId);
 
       if (shouldUseCache) {
         this.accounts =
