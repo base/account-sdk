@@ -99,6 +99,50 @@ export function decodeAmount(bytes: Uint8Array): bigint {
 }
 
 /**
+ * Encode a fixed-size byte field from a hex string
+ * @param value - Hex string (with or without 0x prefix)
+ * @param expectedLength - Required byte length
+ * @param fieldName - Field name used in validation errors
+ * @returns Fixed-size bytes
+ */
+export function encodeFixedBytes(
+  value: string,
+  expectedLength: number,
+  fieldName: string
+): Uint8Array {
+  const bytes = hexToBytes(value);
+
+  if (bytes.length !== expectedLength) {
+    throw new Error(
+      `Invalid ${fieldName} length: expected ${expectedLength} bytes, got ${bytes.length}`
+    );
+  }
+
+  return bytes;
+}
+
+/**
+ * Decode a fixed-size byte field to a hex string without stripping leading zeros
+ * @param bytes - Fixed-size bytes
+ * @param expectedLength - Required byte length
+ * @param fieldName - Field name used in validation errors
+ * @returns Hex string with 0x prefix
+ */
+export function decodeFixedBytes(
+  bytes: Uint8Array,
+  expectedLength: number,
+  fieldName: string
+): string {
+  if (bytes.length !== expectedLength) {
+    throw new Error(
+      `Invalid ${fieldName} length: expected ${expectedLength} bytes, got ${bytes.length}`
+    );
+  }
+
+  return Hex.fromBytes(bytes);
+}
+
+/**
  * Encode capabilities map to protobuf format
  * @param caps - Capabilities object
  * @returns Map with UTF-8 JSON-encoded values
