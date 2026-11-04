@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeAddress, validateStringAmount } from './validation.js';
+import {
+  UINT48_MAX,
+  normalizeAddress,
+  validatePositiveSafeInteger,
+  validateStringAmount,
+} from './validation.js';
 
 describe('validateStringAmount', () => {
   it('should validate valid amounts', () => {
@@ -13,7 +18,8 @@ describe('validateStringAmount', () => {
 
   it('should reject invalid amounts', () => {
     expect(() => validateStringAmount('0', 6)).toThrow('Invalid amount: must be greater than 0');
-    expect(() => validateStringAmount('-10', 6)).toThrow('Invalid amount: must be greater than 0');
+    // Negative values fail the strict decimal format check before the >0 guard.
+    expect(() => validateStringAmount('-10', 6)).toThrow('Invalid amount: must be a valid number');
     expect(() => validateStringAmount('abc', 6)).toThrow('Invalid amount: must be a valid number');
     expect(() => validateStringAmount('10.1234567', 6)).toThrow(
       'Invalid amount: pay only supports up to 6 decimal places'
@@ -36,6 +42,98 @@ describe('validateStringAmount', () => {
     expect(() => validateStringAmount('1.123', 6)).not.toThrow();
     expect(() => validateStringAmount('1.1234', 6)).not.toThrow();
     expect(() => validateStringAmount('1.12345', 6)).not.toThrow();
+  });
+
+  // Regression for https://github.com/base/account-sdk/issues/313
+  it('should reject malformed numeric prefixes that parseFloat would silently accept', () => {
+    expect(() => validateStringAmount('1abc', 6)).toThrow('Invalid amount: must be a valid number');
+    expect(() => validateStringAmount('10x', 6)).toThrow('Invalid amount: must be a valid number');
+    expect(() => validateStringAmount('1.5usdc', 6)).toThrow(
+      'Invalid amount: must be a valid number'
+    );
+  });
+
+  it('should reject multiple decimal points', () => {
+    expect(() => validateStringAmount('1.2.3', 6)).toThrow(
+      'Invalid amount: must be a valid number'
+    );
+    expect(() => validateStringAmount('..1', 6)).toThrow('Invalid amount: must be a valid number');
+  });
+
+  it('should reject scientific notation', () => {
+    expect(() => validateStringAmount('1e5', 6)).toThrow('Invalid amount: must be a valid number');
+    expect(() => validateStringAmount('1E-3', 6)).toThrow('Invalid amount: must be a valid number');
+  });
+
+  it('should reject explicit signs and surrounding whitespace', () => {
+    expect(() => validateStringAmount('+1', 6)).toThrow('Invalid amount: must be a valid number');
+    expect(() => validateStringAmount(' 1', 6)).toThrow('Invalid amount: must be a valid number');
+    expect(() => validateStringAmount('1 ', 6)).toThrow('Invalid amount: must be a valid number');
+  });
+
+  it('should reject leading or trailing decimal point', () => {
+    expect(() => validateStringAmount('.5', 6)).toThrow('Invalid amount: must be a valid number');
+    expect(() => validateStringAmount('5.', 6)).toThrow('Invalid amount: must be a valid number');
+  });
+
+  it('should reject the empty string', () => {
+    expect(() => validateStringAmount('', 6)).toThrow('Invalid amount: must be a valid number');
+  });
+});
+
+// Regression for https://github.com/base/account-sdk/issues/314
+describe('validatePositiveSafeInteger', () => {
+  it('should accept positive integers in range', () => {
+    expect(() => validatePositiveSafeInteger(1, 'periodInDays')).not.toThrow();
+    expect(() => validatePositiveSafeInteger(30, 'periodInDays')).not.toThrow();
+    expect(() =>
+      validatePositiveSafeInteger(UINT48_MAX, 'periodInSeconds', UINT48_MAX)
+    ).not.toThrow();
+  });
+
+  it('should reject zero and negative values', () => {
+    expect(() => validatePositiveSafeInteger(0, 'periodInDays')).toThrow(
+      'periodInDays must be a positive integer'
+    );
+    expect(() => validatePositiveSafeInteger(-1, 'periodInDays')).toThrow(
+      'periodInDays must be a positive integer'
+    );
+  });
+
+  it('should reject non-integer numeric values', () => {
+    expect(() => validatePositiveSafeInteger(1.5, 'periodInDays')).toThrow(
+      'periodInDays must be a positive integer'
+    );
+    expect(() => validatePositiveSafeInteger(Number.NaN, 'periodInDays')).toThrow(
+      'periodInDays must be a positive integer'
+    );
+    expect(() => validatePositiveSafeInteger(Infinity, 'periodInDays')).toThrow(
+      'periodInDays must be a positive integer'
+    );
+  });
+
+  it('should reject non-number types including string-looking numbers', () => {
+    expect(() => validatePositiveSafeInteger('30' as unknown as number, 'periodInDays')).toThrow(
+      'periodInDays must be a positive integer'
+    );
+    expect(() => validatePositiveSafeInteger(null as unknown as number, 'periodInDays')).toThrow(
+      'periodInDays must be a positive integer'
+    );
+    expect(() =>
+      validatePositiveSafeInteger(undefined as unknown as number, 'periodInDays')
+    ).toThrow('periodInDays must be a positive integer');
+  });
+
+  it('should enforce the optional upper bound', () => {
+    expect(() =>
+      validatePositiveSafeInteger(UINT48_MAX + 1, 'periodInSeconds', UINT48_MAX)
+    ).toThrow(`periodInSeconds must be at most ${UINT48_MAX}`);
+  });
+
+  it('should reject unsafe integers above Number.MAX_SAFE_INTEGER even without an upper bound', () => {
+    expect(() => validatePositiveSafeInteger(Number.MAX_SAFE_INTEGER + 2, 'periodInDays')).toThrow(
+      'periodInDays must be a positive integer'
+    );
   });
 });
 
