@@ -136,8 +136,11 @@ export async function createSmartAccount(
     },
 
     async getFactoryArgs() {
-      if (factoryData) return { factory: factory.address, factoryData };
-      // TODO: support creating factory data
+      if (!factoryData) {
+        throw new BaseError(
+          'Cannot deploy smart account: factoryData was not provided and cannot be derived locally.',
+        );
+      }
       return { factory: factory.address, factoryData };
     },
 
