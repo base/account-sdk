@@ -50,6 +50,16 @@ describe('createProlinkUrl', () => {
       const result = createProlinkUrl(EXAMPLE_PROLINK, undefined, {});
       expect(result).toBe(`https://base.app/base-pay?p=${EXAMPLE_PROLINK}`);
     });
+
+    it('should not allow additional params to overwrite the prolink payload', () => {
+      const result = createProlinkUrl(EXAMPLE_PROLINK, undefined, {
+        p: 'not-the-prolink',
+        ref: 'promo',
+      });
+      const url = new URL(result);
+      expect(url.searchParams.get('p')).toBe(EXAMPLE_PROLINK);
+      expect(url.searchParams.get('ref')).toBe('promo');
+    });
   });
 
   describe('URL encoding', () => {
