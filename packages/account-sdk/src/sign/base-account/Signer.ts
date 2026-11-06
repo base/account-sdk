@@ -309,6 +309,7 @@ export class Signer {
               address: subAccount.address,
               factory: subAccount.factory,
               factoryData: subAccount.factoryData,
+              chainId: undefined,
             });
           }
           return response as T;
@@ -400,6 +401,7 @@ export class Signer {
             address: capabilityResponse[0].address,
             factory: capabilityResponse[0].factory,
             factoryData: capabilityResponse[0].factoryData,
+            chainId: undefined,
           });
         }
 
@@ -436,17 +438,25 @@ export class Signer {
         const existingSubAccount = this.storeHelpers.subAccounts.get();
         this.storeHelpers.subAccounts.set({
           ...subAccount,
-          ...(chainId !== undefined
-            ? { chainId }
-            : existingSubAccount?.chainId !== undefined
-              ? { chainId: undefined }
-              : {}),
+          factory: subAccount.factory,
+          factoryData: subAccount.factoryData,
+          chainId,
         });
         const subAccountsConfig = this.storeHelpers.subAccountsConfig.get();
+        const globalAccounts = this.storeHelpers.account.get().accounts ?? [];
+        const baseAccounts =
+          existingSubAccount?.address &&
+          !isAddressEqual(existingSubAccount.address, subAccount.address)
+            ? this.accounts.filter(
+                (account) =>
+                  !isAddressEqual(account, existingSubAccount.address) ||
+                  globalAccounts.some((globalAccount) => isAddressEqual(globalAccount, account))
+              )
+            : this.accounts;
         this.accounts =
           subAccountsConfig?.defaultAccount === 'sub'
-            ? prependWithoutDuplicates(this.accounts, subAccount.address)
-            : appendWithoutDuplicates(this.accounts, subAccount.address);
+            ? prependWithoutDuplicates(baseAccounts, subAccount.address)
+            : appendWithoutDuplicates(baseAccounts, subAccount.address);
         this.callback?.('accountsChanged', this.accounts);
         break;
       }

@@ -1475,7 +1475,91 @@ describe('Signer', () => {
         ],
       });
       expect(store.subAccounts.get()?.address).toBe(secondSubAccountAddress);
+      expect(store.subAccounts.get()?.factory).toBeUndefined();
+      expect(store.subAccounts.get()?.factoryData).toBeUndefined();
       expect(store.subAccounts.get()?.chainId).toBeUndefined();
+    });
+
+    it('should replace previous sub account in accounts when switching sub accounts', async () => {
+      await signer.cleanup();
+
+      const secondSubAccountAddress = '0x9999999999999999999999999999999999999999';
+
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        defaultAccount: 'sub',
+      });
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: { value: null },
+      });
+      await signer.handshake({ method: 'handshake' });
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [{ address: globalAccountAddress, capabilities: {} }],
+          },
+        },
+      });
+      await signer.request({ method: 'wallet_connect', params: [] });
+
+      // Add first sub account
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: subAccountAddress,
+            factory: globalAccountAddress,
+            factoryData: '0x1234',
+          },
+        },
+      });
+      await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'deployed',
+              address: subAccountAddress,
+            },
+          },
+        ],
+      });
+
+      expect(await signer.request({ method: 'eth_accounts' })).toEqual([
+        subAccountAddress,
+        globalAccountAddress,
+      ]);
+
+      // Switch to second sub account
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: secondSubAccountAddress,
+          },
+        },
+      });
+      await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'deployed',
+              address: secondSubAccountAddress,
+            },
+          },
+        ],
+      });
+
+      expect(mockCallback).toHaveBeenLastCalledWith('accountsChanged', [
+        secondSubAccountAddress,
+        globalAccountAddress,
+      ]);
+      expect(await signer.request({ method: 'eth_accounts' })).toEqual([
+        secondSubAccountAddress,
+        globalAccountAddress,
+      ]);
     });
 
     it('should normalize hex response chainId and ignore malformed chainId strings', async () => {
