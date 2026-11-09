@@ -311,5 +311,33 @@ describe('prolink end-to-end', () => {
       expect(params.version).toBe('2.0');
       expect(params.from?.toLowerCase()).toBe(request.params[0].from.toLowerCase());
     });
+
+    it('should skip capabilities whose value has no JSON form', async () => {
+      const request = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            version: '2.0',
+            chainId: '0x2105',
+            calls: [
+              {
+                to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+                data: '0x',
+                value: '0x0',
+              },
+            ],
+          },
+        ],
+        capabilities: {
+          order_id: 'ORDER-12345',
+          paymasterService: undefined,
+        },
+      };
+
+      const decoded = await decodeProlink(await encodeProlink(request));
+
+      const params = (decoded.params as Array<{ capabilities?: Record<string, unknown> }>)[0];
+      expect(params.capabilities).toEqual({ order_id: 'ORDER-12345' });
+    });
   });
 });

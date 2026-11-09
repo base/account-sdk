@@ -100,6 +100,11 @@ describe('encoding', () => {
       expect(encoded.size).toBe(0);
     });
 
+    it('should skip capabilities whose value has no JSON form', () => {
+      const encoded = encodeCapabilities({ orderId: 'ORDER-123', paymasterService: undefined });
+      expect([...encoded.keys()]).toEqual(['orderId']);
+    });
+
     it('should encode string capability', () => {
       const caps = { orderId: 'ORDER-123' };
       const encoded = encodeCapabilities(caps);
