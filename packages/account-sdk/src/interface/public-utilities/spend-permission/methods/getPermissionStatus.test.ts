@@ -7,7 +7,11 @@ import { getClient } from ':store/chain-clients/utils.js';
 import { PublicClient, createPublicClient, http } from 'viem';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import { multicall } from '../../multicall/index.js';
-import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
+import {
+  calculateCurrentPeriod,
+  timestampInSecondsToDate,
+  toSpendPermissionArgs,
+} from '../utils.js';
 import { getPublicClientFromChainId } from '../utils.node.js';
 import { GetPermissionStatusResponseType, getPermissionStatus } from './getPermissionStatus.js';
 
@@ -404,6 +408,9 @@ describe('getPermissionStatus - browser + node', () => {
     });
 
     it('should handle multicall failure for getCurrentPeriod', async () => {
+      // Within [start, end) a getCurrentPeriod failure is unexpected and must surface
+      const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(1234567890 * 1000);
+
       // Test with browser environment
       (getClient as Mock).mockReturnValue(mockClient);
       (multicall as Mock).mockResolvedValueOnce([
@@ -413,6 +420,53 @@ describe('getPermissionStatus - browser + node', () => {
       ]);
 
       await expect(getPermissionStatus(mockSpendPermission)).rejects.toThrow('Call 0 failed');
+      dateNowSpy.mockRestore();
+    });
+
+    it('should report an expired permission when getCurrentPeriod reverts after end', async () => {
+      // SpendPermissionManager.getCurrentPeriod reverts with AfterSpendPermissionEnd once
+      // block.timestamp >= end
+      const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(1234654290 * 1000); // == end
+      const inferredPeriod = { start: 1234567890, end: 1234654290, spend: BigInt(0) };
+      (calculateCurrentPeriod as Mock).mockReturnValue(inferredPeriod);
+
+      (getClient as Mock).mockReturnValue(mockClient);
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'failure' as const, error: new Error('AfterSpendPermissionEnd') },
+        { status: 'success' as const, result: false },
+        { status: 'success' as const, result: true },
+      ]);
+
+      const result = await getPermissionStatus(mockSpendPermission);
+
+      expect(calculateCurrentPeriod).toHaveBeenCalledWith(mockSpendPermission, 1234654290);
+      expect(result.isExpired).toBe(true);
+      expect(result.isActive).toBe(false);
+      expect(result.isRevoked).toBe(false);
+      expect(result.remainingSpend).toBe(BigInt(0));
+      expect(result.currentPeriod).toEqual(inferredPeriod);
+      dateNowSpy.mockRestore();
+    });
+
+    it('should not throw for a permission that has not started when getCurrentPeriod reverts', async () => {
+      // SpendPermissionManager.getCurrentPeriod reverts with BeforeSpendPermissionStart
+      const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(1234567889 * 1000); // start - 1
+      const inferredPeriod = { start: 1234567890, end: 1234654290, spend: BigInt(0) };
+      (calculateCurrentPeriod as Mock).mockReturnValue(inferredPeriod);
+
+      (getClient as Mock).mockReturnValue(mockClient);
+      (multicall as Mock).mockResolvedValueOnce([
+        { status: 'failure' as const, error: new Error('BeforeSpendPermissionStart') },
+        { status: 'success' as const, result: false },
+        { status: 'success' as const, result: true },
+      ]);
+
+      const result = await getPermissionStatus(mockSpendPermission);
+
+      expect(result.isExpired).toBe(false);
+      expect(result.remainingSpend).toBe(BigInt(0));
+      expect(result.currentPeriod).toEqual(inferredPeriod);
+      dateNowSpy.mockRestore();
     });
 
     it('should handle multicall failure for isRevoked', async () => {
@@ -494,6 +548,7 @@ describe('getPermissionStatus - browser + node', () => {
               args: [mockSpendPermissionArgs],
             },
           ],
+          allowPartialFailure: true,
           errorMessages: [
             'Failed to fetch current period',
             'Failed to fetch revoked status',

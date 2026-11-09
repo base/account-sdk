@@ -6,7 +6,11 @@ import {
 import { getClient } from ':store/chain-clients/utils.js';
 import { PublicClient, createPublicClient, http } from 'viem';
 import { multicall, unwrapMulticallResults } from '../../multicall/index.js';
-import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
+import {
+  calculateCurrentPeriod,
+  timestampInSecondsToDate,
+  toSpendPermissionArgs,
+} from '../utils.js';
 import { getPublicClientFromChainId } from '../utils.node.js';
 import { withTelemetry } from '../withTelemetry.js';
 
@@ -104,6 +108,14 @@ const getPermissionStatusFn = async (
 
   const spendPermissionArgs = toSpendPermissionArgs(permission);
 
+  // SpendPermissionManager.getCurrentPeriod reverts outside [start, end) with
+  // BeforeSpendPermissionStart / AfterSpendPermissionEnd, so its result is only required
+  // while the permission is within its validity window.
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+  const hasStarted = currentTimestamp >= Number(permission.permission.start);
+  const isExpired = currentTimestamp >= Number(permission.permission.end);
+  const isWithinWindow = hasStarted && !isExpired;
+
   // Use multicall to batch all contract reads into a single RPC call
   const results = await multicall(client, {
     contracts: [
@@ -126,6 +138,7 @@ const getPermissionStatusFn = async (
         args: [spendPermissionArgs],
       },
     ],
+    allowPartialFailure: true,
     errorMessages: [
       'Failed to fetch current period',
       'Failed to fetch revoked status',
@@ -133,27 +146,35 @@ const getPermissionStatusFn = async (
     ],
   });
 
+  // Outside the validity window the getCurrentPeriod revert is expected: infer the period locally.
+  const periodResults =
+    results[0]?.status === 'failure' && !isWithinWindow
+      ? [
+          {
+            status: 'success' as const,
+            result: calculateCurrentPeriod(permission, currentTimestamp),
+          },
+          ...results.slice(1),
+        ]
+      : results;
+
   // Extract results from multicall response
   const [currentPeriod, isRevoked, isValid] = unwrapMulticallResults<
     { start: number; end: number; spend: bigint } | boolean
-  >(results, [
+  >(periodResults, [
     'Failed to fetch current period',
     'Failed to fetch revoked status',
     'Failed to fetch valid status',
   ]) as [{ start: number; end: number; spend: bigint }, boolean, boolean];
 
-  // Calculate remaining spend in current period
+  // Calculate remaining spend in current period (nothing can be spent outside [start, end))
   const allowance = BigInt(permission.permission.allowance);
   const spent = currentPeriod.spend;
-  const remainingSpend = allowance > spent ? allowance - spent : BigInt(0);
+  const remainingSpend = isWithinWindow && allowance > spent ? allowance - spent : BigInt(0);
 
   // Calculate next period start
   // Next period starts immediately after current period ends
   const nextPeriodStart = (Number(currentPeriod.end) + 1).toString();
-
-  // Check if permission is expired
-  const currentTimestamp = Math.floor(Date.now() / 1000);
-  const isExpired = currentTimestamp > permission.permission.end;
 
   // Permission is active if it's not revoked and not expired
   const isActive = !isRevoked && !isExpired;
