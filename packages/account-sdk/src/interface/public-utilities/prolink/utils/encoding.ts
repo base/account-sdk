@@ -45,19 +45,21 @@ export function decodeAddress(bytes: Uint8Array): string {
 
 /**
  * Encode an amount to minimal big-endian bytes (no leading zeros)
- * @param value - Amount as bigint or hex string
+ * @param value - Amount as bigint, 0x-prefixed hex string, or decimal string
  * @returns Minimal big-endian bytes
  */
 export function encodeAmount(value: bigint | string): Uint8Array {
   let bigintValue: bigint;
 
   if (typeof value === 'string') {
-    // Handle hex strings
-    const normalized = value.toLowerCase().replace(/^0x/, '');
-    if (normalized === '' || normalized === '0') {
+    // EIP-712 uint values are decimal unless 0x-prefixed, matching viem and ethers.
+    if (/^0x$/i.test(value)) {
       return new Uint8Array([0x00]);
     }
-    bigintValue = BigInt(`0x${normalized}`);
+    if (!/^(0x[0-9a-f]+|[0-9]+)$/i.test(value)) {
+      throw new Error(`Invalid amount: ${value}`);
+    }
+    bigintValue = BigInt(value);
   } else {
     bigintValue = value;
   }
