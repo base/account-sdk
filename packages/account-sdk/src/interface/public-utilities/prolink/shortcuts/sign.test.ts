@@ -1,6 +1,7 @@
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
 import { describe, expect, it } from 'vitest';
+import { createSpendPermissionTypedData } from '../../spend-permission/utils.js';
 import { SignType } from '../types.js';
 import { decodeWalletSign, encodeWalletSign } from './sign.js';
 
@@ -309,6 +310,70 @@ describe('sign shortcut', () => {
       expect(decoded.data.message.start).toBe(0);
       expect(decoded.data.message.end).toBe(1914749767655);
       expect((decoded.data.message.extraData as string).toLowerCase()).toBe('0x');
+    });
+  });
+
+  describe('Decimal string amounts', () => {
+    it('should preserve a decimal allowance from createSpendPermissionTypedData', () => {
+      const data = createSpendPermissionTypedData({
+        account: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        spender: '0x8d9F34934dc9619e5DC3Df27D0A40b4A744E7eAa',
+        token: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+        chainId: 84532,
+        allowance: 1000000n,
+        periodInDays: 30,
+      });
+      expect(data.message.allowance).toBe('1000000');
+
+      const encoded = encodeWalletSign({
+        version: '1',
+        chainId: '0x14a34',
+        type: '0x01',
+        data,
+      });
+      const decoded = decodeWalletSign(encoded, 84532);
+
+      expect(BigInt(decoded.data.message.allowance as string)).toBe(1000000n);
+    });
+
+    it('should preserve decimal ReceiveWithAuthorization amounts', () => {
+      const encoded = encodeWalletSign({
+        version: '1',
+        chainId: '0x2105',
+        type: '0x01',
+        data: {
+          types: {
+            ReceiveWithAuthorization: [
+              { name: 'from', type: 'address' },
+              { name: 'to', type: 'address' },
+              { name: 'value', type: 'uint256' },
+              { name: 'validAfter', type: 'uint256' },
+              { name: 'validBefore', type: 'uint256' },
+              { name: 'nonce', type: 'bytes32' },
+            ],
+          },
+          domain: {
+            name: 'USDC',
+            version: '2',
+            chainId: 8453,
+            verifyingContract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          },
+          primaryType: 'ReceiveWithAuthorization',
+          message: {
+            from: '0x1111111111111111111111111111111111111111',
+            to: '0x2222222222222222222222222222222222222222',
+            value: '100000000',
+            validAfter: '0',
+            validBefore: '1914749767',
+            nonce: '0x1234567890123456789012345678901234567890123456789012345678901234',
+          },
+        },
+      });
+      const decoded = decodeWalletSign(encoded, 8453);
+
+      expect(BigInt(decoded.data.message.value as string)).toBe(100000000n);
+      expect(BigInt(decoded.data.message.validAfter as string)).toBe(0n);
+      expect(BigInt(decoded.data.message.validBefore as string)).toBe(1914749767n);
     });
   });
 

@@ -77,6 +77,19 @@ describe('encoding', () => {
       expect(decodeAmount(encoded)).toBe(5000000n);
     });
 
+    it('should encode from decimal string', () => {
+      const encoded = encodeAmount('5000000');
+      expect(encoded).toEqual(new Uint8Array([0x4c, 0x4b, 0x40]));
+      expect(decodeAmount(encoded)).toBe(5000000n);
+      expect(encodeAmount('0')).toEqual(new Uint8Array([0x00]));
+    });
+
+    it('should reject malformed amount strings', () => {
+      expect(() => encodeAmount('')).toThrow(/Invalid amount/);
+      expect(() => encodeAmount('4c4b40')).toThrow(/Invalid amount/);
+      expect(() => encodeAmount('1.5')).toThrow(/Invalid amount/);
+    });
+
     it('should reject leading zeros in decoding', () => {
       const invalidEncoding = new Uint8Array([0x00, 0x01]);
       expect(() => decodeAmount(invalidEncoding)).toThrow(/leading zeros/);
