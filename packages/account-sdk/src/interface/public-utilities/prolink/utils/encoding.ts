@@ -108,6 +108,11 @@ export function encodeCapabilities(caps: Record<string, unknown>): Map<string, U
 
   for (const [key, value] of Object.entries(caps)) {
     const json = JSON.stringify(value);
+    // Skip values with no JSON form (undefined, functions), as JSON.stringify does for object
+    // members; encoding them as empty bytes produced a link that could not be decoded.
+    if (json === undefined) {
+      continue;
+    }
     const bytes = new TextEncoder().encode(json);
     map.set(key, bytes);
   }
