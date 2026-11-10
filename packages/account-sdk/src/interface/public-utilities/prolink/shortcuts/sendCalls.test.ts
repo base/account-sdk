@@ -254,6 +254,31 @@ describe('sendCalls shortcut (EIP-8050 Shortcut 1)', () => {
       expect(decoded.calls[0].to.toLowerCase()).toBe(params.calls[0].to.toLowerCase());
       expect(decoded.calls[1].to.toLowerCase()).toBe(params.calls[1].to.toLowerCase());
     });
+
+    it('should keep leading zero bytes of call data', () => {
+      const params = {
+        version: '1.0',
+        chainId: '0x2105',
+        calls: [
+          {
+            // approve(address,uint256), selector 0x095ea7b3
+            to: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+            data: '0x095ea7b3000000000000000000000000111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000004c4b40',
+            value: '0x0',
+          },
+          {
+            to: '0x2222222222222222222222222222222222222222',
+            data: '0x0000000a1234',
+            value: '0x0',
+          },
+        ],
+      };
+
+      const encoded = encodeWalletSendCalls(params);
+      const decoded = decodeWalletSendCalls(encoded, 8453);
+
+      expect(decoded.calls.map((call) => call.data)).toEqual(params.calls.map((call) => call.data));
+    });
   });
 
   describe('EIP-8050 type detection order', () => {

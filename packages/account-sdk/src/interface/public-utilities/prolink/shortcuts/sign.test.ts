@@ -310,6 +310,52 @@ describe('sign shortcut', () => {
       expect(decoded.data.message.end).toBe(1914749767655);
       expect((decoded.data.message.extraData as string).toLowerCase()).toBe('0x');
     });
+
+    it('should keep leading zero bytes of extraData', () => {
+      const params = {
+        version: '1',
+        chainId: '0x2105',
+        type: '0x01',
+        data: {
+          types: {
+            SpendPermission: [
+              { name: 'account', type: 'address' },
+              { name: 'spender', type: 'address' },
+              { name: 'token', type: 'address' },
+              { name: 'allowance', type: 'uint160' },
+              { name: 'period', type: 'uint48' },
+              { name: 'start', type: 'uint48' },
+              { name: 'end', type: 'uint48' },
+              { name: 'salt', type: 'uint256' },
+              { name: 'extraData', type: 'bytes' },
+            ],
+          },
+          domain: {
+            name: 'Spend Permission Manager',
+            version: '1',
+            chainId: 8453,
+            verifyingContract: '0xf85210b21cc50302f477ba56686d2019dc9b67ad',
+          },
+          primaryType: 'SpendPermission',
+          message: {
+            account: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            spender: '0x8d9f34934dc9619e5dc3df27d0a40b4a744e7eaa',
+            token: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+            allowance: '0x2710',
+            period: 86400,
+            start: 0,
+            end: 1914749767,
+            salt: '0x2d6688aae9435fb91ab0a1fe7ea54ec3ffd86e8e18a0c17e1923c467dea4b75f',
+            extraData: '0x0001',
+          },
+        },
+      };
+
+      const encoded = encodeWalletSign(params);
+      const decoded = decodeWalletSign(encoded, 8453);
+
+      expect(decoded.data.message.extraData).toBe('0x0001');
+    });
   });
 
   describe('ReceiveWithAuthorization roundtrip', () => {

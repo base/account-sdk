@@ -311,5 +311,31 @@ describe('prolink end-to-end', () => {
       expect(params.version).toBe('2.0');
       expect(params.from?.toLowerCase()).toBe(request.params[0].from.toLowerCase());
     });
+
+    it('should preserve call data that starts with a zero byte', async () => {
+      const calls = [
+        {
+          // approve(address,uint256), selector 0x095ea7b3
+          to: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+          data: '0x095ea7b3000000000000000000000000111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000004c4b40',
+          value: '0x0',
+        },
+        {
+          to: '0x2222222222222222222222222222222222222222',
+          data: '0x00000000',
+          value: '0x0',
+        },
+      ];
+      const request = {
+        method: 'wallet_sendCalls',
+        params: [{ version: '1.0', chainId: '0x2105', calls }],
+      };
+
+      const encoded = await encodeProlink(request);
+      const decoded = await decodeProlink(encoded);
+
+      const params = (decoded.params as Array<{ calls: Array<{ data: string }> }>)[0];
+      expect(params.calls.map((call) => call.data)).toEqual(calls.map((call) => call.data));
+    });
   });
 });

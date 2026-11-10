@@ -11,6 +11,7 @@ import {
   encodeCapabilities,
   hexToBytes,
   pad32,
+  rawBytesToHex,
 } from './encoding.js';
 
 describe('encoding', () => {
@@ -165,6 +166,18 @@ describe('encoding', () => {
     it('should throw on input larger than 32 bytes', () => {
       const tooLarge = new Uint8Array(33);
       expect(() => pad32(tooLarge)).toThrow(/larger than 32 bytes/);
+    });
+  });
+
+  describe('rawBytesToHex', () => {
+    it('should keep leading zero bytes', () => {
+      expect(rawBytesToHex(new Uint8Array([0x09, 0x5e, 0xa7, 0xb3]))).toBe('0x095ea7b3');
+      expect(rawBytesToHex(new Uint8Array([0x00, 0x00, 0x01]))).toBe('0x000001');
+      expect(rawBytesToHex(new Uint8Array([0x00]))).toBe('0x00');
+    });
+
+    it('should encode empty bytes as 0x', () => {
+      expect(rawBytesToHex(new Uint8Array())).toBe('0x');
     });
   });
 

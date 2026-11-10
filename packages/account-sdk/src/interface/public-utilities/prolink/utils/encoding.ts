@@ -185,6 +185,16 @@ export function bytesToHex(bytes: Uint8Array): string {
 }
 
 /**
+ * Convert raw bytes (calldata, `bytes` values) to a hex string, keeping every byte
+ * Unlike bytesToHex, which strips leading zeros and is only meant for integers
+ * @param bytes - Bytes to convert (may be empty)
+ * @returns Hex string with 0x prefix, `0x` for empty bytes
+ */
+export function rawBytesToHex(bytes: Uint8Array): string {
+  return Hex.fromBytes(bytes);
+}
+
+/**
  * Convert hex string to bytes
  * @param hex - Hex string (with or without 0x prefix)
  * @returns Bytes
