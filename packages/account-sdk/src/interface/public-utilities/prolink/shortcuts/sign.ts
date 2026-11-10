@@ -13,6 +13,7 @@ import {
   encodeAddress,
   encodeAmount,
   hexToBytes,
+  rawBytesToHex,
 } from '../utils/encoding.js';
 
 type TypedData = {
@@ -217,7 +218,7 @@ export function decodeWalletSign(
         start: Number(sp.start),
         end: Number(sp.end),
         salt: bytesToHex(sp.salt),
-        extraData: sp.extraData.length > 0 ? bytesToHex(sp.extraData) : '0x',
+        extraData: rawBytesToHex(sp.extraData),
       },
     };
 

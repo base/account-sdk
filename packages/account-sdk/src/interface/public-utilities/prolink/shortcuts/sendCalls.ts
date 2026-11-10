@@ -14,6 +14,7 @@ import {
   encodeAmount,
   hexToBytes,
   pad32,
+  rawBytesToHex,
 } from '../utils/encoding.js';
 
 // ERC20 transfer(address,uint256) selector
@@ -213,7 +214,7 @@ export function decodeWalletSendCalls(
 
     result.calls = calls.map((call) => ({
       to: decodeAddress(call.to),
-      data: call.data.length > 0 ? bytesToHex(call.data) : '0x',
+      data: rawBytesToHex(call.data),
       value: bytesToHex(call.value.length > 0 ? call.value : new Uint8Array([0])),
     }));
   }
