@@ -416,6 +416,93 @@ describe('prepareSpendCallData', () => {
     expect(result[0].to).toBe(spendPermissionManagerAddress);
   });
 
+  describe('native token permission', () => {
+    const NATIVE_TOKEN = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+    const recipientAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb8' as Address;
+
+    const nativeSpendPermission: SpendPermission = {
+      ...mockSpendPermission,
+      permission: {
+        ...mockSpendPermission.permission,
+        token: NATIVE_TOKEN,
+      },
+    };
+
+    it('should append a native value transfer to the recipient instead of an ERC20 transfer', async () => {
+      const spendAmount = BigInt('50000000000000000'); // 0.05 ETH
+
+      const result = await prepareSpendCallData(
+        nativeSpendPermission,
+        spendAmount,
+        recipientAddress
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({
+        to: spendPermissionManagerAddress,
+        data: '0xspenddata789abc',
+        value: 0n,
+      });
+      expect(result[1]).toEqual({
+        to: recipientAddress,
+        data: '0x',
+        value: spendAmount,
+      });
+      expect(mockEncodeFunctionData).not.toHaveBeenCalledWith(
+        expect.objectContaining({ functionName: 'transfer' })
+      );
+    });
+
+    it('should match the native token address case-insensitively', async () => {
+      const spendAmount = BigInt('50000000000000000'); // 0.05 ETH
+
+      const result = await prepareSpendCallData(
+        {
+          ...nativeSpendPermission,
+          permission: { ...nativeSpendPermission.permission, token: NATIVE_TOKEN.toLowerCase() },
+        },
+        spendAmount,
+        recipientAddress
+      );
+
+      expect(result[1]).toEqual({
+        to: recipientAddress,
+        data: '0x',
+        value: spendAmount,
+      });
+    });
+
+    it('should forward the remaining spend when using max-remaining-allowance with recipient', async () => {
+      const mockStatus = createMockPermissionStatus({ isApprovedOnchain: false });
+      mockGetPermissionStatus.mockResolvedValue(mockStatus);
+
+      const result = await prepareSpendCallData(
+        nativeSpendPermission,
+        'max-remaining-allowance',
+        recipientAddress
+      );
+
+      // approve, spend, then native value transfer
+      expect(result).toHaveLength(3);
+      expect(result[2]).toEqual({
+        to: recipientAddress,
+        data: '0x',
+        value: mockStatus.remainingSpend,
+      });
+    });
+
+    it('should not append any transfer call when recipient is not provided', async () => {
+      const result = await prepareSpendCallData(nativeSpendPermission, BigInt('50000000000000000'));
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        to: spendPermissionManagerAddress,
+        data: '0xspenddata789abc',
+        value: 0n,
+      });
+    });
+  });
+
   it('should set value to 0x0 for both calls when permission is not approved onchain', async () => {
     mockGetPermissionStatus.mockResolvedValue(
       createMockPermissionStatus({

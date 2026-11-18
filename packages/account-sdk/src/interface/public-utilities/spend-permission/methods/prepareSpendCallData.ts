@@ -27,8 +27,9 @@ export type PrepareSpendCallDataResponseType = Call[];
  * When 'max-remaining-allowance' is provided as the amount, the function automatically uses all remaining
  * spend permission allowance.
  *
- * If a recipient address is provided, an ERC20 transfer call will be appended to transfer
- * the spent tokens to the recipient.
+ * If a recipient address is provided, a call will be appended to forward the spent tokens to the
+ * recipient: an ERC20 `transfer` call for ERC20 permissions, or a plain native value transfer for
+ * native token (ETH) permissions.
  *
  * The resulting call data must be sent using the spender account, not the
  * account holder. The spender is responsible for executing both the approval
@@ -36,7 +37,7 @@ export type PrepareSpendCallDataResponseType = Call[];
  *
  * @param permission - The spend permission object containing the permission details and signature.
  * @param amount - The amount to spend in wei. If 'max-remaining-allowance' is provided, the full remaining allowance will be spent.
- * @param recipient - Optional recipient address to receive the spent tokens via ERC20 transfer.
+ * @param recipient - Optional recipient address to receive the spent tokens (via ERC20 transfer, or a native value transfer for native token permissions).
  * @param options - Optional configuration options.
  * @param options.rpcUrl - Optional custom RPC URL to use for blockchain queries. Useful for avoiding rate limits on public endpoints.
  *
@@ -118,6 +119,9 @@ const ERC20_TRANSFER_ABI = [
   },
 ] as const;
 
+// ERC-7528 native token address, as used by the SpendPermissionManager
+const NATIVE_TOKEN = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+
 const prepareSpendCallDataFn = async (
   permission: SpendPermission,
   amount: bigint | 'max-remaining-allowance',
@@ -173,8 +177,18 @@ const prepareSpendCallDataFn = async (
 
   const calls: Call[] = [approveCall, spendCall].filter((item) => item !== null);
 
-  // If a recipient is specified, add an ERC20 transfer call
-  if (recipient) {
+  const isNativeToken = permission.permission.token.toLowerCase() === NATIVE_TOKEN.toLowerCase();
+
+  // If a recipient is specified for a native token permission, add a native value transfer.
+  // `spend` sends the native token to the spender, and the native token address has no code.
+  if (recipient && isNativeToken) {
+    calls.push({
+      to: recipient,
+      data: '0x',
+      value: spendAmount,
+    });
+  } else if (recipient) {
+    // If a recipient is specified for an ERC20 permission, add an ERC20 transfer call
     // Encode the ERC20 transfer call data
     const transferCallData = encodeFunctionData({
       abi: ERC20_TRANSFER_ABI,
