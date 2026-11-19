@@ -15,11 +15,11 @@ export function withTelemetry<T extends (...args: any[]) => any>(fn: T) {
     return fn;
   }
 
-  return (...args: Parameters<T>): ReturnType<T> => {
+  return async (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
     const functionName = getFunctionName(fn);
     logSpendPermissionUtilStarted(functionName);
     try {
-      const result = fn(...args);
+      const result = await fn(...args);
       logSpendPermissionUtilCompleted(functionName);
       return result;
     } catch (error) {
