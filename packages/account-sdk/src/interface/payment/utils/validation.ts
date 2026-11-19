@@ -11,9 +11,16 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
     throw new Error('Invalid amount: must be a string');
   }
 
-  const numAmount = parseFloat(amount);
+  // Use a regex to validate the format before parsing
+  // This prevents parseFloat from accepting malformed strings like "1abc"
+  const trimmed = amount.trim();
+  if (!/^-?\d+(\.\d+)?$/.test(trimmed)) {
+    throw new Error('Invalid amount: must be a valid decimal number');
+  }
 
-  if (isNaN(numAmount)) {
+  const numAmount = parseFloat(trimmed);
+
+  if (isNaN(numAmount) || !isFinite(numAmount)) {
     throw new Error('Invalid amount: must be a valid number');
   }
 
@@ -22,12 +29,38 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
   }
 
   // Only allow specified decimal places
-  const decimalIndex = amount.indexOf('.');
+  const decimalIndex = trimmed.indexOf('.');
   if (decimalIndex !== -1) {
-    const decimalPlaces = amount.length - decimalIndex - 1;
+    const decimalPlaces = trimmed.length - decimalIndex - 1;
     if (decimalPlaces > maxDecimals) {
       throw new Error(`Invalid amount: pay only supports up to ${maxDecimals} decimal places`);
     }
+  }
+}
+
+/**
+ * Validates that periodInDays is a positive safe integer
+ * @param periodInDays - The period in days to validate
+ * @throws Error if period is invalid
+ */
+export function validatePeriodInDays(periodInDays: number): void {
+  if (!Number.isSafeInteger(periodInDays) || periodInDays <= 0) {
+    throw new Error(
+      `Invalid periodInDays: must be a positive integer (received ${periodInDays})`
+    );
+  }
+}
+
+/**
+ * Validates that periodInSeconds is a positive safe integer
+ * @param periodInSeconds - The period in seconds to validate
+ * @throws Error if period is invalid
+ */
+export function validatePeriodInSeconds(periodInSeconds: number): void {
+  if (!Number.isSafeInteger(periodInSeconds) || periodInSeconds <= 0) {
+    throw new Error(
+      `Invalid periodInSeconds: must be a positive integer (received ${periodInSeconds})`
+    );
   }
 }
 
