@@ -6,7 +6,7 @@ export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string)
   const requestBody = {
     ...request,
     jsonrpc: '2.0',
-    id: crypto.randomUUID(),
+    id: crypto.randomUUID?.() ?? Math.random().toString(36).slice(2),
   };
   const res = await fetch(rpcUrl, {
     method: 'POST',
