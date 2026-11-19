@@ -35,6 +35,13 @@ function getBundlerRequestHeaders(usingDefaultBundlerUrl: boolean): Record<strin
   };
 }
 
+function getReceiptTransactionHash(userOpReceipt: Record<string, unknown>): Hex | undefined {
+  const receipt = userOpReceipt.receipt;
+  if (!receipt || typeof receipt !== 'object') return undefined;
+  const transactionHash = (receipt as { transactionHash?: unknown }).transactionHash;
+  return typeof transactionHash === 'string' ? (transactionHash as Hex) : undefined;
+}
+
 function getRpcErrorMessage(response: unknown): string | undefined {
   if (!response || typeof response !== 'object' || !('error' in response)) {
     return undefined;
@@ -374,6 +381,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
         sender: userOpReceipt.sender,
         amount: paymentTransfer.formattedAmount,
         recipient: paymentTransfer.to,
+        transactionHash: getReceiptTransactionHash(userOpReceipt),
       };
       return result;
     }
@@ -397,6 +405,7 @@ export async function getPaymentStatus(options: PaymentStatusOptions): Promise<P
       message: 'Payment failed',
       sender: userOpReceipt.sender,
       reason: userFriendlyReason,
+      transactionHash: getReceiptTransactionHash(userOpReceipt),
     };
     return result;
   } catch (error) {

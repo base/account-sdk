@@ -142,6 +142,11 @@ export interface PaymentStatus {
   amount?: string;
   /** Recipient address (present for completed transactions, parsed from logs) */
   recipient?: string;
+  /** Settlement transaction hash (present for completed transactions, and for
+   * failed transactions once a transaction landed on-chain). Distinct from
+   * `id`, which is the userOp hash -- only `transactionHash` resolves on a
+   * block explorer like Basescan. */
+  transactionHash?: Hex;
   /** Reason for transaction failure (present for failed status - describes why the transaction failed on-chain) */
   reason?: string;
 }
