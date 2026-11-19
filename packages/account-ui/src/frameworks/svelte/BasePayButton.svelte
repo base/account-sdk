@@ -25,8 +25,7 @@ const unmountWidget = () => {
 };
 
 const hasPropsChanged = () => {
-  const currentProps = { colorScheme, onClick };
-  return JSON.stringify(currentProps) !== JSON.stringify(previousProps);
+  return colorScheme !== previousProps.colorScheme || onClick !== previousProps.onClick;
 };
 
 onMount(() => {
@@ -45,4 +44,4 @@ onDestroy(() => {
 });
 </script>
 
-<div bind:this={mountPoint} style="display: block; width: 100%;"></div> 
+<div bind:this={mountPoint} style="display: block; width: 100%;"></div>
