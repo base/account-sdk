@@ -78,6 +78,11 @@ const requestSpendPermissionFn = async (
   // Check if we should use wallet_sign (when capabilities are provided) or eth_signTypedData_v4
   let signature: string;
   let permissionHash: string;
+  // The permission message actually returned to the caller. It must match the
+  // data that permissionHash is derived from: when the wallet substitutes
+  // message.account via mutableData, this is the wallet-returned (post-
+  // substitution) message, not the original request.
+  let permissionMessage: typeof typedData.message;
 
   if (capabilities) {
     // Use wallet_sign with capabilities
@@ -126,6 +131,7 @@ const requestSpendPermissionFn = async (
       permission: signResult.signedData.message,
       chainId,
     });
+    permissionMessage = signResult.signedData.message;
   } else {
     // Use the original eth_signTypedData_v4 method
     [signature, permissionHash] = await Promise.all([
@@ -135,6 +141,7 @@ const requestSpendPermissionFn = async (
       }) as Promise<string>,
       getHash({ permission: typedData.message, chainId }),
     ]);
+    permissionMessage = typedData.message;
   }
 
   const permission: SpendPermission = {
@@ -142,7 +149,7 @@ const requestSpendPermissionFn = async (
     permissionHash,
     signature,
     chainId,
-    permission: typedData.message,
+    permission: permissionMessage,
   };
 
   return permission;
