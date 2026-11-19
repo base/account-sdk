@@ -458,6 +458,99 @@ describe('sign shortcut', () => {
       expect(decoded.capabilities).toEqual(capabilities);
     });
   });
+
+  describe('Canonical field validation', () => {
+    it('should reject a SpendPermission allowance with leading zeros', () => {
+      const encoded = encodeWalletSign(createSpendPermissionParams());
+
+      if (encoded.signatureData.case !== 'spendPermission') {
+        throw new Error('Expected SpendPermission encoding');
+      }
+
+      encoded.signatureData.value.allowance = new Uint8Array([0x00, 0x01]);
+
+      expect(() => decodeWalletSign(encoded, 84532)).toThrow(/leading zeros/);
+    });
+
+    it.each(['value', 'validAfter', 'validBefore'] as const)(
+      'should reject a ReceiveWithAuthorization %s with leading zeros',
+      (field) => {
+        const encoded = encodeWalletSign(createReceiveWithAuthParams());
+
+        if (encoded.signatureData.case !== 'receiveWithAuthorization') {
+          throw new Error('Expected ReceiveWithAuthorization encoding');
+        }
+
+        encoded.signatureData.value[field] = new Uint8Array([0x00, 0x01]);
+
+        expect(() => decodeWalletSign(encoded, 8453)).toThrow(/leading zeros/);
+      }
+    );
+
+    it.each([31, 33])('should reject a %i-byte salt when encoding', (length) => {
+      const params = createSpendPermissionParams();
+      params.data.message.salt = `0x${'11'.repeat(length)}`;
+
+      expect(() => encodeWalletSign(params)).toThrow(
+        `Invalid salt length: expected 32 bytes, got ${length}`
+      );
+    });
+
+    it.each([31, 33])('should reject a %i-byte salt when decoding', (length) => {
+      const encoded = encodeWalletSign(createSpendPermissionParams());
+
+      if (encoded.signatureData.case !== 'spendPermission') {
+        throw new Error('Expected SpendPermission encoding');
+      }
+
+      encoded.signatureData.value.salt = new Uint8Array(length);
+
+      expect(() => decodeWalletSign(encoded, 84532)).toThrow(
+        `Invalid salt length: expected 32 bytes, got ${length}`
+      );
+    });
+
+    it.each([31, 33])('should reject a %i-byte nonce when encoding', (length) => {
+      const params = createReceiveWithAuthParams();
+      params.data.message.nonce = `0x${'11'.repeat(length)}`;
+
+      expect(() => encodeWalletSign(params)).toThrow(
+        `Invalid nonce length: expected 32 bytes, got ${length}`
+      );
+    });
+
+    it.each([31, 33])('should reject a %i-byte nonce when decoding', (length) => {
+      const encoded = encodeWalletSign(createReceiveWithAuthParams());
+
+      if (encoded.signatureData.case !== 'receiveWithAuthorization') {
+        throw new Error('Expected ReceiveWithAuthorization encoding');
+      }
+
+      encoded.signatureData.value.nonce = new Uint8Array(length);
+
+      expect(() => decodeWalletSign(encoded, 8453)).toThrow(
+        `Invalid nonce length: expected 32 bytes, got ${length}`
+      );
+    });
+
+    it('should preserve leading zeros in fixed-size fields', () => {
+      const salt = `0x00${'11'.repeat(31)}`;
+      const nonce = `0x00${'22'.repeat(31)}`;
+      const spendPermission = createSpendPermissionParams();
+      const receiveWithAuthorization = createReceiveWithAuthParams();
+      spendPermission.data.message.salt = salt;
+      receiveWithAuthorization.data.message.nonce = nonce;
+
+      const decodedSpendPermission = decodeWalletSign(encodeWalletSign(spendPermission), 84532);
+      const decodedReceiveWithAuthorization = decodeWalletSign(
+        encodeWalletSign(receiveWithAuthorization),
+        8453
+      );
+
+      expect(decodedSpendPermission.data.message.salt).toBe(salt);
+      expect(decodedReceiveWithAuthorization.data.message.nonce).toBe(nonce);
+    });
+  });
 });
 
 // Helper functions to create valid test params

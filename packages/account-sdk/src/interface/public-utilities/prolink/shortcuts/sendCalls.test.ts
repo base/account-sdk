@@ -256,6 +256,96 @@ describe('sendCalls shortcut (EIP-8050 Shortcut 1)', () => {
     });
   });
 
+  describe('Canonical integer decoding', () => {
+    it('should reject an ERC20 amount with leading zeros', () => {
+      const encoded = encodeWalletSendCalls({
+        chainId: '0x1',
+        calls: [
+          {
+            to: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            data: '0xa9059cbb000000000000000000000000fe21034794a5a574b94fe4fdfd16e005f1c96e510000000000000000000000000000000000000000000000000000000000000001',
+            value: '0x0',
+          },
+        ],
+      });
+
+      if (encoded.transactionData.case !== 'erc20Transfer') {
+        throw new Error('Expected ERC20 transfer encoding');
+      }
+
+      encoded.transactionData.value.amount = new Uint8Array([0x00, 0x01]);
+
+      expect(() => decodeWalletSendCalls(encoded, 1)).toThrow(/leading zeros/);
+    });
+
+    it('should reject a native transfer amount with leading zeros', () => {
+      const encoded = encodeWalletSendCalls({
+        chainId: '0x1',
+        calls: [
+          {
+            to: '0xfe21034794a5a574b94fe4fdfd16e005f1c96e51',
+            data: '0x',
+            value: '0x1',
+          },
+        ],
+      });
+
+      if (encoded.transactionData.case !== 'nativeTransfer') {
+        throw new Error('Expected native transfer encoding');
+      }
+
+      encoded.transactionData.value.amount = new Uint8Array([0x00, 0x01]);
+
+      expect(() => decodeWalletSendCalls(encoded, 1)).toThrow(/leading zeros/);
+    });
+
+    it('should reject a generic call value with leading zeros', () => {
+      const encoded = encodeWalletSendCalls({
+        chainId: '0x1',
+        calls: [
+          {
+            to: '0x1111111111111111111111111111111111111111',
+            data: '0x1234',
+            value: '0x1',
+          },
+        ],
+      });
+
+      if (encoded.transactionData.case !== 'genericCalls') {
+        throw new Error('Expected generic calls encoding');
+      }
+
+      encoded.transactionData.value.calls[0].value = new Uint8Array([0x00, 0x01]);
+
+      expect(() => decodeWalletSendCalls(encoded, 1)).toThrow(/leading zeros/);
+    });
+
+    it.each([new Uint8Array(), new Uint8Array([0x00])])(
+      'should decode canonical zero encodings',
+      (zeroEncoding) => {
+        const encoded = encodeWalletSendCalls({
+          chainId: '0x1',
+          calls: [
+            {
+              to: '0x1111111111111111111111111111111111111111',
+              data: '0x1234',
+              value: '0x1',
+            },
+          ],
+        });
+
+        if (encoded.transactionData.case !== 'genericCalls') {
+          throw new Error('Expected generic calls encoding');
+        }
+
+        encoded.transactionData.value.calls[0].value = zeroEncoding;
+
+        const decoded = decodeWalletSendCalls(encoded, 1);
+        expect(decoded.calls[0].value).toBe('0x0');
+      }
+    );
+  });
+
   describe('EIP-8050 type detection order', () => {
     // Per spec: "Encoders MUST detect transaction types in this order:
     // 1. ERC20 Transfer, 2. Native Transfer, 3. Generic Calls"
