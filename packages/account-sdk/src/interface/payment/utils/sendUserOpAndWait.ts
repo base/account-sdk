@@ -29,12 +29,33 @@ export async function sendUserOpAndWait(
 
     // The sendUserOperation returns { smartAccountAddress, status: "broadcast", userOpHash }
     // We need to wait for the operation to complete to get the transaction hash
-    const completedOp = await networkSmartWallet.waitForUserOperation({
-      userOpHash: userOpResult.userOpHash,
-      waitOptions: {
-        timeoutSeconds,
-      },
-    });
+    let completedOp;
+    try {
+      completedOp = await networkSmartWallet.waitForUserOperation({
+        userOpHash: userOpResult.userOpHash,
+        waitOptions: {
+          timeoutSeconds,
+        },
+      });
+    } catch (waitError) {
+      // waitForUserOperation may time out even though the user operation was already
+      // broadcast and may eventually confirm. Distinguish between broadcast success
+      // (op is on-chain, wait timed out) and broadcast failure (op never reached
+      // the mempool).
+      const waitErrorMessage = waitError instanceof Error ? waitError.message : String(waitError);
+      throw Object.assign(
+        new Error(
+          `Failed to execute ${context} transaction with smart wallet: ${waitErrorMessage}`
+        ),
+        {
+          // The userOp was broadcast successfully even if confirmation timed out.
+          // Callers can use userOpResult.userOpHash to track it independently.
+          userOpHash: userOpResult.userOpHash,
+          broadcast: true,
+          context,
+        }
+      );
+    }
 
     // Check if the operation was successful
     if (completedOp.status === 'failed') {
