@@ -12,7 +12,7 @@ function run(
   env: Record<string, string> = {}
 ): { stdout: string; exitCode: number } {
   try {
-    const stdout = execFileSync('npx', ['tsx', CLI_PATH, ...args], {
+    const stdout = execFileSync(process.execPath, ['--import', 'tsx', CLI_PATH, ...args], {
       encoding: 'utf-8',
       env: { ...process.env, ...env },
       timeout: 10_000,
