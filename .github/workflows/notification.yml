@@ -4,6 +4,11 @@ on:
   issues:
     types: [opened, reopened]
 
+# This workflow reads attacker-controlled issue content. It needs no repository
+# access at all, so the GITHUB_TOKEN is stripped of every scope rather than
+# inheriting the repository default (which may be read-write).
+permissions: {}
+
 env:
   CHANNEL_WALLET_FEEDBACK: ${{ vars.CHANNEL_WALLET_FEEDBACK }}
   CHANNEL_WALLET_SQUAD_BUILD: ${{ vars.CHANNEL_WALLET_SQUAD_BUILD }}
@@ -14,54 +19,107 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     outputs:
-      skip: ${{ env.skip }}
+      # Read from an explicit step output rather than from a value written to
+      # $GITHUB_ENV, so the data flow into the job output is unambiguous.
+      skip: ${{ steps.spam.outputs.skip }}
     steps:
-    - name: Check spam labels
-      if: ${{ contains(github.event.*.labels.*.name, 'spam') }}
-      run: |
-        echo "skip=true" >> $GITHUB_ENV
-        echo "::error:: Spam label found."
-        
+      - name: Check spam labels
+        id: spam
+        run: |
+          if [ "${IS_SPAM}" = "true" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::error:: Spam label found."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          # The expression is evaluated by the Actions runner and yields the
+          # literal string "true" or "false"; it is passed through the
+          # environment rather than being interpolated into the script body.
+          IS_SPAM: ${{ contains(github.event.issue.labels.*.name, 'spam') }}
+
   notify:
     runs-on: ubuntu-latest
     needs: checks
-    if: ${{ vars.SLACK_ENABLED == 'true' && needs.checks.outputs.skip != 'true' }}
+    if: vars.SLACK_ENABLED == 'true' && needs.checks.outputs.skip != 'true'
     steps:
-    - name: Set channel and mention
-      run: |
-        if ${{ contains(join(github.event.issue.labels.*.name), 'type:') }}; then
-          echo "channel=${{ env.CHANNEL_WALLET_FEEDBACK }}" >> $GITHUB_ENV
-          echo "mention=!subteam^${{ env.ON_CALL_WALLET }}" >> $GITHUB_ENV
-        else
-          echo "channel=${{ env.CHANNEL_WALLET_SQUAD_BUILD }}" >> $GITHUB_ENV
-          echo "mention=!subteam^${{ env.ON_CALL_BUILD_SQUAD }}" >> $GITHUB_ENV
-        fi
+      - name: Resolve channel and mention
+        id: routing
+        run: |
+          # Expression interpolation is textual substitution performed before the
+          # shell sees the script, so untrusted values must never appear in
+          # command position. Everything below reads from the environment.
+          if printf '%s' "$LABEL_NAMES" | grep -q 'type:'; then
+            echo "channel=${CHANNEL_WALLET_FEEDBACK}" >> "$GITHUB_OUTPUT"
+            echo "mention=!subteam^${ON_CALL_WALLET}" >> "$GITHUB_OUTPUT"
+          else
+            echo "channel=${CHANNEL_WALLET_SQUAD_BUILD}" >> "$GITHUB_OUTPUT"
+            echo "mention=!subteam^${ON_CALL_BUILD_SQUAD}" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          LABEL_NAMES: ${{ join(github.event.issue.labels.*.name, ',') }}
 
-    - name: Set text
-      run: |
-        text=$(echo "${{ vars.SLACK_TEMPLATE }}")
-        text=${text//'{{event}}'/Issue ${{ env.action }}}
-        text=${text//'{{author}}'/${{ env.author }}}
-        text=${text//'{{url}}'/${{ env.url }}}
-        text=${text//'{{mention}}'/${{ env.mention }}}
-        text=${text//'{{repo}}'/${{ github.repository }}}
-        text="${text//$'\r\n'/'\n'}"
-        text="${text//$'\n'/'\n'}"
-        echo "text=$text" >> $GITHUB_ENV
-      env:
-        action: ${{ github.event.action }}
-        author: ${{ github.event.issue.user.login }}
-        url: ${{ github.event.issue.html_url }}
+      - name: Build Slack payload
+        id: payload
+        run: |
+          set -euo pipefail
+          # Substitute the template placeholders with bash parameter expansion on
+          # environment variables. No untrusted value is ever spliced into the
+          # script text itself.
+          text="${SLACK_TEMPLATE}"
+          text="${text//'{{event}}'/Issue ${ISSUE_ACTION}}"
+          text="${text//'{{author}}'/${ISSUE_AUTHOR}}"
+          text="${text//'{{url}}'/${ISSUE_URL}}"
+          text="${text//'{{mention}}'/${MENTION}}"
+          text="${text//'{{repo}}'/${REPOSITORY}}"
+          # Assemble the payload with jq. This is the fix for the JSON-injection
+          # flaw: the previous version interpolated the raw, attacker-chosen 
+          # issue title directly inside a JSON string literal.
+          # An issue titled  x", "channel": "#elsewhere", "text": "spoofed
+          # terminated the string and rewrote the object, letting any GitHub user
+          # redirect the notification to another Slack channel and forge its
+          # contents. jq emits correctly escaped JSON, so no title can break out.
+          #
+          # `-c` keeps the output on a single line, which is what makes it safe to
+          # pass through $GITHUB_OUTPUT with a plain `key=value` assignment.
+          payload="$(
+            jq -nc \
+              --arg channel "#${CHANNEL}" \
+              --arg title "${ISSUE_TITLE}" \
+              --arg body "${text}" \
+              --arg icon ":${ICON_EMOJI}:" \
+              '{channel: $channel, text: ("*" + $title + "*\n" + $body), icon_emoji: $icon}'
+          )"
+          echo "json=${payload}" >> "$GITHUB_OUTPUT"
+        env:
+          SLACK_TEMPLATE: ${{ vars.SLACK_TEMPLATE }}
+          ICON_EMOJI: ${{ vars.ICON_EMOJI }}
+          CHANNEL: ${{ steps.routing.outputs.channel }}
+          MENTION: ${{ steps.routing.outputs.mention }}
+          REPOSITORY: ${{ github.repository }}
+          ISSUE_ACTION: ${{ github.event.action }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          # Attacker-controlled free text. Handled only as data, via jq --arg.
+          ISSUE_TITLE: ${{ github.event.issue.title }}
 
-    - name: Notify Slack
-      uses: slackapi/slack-github-action@v1.23.0
-      with:
-        payload: |
-          {
-            "channel": "#${{ env.channel }}",
-            "text": "*${{ env.title }}*\n${{ env.text }}",
-            "icon_emoji": ":${{ vars.ICON_EMOJI }}:"
-          }
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        title: ${{ github.event.issue.title }}
+      - name: Notify Slack
+        # SUPPLY-CHAIN NOTE: this is a mutable tag. A tag can be repointed at any
+        # commit, so a compromise of the upstream repository would execute
+        # arbitrary code in this job — which holds SLACK_WEBHOOK_URL in its
+        # environment. Pin to an immutable commit SHA:
+        #
+        #   gh api repos/slackapi/slack-github-action/git/ref/tags/v1.23.0 \
+        #     --jq .object.sha
+        #
+        # then replace the reference with `slackapi/slack-github-action@<sha> # v1.23.0`.
+        # Left unpinned here because resolving the SHA requires network access
+        # that was not available when this change was made; do not guess it.
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          # `steps.payload.outputs.json` is already valid, fully escaped JSON, so
+          # interpolating it here cannot alter the document's structure.
+          payload: |
+            ${{ steps.payload.outputs.json }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
