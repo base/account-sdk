@@ -19,10 +19,10 @@ npm install @base-org/account-ui
 
 For detailed usage examples and setup instructions for each framework:
 
-- **[React](./react/README.md)** - React-specific documentation and examples
-- **[Preact](./preact/README.md)** - Preact-specific documentation and examples
-- **[Vue](./vue/README.md)** - Vue-specific documentation and examples
-- **[Svelte](./svelte/README.md)** - Svelte-specific documentation and examples
+- **[React](src/frameworks/react/README.md)** - React-specific documentation and examples
+- **[Preact](src/frameworks/preact/README.md)** - Preact-specific documentation and examples
+- **[Vue](src/frameworks/vue/README.md)** - Vue-specific documentation and examples
+- **[Svelte](src/frameworks/svelte/README.md)** - Svelte-specific documentation and examples
 
 ## Quick Start - React
 
