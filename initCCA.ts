@@ -1,0 +1,54 @@
+import { store } from ':store/store.js';
+import { TELEMETRY_SCRIPT_CONTENT } from './telemetry-content.js';
+
+export const loadTelemetryScript = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') {
+      reject(new Error('Telemetry is not supported in non-browser environments'));
+      return;
+    }
+
+    if (window.ClientAnalytics) {
+      return resolve();
+    }
+
+    try {
+      const script = document.createElement('script');
+      script.textContent = TELEMETRY_SCRIPT_CONTENT;
+      script.type = 'text/javascript';
+      document.head.appendChild(script);
+
+      initCCA();
+
+      document.head.removeChild(script);
+      resolve();
+    } catch (error) {
+      const failure = error instanceof Error ? error : new Error(String(error));
+      console.error('Failed to execute inlined telemetry script', failure);
+      reject(failure);
+    }
+  });
+};
+
+const initCCA = () => {
+  if (typeof window !== 'undefined') {
+    const deviceId = store.config.get().deviceId ?? crypto?.randomUUID() ?? '';
+
+    if (window.ClientAnalytics) {
+      const { init, identify, PlatformName } = window.ClientAnalytics;
+
+      init({
+        isProd: true,
+        amplitudeApiKey: 'c66737ad47ec354ced777935b0af822e',
+        platform: PlatformName.web,
+        projectName: 'base_account_sdk',
+        showDebugLogging: false,
+        version: '1.0.0',
+        apiEndpoint: 'https://cca-lite.coinbase.com',
+      });
+
+      identify({ deviceId });
+      store.config.set({ deviceId });
+    }
+  }
+};
