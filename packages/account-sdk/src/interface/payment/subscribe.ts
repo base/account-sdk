@@ -200,8 +200,14 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
           '[SUBSCRIBE] Missing expected properties. Response keys:',
           Object.keys(result)
         );
+        const missingProps = [
+          !hasSignature && 'signature',
+          !hasSignedData && 'signedData',
+        ]
+          .filter((prop): prop is string => Boolean(prop))
+          .join(', ');
         throw new Error(
-          `Invalid response from wallet_sign: missing ${!hasSignature ? 'signature' : ''} ${!hasSignedData ? 'signedData' : ''}`
+          `Invalid response from wallet_sign: missing ${missingProps}`
         );
       }
 
