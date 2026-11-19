@@ -146,6 +146,15 @@ describe('util', () => {
     expect(() => ensureIntNumber('hexString')).toThrowError();
   });
 
+  test('ensureIntNumber: an empty hex body is not an integer', () => {
+    // `isHexString` accepts an empty body, so these reached `BigInt('0x')` and surfaced a
+    // raw SyntaxError instead of the documented invalidParams. `''` matched `/^[0-9]*$/`
+    // and came back as 0.
+    for (const value of ['0x', '0X', '']) {
+      expect(() => ensureIntNumber(value)).toThrowError(/Not an integer/);
+    }
+  });
+
   test('ensureRegExpString', () => {
     const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;
     expect(() => ensureRegExpString('^&1234')).toThrowError();
@@ -159,6 +168,15 @@ describe('util', () => {
     expect(Number(ensureBigInt('ab12345667'))).toEqual(734744827495);
     expect(() => ensureBigInt('ax123456')).toThrowError();
     expect(() => ensureBigInt(['cat'])).toThrowError();
+  });
+
+  test('ensureBigInt: an empty hex body is not an integer', () => {
+    for (const value of ['0x', '0X', '']) {
+      expect(() => ensureBigInt(value)).toThrowError(/Not an integer/);
+    }
+    // Values that do carry digits are unaffected.
+    expect(ensureBigInt('0x1f').toString()).toEqual('31');
+    expect(ensureBigInt('0').toString()).toEqual('0');
   });
 
   test('ensureParsedJSONObject', () => {

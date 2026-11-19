@@ -3,7 +3,7 @@
 import { standardErrors } from '../error/errors.js';
 import { Address, BigIntString, HexString, IntNumber, RegExpString } from './index.js';
 
-const INT_STRING_REGEX = /^[0-9]*$/;
+const INT_STRING_REGEX = /^[0-9]+$/;
 const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;
 
 /**
@@ -68,6 +68,16 @@ export function isHexString(hex: unknown): hex is HexString {
   return HEXADECIMAL_STRING_REGEX.test(s);
 }
 
+/**
+ * A hex *string* may be empty -- `''` and `'0x'` both satisfy `isHexString`, and
+ * `ensureHexString('0x')` returning `'0x'` is relied on for optional calldata. A hex
+ * *number* may not: `BigInt('0x')` throws a raw `SyntaxError`, which escapes the numeric
+ * helpers below instead of the `invalidParams` they document.
+ */
+function isHexNumberString(value: string): boolean {
+  return isHexString(value) && strip0x(value).length > 0;
+}
+
 export function ensureHexString(hex: unknown, includePrefix = false): HexString {
   if (typeof hex === 'string') {
     const s = strip0x(hex).toLowerCase();
@@ -118,7 +128,7 @@ export function ensureIntNumber(num: unknown): IntNumber {
     if (INT_STRING_REGEX.test(num)) {
       return IntNumber(Number(num));
     }
-    if (isHexString(num)) {
+    if (isHexNumberString(num)) {
       return IntNumber(Number(BigInt(ensureEvenLengthHexString(num, true))));
     }
   }
@@ -144,7 +154,7 @@ export function ensureBigInt(val: unknown): bigint {
     if (INT_STRING_REGEX.test(val)) {
       return BigInt(val);
     }
-    if (isHexString(val)) {
+    if (isHexNumberString(val)) {
       return BigInt(ensureEvenLengthHexString(val, true));
     }
   }
