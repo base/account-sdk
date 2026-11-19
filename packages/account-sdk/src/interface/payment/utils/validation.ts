@@ -11,6 +11,13 @@ export function validateStringAmount(amount: string, maxDecimals: number): void 
     throw new Error('Invalid amount: must be a string');
   }
 
+  // Reject scientific notation (e.g. "1e-7", "1.5e2") and other non-decimal formats.
+  // parseFloat silently accepts these, but downstream parseUnits/viiem expects
+  // a plain decimal string like "10.50".
+  if (!/^\d+\.?\d*$/.test(amount)) {
+    throw new Error('Invalid amount: must be a decimal number (e.g. "10.50")');
+  }
+
   const numAmount = parseFloat(amount);
 
   if (isNaN(numAmount)) {
